@@ -1,0 +1,23 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "0UBymFkwim2m871PQsx3Ag0vrxc=",
+			"path": "github.com/Sirupsen/logrus",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "iOnDBM4xJIRsf8Hh9RxEBSACj9s=",
+			"path": "github.com/pborman/uuid",
+			"revision": ""
+		},
+		{
+			"checksumSHA1": "fwb6FNBUs0SOyUpUx5R31Xf22GY=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "d8f5ea21b9295e315e612b4bcf4bedea93454d4d",
+			"revisionTime": "2017-08-03T09:04:06Z"
+		}
+	],
+	"rootPath": "df-daemon"
+}

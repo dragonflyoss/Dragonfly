@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+cur_dir=`pwd`
+echo "df_install_home=${cur_dir}" > Makefile
+if [ $# -eq 1 ] ;then
+	prefix=${1#--prefix=}
+	if [ -n "${prefix}" -a ${prefix:0:1} = "/" ] ;then
+		echo "df_install_home=${prefix}" > Makefile
+	fi
+
+fi
+
+echo "df_home=${cur_dir%/build/client*}" >> Makefile
+echo "go_path=${GOPATH}" >> Makefile
+cat client.mk >> Makefile
