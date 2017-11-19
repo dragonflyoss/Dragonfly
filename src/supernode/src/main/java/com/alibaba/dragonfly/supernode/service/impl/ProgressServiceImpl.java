@@ -343,7 +343,7 @@ public class ProgressServiceImpl implements ProgressService {
                                 return new ResultInfo(ResultCode.UNKNOWN_ERROR,
                                     "piece state not found for pieceNum:" + tmpPieceNum, null);
                             }
-                            String dstCid = pieceState.popProducer(taskId, cid);
+                            String dstCid = pieceState.popProducer(taskId, cid, parsePieceLen(taskId, tmpPieceNum));
 
                             if (dstCid == null) {
                                 continue;
@@ -507,5 +507,18 @@ public class ProgressServiceImpl implements ProgressService {
                 pieceNums.addAll(tmpPrior);
             }
         }
+    }
+
+    private int parsePieceLen(String taskId, int pieceNum) {
+        try {
+            String pieceM5 = taskService.getPieceMd5(taskId, pieceNum);
+            int colonIndex = pieceM5.lastIndexOf(":");
+            if (colonIndex > 0) {
+                return Integer.parseInt(pieceM5.substring(colonIndex + 1));
+            }
+        } catch (Exception e) {
+            logger.error("parse piece len error for taskId:{}", taskId, e);
+        }
+        return -1;
     }
 }

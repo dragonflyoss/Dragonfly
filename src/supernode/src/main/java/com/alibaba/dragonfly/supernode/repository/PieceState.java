@@ -68,7 +68,7 @@ public class PieceState {
         return true;
     }
 
-    public String popProducer(String taskId, String srcCid) {
+    public String popProducer(String taskId, String srcCid, int pieceLen) {
         String dstCid = null;
 
         Set<String> blackSet = progressRepo.getClientBlackInfo(srcCid);
@@ -84,12 +84,8 @@ public class PieceState {
         }
 
         if (dstCid == null && superCid != null) {
-            if (rateLimiter.tryAcquire(pieceSize, distributedCount > 1)) {
-                if (distributedCount > 0) {
-                    pieceHitLogger
-                        .info("srcCid:{} taskId:{} down from super node because resource lack,exist dstCid count:{}",
-                            srcCid, taskId, distributedCount);
-                }
+            if (rateLimiter.tryAcquire(pieceLen > 0 ? pieceLen : pieceSize, distributedCount > 1)) {
+
                 dstCid = superCid;
             }
         }
