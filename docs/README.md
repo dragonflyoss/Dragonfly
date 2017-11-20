@@ -1,14 +1,12 @@
-## Table of Content
-
-**[Architecture Introduction](architecture_introduction.md)**  
+**[Architecture Introduction](architecture.md)**  
 Introduce the architecture of dragonfly.
 
-**[Install Dragonfly Client Guide](install_client.md)**  
-How to install dragonfly client.
+**[Install Client Guide](install_client.md)**  
+How to install dragonfly client including dfget and df-daemon.
 
 
-**[Install Cluster Manager Guide](install_clustermanager.md)**  
+**[Install Server Guide](install_server.md)**  
 How to install dragonfly cluster maneger.
 
-**[Configuration And Run Dragonfly](configuration_and_run.md)**  
-How to download images through dragonfly.
+**[Usage of Dragonfly](usage.md)**  
+How to download images or files through dragonfly.
