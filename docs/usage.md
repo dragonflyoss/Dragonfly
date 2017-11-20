@@ -1,4 +1,4 @@
-# Configuration and Run Guide
+# Usage Guide
 
 ## Requirements
 

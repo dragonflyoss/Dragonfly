@@ -1,7 +1,7 @@
 # Description of submodule
 
 ## supernode(Java)
-> Cluster Manager(Supernode) is the P2P-cluster manager, which is mainly responsible for scheduling P2P task and making CDN cache.
+> Cluster Manager(Supernode) is the P2P server, which is mainly responsible for scheduling P2P task and making CDN cache.
 
 ## daemon(GoLang)
 > df-daemon is a key component of solution for distributing images,
