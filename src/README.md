@@ -10,3 +10,6 @@
 ## getter(Python)
 
 > getter is mainly responsible for transmiting and sharing files.
+<br/>
+
+**Notice：All of the modules will use golang in the future**
