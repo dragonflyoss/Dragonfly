@@ -3,7 +3,23 @@
 [![Join the chat at https://gitter.im/alibaba/Dragonfly](https://badges.gitter.im/alibaba/Dragonfly.svg)](https://gitter.im/alibaba/Dragonfly?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
 
-![](https://github.com/alibaba/Dragonfly/raw/master/docs/images/logo.png)
+## ![Dragonfly](docs/images/logo.png)
+
+## Contents
+
+- [Introduction](#introduction)
+- [Features](#features)
+- [Comparison](#comparison) 
+- [Docs](docs)
+    - [Installation](#installation)
+    - [Usage Guide](docs/usage.md)
+    - [Architecture Design](docs/architecture.md)
+    - [Contributing](CONTRIBUTING.md)
+- [FAQ](FAQ.md)
+- [LICENSE](LICENSE)
+- [Commercial Support](#commercial-support)
+
+## Introduction
 
 Dragonfly is an intelligent P2P based file distribution system. It resolved issues like low-efficiency，low-success rate，waste of network bandwidth you faced in large-scale file distribution scenarios such as application deployment, large-scale cache file distribution, data file distribution, images distribution etc.
 In Alibaba, the system transferred 2 billion times and distributed 3.4PB data every month, it becomes one of the most important infrastructure in Alibaba. The reliability is up to 99.9999%.
@@ -35,7 +51,7 @@ processing requests with extremely high performance.
 - **Effective concurrency control of Registry Auth**: Reduce the pressure of the Registry Auth Service.
 - **Simple and easy to use**: Very few configurations are needed.
 
-## Performance Benchmark (wget v.s dragonfly)
+## Comparison
 
 |Test Environment ||
 |--------------------|-------------------|
@@ -45,27 +61,19 @@ processing requests with extremely high performance.
 |Target file size|200MB|
 |Executed Date|2016-04-20|
 
-**Results:**
-
 <div>
-<img src="https://github.com/alibaba/Dragonfly/raw/master/docs/images/performance.png"/>
+<img src="docs/images/performance.png"/>
 </div>
 
 For Dragonfly the average time of downloading is around 12 seconds no matter how many clients issued the file downloading.
 and for wget time increased when you have more clients. and by 1200 clients, the file source crash, it can not serve any client.
 
-## System Architecture
+## Installation
 
-&nbsp;&nbsp;&nbsp;&nbsp;Please Read [Architecture Introduction.](https://github.com/alibaba/Dragonfly/blob/master/docs/architecture_introduction.md)
-
-## Install & Run
-
-1. [Install and run server.](https://github.com/alibaba/Dragonfly/blob/master/docs/install_clustermanager.md)
+1. [Install server.](docs/install_server.md)
 *you need record server ips, which will be used later*.
 
-2. [Install client.](https://github.com/alibaba/Dragonfly/blob/master/docs/install_client.md)
-
-3. [Using dragonfly.](https://github.com/alibaba/Dragonfly/blob/master/docs/configuration_and_run.md)
+2. [Install client.](docs/install_client.md)
 
 ## License
 
