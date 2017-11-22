@@ -14,10 +14,12 @@
 package handler
 
 import (
-	"net/http"
-	"df-daemon/global"
 	"fmt"
+	"net/http"
+
 	"github.com/Sirupsen/logrus"
+
+	"github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/global"
 )
 
 func GetEnv(w http.ResponseWriter, r *http.Request) {

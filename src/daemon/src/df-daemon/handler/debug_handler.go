@@ -15,10 +15,12 @@ package handler
 
 import (
 	"net/http"
-	"strings"
 	"net/http/pprof"
-	"df-daemon/constant"
+	"strings"
+
 	"github.com/Sirupsen/logrus"
+
+	"github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/constant"
 )
 
 func DebugInfo(w http.ResponseWriter, req *http.Request) {

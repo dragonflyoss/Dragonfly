@@ -14,17 +14,19 @@
 package handler
 
 import (
-	"sync"
-	"strings"
-	"fmt"
-	log "github.com/Sirupsen/logrus"
-	"os/exec"
-	. "df-daemon/global"
-	"time"
-	"syscall"
-	"df-daemon/constant"
-	"df-daemon/exception"
 	"errors"
+	"fmt"
+	"os/exec"
+	"strings"
+	"sync"
+	"syscall"
+	"time"
+
+	log "github.com/Sirupsen/logrus"
+
+	"github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/constant"
+	"github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/exception"
+	. "github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/global"
 )
 
 type Downloader interface {
@@ -35,17 +37,17 @@ type Downloader interface {
 
 type DFgetter struct {
 	//output dir
-	dstDir     string
+	dstDir string
 	//the urlfilter param of dfget
-	urlFilter  string
+	urlFilter string
 	//the totallimit and s param of dfget
-	rateLimit  string
+	rateLimit string
 	//the callsystem param of dfget
 	callSystem string
 	//the notbs param of dfget
-	notbs      bool
+	notbs bool
 
-	once       sync.Once
+	once sync.Once
 }
 
 var getter = new(DFgetter)
@@ -57,7 +59,7 @@ func (dfgetter *DFgetter) Download(url string, header map[string][]string, name 
 	_, err := cmd.CombinedOutput()
 
 	if cmd.ProcessState.Success() {
-		log.Infof("dfget url:%s [SUCCESS] cost:%ds", url, time.Now().Unix() - startTime)
+		log.Infof("dfget url:%s [SUCCESS] cost:%ds", url, time.Now().Unix()-startTime)
 		return dstPath, nil
 	} else {
 		if value, ok := cmd.ProcessState.Sys().(syscall.WaitStatus); ok {
@@ -72,7 +74,7 @@ func (dfgetter *DFgetter) Download(url string, header map[string][]string, name 
 func (dfgetter *DFgetter) parseCommand(url string, header map[string][]string, name string) (cmdPath string, args []string, dstPath string) {
 	args = make([]string, 0, 32)
 	args = append(append(args, "-u"), url)
-	args = append(append(args, "-o"), getter.dstDir + name)
+	args = append(append(args, "-o"), getter.dstDir+name)
 	if getter.notbs {
 		args = append(args, "--notbs")
 	}
@@ -120,5 +122,3 @@ func DownloadByGetter(url string, header map[string][]string, name string) (stri
 	})
 	return getter.Download(url, header, name)
 }
-
-

@@ -14,12 +14,14 @@
 package main
 
 import (
-	_ "df-daemon/initializer"
-	"github.com/Sirupsen/logrus"
 	"fmt"
 	"net/http"
 	"runtime"
-	. "df-daemon/global"
+
+	"github.com/Sirupsen/logrus"
+
+	. "github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/global"
+	_ "github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/initializer"
 )
 
 func main() {
@@ -44,6 +46,3 @@ func main() {
 		logrus.Fatal(err)
 	}
 }
-
-
-
