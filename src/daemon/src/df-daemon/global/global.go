@@ -16,6 +16,7 @@ package global
 import (
 	"regexp"
 	"sync"
+
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -27,15 +28,15 @@ type CommandParam struct {
 	Urlfilter  string
 	Notbs      bool
 
-	Version    bool
-	Verbose    bool
-	Help       bool
-	Port       uint
-	Registry   string //https://xxx.xx.x:port or http://xxx.xx.x:port
-	DownRule   string
+	Version  bool
+	Verbose  bool
+	Help     bool
+	Port     uint
+	Registry string //https://xxx.xx.x:port or http://xxx.xx.x:port
+	DownRule string
 
-	CertFile   string
-	KeyFile    string
+	CertFile string
+	KeyFile  string
 }
 
 var (
@@ -94,5 +95,3 @@ func MatchDfPattern(location string) bool {
 	}
 	return useGetter
 }
-
-

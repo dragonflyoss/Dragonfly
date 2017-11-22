@@ -15,11 +15,13 @@ package handler
 
 import (
 	"net/http"
-	"net/url"
 	"net/http/httputil"
-	"df-daemon/util"
-	. "df-daemon/global"
+	"net/url"
+
 	log "github.com/Sirupsen/logrus"
+
+	. "github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/global"
+	"github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/util"
 )
 
 func Process(w http.ResponseWriter, r *http.Request) {
@@ -70,6 +72,3 @@ func Process(w http.ResponseWriter, r *http.Request) {
 
 	reverseProxy.ServeHTTP(w, r)
 }
-
-
-

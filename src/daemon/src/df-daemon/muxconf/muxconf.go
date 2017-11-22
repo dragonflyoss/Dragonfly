@@ -13,19 +13,21 @@
 // limitations under the License.
 package muxconf
 
-import . "net/http"
-import "df-daemon/handler"
+import (
+	"net/http"
+
+	"github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/handler"
+)
 
 func InitMux() {
-	router := map[string]func(ResponseWriter, *Request){
-		"/":handler.Process,
-		"/args": handler.GetArgs,
-		"/debug/":handler.DebugInfo,
-		"/env":handler.GetEnv,
+	router := map[string]func(http.ResponseWriter, *http.Request){
+		"/":       handler.Process,
+		"/args":   handler.GetArgs,
+		"/debug/": handler.DebugInfo,
+		"/env":    handler.GetEnv,
 	}
 
 	for key, value := range router {
-		HandleFunc(key, value)
+		http.HandleFunc(key, value)
 	}
 }
-

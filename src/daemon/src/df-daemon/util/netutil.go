@@ -14,16 +14,18 @@
 package util
 
 import (
-	"net"
-	"strings"
-	"os/exec"
-	"os"
 	"bufio"
-	log "github.com/Sirupsen/logrus"
+	"net"
+	"os"
+	"os/exec"
 	"regexp"
-	"strconv"
 	"runtime"
+	"strconv"
+	"strings"
+
+	log "github.com/Sirupsen/logrus"
 )
+
 //ParseInterfaceLimit parse speed of interface that it has prefix of eth
 func NetLimit() string {
 	defer func() {
@@ -77,12 +79,10 @@ func NetLimit() string {
 				}
 			}
 			if maxInterfaceLimit > 0 {
-				return strconv.FormatUint(maxInterfaceLimit / 8, 10) + "M"
+				return strconv.FormatUint(maxInterfaceLimit/8, 10) + "M"
 			}
 		}
 	}
 	return "20M"
 
 }
-
-
