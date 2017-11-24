@@ -36,6 +36,6 @@ install:
 clean:
 	rm -rf temp
 	rm -f Makefile
-	rm -rf ${build_daemon_home%/github.com*}
+	rm -rf ${df_home}/build/client/src
 
 
