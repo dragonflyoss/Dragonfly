@@ -16,6 +16,7 @@ package handler
 import (
 	"net/http"
 	"os"
+
 	"github.com/Sirupsen/logrus"
 )
 
@@ -31,5 +32,3 @@ func GetArgs(w http.ResponseWriter, r *http.Request) {
 
 	}
 }
-
-
