@@ -10,6 +10,18 @@ if [ $# -eq 1 ] ;then
 
 fi
 
+build_daemon_home=${cur_dir}/src/github.com/alibaba/Dragonfly/src/daemon
+
+rm -rf ${build_daemon_home}/*
+
+mkdir -p ${build_daemon_home}
+
+echo "build_daemon_home=${build_daemon_home}" >> Makefile
+
+cp -r ${cur_dir%/build/client*}/src/daemon/* ${build_daemon_home}
+
 echo "df_home=${cur_dir%/build/client*}" >> Makefile
+
 echo "go_path=${GOPATH}" >> Makefile
+
 cat client.mk >> Makefile
