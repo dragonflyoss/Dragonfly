@@ -8,9 +8,9 @@ build:
 	mkdir temp
 
 	cp -r ${df_home}/src/getter/* ./temp
-	export GOPATH=${df_home}/src/daemon;cd ${df_home}/src/daemon/src/df-daemon;go build
+	export GOPATH=${df_home}/build/client;cd ${build_daemon_home}/src/df-daemon;go build
 	export GOPATH=${go_path}
-	mv ${df_home}/src/daemon/src/df-daemon/df-daemon ./temp
+	mv ${build_daemon_home}/src/df-daemon/df-daemon ./temp
 
 	chmod a+x ./temp/df-daemon
 	chmod a+x ./temp/dfget
@@ -36,5 +36,6 @@ install:
 clean:
 	rm -rf temp
 	rm -f Makefile
+	rm -rf ${build_daemon_home%/github.com*}
 
 
