@@ -14,23 +14,25 @@
 package util
 
 import (
-	"os"
-	"path/filepath"
-	log "github.com/Sirupsen/logrus"
-	"strings"
-	"os/user"
 	"flag"
-	"time"
+	"fmt"
 	"io"
 	"io/ioutil"
-	"regexp"
+	"os"
 	"os/exec"
-	"fmt"
+	"os/user"
+	"path/filepath"
 	"reflect"
-	"df-daemon/constant"
-	. "df-daemon/muxconf"
-	"df-daemon/util"
-	. "df-daemon/global"
+	"regexp"
+	"strings"
+	"time"
+
+	log "github.com/Sirupsen/logrus"
+
+	"github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/constant"
+	. "github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/global"
+	. "github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/muxconf"
+	"github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/util"
 )
 
 func init() {
@@ -69,7 +71,7 @@ func cleanLocalRepo() {
 						log.Warnf("walk file:%s error:%v", path, err)
 					} else {
 						if info.Mode().IsRegular() {
-							if time.Now().Unix() - reflect.ValueOf(info.Sys()).Elem().FieldByName("Atim").Field(0).Int() >= 3600 {
+							if time.Now().Unix()-reflect.ValueOf(info.Sys()).Elem().FieldByName("Atim").Field(0).Int() >= 3600 {
 								if err := os.Remove(path); err == nil {
 									log.Infof("remove file:%s success", path)
 								} else {
@@ -95,7 +97,7 @@ func rotateLog(logFile *os.File, logFilePath string) {
 					log.SetOutput(ioutil.Discard)
 					logFile.Sync()
 					if transFile, err := os.Open(logFilePath); err == nil {
-						transFile.Seek(-10 * 1024 * 1024, 2)
+						transFile.Seek(-10*1024*1024, 2)
 						logFile.Seek(0, 0)
 						count, _ := io.Copy(logFile, transFile)
 						logFile.Truncate(count)
@@ -123,9 +125,9 @@ func initLogger() {
 	}
 
 	logFilePath := G_HomeDir + ".small-dragonfly/logs/dfdaemon.log"
-	log.SetFormatter(&log.TextFormatter{TimestampFormat:"2006-01-02 15:04:00", DisableColors:true})
+	log.SetFormatter(&log.TextFormatter{TimestampFormat: "2006-01-02 15:04:00", DisableColors: true})
 	if os.MkdirAll(filepath.Dir(logFilePath), 0755) == nil {
-		if logFile, err := os.OpenFile(logFilePath, os.O_CREATE | os.O_RDWR, 0644); err == nil {
+		if logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_RDWR, 0644); err == nil {
 			logFile.Seek(0, 2)
 			log.SetOutput(logFile)
 			go rotateLog(logFile, logFilePath)
@@ -135,7 +137,7 @@ func initLogger() {
 }
 
 func initParam() {
-	flag.StringVar(&G_CommandLine.DFRepo, "localrepo", G_HomeDir + ".small-dragonfly/dfdaemon/data/", "temp output dir of daemon")
+	flag.StringVar(&G_CommandLine.DFRepo, "localrepo", G_HomeDir+".small-dragonfly/dfdaemon/data/", "temp output dir of daemon")
 
 	var defaultPath string
 	if path, err := exec.LookPath(os.Args[0]); err == nil {
@@ -207,7 +209,7 @@ func initParam() {
 		os.Exit(constant.CODE_EXIT_DFGET_NOT_FOUND)
 	}
 	cmd := exec.Command(G_CommandLine.DfPath, "-v")
-	version, _ := cmd.CombinedOutput();
+	version, _ := cmd.CombinedOutput()
 
 	log.Infof("dfget version:%s", string(version))
 
@@ -224,7 +226,7 @@ func initParam() {
 		protoAndDomain := strings.SplitN(G_CommandLine.Registry, "://", 2)
 		splitedCount := len(protoAndDomain)
 		G_RegProto = "http"
-		G_RegDomain = protoAndDomain[splitedCount - 1]
+		G_RegDomain = protoAndDomain[splitedCount-1]
 		if splitedCount == 2 {
 			G_RegProto = protoAndDomain[0]
 		}

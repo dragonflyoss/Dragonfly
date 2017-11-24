@@ -14,16 +14,17 @@
 package handler
 
 import (
-	. "net/http"
 	"net"
-	"time"
-	"df-daemon/global"
+	. "net/http"
 	"os"
-	"github.com/pborman/uuid"
+	"regexp"
+	"time"
 
 	"github.com/Sirupsen/logrus"
-	"regexp"
-	"df-daemon/exception"
+	"github.com/pborman/uuid"
+
+	"github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/exception"
+	"github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/global"
 )
 
 type DFRoundTripper struct {
@@ -32,7 +33,7 @@ type DFRoundTripper struct {
 }
 
 var dfRoundTripper = &DFRoundTripper{
-	Round:&Transport{
+	Round: &Transport{
 		DialContext: (&net.Dialer{
 			Timeout:   10 * time.Second,
 			KeepAlive: 30 * time.Second,
@@ -59,6 +60,7 @@ func needUseGetter(req *Request, location string) bool {
 	}
 	return useGetter
 }
+
 //only process first redirect at present
 //fix resource release
 func (roundTripper *DFRoundTripper) RoundTrip(req *Request) (*Response, error) {
@@ -80,10 +82,10 @@ func (roundTripper *DFRoundTripper) download(req *Request, urlString string) (*R
 	//use dfget to download
 	if dstPath, err := DownloadByGetter(urlString, req.Header, uuid.New()); err == nil {
 		defer os.Remove(dstPath)
-		if fileReq, err := NewRequest("GET", "file:///" + dstPath, nil); err == nil {
+		if fileReq, err := NewRequest("GET", "file:///"+dstPath, nil); err == nil {
 			response, err := dfRoundTripper.Round2.RoundTrip(fileReq)
 			if err == nil {
-				response.Header.Set("Content-Disposition", "attachment; filename=" + dstPath)
+				response.Header.Set("Content-Disposition", "attachment; filename="+dstPath)
 			} else {
 				logrus.Errorf("read response from file:%s error:%v", dstPath, err)
 			}
@@ -96,6 +98,3 @@ func (roundTripper *DFRoundTripper) download(req *Request, urlString string) (*R
 		return nil, err
 	}
 }
-
-
-
