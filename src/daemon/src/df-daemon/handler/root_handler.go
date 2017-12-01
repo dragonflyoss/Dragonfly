@@ -61,11 +61,19 @@ func Process(w http.ResponseWriter, r *http.Request) {
 		} else {
 			log.Warnf("registry not config but url host is %s", hostIp)
 		}
-
+	default:
+		// non localhost access should be denied explictly, otherwise we
+		// are falling into a dead loop: a reverse proxy for itself.
+		// TODO: we do not need such check actually, anything that served
+		// by df-daemon should only be accessed by localhost which should
+		// be controlled by the listener addr.
+		w.WriteHeader(http.StatusForbidden)
+		return
 	}
 
 	log.Debugf("post access:%s", targetUrl.String())
 
+	// TODO: do we really need to construct this every time?
 	reverseProxy := httputil.NewSingleHostReverseProxy(targetUrl)
 
 	reverseProxy.Transport = dfRoundTripper
