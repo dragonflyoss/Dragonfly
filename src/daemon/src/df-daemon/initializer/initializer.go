@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package util
+package initializer
 
 import (
 	"flag"
@@ -22,9 +22,9 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
-	"reflect"
 	"regexp"
 	"strings"
+	"syscall"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
@@ -54,6 +54,9 @@ func init() {
 	log.Info("init finish")
 }
 
+// cleanLocalRepo checks the files at local periodically, and delete the file when
+// it comes to a certain age(counted by the last access time).
+// TODO: what happens if the disk usage comes to high level?
 func cleanLocalRepo() {
 	defer func() {
 		if err := recover(); err != nil {
@@ -62,51 +65,60 @@ func cleanLocalRepo() {
 		}
 	}()
 	for {
-		select {
-		case <-time.After(time.Minute * 2):
-			func() {
-				log.Info("scan repo and clean expired files")
-				filepath.Walk(G_CommandLine.DFRepo, func(path string, info os.FileInfo, err error) error {
-					if err != nil {
-						log.Warnf("walk file:%s error:%v", path, err)
-					} else {
-						if info.Mode().IsRegular() {
-							if time.Now().Unix()-reflect.ValueOf(info.Sys()).Elem().FieldByName("Atim").Field(0).Int() >= 3600 {
-								if err := os.Remove(path); err == nil {
-									log.Infof("remove file:%s success", path)
-								} else {
-									log.Warnf("remove file:%s error:%v", path, err)
-								}
-							}
-						}
-					}
-					return nil
-				})
-			}()
-		}
+		time.Sleep(time.Minute * 2)
+		log.Info("scan repo and clean expired files")
+		filepath.Walk(G_CommandLine.DFRepo, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				log.Warnf("walk file:%s error:%v", path, err)
+				return nil
+			}
+			if !info.Mode().IsRegular() {
+				log.Infof("ignore %s: not a regular file", path)
+				return nil
+			}
+			// get the last access time
+			statT, ok := info.Sys().(*syscall.Stat_t)
+			if !ok {
+				log.Warnf("ingore %s: failed to get last access time", path)
+				return nil
+			}
+			// if the last access time is 1 hour ago
+			if time.Now().Unix()-Atime(statT) >= 3600 {
+				if err := os.Remove(path); err == nil {
+					log.Infof("remove file:%s success", path)
+				} else {
+					log.Warnf("remove file:%s error:%v", path, err)
+				}
+			}
+			return nil
+		})
 	}
 }
 
+// rotateLog truncates the logs file by a certain amount bytes.
 func rotateLog(logFile *os.File, logFilePath string) {
 	logSizeLimit := int64(20 * 1024 * 1024)
 	for {
-		select {
-		case <-time.After(time.Second * 60):
-			if stat, err := os.Stat(logFilePath); err == nil {
-				if stat.Size() > logSizeLimit {
-					log.SetOutput(ioutil.Discard)
-					logFile.Sync()
-					if transFile, err := os.Open(logFilePath); err == nil {
-						transFile.Seek(-10*1024*1024, 2)
-						logFile.Seek(0, 0)
-						count, _ := io.Copy(logFile, transFile)
-						logFile.Truncate(count)
-						log.SetOutput(logFile)
-						transFile.Close()
-					}
-				}
+		time.Sleep(time.Second * 60)
+		stat, err := os.Stat(logFilePath)
+		if err != nil {
+			log.Errorf("failed to stat %s: %s", logFilePath, err)
+			continue
+		}
+		// if it exceeds the 20MB limitation
+		if stat.Size() > logSizeLimit {
+			log.SetOutput(ioutil.Discard)
+			logFile.Sync()
+			if transFile, err := os.Open(logFilePath); err == nil {
+				// move the pointer to be (end - 10MB)
+				transFile.Seek(-10*1024*1024, 2)
+				// move the pointer to head
+				logFile.Seek(0, 0)
+				count, _ := io.Copy(logFile, transFile)
+				logFile.Truncate(count)
+				log.SetOutput(logFile)
+				transFile.Close()
 			}
-
 		}
 	}
 
