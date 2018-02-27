@@ -15,13 +15,25 @@
  */
 package com.alibaba.dragonfly.supernode.common.util;
 
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import com.alibaba.dragonfly.supernode.common.exception.AuthenticationRequiredException;
 import com.alibaba.dragonfly.supernode.common.exception.UrlNotReachableException;
@@ -39,6 +51,26 @@ public class HttpClientUtil {
         HttpURLConnection.setFollowRedirects(false);
     }
 
+    private static class TrustAnyTrustManager implements X509TrustManager {
+        @Override
+        public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {}
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {}
+
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return new X509Certificate[] {};
+        }
+    }
+
+    private static class TrustAnyHostnameVerifier implements HostnameVerifier {
+        @Override
+        public boolean verify(String hostname, SSLSession session) {
+            return true;
+        }
+    }
+
     public static boolean isExpired(String fileUrl, long lastModified, String[] headers) throws MalformedURLException {
         if (lastModified <= 0) {
             return true;
@@ -49,7 +81,7 @@ public class HttpClientUtil {
         int code;
         while (times-- > 0) {
             try {
-                conn = (HttpURLConnection)url.openConnection();
+                conn = openConnection(url);
                 fillHeaders(conn, headers);
                 conn.setUseCaches(false);
                 conn.setConnectTimeout(2000);
@@ -86,7 +118,7 @@ public class HttpClientUtil {
         int code;
         while (times-- > 0) {
             try {
-                conn = (HttpURLConnection)url.openConnection();
+                conn = openConnection(url);
                 conn.setUseCaches(false);
                 fillHeaders(conn, headers);
                 conn.setConnectTimeout(2000);
@@ -149,7 +181,7 @@ public class HttpClientUtil {
         int code;
         while (times-- > 0) {
             try {
-                conn = (HttpURLConnection)url.openConnection();
+                conn = openConnection(url);
                 conn.setUseCaches(false);
                 conn.setRequestProperty("Range", "bytes=0-0");
                 fillHeaders(conn, headers);
@@ -228,5 +260,22 @@ public class HttpClientUtil {
             }
         }
         return result;
+    }
+
+    public static HttpURLConnection openConnection(URL url)
+        throws NoSuchAlgorithmException, KeyManagementException, IOException {
+        HttpURLConnection conn = null;
+        if (url.getProtocol().toLowerCase().equals("https")) {
+            SSLContext sc = SSLContext.getInstance("TLS");
+            sc.init(null, new TrustManager[] {new TrustAnyTrustManager()},
+                new java.security.SecureRandom());
+            HttpsURLConnection https = (HttpsURLConnection)url.openConnection();
+            https.setSSLSocketFactory(sc.getSocketFactory());
+            https.setHostnameVerifier(new TrustAnyHostnameVerifier());
+            conn = https;
+        } else {
+            conn = (HttpURLConnection)url.openConnection();
+        }
+        return conn;
     }
 }
