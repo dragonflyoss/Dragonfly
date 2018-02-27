@@ -208,7 +208,7 @@ public class Downloader implements Callable<Boolean> {
             int code;
             for (int i = 0; i < 3; i++) {
                 try {
-                    conn = (HttpURLConnection)url.openConnection();
+                    conn = HttpClientUtil.openConnection(url);
                     HttpClientUtil.fillHeaders(conn, header);
                     conn.setConnectTimeout(2000);
                     conn.setUseCaches(false);
