@@ -19,7 +19,7 @@ RUN wget http://www.eu.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven
     && rm /tmp/apache-maven-3.3.9-bin.tar.gz
 
 # Install Tomcat7
-RUN wget http://mirrors.hust.edu.cn/apache/tomcat/tomcat-7/v7.0.84/bin/apache-tomcat-7.0.84.tar.gz -O /tmp/apache-tomcat-7.0.84.tar.gz \
+RUN wget https://archive.apache.org/dist/tomcat/tomcat-7/v7.0.84/bin/apache-tomcat-7.0.84.tar.gz -O /tmp/apache-tomcat-7.0.84.tar.gz \
     && cd /usr/local && tar xzf /tmp/apache-tomcat-7.0.84.tar.gz \
     && ln -s /usr/local/apache-tomcat-7.0.84 /usr/local/tomcat \
     && rm /tmp/apache-tomcat-7.0.84.tar.gz
