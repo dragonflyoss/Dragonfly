@@ -48,7 +48,7 @@ var dfRoundTripper = &DFRoundTripper{
 	Round2: NewFileTransport(Dir("/")),
 }
 
-var compiler = regexp.MustCompile("^.+/blobs/sha256:[A-Fa-f0-9]{64}$")
+var compiler = regexp.MustCompile("^.+/blobs/sha256.*$")
 
 func needUseGetter(req *Request, location string) bool {
 	var useGetter bool
