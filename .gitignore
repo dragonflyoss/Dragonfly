@@ -8,6 +8,8 @@ target
 .akconfig
 .DS_Store
 **/.DS_Store
+*.swo
+*.swp
 
 #df-daemon
 
