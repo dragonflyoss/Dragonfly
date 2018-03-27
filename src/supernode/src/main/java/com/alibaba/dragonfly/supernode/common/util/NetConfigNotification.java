@@ -46,17 +46,15 @@ public class NetConfigNotification {
     }
 
     public void freshNetRate(int rate) {
-        int downRate = rate - Constants.SYSTEM_NEED_RATE;
-        if (downRate <= 0) {
-            downRate = rate / 2;
-        }
-        if (downRate == 0) {
+        if (rate <= 0) {
             logger.error("net rate:{} is illegal", rate);
             return;
         }
+        int downRate = rate > Constants.SYSTEM_NEED_RATE ?
+            rate - Constants.SYSTEM_NEED_RATE : (rate + 1) / 2;
         long rateOnByte = downRate * 1024L * 1024L;
-        boolean updated = false;
         try {
+            boolean updated = false;
             for (RateLimiter rateLimiter : rateLimiters) {
                 if (Math.abs(rateLimiter.getRate() - rateOnByte) >= 1024) {
                     rateLimiter.setRate(rateOnByte);
