@@ -12,11 +12,8 @@
 - [Introduction](#introduction)
 - [Features](#features)
 - [Comparison](#comparison) 
-- [Docs](docs)
-    - [Installation](#installation)
-    - [Usage Guide](docs/usage.md)
-    - [Architecture Design](docs/architecture.md)
-    - [Contributing](CONTRIBUTING.md)
+- [Documents](docs)
+- [Contributing](CONTRIBUTING.md)
 - [FAQ](FAQ.md)
 - [LICENSE](LICENSE)
 - [Commercial Support](#commercial-support)
@@ -69,13 +66,6 @@ processing requests with extremely high performance.
 
 For Dragonfly the average time of downloading is around 12 seconds no matter how many clients issued the file downloading.
 and for wget time increased when you have more clients. and by 1200 clients, the file source crash, it can not serve any client.
-
-## Installation
-
-1. [Install server.](docs/install_server.md)
-*you need record server ips, which will be used later*.
-
-2. [Install client.](docs/install_client.md)
 
 ## License
 
