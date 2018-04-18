@@ -1,12 +1,14 @@
-**[Architecture Introduction](architecture.md)**  
-Introduce the architecture of dragonfly.
+# Dragonfly
 
-**[Install Client Guide](install_client.md)**  
-How to install dragonfly client including dfget and df-daemon.
+![Dragonfly](./images/logo.png)
 
+Dragonfly is an intelligent P2P based file distribution system. It resolved issues like low-efficiency，low-success rate，waste of network bandwidth you faced in large-scale file distribution scenarios such as application deployment, large-scale cache file distribution, data file distribution, images distribution etc.
 
-**[Install Server Guide](install_server.md)**  
-How to install dragonfly cluster maneger.
+## Documents
 
-**[Usage of Dragonfly](usage.md)**  
-How to download images or files through dragonfly.
+The documents are written in multi-languages:
+
+* [Dragonfly Documents](en)
+* [蜻蜓文档](zh)
+
+If you want to contribute even something trivial please do not hesitate, **WE ARE LOOKING FORWARD TO ANY PR FROM YOU TO IMPROVE THE DOCUMENTS**.
