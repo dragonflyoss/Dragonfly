@@ -2,13 +2,15 @@
 
 - **Install From Latest Package**
 
-  - Download [df-client.linux-amd64.tar.gz](../../package/df-client.linux-amd64.tar.gz) 
+  - Download [df-client.linux-amd64.tar.gz](../../package/df-client.linux-amd64.tar.gz)
   - `tar xzvf df-client.linux-amd64.tar.gz -C xxx`, "xxx" is installation directory.
-  - Set environment variable named PATH: `PATH=$PATH:xxx/df-client`
+  - Set environment variable named PATH: `export PATH=$PATH:xxx/df-client`
 
 - **Install From Source Code**
 
   *Requirements: go1.7+ and the go cmd must be in environment variable named PATH.*
+
+  - `git clone https://github.com/alibaba/Dragonfly.git`, clone source code from GitHub.
 
   - `cd source_dir/build/client`,source_dir is the directory where the source code is located.
 
@@ -20,4 +22,4 @@
 
   - `make clean`
 
-  - Set environment variable named PATH: `PATH=$PATH:xxx/df-client`
+  - Set environment variable named PATH: `export PATH=$PATH:xxx/df-client`
