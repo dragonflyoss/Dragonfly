@@ -1,47 +1,54 @@
+# We use this stage for minimizing layers
+FROM busybox:latest as SRC
+# Copy configs and the source code
+COPY ./build/supernode/docker /tmp/docker
+COPY ./src/supernode /tmp/supernode-sourcecode
+
 FROM centos:centos7
 
-COPY ./build/supernode/docker/repos/aliyun-centos-7.repo /etc/yum.repos.d/CentOS-Base.repo
-COPY ./build/supernode/docker/repos/aliyun-epel-7.repo /etc/yum.repos.d/epel.repo
-COPY ./build/supernode/docker/repos/nginx.repo /etc/yum.repos.d/nginx.repo
+# Set environments
+ENV JAVA_HOME=/usr/java/default
+ENV MAVEN_HOME=/usr/local/maven
+ENV CATALINA_HOME=/usr/local/tomcat
+ENV PATH=$JAVA_HOME/bin:$MAVEN_HOME/bin:$CATALINA_HOME/bin:$PATH
 
-# Install Nginx Wget Tar
-RUN yum install -y nginx wget tar
+# That's all we need
+COPY --from=SRC /tmp /tmp
 
-# Install Jdk8
-RUN wget --progress=bar:force --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" \
-    http://download.oracle.com/otn-pub/java/jdk/8u171-b11/512cd62ec5174c3487ac17c61aaa89e8/jdk-8u171-linux-x64.rpm -O /tmp/jdk.rpm \
-    && rpm -i /tmp/jdk.rpm \
-    && rm /tmp/jdk.rpm
+# Let's go
+RUN export JDK_URL=http://download.oracle.com/otn-pub/java/jdk/8u171-b11/512cd62ec5174c3487ac17c61aaa89e8/jdk-8u171-linux-x64.rpm && \
+    export MAVEN3_URL=http://www.eu.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz && \
+    export TOMCAT_URL=https://archive.apache.org/dist/tomcat/tomcat-7/v7.0.84/bin/apache-tomcat-7.0.84.tar.gz && \
+    # Download jdk, maven and tomcat
+    cp /tmp/docker/repos/* /etc/yum.repos.d/ && \
+    yum install -y nginx tar wget && \
+    wget --progress=bar:force \
+    --header "Cookie: oraclelicense=accept-securebackup-cookie" \
+    ${JDK_URL} -O /tmp/jdk.rpm && \
+    wget --progress=bar:force ${MAVEN3_URL} -O /tmp/maven.tgz && \
+    wget --progress=bar:force ${TOMCAT_URL} -O /tmp/tomcat.tgz && \
+    # Install Jdk8
+    rpm -i /tmp/jdk.rpm && \
+    # Install Maven3
+    mkdir /usr/local/maven && \
+    tar xzf /tmp/maven.tgz -C /usr/local/maven --strip-components 1 && \
+    # Install Tomcat7
+    mkdir /usr/local/tomcat && \
+    tar xzf /tmp/tomcat.tgz -C /usr/local/tomcat --strip-components 1 && \
+    # Build Source Code
+    cd /tmp/supernode-sourcecode && \
+    mvn clean -U install -DskipTests=true -q && \
+    rm -rf $CATALINA_HOME/webapps/* && \
+    mv /tmp/supernode-sourcecode/target/supernode.war $CATALINA_HOME/webapps/supernode.war && \
+    # Copy nginx and tomcat config
+    cp /tmp/docker/nginx/nginx.conf /etc/nginx/nginx.conf && \
+    cp /tmp/docker/tomcat/server.xml /usr/local/tomcat/conf/server.xml && \
+    # Clean
+    rm -rf /tmp/* && \
+    rm -rf ~/.m2/repository && \
+    yum clean all && \
+    rm -rf /var/cache/yum
 
-# Install Maven3
-RUN wget --progress=bar:force http://www.eu.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.tar.gz -O /tmp/apache-maven-3.3.9-bin.tar.gz \
-    && cd /usr/local && tar xzf /tmp/apache-maven-3.3.9-bin.tar.gz \
-    && ln -s /usr/local/apache-maven-3.3.9 /usr/local/maven \
-    && rm /tmp/apache-maven-3.3.9-bin.tar.gz
-
-# Install Tomcat7
-RUN wget --progress=bar:force https://archive.apache.org/dist/tomcat/tomcat-7/v7.0.84/bin/apache-tomcat-7.0.84.tar.gz -O /tmp/apache-tomcat-7.0.84.tar.gz \
-    && cd /usr/local && tar xzf /tmp/apache-tomcat-7.0.84.tar.gz \
-    && ln -s /usr/local/apache-tomcat-7.0.84 /usr/local/tomcat \
-    && rm /tmp/apache-tomcat-7.0.84.tar.gz
-
-# Set Environment Variables
-RUN mv $(find /usr/java/ -maxdepth 1 -name "jdk*" -type d) /usr/java/jdk
-ENV JAVA_HOME /usr/java/jdk
-ENV MAVEN_HOME /usr/local/maven
-ENV CATALINA_HOME /usr/local/tomcat
-ENV PATH $JAVA_HOME/bin:$MAVEN_HOME/bin:$CATALINA_HOME/bin:$PATH
-
-# Build Source Code
-COPY ./src/supernode /tmp/supernode-sourcecode
-RUN cd /tmp/supernode-sourcecode \
-    && mvn clean -U install -DskipTests=true -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn \
-    && rm -rf $CATALINA_HOME/webapps/* \
-    && mv /tmp/supernode-sourcecode/target/supernode.war $CATALINA_HOME/webapps/supernode.war \
-    && rm -rf /tmp/supernode-sourcecode \
-    && rm -rf ~/.m2/repository
-
-COPY ./build/supernode/docker/tomcat/server.xml /usr/local/tomcat/conf/server.xml
-COPY ./build/supernode/docker/nginx/nginx.conf /etc/nginx/nginx.conf
 EXPOSE 8001 8002
+
 CMD nginx && catalina.sh run
