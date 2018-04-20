@@ -2,7 +2,7 @@
 
 - **Install From Latest Package**
 
-  - Download [df-client.linux-amd64.tar.gz](../../package/df-client.linux-amd64.tar.gz)
+  - Download [df-client.linux-amd64.tar.gz](https://github.com/alibaba/Dragonfly/raw/master/package/df-client.linux-amd64.tar.gz)
   - `tar xzvf df-client.linux-amd64.tar.gz -C xxx`, "xxx" is installation directory.
   - Set environment variable named PATH: `export PATH=$PATH:xxx/df-client`
 
