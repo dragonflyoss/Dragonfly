@@ -31,6 +31,7 @@ type CommandParam struct {
 	Version  bool
 	Verbose  bool
 	Help     bool
+	HostIp   string
 	Port     uint
 	Registry string //https://xxx.xx.x:port or http://xxx.xx.x:port
 	DownRule string
