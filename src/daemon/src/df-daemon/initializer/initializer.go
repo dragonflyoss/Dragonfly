@@ -167,6 +167,7 @@ func initParam() {
 	flag.BoolVar(&G_CommandLine.Version, "v", false, "version")
 	flag.BoolVar(&G_CommandLine.Verbose, "verbose", false, "verbose")
 	flag.BoolVar(&G_CommandLine.Help, "h", false, "help")
+	flag.StringVar(&G_CommandLine.HostIp, "hostIp", "127.0.0.1", "daemon host ip, default: 127.0.0.1")
 	flag.UintVar(&G_CommandLine.Port, "port", 65001, "daemon will listen the port")
 	flag.StringVar(&G_CommandLine.Registry, "registry", "", "registry addr(https://abc.xx.x or http://abc.xx.x) and must exist if df-daemon is used to mirror mode")
 	flag.StringVar(&G_CommandLine.DownRule, "rule", "", "download the url by P2P if url matches the specified pattern,format:reg1,reg2,reg3")

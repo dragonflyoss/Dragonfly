@@ -54,7 +54,7 @@ func Process(w http.ResponseWriter, r *http.Request) {
 
 	hostIp := util.ExtractHost(r.URL.Host)
 	switch hostIp {
-	case "127.0.0.1", "localhost":
+	case "127.0.0.1", "localhost", G_CommandLine.HostIp:
 		if len(G_CommandLine.Registry) > 0 {
 			targetUrl.Host = G_RegDomain
 			targetUrl.Scheme = G_RegProto
