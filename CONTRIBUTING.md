@@ -113,8 +113,10 @@ Commit message could help reviewers better understand what is the purpose of sub
 * docs: xxxx. For example, "docs: add docs about storage installation".
 * feature: xxxx.For example, "feature: make result show in sorted order".
 * bugfix: xxxx. For example, "bugfix: fix panic when input nil parameter".
+* style: xxxx. For example, "style: format the code style of Constants.java".
 * refactor: xxxx. For example, "refactor: simplify to make codes more readable".
 * test: xxx. For example, "test: add unit test case for func InsertIntoArray".
+* chore: xxx. For example, "chore: integrate travis-ci". It's the type of mantainance change.
 * other readable and explicit expression ways.
 
 On the other side, we discourage contributors from committing message like the following ways:
