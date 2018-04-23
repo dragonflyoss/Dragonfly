@@ -1,54 +1,48 @@
-API
-===
+# API
 
-This section describes APIs that is provided by the supernode, aka cluster manager.
+本节介绍超级节点提供的API。
 
-### Registration
+### 注册
 
 ```
 POST /peer/registry
 ```
 
-**Parameters**
+**参数**
 
-Parameters are encodeds as `application/x-www-form-urlencoded`.
+`Content-type: application/x-www-form-urlencoded`
 
-*   `cid`: string, the client id.
-*   `ip`: ipv4 string, the client ip address.
-*   `hostName`: string, the host name of client node.
-*   `superNodeIp`: ipv4 string, the ip address of super node.
-*   `port`: integer, the port which client opens.
-*   `callSystem`: string, the caller identifier.
-*   `version`: string, client version.
-*   `dfdaemon`: boolean, tells whether it is a call from df-daemon.
-*   `path`: string, the path which client can serve.
-*   `rawUrl`: string, the resource url provided by command line parameter.
-*   `taskUrl`: string, the resource url.
-*   `md5`: string, the md5 checksum for the resource, optional.
-*   `identifier`: string, identifer for the resource.
-*   `headers`: map, extra http headers sent to the raw url.
+* `cid`: string, 客户端Id
+* `ip`: ipv4 string, 客户端ip地址
+* `hostName`: string, 客户端主机名
+* `superNodeIp`: ipv4 string, 注册的超级节点ip地址
+* `port`: integer, 客户端开放的端口号，用于P2P下载
+* `callSystem`: string, 调用`dfget`的使用方标识
+* `version`: string, 客户端版本
+* `dfdaemon`: boolean, 是否由`df-daemon`启动`dfget`
+* `path`: string, 客户端开放的服务路径
+* `rawUrl`: string, 由命令行参数指定的原始资源url
+* `taskUrl`: string, 资源url
+* `md5`: string, 要下载的资源的md5值，可选
+* `identifier`: string, 资源标识
+* `headers`: map, 需要发送给`rawUrl`的额外HTTP头信息
 
-Under the scene, the cluster manager creates a new instance of Task, which is built
-from the information provided by parameters. Specifically, it generates a `taskId`
-based on `rawUrl`, `md5` and `identifier`.
+当客户端发送注册请求时，超级节点会根据请求参数构造一个新的任务实例。每个任务有一个`taskId`，基于参数`rawUrl`，`md5`，`identifier`由超级节点生成。
 
-Then the task would be saved in the memory state. At the same time, it will fetch
-extra information like the `content-length` which would generally be set. Also,
-the `pieceSize` is computed with the strategy below:
+然后该任务会被保存到内存缓存中。同时，超级节点会获取额外的信息，比如一般都会设置的文件大小(Content-Length)。另外会按照如下策略计算分片大小(pieceSize)：
 
-1.  if the total size is less than 200MB, the piece size would be 4MB by default.
-1.  otherwise, the minimum of `(${totalSize} / 100MB) + 2`MB and 15MB.
+1. 如果总大小比`200MB`小，则分片大小为默认的`4MB`。
+2. 否则，取`(${totalSize} / 100 MB) + 2`MB与`15MB`中的最小值。
 
-The next step is, the peer information along with the task will be recorded:
+之后，`peer`信息和任务会被一起记录下来：
+* `peer<ip, cid, hostname>`
+* `task<taskId, cid, pieceSize, port, path>`
 
-1.  The peer<ip, cid, hostname> will be saved.
-1.  The task<taskId, cid, pieceSize, port, path> will be saved.
+最后触发一个流程处理后续流程。
 
-The last step is about triggering a progress.
+**响应**
 
-**Response**
-
-An example response:
+成功返回的例子：
 
 ```json
 {
@@ -61,56 +55,52 @@ An example response:
 }
 ```
 
-Other cases could happen:
+其他情况下的`code`值：
+1. `taskId`已经存在, `606`。
+2. url不正确，`607`。
+3. 需要认证，`608`或者`609`。
 
-1.  the task id might duplicate with an existing one. `606`
-1.  the url might be invalid. `607`
-1.  the access requires authentication. `608` or `609`
-
-### Get Task
+### 获取任务信息
 
 ```
 GET /peer/task
 ```
 
-**Parameters**
+**参数**
 
-Parameters are encoded as query string.
+参数位于请求参数列表中
 
-*   `superNode`: ipv4 string, the ip address of super node.
-*   `dstCid`: string, destination client id.
+*   `superNode`: ipv4 string, 超级节点ip地址。
+*   `dstCid`: string, 目标客户端Id。
 *   `range`: string, byte range.
 *   `status`: integer.
 *   `result`: integer.
-*   `taskId`: string, the task id.
-*   `srcCid`: string, the source client id.
+*   `taskId`: string, 任务Id。
+*   `srcCid`: string, 源客户端Id。
 
 The super node will analyze the `status` and `result` firstly:
 
-*   `Running` if `status == 701`.
-*   `Success` if `status == 702` and `result == 501`.
-*   `Fail` if `status == 702` and `result == 500`.
-*   `Wait` if `status == 700`.
+超级节点首先分析`status`和`result`：
+* 若`status == 701`，则为`Running`
+* 若`status == 702` 且 `result == 501`，则为`Success`
+* 若`status == 702` 且 `result == 500`，则为`Fail`
+* 若``status == 700``，则为`Wait`
 
-In waiting status, the super node would:
+如果是waiting状态，则超级节点会执行：
+* 将状态保存为`Running`
 
-1.  Save the status to be running.
+在`Running`状态下，超级节点提取分片状态：
+* 若`result == 501`，则为`Success`
+* 若`result == 500`，则为`Fail`
+* 若`result == 503`，则为`SemiSuc`
 
-In running status, the super node would will extract the piece status:
+(注): `result == 502` 是非法状态码
 
-*   `Success` if `result == 501`.
-*   `Fail` if `result == 500`.
-*   `SemiSuc` if `result == 503`.
+然后超级节点更新此任务的进度，检查任务状态和对等者(peer)的状态。之后，若其他peer有足够信息下载下一个分片，那么超级节点告诉客户端对应peer的信息；否则就会失败。
 
-(side note): `result == 502` means invalid code.
+**响应**
 
-And update the progress for this specific task. Then it checks the status itself
-and also the peer status, after that, the super node will tell the client another
-task which has enough detail for the next piece, or fails if no one is available.
-
-**Response**
-
-An example resonse:
+例子：
 
 ```json
 {
@@ -119,8 +109,9 @@ An example resonse:
 }
 ```
 
-This means the client has to wait, since no peer can serve this piece now. And if
-there is a peer which can serve this request, there will be a reponse like this:
+上面响应内容的意思是，客户端必须等待，因为目前还没有peer可用下载当前的分片。
+
+若有peer可用，则响应如下：
 
 ```json
 {
@@ -141,25 +132,24 @@ there is a peer which can serve this request, there will be a reponse like this:
 }
 ```
 
-
 ### Peer Progress
 
 ```
 GET /peer/piece/suc
 ```
 
-**Parameters**
+**参数**
 
-Parameters are encoded as query string.
+参数位于请求参数列表中
 
-*   `dstCid`: string, the destination client id.
+*   `dstCid`: string, 目标客户端Id。
 *   `pieceRange`: byte range.
-*   `taskId`: string, the task id.
-*   `cid`: string, the client id.
+*   `taskId`: string, 任务Id。
+*   `cid`: string, 客户端Id。
 
-**Response**
+**响应**
 
-An example response:
+例子：
 
 ```json
 {
