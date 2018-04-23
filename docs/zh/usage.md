@@ -1,74 +1,81 @@
-# Usage Guide
+# 使用指南
 
-## Requirements
+## 环境要求
 
-1.on linux host
+* Linux
+* python 2.7 并且在`PATH`环境变量中
 
-2.need python 2.7 and make sure it's in the environment variable named PATH.
+## 操作步骤
 
-## Step By Step
+### 配置
 
-### Configuration
+#### 通过配置文件或命令行参数指定超级节点
+> 确保超级节点已经启动，部署参考：*[超级节点部署指南](./install_server.md)*
 
-1.specify cluster manager nodes by configuration file or by cmd param
+* 配置文件方式：用于分发容器镜像和普通文件
+  ```sh
+  # 编辑蜻蜓配置文件
+  vi /etc/dragonfly.conf
+  # 在配置文件中添加超级节点信息，多个节点用','分割
+  [node]
+  address=nodeIp1,nodeIp2
+  ```
 
-&nbsp;&nbsp;&nbsp;&nbsp;*cluster manager nodes is deployed [above](https://github.com/alibaba/Dragonfly/blob/master/docs/install_clustermanager.md)*
+* 命令行参数方式：适用于下载普通文件
 
-&nbsp;&nbsp;&nbsp;&nbsp;*nodeIp is cluster manager ip*
+  在每次执行`dfget`命令时添加参数`--node`，如下：
+  ```sh
+  dfget -u "http://" --node nodeIp1,nodeIp2
+  ```
 
-- by configuration file for distributing container images or general files
+  注意：**命令行参数会覆盖掉配置文件内容**
 
-> A. `vi /etc/dragonfly.conf`.
+#### 配置 Container Daemon
 
-> B. add or update cluster manager nodes as follows:
+> 如果仅用蜻蜓下载普通文件，则忽略此步骤。**若用于镜像下载，则此步骤必须。**
 
->
+* 启动`dfget proxy`(即`df-damoen`)
+  ```sh
+  # 查看帮助信息
+  df-deaemon -h
+  # 启动`df-daemon`，指定镜像仓库地址，默认端口为`65001`
+  df-daemon --registry https://xxx.xx.x
+  # 查看`df-daemon`日志
+  tailf ~/.small-dragonfly/logs/dfdaemon.log
+  ```
+
+* 配置 Daemon Mirror
+
+  _如下是配置Docker Daemon Mirror的标准方法_
+  ```sh
+  # 1. 编辑`/etc/docker/daemon.json`
+  vi /etc/docker/daemon.json
+  # 2. 在配置文件里添加或更新配置项`registry-mirrors`
+  "registry-mirrors": ["http://127.0.0.1:65001"]
+  # 3. 重启docker deamon
+  systemctl restart docker
+  ```
+  > 关于`/etc/docker/daemon.json`，详情参考[官网文档](https://docs.docker.com/registry/recipes/mirror/#configure-the-cache)
+
+### 运行
+
+#### 分发普通文件
+
+```sh
+# 查看`dfget`帮助信息
+dfget -h
+# 下载文件，默认使用`/etc/dragonfly.conf`配置
+dfget --url "http://xxx.xx.x"
+# 下载文件，指定超级节点
+dfget --url "http://xxx.xx.x" --node "127.0.0.1"
+# 下载文件，指定输出文件
+dfget --url "http://xxx.xx.x" -o a.txt
+# 查看下载日志
+less ~/.small-dragonfly/logs/dfclient.log
 ```
-[node]
-address=nodeIp1,nodeIp2,...
-```
 
-- by cmd param only for distributing general files
+#### 分发docker镜像
 
-*cmd param will cover items in configuration file*
+直接使用`docker pull imageName`下载镜像即可。
 
-> you must apply this param named --node every time the dfget is executed,<br/> for example `dfget -u "http://xxx.xx.x" --node nodeIp1,nodeIp2,...`
-
-2.configure container daemon
-
-*please ignore this step if you only distribute general files with dragonfly*
-
-- start dfget proxy
-
-> A. you can execute `df-daemon -h` to show help info
-
-> B. the simplest way:  `df-daemon --registry https://xxx.xx.x ` or `df-daemon --registry http://xxx.xx.x ` , "xxx.xx.x" is the domain of registry
-
-> C. df-daemon's log info in ~/.small-dragonfly/logs/dfdaemon.log 
-
-- configure daemon mirror
-
-*standard method of configuring daemon mirror for docker*
-
-> A. `vi /etc/docker/daemon.json`, please refer to [official document](https://docs.docker.com/registry/recipes/mirror/#configure-the-cache)
-
-> B. add or update the item: `"registry-mirrors": ["http://127.0.0.1:65001"]`,65001 is default port of dfget-proxy
-
-> C. restart docker `systemctl restart docker`
-
-### Run
-
-- distributing general files
-
-> you can execute `dfget -h` to show help info.
-
-> the simplest way: `dfget --url "http://xxx.xx.x"`
-
-> dfget' log info in ~/.small-dragonfly/logs/dfclient.log
-
-
-- distributing docker images
-
-> execute `docker pull xxx/xx` as usual to download images.<br/>
-Note: "xxx/xx" is the path of image addr and can not contain registry domain that was configured in df-daemon
-`df-daemon --registry xxxxxx`
+> **注意**：镜像名称不要包含镜像仓库地址，因为仓库域名已经由`df-daemon`的启动参数`--registry`指定。
