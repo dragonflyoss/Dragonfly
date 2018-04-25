@@ -27,6 +27,7 @@ type CommandParam struct {
 	CallSystem string
 	Urlfilter  string
 	Notbs      bool
+	MaxProcs   int
 
 	Version  bool
 	Verbose  bool
