@@ -26,7 +26,10 @@ import (
 
 func main() {
 
-	runtime.GOMAXPROCS(4)
+	// if G_CommandLine.MaxProcs <= 0, programs run with GOMAXPROCS set to the number of cores available
+	if G_CommandLine.MaxProcs > 0 {
+		runtime.GOMAXPROCS(G_CommandLine.MaxProcs)
+	}
 
 	logrus.Infof("start dragonfly daemon param:%+v", G_CommandLine)
 

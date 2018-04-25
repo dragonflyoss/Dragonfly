@@ -173,6 +173,7 @@ func initParam() {
 	flag.StringVar(&G_CommandLine.DownRule, "rule", "", "download the url by P2P if url matches the specified pattern,format:reg1,reg2,reg3")
 	flag.StringVar(&G_CommandLine.CertFile, "certpem", "", "cert.pem file path")
 	flag.StringVar(&G_CommandLine.KeyFile, "keypem", "", "key.pem file path")
+	flag.IntVar(&G_CommandLine.MaxProcs, "maxprocs", 4, "max cpus daemon can use, default: 4")
 
 	flag.Parse()
 
