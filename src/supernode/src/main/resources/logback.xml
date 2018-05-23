@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="false">
 
-    <property resource="logback-config.properties"/>
+    <property name="LOG_HOME" value="${LOG_HOME:-/home/admin/supernode/logs}"/>
+    <property name="LOG_LEVEL" value="${LOG_LEVEL:-INFO}"/>
+    <property name="LOG_APPENDER" value="${LOG_APPENDER:-STDOUT}"/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
@@ -11,9 +13,9 @@
     </appender>
     <appender name="APP"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${log_home}/app.log</file>
+        <file>${LOG_HOME}/app.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <FileNamePattern>${log_home}/app.log.%d{yyyy-MM-dd}</FileNamePattern>
+            <FileNamePattern>${LOG_HOME}/app.log.%d{yyyy-MM-dd}</FileNamePattern>
             <MaxHistory>31</MaxHistory>
         </rollingPolicy>
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
@@ -24,9 +26,9 @@
 
     <appender name="PIECEHIT"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${log_home}/piece-hit.log</file>
+        <file>${LOG_HOME}/piece-hit.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <FileNamePattern>${log_home}/piece-hit.log.%d{yyyy-MM-dd}
+            <FileNamePattern>${LOG_HOME}/piece-hit.log.%d{yyyy-MM-dd}
             </FileNamePattern>
             <MaxHistory>7</MaxHistory>
         </rollingPolicy>
@@ -38,9 +40,9 @@
 
     <appender name="DATAGC"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${log_home}/data-gc.log</file>
+        <file>${LOG_HOME}/data-gc.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <FileNamePattern>${log_home}/data-gc.log.%d{yyyy-MM-dd}
+            <FileNamePattern>${LOG_HOME}/data-gc.log.%d{yyyy-MM-dd}
             </FileNamePattern>
             <MaxHistory>1</MaxHistory>
         </rollingPolicy>
@@ -51,9 +53,9 @@
     </appender>
     <appender name="DOWNLOADER"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${log_home}/downloader.log</file>
+        <file>${LOG_HOME}/downloader.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <FileNamePattern>${log_home}/downloader.log.%d{yyyy-MM-dd}
+            <FileNamePattern>${LOG_HOME}/downloader.log.%d{yyyy-MM-dd}
             </FileNamePattern>
             <MaxHistory>7</MaxHistory>
         </rollingPolicy>
@@ -64,9 +66,9 @@
     </appender>
     <appender name="SPACEGC"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${log_home}/space-gc.log</file>
+        <file>${LOG_HOME}/space-gc.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <FileNamePattern>${log_home}/space-gc.log.%d{yyyy-MM-dd}
+            <FileNamePattern>${LOG_HOME}/space-gc.log.%d{yyyy-MM-dd}
             </FileNamePattern>
             <MaxHistory>1</MaxHistory>
         </rollingPolicy>
@@ -76,29 +78,29 @@
         </encoder>
     </appender>
 
-    <logger name="com.alibaba.dragonfly.supernode" level="${log_level}"
+    <logger name="com.alibaba.dragonfly.supernode" level="${LOG_LEVEL}"
             additivity="false">
         <appender-ref ref="APP"/>
     </logger>
 
-    <logger name="PieceHitLogger" level="${log_level}" additivity="false">
+    <logger name="PieceHitLogger" level="${LOG_LEVEL}" additivity="false">
         <appender-ref ref="PIECEHIT"/>
     </logger>
 
-    <logger name="DataGcLogger" level="${log_level}" additivity="false">
+    <logger name="DataGcLogger" level="${LOG_LEVEL}" additivity="false">
         <appender-ref ref="DATAGC"/>
     </logger>
 
 
-    <logger name="DownloaderLogger" level="${log_level}" additivity="false">
+    <logger name="DownloaderLogger" level="${LOG_LEVEL}" additivity="false">
         <appender-ref ref="DOWNLOADER"/>
     </logger>
 
-    <logger name="SpaceGcLogger" level="${log_level}" additivity="false">
+    <logger name="SpaceGcLogger" level="${LOG_LEVEL}" additivity="false">
         <appender-ref ref="SPACEGC"/>
     </logger>
 
-    <root level="${log_level}">
-        <appender-ref ref="STDOUT"/>
+    <root level="${LOG_LEVEL}">
+        <appender-ref ref="${LOG_APPENDER}"/>
     </root>
 </configuration>
