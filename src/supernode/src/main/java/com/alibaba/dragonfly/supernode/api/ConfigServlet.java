@@ -51,9 +51,9 @@ public class ConfigServlet extends BaseServlet {
         String debug = params.get("debug");
         if (debug != null) {
             if (StringUtils.equalsIgnoreCase(debug, "on")) {
-                Constants.debug_switcher = "on";
-            } else {
-                Constants.debug_switcher = "off";
+                Constants.debugSwitcher = true;
+            } else if (StringUtils.equalsIgnoreCase(debug, "off")) {
+                Constants.debugSwitcher = false;
             }
         }
 
