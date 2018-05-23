@@ -21,6 +21,8 @@ import java.util.Map;
 public class ResultCode {
     public static final int SUCCESS = 200;
 
+    public static final int NOT_FOUND = 404;
+
     public static final int SYSTEM_ERROR = 500;
     public static final int PARAM_ERROR = 501;
     public static final int TARGET_NOT_FOUND = 502;

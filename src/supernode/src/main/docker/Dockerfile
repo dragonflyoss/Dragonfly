@@ -10,7 +10,7 @@ COPY --from=SRC /tmp /tmp
 
 RUN yum install -y epel-release && \
     yum install -y -q telnet nginx java-1.8.0-openjdk.x86_64 && \
-    cp /tmp/sources/start.sh /start.sh && \
+    cp /tmp/sources/start.sh /root/start.sh && \
     cp /tmp/sources/nginx.conf /etc/nginx/nginx.conf && \
     mkdir -p /home/admin/supernode/bin && \
     cp /tmp/sources/start.sh /home/admin/supernode/bin/ && \
@@ -23,5 +23,5 @@ ADD supernode.jar supernode.jar
 
 EXPOSE 8001 8002
 
-ENTRYPOINT ["/start.sh"]
+ENTRYPOINT ["/root/start.sh"]
 

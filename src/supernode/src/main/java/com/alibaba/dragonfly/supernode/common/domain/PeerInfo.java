@@ -30,7 +30,14 @@ public class PeerInfo {
         peerInfo.setHostName(params.get("hostName"));
 
         return peerInfo;
+    }
 
+    public static PeerInfo newInstance(String cid, String ip, String hostName) {
+        PeerInfo peerInfo = new PeerInfo();
+        peerInfo.setCid(cid);
+        peerInfo.setIp(ip);
+        peerInfo.setHostName(hostName);
+        return peerInfo;
     }
 
     public String getCid() {
