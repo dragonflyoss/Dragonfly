@@ -18,7 +18,6 @@ package com.alibaba.dragonfly.supernode.common;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,9 +90,9 @@ public class Constants {
         return SUPER_NODE_CID + taskId;
     }
 
-    public volatile static String debug_switcher = "off";
+    public volatile static boolean debugSwitcher = false;
 
     public static boolean isDebugEnabled() {
-        return StringUtils.equalsIgnoreCase(debug_switcher, "on");
+        return debugSwitcher;
     }
 }
