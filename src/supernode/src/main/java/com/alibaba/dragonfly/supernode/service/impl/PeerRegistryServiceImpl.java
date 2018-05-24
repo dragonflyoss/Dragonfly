@@ -149,7 +149,7 @@ public class PeerRegistryServiceImpl implements PeerRegistryService {
         String taskId = task.getTaskId();
 
         String cid = Constants.getSuperCid(taskId);
-        int port = Constants.port;
+        int port = Constants.PORT;
         String path = PathUtil.getHttpPath(taskId);
         PeerInfo peerInfo = new PeerInfo();
         peerInfo.setIp(Constants.localIp);
