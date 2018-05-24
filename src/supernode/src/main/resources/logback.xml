@@ -2,7 +2,7 @@
 <configuration debug="false">
     <include resource="org/springframework/boot/logging/logback/defaults.xml" />
 
-    <property name="LOG_HOME" value="${LOG_HOME:-/home/admin/supernode/logs}"/>
+    <property name="LOG_HOME" value="${LOG_HOME:-${supernode.baseHome:-/home/admin/supernode}/logs}"/>
     <property name="LOG_LEVEL" value="${LOG_LEVEL:-INFO}"/>
     <property name="LOG_APPENDER" value="${LOG_APPENDER:-STDOUT}"/>
 

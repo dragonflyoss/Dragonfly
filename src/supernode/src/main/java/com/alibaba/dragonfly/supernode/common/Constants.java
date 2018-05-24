@@ -15,39 +15,34 @@
  */
 package com.alibaba.dragonfly.supernode.common;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
+/**
+ * @author lowzj
+ */
+public final class Constants {
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-public class Constants {
-    private static final Logger logger = LoggerFactory.getLogger(Constants.class);
+    public static final int PORT = 8001;
 
     public static String localIp;
-    public static final int port = 8001;
-    public static final String CDN_HOME = "/home/admin/supernode/repo";
+    public static String SUPER_NODE_CID = null;
 
-    public static String DOWNLOAD_HOME = "";
-    public static String UPLOAD_HOME = "";
+    public static final int FAIL_COUNT_LIMIT = 5;
 
+    public static final int DEFAULT_SCHEDULER_CORE_POOL_SIZE = 10;
+
+    //-------------------------------------------------------------------------
+    // directories
+
+    public static final String DEFAULT_BASE_HOME = "/home/admin/supernode";
     public static final String HTTP_SUB_PATH = "/qtdown/";
     public static final String DOWN_SUB_PATH = "/download/";
 
-    static {
-        DOWNLOAD_HOME = CDN_HOME + DOWN_SUB_PATH;
-        UPLOAD_HOME = CDN_HOME + HTTP_SUB_PATH;
-        try {
-            Files.createDirectories(Paths.get(DOWNLOAD_HOME));
-            Files.createDirectories(Paths.get(UPLOAD_HOME));
-        } catch (Exception e) {
-            logger.error("create repo dir error", e);
-            System.exit(1);
-        }
-    }
+    public static String DOWNLOAD_HOME = DEFAULT_BASE_HOME + "/repo" + DOWN_SUB_PATH;
+    public static String UPLOAD_HOME = DEFAULT_BASE_HOME + "/repo" + HTTP_SUB_PATH;
 
-    public static int DEFAULT_PIECE_SIZE = 4 * 1024 * 1024;
-    public static int PIECE_SIZE_LIMIT = 15 * 1024 * 1024;
+    //-------------------------------------------------------------------------
+
+    public static final int DEFAULT_PIECE_SIZE = 4 * 1024 * 1024;
+    public static final int PIECE_SIZE_LIMIT = 15 * 1024 * 1024;
     /**
      * 4 bytes head and 1 byte tail
      */
@@ -56,6 +51,9 @@ public class Constants {
      * can not change
      */
     public static final int PIECE_WRAP_SIZE = PIECE_HEAD_SIZE + 1;
+
+    //-------------------------------------------------------------------------
+
     public static int PEER_UP_LIMIT = 5;
     public static int PEER_DOWN_LIMIT = 4;
     public static int ELIMINATION_LIMIT = 5;
@@ -66,19 +64,17 @@ public class Constants {
     /**
      * unit is MB
      */
-    public static final int SYSTEM_NEED_RATE = 20;
+    public static final int DEFAULT_SYSTEM_NEED_RATE = 20;
     /**
      * unit is MB
      */
     public static final int DEFAULT_TOTAL_LIMIT = 200;
 
-    public static String getSuperNodeCidPrefix() {
-        return new StringBuilder("cdnnode:").append(localIp).append("~").toString();
+    //-------------------------------------------------------------------------
+
+    private static String getSuperNodeCidPrefix() {
+        return "cdnnode:" + localIp + "~";
     }
-
-    public static String SUPER_NODE_CID = null;
-
-    public static final int FAIL_COUNT_LIMIT = 5;
 
     public static void generateNodeCid() {
         if (SUPER_NODE_CID == null) {

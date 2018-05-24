@@ -20,22 +20,29 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.alibaba.dragonfly.supernode.common.Constants;
+import com.alibaba.dragonfly.supernode.config.SupernodeProperties;
 
 import com.google.common.util.concurrent.RateLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+/**
+ * @author lowzj
+ */
 @Component
 public class NetConfigNotification {
+
+    @Autowired
+    private SupernodeProperties properties;
 
     private static final Logger logger = LoggerFactory.getLogger(NetConfigNotification.class);
 
     private List<RateLimiter> rateLimiters = new ArrayList<RateLimiter>();
     private Lock lock = new ReentrantLock();
 
-    public void addRateLimiter(RateLimiter rateLimiter) {
+    void addRateLimiter(RateLimiter rateLimiter) {
         lock.lock();
         try {
             rateLimiters.add(rateLimiter);
@@ -50,8 +57,8 @@ public class NetConfigNotification {
             logger.error("net rate:{} is illegal", rate);
             return;
         }
-        int downRate = rate > Constants.SYSTEM_NEED_RATE ?
-            rate - Constants.SYSTEM_NEED_RATE : (rate + 1) / 2;
+        int downRate = rate > properties.getSystemNeedRate() ?
+            rate - properties.getSystemNeedRate() : (rate + 1) / 2;
         long rateOnByte = downRate * 1024L * 1024L;
         try {
             boolean updated = false;
