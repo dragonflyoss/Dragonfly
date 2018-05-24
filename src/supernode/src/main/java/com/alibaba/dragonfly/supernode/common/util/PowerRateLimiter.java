@@ -15,12 +15,11 @@
  */
 package com.alibaba.dragonfly.supernode.common.util;
 
+import javax.annotation.PostConstruct;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.annotation.PostConstruct;
-
-import com.alibaba.dragonfly.supernode.common.Constants;
+import com.alibaba.dragonfly.supernode.config.SupernodeProperties;
 
 import com.google.common.util.concurrent.RateLimiter;
 import org.slf4j.Logger;
@@ -30,6 +29,9 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+/**
+ * @author lowzj
+ */
 @Component
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class PowerRateLimiter {
@@ -42,14 +44,16 @@ public class PowerRateLimiter {
     @Autowired
     private MonitorService monitorService;
 
+    @Autowired
+    private SupernodeProperties properties;
+
     private Lock lock = new ReentrantLock(true);
     private RateLimiter rateLimiter;
 
     @PostConstruct
     public void init() {
-        rateLimiter =
-            RateLimiter
-                .create((Constants.DEFAULT_TOTAL_LIMIT - Constants.SYSTEM_NEED_RATE) * 1024L * 1024L);
+        rateLimiter = RateLimiter
+                .create((properties.getTotalLimit() - properties.getSystemNeedRate()) * 1024L * 1024L);
         netConfigNotification.addRateLimiter(rateLimiter);
     }
 
