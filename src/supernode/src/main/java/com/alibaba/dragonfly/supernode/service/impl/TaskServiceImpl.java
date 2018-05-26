@@ -30,7 +30,7 @@ import com.alibaba.dragonfly.supernode.common.util.DigestUtil;
 import com.alibaba.dragonfly.supernode.repository.TaskRepository;
 import com.alibaba.dragonfly.supernode.service.TaskService;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.alibaba.dragonfly.supernode.common.domain.PeerInfo;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
 
 @Repository

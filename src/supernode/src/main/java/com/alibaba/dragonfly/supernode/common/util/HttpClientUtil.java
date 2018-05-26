@@ -38,7 +38,7 @@ import javax.net.ssl.X509TrustManager;
 import com.alibaba.dragonfly.supernode.common.exception.AuthenticationRequiredException;
 import com.alibaba.dragonfly.supernode.common.exception.UrlNotReachableException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

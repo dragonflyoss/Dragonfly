@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.alibaba.dragonfly.supernode.common.enumeration.CdnStatus;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class Task {
 
