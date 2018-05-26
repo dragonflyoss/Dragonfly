@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.alibaba.dragonfly.supernode.common.domain.PeerTask;
 import com.alibaba.dragonfly.supernode.common.enumeration.PeerTaskStatus;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Repository;
 
 @Repository

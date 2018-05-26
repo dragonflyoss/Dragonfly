@@ -20,7 +20,7 @@ import java.util.List;
 import com.alibaba.dragonfly.supernode.common.exception.AssertException;
 import com.alibaba.fastjson.JSON;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 
 public final class Assert {
