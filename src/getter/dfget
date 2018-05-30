@@ -68,7 +68,7 @@ def download(params):
 
         timeout = 5 * 60
         if not paramparser.cmdparam.timeout:
-            if env.file_length > 0:
+            if env.file_length >= 0:
                 timeout = env.file_length / (64 * 1024) + 10.0
         else:
             timeout = paramparser.cmdparam.timeout
