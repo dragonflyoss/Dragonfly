@@ -20,8 +20,8 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	. "github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/global"
-	"github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/util"
+	. "github.com/alibaba/Dragonfly/daemon/global"
+	"github.com/alibaba/Dragonfly/daemon/util"
 )
 
 func Process(w http.ResponseWriter, r *http.Request) {

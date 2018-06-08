@@ -29,10 +29,10 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/constant"
-	. "github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/global"
-	. "github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/muxconf"
-	"github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/util"
+	"github.com/alibaba/Dragonfly/daemon/constant"
+	. "github.com/alibaba/Dragonfly/daemon/global"
+	. "github.com/alibaba/Dragonfly/daemon/muxconf"
+	"github.com/alibaba/Dragonfly/daemon/util"
 )
 
 func init() {
