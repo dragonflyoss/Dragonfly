@@ -12,7 +12,7 @@
 
 <div align="center"><img src="../images/dfget-combine-container.png"/></div>
 
-图中镜像仓库(registry)类似于文件服务器。`dfget proxy`也称为`df-daemon`，它拦截来自`docker pull`和`docker push`的HTTP请求，然后将那些跟镜像分层相关的请求使用`dfget`来处理。
+图中镜像仓库(registry)类似于文件服务器。`dfget proxy`也称为`dfdaemon`，它拦截来自`docker pull`和`docker push`的HTTP请求，然后将那些跟镜像分层相关的请求使用`dfget`来处理。
 
 ## 文件分块是怎么下载的
 

@@ -20,7 +20,7 @@ Parameters are encodeds as `application/x-www-form-urlencoded`.
 *   `port`: integer, the port which client opens.
 *   `callSystem`: string, the caller identifier.
 *   `version`: string, client version.
-*   `dfdaemon`: boolean, tells whether it is a call from df-daemon.
+*   `dfdaemon`: boolean, tells whether it is a call from dfdaemon.
 *   `path`: string, the path which client can serve.
 *   `rawUrl`: string, the resource url provided by command line parameter.
 *   `taskUrl`: string, the resource url.
