@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-
 # Copyright 1999-2018 Alibaba Group.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,23 +12,45 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# color: normal, red, yellow, green
-CN="\033[0;;m"
-CR="\033[1;31;m"
-CY="\033[1;33;m"
-CG="\033[1;32;m"
+# build client
 
-log() {
-    filed=$1
-    msg=$2
-    echo -e "${CY}BUILD(${filed})${CN}: ${msg}"
-}
+BUILD_CMD=./run.sh
 
-info() {
-    log "$1" "${CG}$2${CN}"
-}
+.PHONY: build
+build: pre dfdaemon dfget
 
-error() {
-    log "$1" "${CR}$2${CN}"
-}
+
+.PHONY: pre
+pre:
+	@${BUILD_CMD} pre
+
+
+.PHONY: dfget
+dfget:
+	@${BUILD_CMD} dfget
+
+
+.PHONY: dfdaemon
+dfdaemon:
+	@${BUILD_CMD} dfdaemon
+
+
+.PHONY: package
+package: 
+	@${BUILD_CMD} package
+
+
+.PHONY: install
+install:
+	@${BUILD_CMD} install
+
+
+.PHONY: uninstall
+uninstall:
+	@${BUILD_CMD} uninstall
+
+
+.PHONY: clean
+clean:
+	@${BUILD_CMD} clean
 

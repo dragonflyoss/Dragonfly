@@ -45,7 +45,7 @@ var (
 	//user home
 	G_HomeDir string
 
-	//df-daemon home
+	//dfdaemon home
 	G_DfHome string
 
 	G_UseHttps bool

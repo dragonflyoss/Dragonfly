@@ -14,28 +14,24 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
-	"net/http/pprof"
-	"strings"
 
 	"github.com/Sirupsen/logrus"
 
-	"github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/constant"
+	"github.com/alibaba/Dragonfly/dfdaemon/global"
 )
 
-func DebugInfo(w http.ResponseWriter, req *http.Request) {
-	logrus.Debugf("access:%s", req.URL.String())
+func GetEnv(w http.ResponseWriter, r *http.Request) {
+	logrus.Debugf("access:%s", r.URL.String())
 
-	if strings.HasPrefix(req.URL.Path, "/debug/pprof") {
-		if req.URL.Path == "/debug/pprof/symbol" {
-			pprof.Symbol(w, req)
-		} else {
-			pprof.Index(w, req)
-		}
-	} else if strings.HasPrefix(req.URL.Path, "/debug/version") {
-		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "text/plain;charset=utf-8")
-		w.Write([]byte(constant.VERSION))
-	}
+	env := make(map[string]interface{})
 
+	env["dfPattern"] = global.CopyDfPattern()
+
+	env["home"] = global.G_HomeDir
+
+	env["param"] = global.G_CommandLine
+
+	w.Write([]byte(fmt.Sprintf("%+v", env)))
 }
