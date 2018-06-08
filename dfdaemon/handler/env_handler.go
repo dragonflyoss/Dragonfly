@@ -11,23 +11,27 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package muxconf
+package handler
 
 import (
+	"fmt"
 	"net/http"
 
-	"github.com/alibaba/Dragonfly/daemon/handler"
+	"github.com/Sirupsen/logrus"
+
+	"github.com/alibaba/Dragonfly/dfdaemon/global"
 )
 
-func InitMux() {
-	router := map[string]func(http.ResponseWriter, *http.Request){
-		"/":       handler.Process,
-		"/args":   handler.GetArgs,
-		"/debug/": handler.DebugInfo,
-		"/env":    handler.GetEnv,
-	}
+func GetEnv(w http.ResponseWriter, r *http.Request) {
+	logrus.Debugf("access:%s", r.URL.String())
 
-	for key, value := range router {
-		http.HandleFunc(key, value)
-	}
+	env := make(map[string]interface{})
+
+	env["dfPattern"] = global.CopyDfPattern()
+
+	env["home"] = global.G_HomeDir
+
+	env["param"] = global.G_CommandLine
+
+	w.Write([]byte(fmt.Sprintf("%+v", env)))
 }

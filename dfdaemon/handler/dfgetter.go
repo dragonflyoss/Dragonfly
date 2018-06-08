@@ -24,9 +24,9 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/alibaba/Dragonfly/daemon/constant"
-	"github.com/alibaba/Dragonfly/daemon/exception"
-	. "github.com/alibaba/Dragonfly/daemon/global"
+	"github.com/alibaba/Dragonfly/dfdaemon/constant"
+	"github.com/alibaba/Dragonfly/dfdaemon/exception"
+	. "github.com/alibaba/Dragonfly/dfdaemon/global"
 )
 
 type Downloader interface {
