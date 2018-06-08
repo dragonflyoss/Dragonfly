@@ -149,7 +149,7 @@ func initLogger() {
 }
 
 func initParam() {
-	flag.StringVar(&G_CommandLine.DFRepo, "localrepo", G_HomeDir+".small-dragonfly/dfdaemon/data/", "temp output dir of daemon")
+	flag.StringVar(&G_CommandLine.DFRepo, "localrepo", G_HomeDir+".small-dragonfly/dfdaemon/data/", "temp output dir of dfdaemon")
 
 	var defaultPath string
 	if path, err := exec.LookPath(os.Args[0]); err == nil {
@@ -167,13 +167,13 @@ func initParam() {
 	flag.BoolVar(&G_CommandLine.Version, "v", false, "version")
 	flag.BoolVar(&G_CommandLine.Verbose, "verbose", false, "verbose")
 	flag.BoolVar(&G_CommandLine.Help, "h", false, "help")
-	flag.StringVar(&G_CommandLine.HostIp, "hostIp", "127.0.0.1", "daemon host ip, default: 127.0.0.1")
-	flag.UintVar(&G_CommandLine.Port, "port", 65001, "daemon will listen the port")
-	flag.StringVar(&G_CommandLine.Registry, "registry", "", "registry addr(https://abc.xx.x or http://abc.xx.x) and must exist if df-daemon is used to mirror mode")
+	flag.StringVar(&G_CommandLine.HostIp, "hostIp", "127.0.0.1", "dfdaemon host ip, default: 127.0.0.1")
+	flag.UintVar(&G_CommandLine.Port, "port", 65001, "dfdaemon will listen the port")
+	flag.StringVar(&G_CommandLine.Registry, "registry", "", "registry addr(https://abc.xx.x or http://abc.xx.x) and must exist if dfdaemon is used to mirror mode")
 	flag.StringVar(&G_CommandLine.DownRule, "rule", "", "download the url by P2P if url matches the specified pattern,format:reg1,reg2,reg3")
 	flag.StringVar(&G_CommandLine.CertFile, "certpem", "", "cert.pem file path")
 	flag.StringVar(&G_CommandLine.KeyFile, "keypem", "", "key.pem file path")
-	flag.IntVar(&G_CommandLine.MaxProcs, "maxprocs", 4, "the maximum number of CPUs that the daemon can use")
+	flag.IntVar(&G_CommandLine.MaxProcs, "maxprocs", 4, "the maximum number of CPUs that the dfdaemon can use")
 
 	flag.Parse()
 
