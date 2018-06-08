@@ -19,9 +19,9 @@ printResult() {
     fi
 }
 buildClient() {
-    field="daemon&dfget"
+    field="dfdaemon&dfget"
     echo "====================================================================="
-    info "${field}" "compiling daemon and dfget..."
+    info "${field}" "compiling dfdaemon and dfget..."
     cd ${BUILD_DIR}/client
     test -d ${INSTALL_PREFIX} || mkdir -p ${INSTALL_PREFIX}
     ./configure --prefix=${INSTALL_PREFIX}
@@ -42,5 +42,19 @@ buildSupernode() {
     return ${retCode}
 }
 
-buildSupernode && buildClient
+main() {
+    case "$1" in
+        client)
+            buildClient
+        ;;
+        supernode)
+            buildSupernode
+        ;;
+        *)
+            buildSupernode && buildClient
+        ;;
+    esac
+}
+
+main "$@"
 
