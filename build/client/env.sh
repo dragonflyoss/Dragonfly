@@ -14,23 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# color: normal, red, yellow, green
-CN="\033[0;;m"
-CR="\033[1;31;m"
-CY="\033[1;33;m"
-CG="\033[1;32;m"
+curDir=`cd $(dirname $0) && pwd`
 
-log() {
-    filed=$1
-    msg=$2
-    echo -e "${CY}BUILD(${filed})${CN}: ${msg}"
-}
+DRAGONFLY_HOME=${curDir%/build/client*}
+BUILD_GOPATH=${curDir}/target
+BUILD_SOURCE_HOME=${BUILD_GOPATH}/src/github.com/alibaba/Dragonfly
 
-info() {
-    log "$1" "${CG}$2${CN}"
-}
+INSTALL_HOME=${HOME}/.dragonfly
 
-error() {
-    log "$1" "${CR}$2${CN}"
-}
+CONFIGURED_VARIABLES_FILE=${BUILD_GOPATH}/configured_variables.sh
+
+#
+# source directories
+#
+SOURCE_DIRECTORIES=( \
+    "vendor" \
+    "dfdaemon" \
+    "src" \
+)
 

@@ -20,8 +20,8 @@ import (
 
 	"github.com/Sirupsen/logrus"
 
-	. "github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/global"
-	_ "github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/initializer"
+	. "github.com/alibaba/Dragonfly/dfdaemon/global"
+	_ "github.com/alibaba/Dragonfly/dfdaemon/initializer"
 )
 
 func main() {
@@ -31,9 +31,9 @@ func main() {
 		runtime.GOMAXPROCS(G_CommandLine.MaxProcs)
 	}
 
-	logrus.Infof("start dragonfly daemon param:%+v", G_CommandLine)
+	logrus.Infof("start dfdaemon param:%+v", G_CommandLine)
 
-	fmt.Printf("\nlaunch df-daemon on port:%d\n", G_CommandLine.Port)
+	fmt.Printf("\nlaunch dfdaemon on port:%d\n", G_CommandLine.Port)
 
 	var err error
 

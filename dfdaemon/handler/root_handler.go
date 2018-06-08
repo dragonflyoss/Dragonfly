@@ -20,8 +20,8 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	. "github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/global"
-	"github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/util"
+	. "github.com/alibaba/Dragonfly/dfdaemon/global"
+	"github.com/alibaba/Dragonfly/dfdaemon/util"
 )
 
 func Process(w http.ResponseWriter, r *http.Request) {
@@ -65,7 +65,7 @@ func Process(w http.ResponseWriter, r *http.Request) {
 		// non localhost access should be denied explictly, otherwise we
 		// are falling into a dead loop: a reverse proxy for itself.
 		// TODO: we do not need such check actually, anything that served
-		// by df-daemon should only be accessed by localhost which should
+		// by dfdaemon should only be accessed by localhost which should
 		// be controlled by the listener addr.
 		w.WriteHeader(http.StatusForbidden)
 		return

@@ -11,23 +11,31 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package muxconf
+package handler
 
 import (
 	"net/http"
+	"net/http/pprof"
+	"strings"
 
-	"github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/handler"
+	"github.com/Sirupsen/logrus"
+
+	"github.com/alibaba/Dragonfly/dfdaemon/constant"
 )
 
-func InitMux() {
-	router := map[string]func(http.ResponseWriter, *http.Request){
-		"/":       handler.Process,
-		"/args":   handler.GetArgs,
-		"/debug/": handler.DebugInfo,
-		"/env":    handler.GetEnv,
+func DebugInfo(w http.ResponseWriter, req *http.Request) {
+	logrus.Debugf("access:%s", req.URL.String())
+
+	if strings.HasPrefix(req.URL.Path, "/debug/pprof") {
+		if req.URL.Path == "/debug/pprof/symbol" {
+			pprof.Symbol(w, req)
+		} else {
+			pprof.Index(w, req)
+		}
+	} else if strings.HasPrefix(req.URL.Path, "/debug/version") {
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "text/plain;charset=utf-8")
+		w.Write([]byte(constant.VERSION))
 	}
 
-	for key, value := range router {
-		http.HandleFunc(key, value)
-	}
 }
