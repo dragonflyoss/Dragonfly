@@ -16,7 +16,7 @@ package muxconf
 import (
 	"net/http"
 
-	"github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/handler"
+	"github.com/alibaba/Dragonfly/daemon/handler"
 )
 
 func InitMux() {

@@ -24,8 +24,8 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/pborman/uuid"
 
-	"github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/exception"
-	"github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/global"
+	"github.com/alibaba/Dragonfly/daemon/exception"
+	"github.com/alibaba/Dragonfly/daemon/global"
 )
 
 type DFRoundTripper struct {

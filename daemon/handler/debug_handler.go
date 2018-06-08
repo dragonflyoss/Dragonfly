@@ -20,7 +20,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 
-	"github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/constant"
+	"github.com/alibaba/Dragonfly/daemon/constant"
 )
 
 func DebugInfo(w http.ResponseWriter, req *http.Request) {

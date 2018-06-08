@@ -19,7 +19,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 
-	"github.com/alibaba/Dragonfly/src/daemon/src/df-daemon/global"
+	"github.com/alibaba/Dragonfly/daemon/global"
 )
 
 func GetEnv(w http.ResponseWriter, r *http.Request) {
