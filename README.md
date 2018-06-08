@@ -20,29 +20,28 @@
 
 ## Introduction
 
-Dragonfly is an intelligent P2P based file distribution system. It resolved issues like low-efficiency，low-success rate，waste of network bandwidth you faced in large-scale file distribution scenarios such as application deployment, large-scale cache file distribution, data file distribution, images distribution etc.
-In Alibaba, the system transferred 2 billion times and distributed 3.4PB data every month, it becomes one of the most important infrastructure in Alibaba. The reliability is up to 99.9999%.
+Dragonfly is an intelligent P2P based file distribution system. It resolves issues like low-efficiency, low-success rate and waste of network bandwidth in large-scale file distribution scenarios such as application deployment, large-scale cache file distribution, data file distribution, image distribution etc.
+In Alibaba, the system transfers 2 billion times and distributes 3.4PB data every month, it becomes one of the most important infrastructures in Alibaba. The reliability is up to 99.9999%.
 
 
-DevOps takes a lot of benefits from container technologies . but at the same time, it also bring a lot of challenges: the efficiency of image distribution, especially when you have a lot of applications and require image distribution at the same time. Dragonfly works extremely well with  both Docker and [Pouch](https://github.com/alibaba/pouch), and actually we compatible with any other container technologies without any modifications of container engine.
+DevOps takes a lot of benefits from container technologies, but at the same time, it also brings a lot of challenges: the efficiency of image distribution, especially when you have a lot of applications and require image distribution at the same time. Dragonfly works extremely well with  both Docker and [Pouch](https://github.com/alibaba/pouch), and actually we are compatible with any other container technologies without any modifications of container engine.
 
-It delivers up to 57 times the throughput of native docker and saved up to 99.5% the out bandwidth of registry.
+It delivers up to 57 times the throughput of native docker and saves up to 99.5% the out bandwidth of registry.
 
-Dragonfly makes it simple and cost-effective to set up, operate, and scale your any kind of files/images/data distribution.
+Dragonfly makes it simple and cost-effective to set up, operate, and scale any kind of files/images/data distribution.
 
 ## Features
 *The project is an open source version of the dragonfly and more internal features will be gradually opened*.
 
-- **P2P based file distribution**: Using P2P technology for file transmission, which can make full 
-use of the bandwidth resources of each peer to improve download efficiency.  saved lot of cross-IDC bandwidth, especially costly cross-board bandwidth
+- **P2P based file distribution**: Using P2P technology for file transmission, which can make full use of the bandwidth resources of each peer to improve download efficiency,  saves a lot of cross-IDC bandwidth, especially costly cross-board bandwidth
 - **Non-invasive support all kinds of container technologies**: Dragonfly can seamlessly support various containers for distributing images.
-- **Host level speed limit**: Many download tools(wget/curl) only have rate limit for the current download task,but dragonfly
-still provides rate limit for the entire host.
+- **Host level speed limit**: Many downloading tools(wget/curl) only have rate limit for the current download task,but dragonfly
+also provides rate limit for the entire host.
 - **Passive CDN**: The CDN mechanism can avoid repetitive remote downloads.
 - **Strong consistency**： Dragonfly can guarantee that all downloaded files must be consistent even if users do not provide any check code(MD5).
-- **Disk protection and high efficient IO**: Pre check Disk space, delay synchronization, write file-block in the best order,
+- **Disk protection and high efficient IO**: Precheck Disk space, delay synchronization, write file-block in the best order,
 split net-read / disk-write, and so on.
-- **High performance**: Cluster Manager is completely closed-loop.that is, it does not rely on any DB and distributed cache,
+- **High performance**: Cluster Manager is completely closed-loop, which means, it does not rely on any DB or distributed cache,
 processing requests with extremely high performance. 
 - **Exception auto isolation**: Dragonfly will automatically isolate exception nodes(peer or Cluster Manager) to improve download stability.
 - **No pressure on file source**: Generally, as long as a few Cluster Managers download file from the source.
@@ -64,8 +63,8 @@ processing requests with extremely high performance.
 <img src="docs/images/performance.png"/>
 </div>
 
-For Dragonfly the average time of downloading is around 12 seconds no matter how many clients issued the file downloading.
-and for wget time increased when you have more clients. and by 1200 clients, the file source crash, it can not serve any client.
+For Dragonfly, no matter how many clients issue the file downloading, the average downloading time is always around 12 seconds.
+And for wget, the downloading time keeps increasing when you have more clients, and as the amount of wget clients reaches 1200, the file source will crash, then it can not serve any client.
 
 ## License
 
