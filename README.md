@@ -33,8 +33,7 @@ Dragonfly makes it simple and cost-effective to set up, operate, and scale any 
 ## Features
 *The project is an open source version of the dragonfly and more internal features will be gradually opened*.
 
-- **P2P based file distribution**: Using P2P technology for file transmission, which can make full 
-use of the bandwidth resources of each peer to improve download efficiency,  saves lot of cross-IDC bandwidth, especially costly cross-board bandwidth
+- **P2P based file distribution**: Using P2P technology for file transmission, which can make full use of the bandwidth resources of each peer to improve download efficiency,  saves a lot of cross-IDC bandwidth, especially costly cross-board bandwidth
 - **Non-invasive support all kinds of container technologies**: Dragonfly can seamlessly support various containers for distributing images.
 - **Host level speed limit**: Many downloading tools(wget/curl) only have rate limit for the current download task,but dragonfly
 also provides rate limit for the entire host.
