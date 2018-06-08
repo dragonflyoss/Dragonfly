@@ -31,9 +31,9 @@ func main() {
 		runtime.GOMAXPROCS(G_CommandLine.MaxProcs)
 	}
 
-	logrus.Infof("start dragonfly daemon param:%+v", G_CommandLine)
+	logrus.Infof("start dfdaemon param:%+v", G_CommandLine)
 
-	fmt.Printf("\nlaunch df-daemon on port:%d\n", G_CommandLine.Port)
+	fmt.Printf("\nlaunch dfdaemon on port:%d\n", G_CommandLine.Port)
 
 	var err error
 
