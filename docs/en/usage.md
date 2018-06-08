@@ -40,11 +40,11 @@ address=nodeIp1,nodeIp2,...
 
 - start dfget proxy
 
-> A. you can execute `df-daemon -h` to show help info
+> A. you can execute `dfdaemon -h` to show help info
 
-> B. the simplest way:  `df-daemon --registry https://xxx.xx.x ` or `df-daemon --registry http://xxx.xx.x ` , "xxx.xx.x" is the domain of registry
+> B. the simplest way:  `dfdaemon --registry https://xxx.xx.x ` or `dfdaemon --registry http://xxx.xx.x ` , "xxx.xx.x" is the domain of registry
 
-> C. df-daemon's log info in ~/.small-dragonfly/logs/dfdaemon.log 
+> C. dfdaemon's log info in ~/.small-dragonfly/logs/dfdaemon.log
 
 - configure daemon mirror
 
@@ -70,5 +70,5 @@ address=nodeIp1,nodeIp2,...
 - distributing docker images
 
 > execute `docker pull xxx/xx` as usual to download images.<br/>
-Note: "xxx/xx" is the path of image addr and can not contain registry domain that was configured in df-daemon
-`df-daemon --registry xxxxxx`
+Note: "xxx/xx" is the path of image addr and can not contain registry domain that was configured in dfdaemon
+`dfdaemon --registry xxxxxx`

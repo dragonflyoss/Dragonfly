@@ -14,7 +14,7 @@ The cluster manager is also called supernode, which is responsible for CDN and s
 <img src="../images/dfget-combine-container.png"/>
 </div>
 <br/>
-Registry is similar to the file server above. dfget proxy is also called df-daemon, which intercepts http-requests from docker pull or docker push,and then determines which requests need use dfget to handle.
+Registry is similar to the file server above. dfget proxy is also called dfdaemon, which intercepts http-requests from docker pull or docker push,and then determines which requests need use dfget to handle.
 
 ## How file blocks are downloaded
 

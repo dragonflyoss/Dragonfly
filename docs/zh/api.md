@@ -19,7 +19,7 @@ POST /peer/registry
 * `port`: integer, 客户端开放的端口号，用于P2P下载
 * `callSystem`: string, 调用`dfget`的使用方标识
 * `version`: string, 客户端版本
-* `dfdaemon`: boolean, 是否由`df-daemon`启动`dfget`
+* `dfdaemon`: boolean, 是否由`dfdaemon`启动`dfget`
 * `path`: string, 客户端开放的服务路径
 * `rawUrl`: string, 由命令行参数指定的原始资源url
 * `taskUrl`: string, 资源url
