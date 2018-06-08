@@ -65,7 +65,7 @@ processing requests with extremely high performance.
 </div>
 
 For Dragonfly, no matter how many clients issue the file downloading, the average downloading time is always around 12 seconds.
-And for wget, the downloading time keeps increasing when you have more clients, and as the amount of wget clients reaches 1200, the file source crashes, it can not serve any client ultimatetly.
+And for wget, the downloading time keeps increasing when you have more clients, and as the amount of wget clients reaches 1200, the file source will crash, then it can not serve any client.
 
 ## License
 
