@@ -20,8 +20,8 @@ import (
 
 	"github.com/Sirupsen/logrus"
 
-	. "github.com/alibaba/Dragonfly/daemon/global"
-	_ "github.com/alibaba/Dragonfly/daemon/initializer"
+	. "github.com/alibaba/Dragonfly/dfdaemon/global"
+	_ "github.com/alibaba/Dragonfly/dfdaemon/initializer"
 )
 
 func main() {
