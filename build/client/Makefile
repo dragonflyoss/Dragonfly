@@ -13,6 +13,8 @@
 # limitations under the License.
 
 # build client
+# NOTE: All actions of every rule must be started with tabs(not 4 spaces).
+# Using command 'cat -e -t Makefile' to show the presence of tabs with `^I`.
 
 BUILD_CMD=./run.sh
 
