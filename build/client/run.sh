@@ -27,7 +27,12 @@ cd ${curDir}
 #
 # init configured variables
 #
+test -e ${CONFIGURED_VARIABLES_FILE} || (echo "ERROR: must execute './configure' before '$0'" && exit 2)
 . ${CONFIGURED_VARIABLES_FILE}
+
+#
+# =============================================================================
+#
 
 BIN_DIR=${BUILD_GOPATH}/bin
 PKG_DIR=${BUILD_GOPATH}/package
@@ -84,6 +89,10 @@ uninstall() {
 clean() {
     test -d ${BUILD_GOPATH} && rm -rf ${BUILD_GOPATH}
 }
+
+#
+# =============================================================================
+#
 
 createDir() {
     test -e $1 && rm -rf $1
