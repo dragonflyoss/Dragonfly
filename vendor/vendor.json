@@ -19,5 +19,5 @@
 			"revisionTime": "2017-08-03T09:04:06Z"
 		}
 	],
-	"rootPath": "df-daemon"
+	"rootPath": "github.com/alibaba/Dragonfly"
 }
