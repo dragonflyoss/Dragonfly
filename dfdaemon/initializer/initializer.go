@@ -79,7 +79,7 @@ func cleanLocalRepo() {
 			// get the last access time
 			statT, ok := info.Sys().(*syscall.Stat_t)
 			if !ok {
-				log.Warnf("ingore %s: failed to get last access time", path)
+				log.Warnf("ignore %s: failed to get last access time", path)
 				return nil
 			}
 			// if the last access time is 1 hour ago
