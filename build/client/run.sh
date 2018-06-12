@@ -64,7 +64,7 @@ check() {
             cp ${BUILD_GOPATH}/bin/golint ${BUILD_GOPATH}/)
 
     echo "CHECK: golint, check code style"
-    result=`go list ./... | grep -vE "${exclude}" | xargs golint`
+    result=`go list ./... | grep -vE "${exclude}" | sed 's/^_//' | xargs golint`
     [ ${#result} -gt 0 ] && (echo "${result}" && false)
 
     # go vet check
