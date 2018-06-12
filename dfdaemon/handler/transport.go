@@ -17,7 +17,7 @@ package handler
 import (
 	"crypto/tls"
 	"net"
-	. "net/http"
+	"net/http"
 	"os"
 	"regexp"
 	"time"
@@ -30,12 +30,12 @@ import (
 )
 
 type DFRoundTripper struct {
-	Round  *Transport
-	Round2 RoundTripper
+	Round  *http.Transport
+	Round2 http.RoundTripper
 }
 
 var dfRoundTripper = &DFRoundTripper{
-	Round: &Transport{
+	Round: &http.Transport{
 		DialContext: (&net.Dialer{
 			Timeout:   10 * time.Second,
 			KeepAlive: 30 * time.Second,
@@ -46,14 +46,14 @@ var dfRoundTripper = &DFRoundTripper{
 		ExpectContinueTimeout: 1 * time.Second,
 		TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
 	},
-	Round2: NewFileTransport(Dir("/")),
+	Round2: http.NewFileTransport(http.Dir("/")),
 }
 
 var compiler = regexp.MustCompile("^.+/blobs/sha256.*$")
 
-func needUseGetter(req *Request, location string) bool {
+func needUseGetter(req *http.Request, location string) bool {
 	var useGetter bool
-	if req.Method == MethodGet {
+	if req.Method == http.MethodGet {
 		if compiler.MatchString(req.URL.Path) {
 			return true
 		}
@@ -66,7 +66,7 @@ func needUseGetter(req *Request, location string) bool {
 
 //only process first redirect at present
 //fix resource release
-func (roundTripper *DFRoundTripper) RoundTrip(req *Request) (*Response, error) {
+func (roundTripper *DFRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	urlString := req.URL.String()
 
 	if needUseGetter(req, urlString) {
@@ -81,11 +81,11 @@ func (roundTripper *DFRoundTripper) RoundTrip(req *Request) (*Response, error) {
 
 }
 
-func (roundTripper *DFRoundTripper) download(req *Request, urlString string) (*Response, error) {
+func (roundTripper *DFRoundTripper) download(req *http.Request, urlString string) (*http.Response, error) {
 	//use dfget to download
 	if dstPath, err := DownloadByGetter(urlString, req.Header, uuid.New()); err == nil {
 		defer os.Remove(dstPath)
-		if fileReq, err := NewRequest("GET", "file:///"+dstPath, nil); err == nil {
+		if fileReq, err := http.NewRequest("GET", "file:///"+dstPath, nil); err == nil {
 			response, err := dfRoundTripper.Round2.RoundTrip(fileReq)
 			if err == nil {
 				response.Header.Set("Content-Disposition", "attachment; filename="+dstPath)

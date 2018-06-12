@@ -27,7 +27,7 @@ import (
 
 	"github.com/alibaba/Dragonfly/dfdaemon/constant"
 	"github.com/alibaba/Dragonfly/dfdaemon/exception"
-	. "github.com/alibaba/Dragonfly/dfdaemon/global"
+	"github.com/alibaba/Dragonfly/dfdaemon/global"
 )
 
 type Downloader interface {
@@ -107,7 +107,7 @@ func (dfgetter *DFgetter) parseCommand(url string, header map[string][]string, n
 	args = append(args, "--dfdaemon")
 
 	dstPath = getter.dstDir + name
-	cmdPath = G_CommandLine.DfPath
+	cmdPath = global.G_CommandLine.DfPath
 
 	return
 }
@@ -115,11 +115,11 @@ func (dfgetter *DFgetter) parseCommand(url string, header map[string][]string, n
 func DownloadByGetter(url string, header map[string][]string, name string) (string, error) {
 	log.Infof("start download url:%s to %s in repo", url, name)
 	getter.once.Do(func() {
-		getter.dstDir = G_CommandLine.DFRepo
-		getter.callSystem = G_CommandLine.CallSystem
-		getter.notbs = G_CommandLine.Notbs
-		getter.rateLimit = G_CommandLine.RateLimit
-		getter.urlFilter = G_CommandLine.Urlfilter
+		getter.dstDir = global.G_CommandLine.DFRepo
+		getter.callSystem = global.G_CommandLine.CallSystem
+		getter.notbs = global.G_CommandLine.Notbs
+		getter.rateLimit = global.G_CommandLine.RateLimit
+		getter.urlFilter = global.G_CommandLine.Urlfilter
 	})
 	return getter.Download(url, header, name)
 }
