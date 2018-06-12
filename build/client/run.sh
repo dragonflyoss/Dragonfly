@@ -47,7 +47,7 @@ pre() {
 }
 
 check() {
-    cd ${DRAGONFLY_HOME}
+    cd ${BUILD_SOURCE_HOME}
     exclude="vendor/"
 
     # gofmt
