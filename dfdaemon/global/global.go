@@ -21,6 +21,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
+// CommandParam is a struct that stores all the command line parameters
 type CommandParam struct {
 	DfPath     string
 	DFRepo     string
@@ -43,25 +44,31 @@ type CommandParam struct {
 }
 
 var (
-	//user home
+	// HomeDir is the user home
 	HomeDir string
 
-	//dfdaemon home
+	// DfHome is the dfdaemon home
 	DfHome string
 
+	// UseHttps indicates whether to use HTTPS protocol
 	UseHttps bool
 
+	// CommandLine stores all the command line parameters
 	CommandLine CommandParam
 
+	// RegProto is the protocol(HTTP/HTTPS) of images registry
 	RegProto string
 
+	// RegDomain is the domain of images registry
 	RegDomain string
 
+	// DFPattern is the url patterns. Dfdaemon starts downloading by P2P if the downloading url matches DFPattern.
 	DFPattern = make(map[string]*regexp.Regexp)
 
 	rwMutex sync.RWMutex
 )
 
+// UpdateDFPattern is to update DFPattern from the giving string(CommandParam.DownRule).
 func UpdateDFPattern(reg string) {
 	if reg == "" {
 		return
@@ -75,6 +82,7 @@ func UpdateDFPattern(reg string) {
 	}
 }
 
+// CopyDfPattern is to copy DFPattern's content.
 func CopyDfPattern() []string {
 	rwMutex.RLock()
 	defer rwMutex.RUnlock()
@@ -85,6 +93,7 @@ func CopyDfPattern() []string {
 	return copiedPattern
 }
 
+// MatchDfPattern returns true if location matches DFPattern, otherwise returns false.
 func MatchDfPattern(location string) bool {
 	useGetter := false
 	rwMutex.RLock()

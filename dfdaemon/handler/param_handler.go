@@ -21,6 +21,7 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
+// GetArgs returns all the arguments of command-line except the program name.
 func GetArgs(w http.ResponseWriter, r *http.Request) {
 	logrus.Debugf("access:%s", r.URL.String())
 

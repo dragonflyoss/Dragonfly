@@ -29,6 +29,9 @@ import (
 	"github.com/alibaba/Dragonfly/dfdaemon/global"
 )
 
+// DFRoundTripper implements RoundTripper for dfget.
+// It uses http.fileTransport to serve requests that need to use dfget,
+// and uses http.Transport to serve the other requests.
 type DFRoundTripper struct {
 	Round  *http.Transport
 	Round2 http.RoundTripper
@@ -64,8 +67,8 @@ func needUseGetter(req *http.Request, location string) bool {
 	return useGetter
 }
 
-//only process first redirect at present
-//fix resource release
+// RoundTrip only process first redirect at present
+// fix resource release
 func (roundTripper *DFRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	urlString := req.URL.String()
 
@@ -78,11 +81,10 @@ func (roundTripper *DFRoundTripper) RoundTrip(req *http.Request) (*http.Response
 	req.Header.Set("Host", req.Host)
 	res, err := roundTripper.Round.RoundTrip(req)
 	return res, err
-
 }
 
 func (roundTripper *DFRoundTripper) download(req *http.Request, urlString string) (*http.Response, error) {
-	//use dfget to download
+	// use dfget to download
 	if dstPath, err := DownloadByGetter(urlString, req.Header, uuid.New()); err == nil {
 		defer os.Remove(dstPath)
 		if fileReq, err := http.NewRequest("GET", "file:///"+dstPath, nil); err == nil {

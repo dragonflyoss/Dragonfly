@@ -25,6 +25,7 @@ import (
 	"github.com/alibaba/Dragonfly/dfdaemon/util"
 )
 
+// Process makes the dfdaemon as a reverse proxy to download image layers by dragonfly
 func Process(w http.ResponseWriter, r *http.Request) {
 
 	if r.URL.Host == "" {
@@ -63,7 +64,7 @@ func Process(w http.ResponseWriter, r *http.Request) {
 			log.Warnf("registry not config but url host is %s", hostIp)
 		}
 	default:
-		// non localhost access should be denied explictly, otherwise we
+		// non localhost access should be denied explicitly, otherwise we
 		// are falling into a dead loop: a reverse proxy for itself.
 		// TODO: we do not need such check actually, anything that served
 		// by dfdaemon should only be accessed by localhost which should
