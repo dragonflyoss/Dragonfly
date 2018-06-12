@@ -63,7 +63,7 @@ check() {
 
     echo "CHECK: golint, check code style"
     result=`go list ./... | grep -vE "${exclude}" | xargs golint`
-    ${#result} -gt 0 ] && (echo "${result}" && false)
+    [ ${#result} -gt 0 ] && (echo "${result}" && false)
 
     # go vet check
     echo "CHECK: go vet, check code syntax"
