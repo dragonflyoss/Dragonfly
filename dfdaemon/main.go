@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package main
 
 import (
@@ -20,27 +21,28 @@ import (
 
 	"github.com/Sirupsen/logrus"
 
-	. "github.com/alibaba/Dragonfly/dfdaemon/global"
+	"github.com/alibaba/Dragonfly/dfdaemon/global"
 	_ "github.com/alibaba/Dragonfly/dfdaemon/initializer"
 )
 
 func main() {
 
-	// if G_CommandLine.MaxProcs <= 0, programs run with GOMAXPROCS set to the number of cores available
-	if G_CommandLine.MaxProcs > 0 {
-		runtime.GOMAXPROCS(G_CommandLine.MaxProcs)
+	// if CommandLine.MaxProcs <= 0, programs run with GOMAXPROCS set to the number of cores available
+	if global.CommandLine.MaxProcs > 0 {
+		runtime.GOMAXPROCS(global.CommandLine.MaxProcs)
 	}
 
-	logrus.Infof("start dfdaemon param:%+v", G_CommandLine)
+	logrus.Infof("start dfdaemon param:%+v", global.CommandLine)
 
-	fmt.Printf("\nlaunch dfdaemon on port:%d\n", G_CommandLine.Port)
+	fmt.Printf("\nlaunch dfdaemon on port:%d\n", global.CommandLine.Port)
 
 	var err error
 
-	if G_UseHttps {
-		err = http.ListenAndServeTLS(fmt.Sprintf(":%d", G_CommandLine.Port), G_CommandLine.CertFile, G_CommandLine.KeyFile, nil)
+	if global.UseHTTPS {
+		err = http.ListenAndServeTLS(fmt.Sprintf(":%d", global.CommandLine.Port),
+			global.CommandLine.CertFile, global.CommandLine.KeyFile, nil)
 	} else {
-		err = http.ListenAndServe(fmt.Sprintf(":%d", G_CommandLine.Port), nil)
+		err = http.ListenAndServe(fmt.Sprintf(":%d", global.CommandLine.Port), nil)
 
 	}
 

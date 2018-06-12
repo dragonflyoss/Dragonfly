@@ -11,15 +11,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package util
 
 import (
 	"strings"
 )
 
+// ExtractHost extracts host ip from the giving string.
 func ExtractHost(hostAndPort string) string {
 	fields := strings.Split(strings.TrimSpace(hostAndPort), ":")
 	return fields[0]
 }
-
-

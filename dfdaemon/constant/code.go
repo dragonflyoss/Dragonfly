@@ -11,16 +11,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package constant
 
 var (
-	CODE_EXIT_USER_HOME_NOT_EXIST = 15
-	CODE_EXIT_PATH_NOT_ABS = 16
-	CODE_EXIT_RATE_LIMIT_INVALID = 17
-	CODE_EXIT_PORT_INVALID = 18
-	CODE_EXIT_DFGET_NOT_FOUND = 19
-	CODE_EXIT_REPO_CREATE_FAIL = 20
-	CODE_EXIT_DFGET_FAIL = 21
+	// CodeExitUserHomeNotExist represents that the user home directory is not exist.
+	CodeExitUserHomeNotExist = 15
+	// CodeExitPathNotAbs represents that the repo directory parsed from command-line is not absolute path.
+	CodeExitPathNotAbs = 16
+	// CodeExitRateLimitInvalid represents that the rate limit is invalid.
+	CodeExitRateLimitInvalid = 17
+	// CodeExitPortInvalid represents that the port is invalid.
+	CodeExitPortInvalid = 18
+	// CodeExitDfgetNotFound represents that the dfget cannot be found.
+	CodeExitDfgetNotFound = 19
+	// CodeExitRepoCreateFail represents that the repo directory is created failed.
+	CodeExitRepoCreateFail = 20
+	// CodeExitDfgetFail represents that executing dfget failed.
+	CodeExitDfgetFail = 21
 
-	CODE_REQ_AUTH = 22
+	// CodeReqAuth represents that an authentication failure happens when executing dfget.
+	CodeReqAuth = 22
 )

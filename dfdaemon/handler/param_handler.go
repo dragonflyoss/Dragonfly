@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package handler
 
 import (
@@ -20,6 +21,7 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
+// GetArgs returns all the arguments of command-line except the program name.
 func GetArgs(w http.ResponseWriter, r *http.Request) {
 	logrus.Debugf("access:%s", r.URL.String())
 

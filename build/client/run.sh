@@ -32,7 +32,9 @@ test -e ${CONFIGURED_VARIABLES_FILE} || (echo "ERROR: must execute './configure'
 
 #
 # =============================================================================
-#
+# scripts' variables
+
+export GOPATH=${BUILD_GOPATH}:${GOPATH}
 
 BIN_DIR=${BUILD_GOPATH}/bin
 PKG_DIR=${BUILD_GOPATH}/package
@@ -41,15 +43,44 @@ DFDAEMON_BINARY_NAME=dfdaemon
 
 PKG_NAME=df-client
 
+#
+# =============================================================================
+# build commands
+
 pre() {
     echo "PRE: clean and create ${BIN_DIR}"
     createDir ${BIN_DIR}
 }
 
+check() {
+    cd ${BUILD_SOURCE_HOME}
+    exclude="vendor/"
+
+    # gofmt
+    echo "CHECK: gofmt, check code formats"
+    result=`find . -name '*.go' | grep -vE "${exclude}" | xargs gofmt -s -l 2>/dev/null`
+    [ ${#result} -gt 0 ] && (echo "${result}" \
+        && echo "CHECK: please format Go code with 'gofmt -s -w .'" && false)
+
+    # golint
+    which golint > /dev/null || export PATH=${BUILD_GOPATH}:$PATH
+    which golint > /dev/null || (echo "CHECK: install golint" \
+        && go get -u golang.org/x/lint/golint; \
+            cp ${BUILD_GOPATH}/bin/golint ${BUILD_GOPATH}/)
+
+    echo "CHECK: golint, check code style"
+    result=`go list ./... | grep -vE "${exclude}" | sed 's/^_//' | xargs golint`
+    [ ${#result} -gt 0 ] && (echo "${result}" && false)
+
+    # go vet check
+    echo "CHECK: go vet, check code syntax"
+    packages=`go list ./... | grep -vE "${exclude}" | sed 's/^_//'`
+    go vet ${packages} 2>&1
+}
+
 dfdaemon() {
     echo "BUILD: dfdaemon"
     test -f ${BIN_DIR}/${DFDAEMON_BINARY_NAME} && rm -f ${BIN_DIR}/${DFDAEMON_BINARY_NAME}
-    export GOPATH=${BUILD_GOPATH}
     cd ${BUILD_SOURCE_HOME}/dfdaemon
     go build -o ${BIN_DIR}/${DFDAEMON_BINARY_NAME}
     chmod a+x ${BIN_DIR}/${DFDAEMON_BINARY_NAME}
@@ -87,6 +118,7 @@ uninstall() {
 }
 
 clean() {
+    echo "delete ${BUILD_GOPATH}"
     test -d ${BUILD_GOPATH} && rm -rf ${BUILD_GOPATH}
 }
 
@@ -99,14 +131,15 @@ createDir() {
     mkdir -p $1
 }
 
+COMMANDS="pre|check|dfdaemon|dfget|package|install|uninstall|clean"
 usage() {
-    echo "Usage: $0 [pre|daemon|dfget|package|install|uninstall]"
+    echo "Usage: $0 [${COMMANDS}]"
     exit 1
 }
 
 
 main() {
-    cmd="pre dfdaemon dfget package install uninstall clean"
+    cmd="${COMMANDS}"
     action=`echo ${cmd} | grep -w "$1"`
     test -z $1 && usage
     $1

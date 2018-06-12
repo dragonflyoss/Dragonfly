@@ -11,8 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package exception
 
+// AuthError is an interface that represents an error caused by an authentication failure.
 type AuthError struct {
 }
 
@@ -20,6 +22,7 @@ func (authError *AuthError) Error() string {
 	return "NOT AUTH"
 }
 
+// IsNotAuth is to judge whether an error is AuthError
 func IsNotAuth(err error) bool {
 	if _, ok := err.(*AuthError); ok {
 		return true
