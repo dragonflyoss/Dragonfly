@@ -65,7 +65,7 @@ main() {
             buildSupernode
         ;;
         *)
-            buildSupernode && buildClient
+            buildClient && buildSupernode
         ;;
     esac
 }
