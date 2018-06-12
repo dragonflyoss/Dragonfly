@@ -107,7 +107,7 @@ func (dfgetter *DFgetter) parseCommand(url string, header map[string][]string, n
 	args = append(args, "--dfdaemon")
 
 	dstPath = getter.dstDir + name
-	cmdPath = global.G_CommandLine.DfPath
+	cmdPath = global.CommandLine.DfPath
 
 	return
 }
@@ -115,11 +115,11 @@ func (dfgetter *DFgetter) parseCommand(url string, header map[string][]string, n
 func DownloadByGetter(url string, header map[string][]string, name string) (string, error) {
 	log.Infof("start download url:%s to %s in repo", url, name)
 	getter.once.Do(func() {
-		getter.dstDir = global.G_CommandLine.DFRepo
-		getter.callSystem = global.G_CommandLine.CallSystem
-		getter.notbs = global.G_CommandLine.Notbs
-		getter.rateLimit = global.G_CommandLine.RateLimit
-		getter.urlFilter = global.G_CommandLine.Urlfilter
+		getter.dstDir = global.CommandLine.DFRepo
+		getter.callSystem = global.CommandLine.CallSystem
+		getter.notbs = global.CommandLine.Notbs
+		getter.rateLimit = global.CommandLine.RateLimit
+		getter.urlFilter = global.CommandLine.Urlfilter
 	})
 	return getter.Download(url, header, name)
 }

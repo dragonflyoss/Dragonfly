@@ -44,20 +44,20 @@ type CommandParam struct {
 
 var (
 	//user home
-	G_HomeDir string
+	HomeDir string
 
 	//dfdaemon home
-	G_DfHome string
+	DfHome string
 
-	G_UseHttps bool
+	UseHttps bool
 
-	G_CommandLine CommandParam
+	CommandLine CommandParam
 
-	G_RegProto string
+	RegProto string
 
-	G_RegDomain string
+	RegDomain string
 
-	G_DFPattern = make(map[string]*regexp.Regexp)
+	DFPattern = make(map[string]*regexp.Regexp)
 
 	rwMutex sync.RWMutex
 )
@@ -69,7 +69,7 @@ func UpdateDFPattern(reg string) {
 	rwMutex.Lock()
 	defer rwMutex.Unlock()
 	if compiledReg, err := regexp.Compile(reg); err == nil {
-		G_DFPattern[reg] = compiledReg
+		DFPattern[reg] = compiledReg
 	} else {
 		log.Warnf("pattern:%s is invalid", reg)
 	}
@@ -78,8 +78,8 @@ func UpdateDFPattern(reg string) {
 func CopyDfPattern() []string {
 	rwMutex.RLock()
 	defer rwMutex.RUnlock()
-	copiedPattern := make([]string, 0, len(G_DFPattern))
-	for _, value := range G_DFPattern {
+	copiedPattern := make([]string, 0, len(DFPattern))
+	for _, value := range DFPattern {
 		copiedPattern = append(copiedPattern, value.String())
 	}
 	return copiedPattern
@@ -89,7 +89,7 @@ func MatchDfPattern(location string) bool {
 	useGetter := false
 	rwMutex.RLock()
 	defer rwMutex.RUnlock()
-	for key, regex := range G_DFPattern {
+	for key, regex := range DFPattern {
 		if regex.MatchString(location) {
 			useGetter = true
 			break
