@@ -15,7 +15,6 @@
 package handler
 
 import (
-	"errors"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -65,14 +64,13 @@ func (dfGetter *DFGetter) Download(url string, header map[string][]string, name 
 	if cmd.ProcessState.Success() {
 		log.Infof("dfget url:%s [SUCCESS] cost:%ds", url, time.Now().Unix()-startTime)
 		return dstPath, nil
-	} else {
-		if value, ok := cmd.ProcessState.Sys().(syscall.WaitStatus); ok {
-			if value.ExitStatus() == constant.CodeReqAuth {
-				return "", &exception.AuthError{}
-			}
-		}
-		return "", errors.New(fmt.Sprintf("dfget fail(%s):%v", cmd.ProcessState.String(), err))
 	}
+	if value, ok := cmd.ProcessState.Sys().(syscall.WaitStatus); ok {
+		if value.ExitStatus() == constant.CodeReqAuth {
+			return "", &exception.AuthError{}
+		}
+	}
+	return "", fmt.Errorf("dfget fail(%s):%v", cmd.ProcessState.String(), err)
 }
 
 func (dfGetter *DFGetter) parseCommand(url string, header map[string][]string, name string) (
@@ -124,7 +122,7 @@ func DownloadByGetter(url string, header map[string][]string, name string) (stri
 		getter.callSystem = global.CommandLine.CallSystem
 		getter.notbs = global.CommandLine.Notbs
 		getter.rateLimit = global.CommandLine.RateLimit
-		getter.urlFilter = global.CommandLine.Urlfilter
+		getter.urlFilter = global.CommandLine.URLFilter
 	})
 	return getter.Download(url, header, name)
 }

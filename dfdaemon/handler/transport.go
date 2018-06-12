@@ -83,9 +83,10 @@ func (roundTripper *DFRoundTripper) RoundTrip(req *http.Request) (*http.Response
 	return res, err
 }
 
+// download uses dfget to download
 func (roundTripper *DFRoundTripper) download(req *http.Request, urlString string) (*http.Response, error) {
-	// use dfget to download
-	if dstPath, err := DownloadByGetter(urlString, req.Header, uuid.New()); err == nil {
+	dstPath, err := DownloadByGetter(urlString, req.Header, uuid.New())
+	if err == nil {
 		defer os.Remove(dstPath)
 		if fileReq, err := http.NewRequest("GET", "file:///"+dstPath, nil); err == nil {
 			response, err := dfRoundTripper.Round2.RoundTrip(fileReq)
@@ -95,11 +96,9 @@ func (roundTripper *DFRoundTripper) download(req *http.Request, urlString string
 				logrus.Errorf("read response from file:%s error:%v", dstPath, err)
 			}
 			return response, err
-		} else {
-			return nil, err
 		}
-	} else {
-		logrus.Errorf("download fail:%v", err)
 		return nil, err
 	}
+	logrus.Errorf("download fail:%v", err)
+	return nil, err
 }
