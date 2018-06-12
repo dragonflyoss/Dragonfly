@@ -15,13 +15,21 @@
 package constant
 
 var (
+	// CodeExitUserHomeNotExist represents that the user home directory is not exist.
 	CodeExitUserHomeNotExist = 15
-	CodeExitPathNotAbs       = 16
+	// CodeExitPathNotAbs represents that the repo directory parsed from command-line is not absolute path.
+	CodeExitPathNotAbs = 16
+	// CodeExitRateLimitInvalid represents that the rate limit is invalid.
 	CodeExitRateLimitInvalid = 17
-	CodeExitPortInvalid      = 18
-	CodeExitDfgetNotFound    = 19
-	CodeExitRepoCreateFail   = 20
-	CodeExitDfgetFail        = 21
+	// CodeExitPortInvalid represents that the port is invalid.
+	CodeExitPortInvalid = 18
+	// CodeExitDfgetNotFound represents that the dfget cannot be found.
+	CodeExitDfgetNotFound = 19
+	// CodeExitRepoCreateFail represents that the repo directory is created failed.
+	CodeExitRepoCreateFail = 20
+	// CodeExitDfgetFail represents that executing dfget failed.
+	CodeExitDfgetFail = 21
 
+	// CodeReqAuth represents that an authentication failure happens when executing dfget.
 	CodeReqAuth = 22
 )

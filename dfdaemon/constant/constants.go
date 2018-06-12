@@ -15,5 +15,6 @@
 package constant
 
 var (
+	// VERSION is the version of dfdaemon
 	VERSION = "0.2.0"
 )

@@ -23,6 +23,7 @@ import (
 	"github.com/alibaba/Dragonfly/dfdaemon/global"
 )
 
+// GetEnv returns the environments of dfdaemon
 func GetEnv(w http.ResponseWriter, r *http.Request) {
 	logrus.Debugf("access:%s", r.URL.String())
 

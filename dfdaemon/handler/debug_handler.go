@@ -24,6 +24,7 @@ import (
 	"github.com/alibaba/Dragonfly/dfdaemon/constant"
 )
 
+// DebugInfo responds the inner http server running information.
 func DebugInfo(w http.ResponseWriter, req *http.Request) {
 	logrus.Debugf("access:%s", req.URL.String())
 

@@ -27,7 +27,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
-//ParseInterfaceLimit parse speed of interface that it has prefix of eth
+// NetLimit parse speed of interface that it has prefix of eth
 func NetLimit() string {
 	defer func() {
 		if err := recover(); err != nil {

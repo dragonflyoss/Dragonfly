@@ -38,7 +38,7 @@ import (
 
 func init() {
 
-	//init part log config
+	// init part log config
 	initLogger()
 
 	log.Info("init...")
@@ -46,10 +46,10 @@ func init() {
 	// init command line param
 	initParam()
 
-	//http handler mapper
+	// http handler mapper
 	mux.InitMux()
 
-	//clean local data dir
+	// clean local data dir
 	go cleanLocalRepo()
 
 	log.Info("init finish")

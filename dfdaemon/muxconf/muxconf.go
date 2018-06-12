@@ -20,6 +20,7 @@ import (
 	"github.com/alibaba/Dragonfly/dfdaemon/handler"
 )
 
+// InitMux initialize web router of dfdaemon
 func InitMux() {
 	router := map[string]func(http.ResponseWriter, *http.Request){
 		"/":       handler.Process,
