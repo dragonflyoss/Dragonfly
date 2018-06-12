@@ -27,14 +27,14 @@ type CommandParam struct {
 	DFRepo     string
 	RateLimit  string
 	CallSystem string
-	Urlfilter  string
+	URLFilter  string
 	Notbs      bool
 	MaxProcs   int
 
 	Version  bool
 	Verbose  bool
 	Help     bool
-	HostIp   string
+	HostIP   string
 	Port     uint
 	Registry string //https://xxx.xx.x:port or http://xxx.xx.x:port
 	DownRule string
@@ -50,8 +50,8 @@ var (
 	// DfHome is the dfdaemon home
 	DfHome string
 
-	// UseHttps indicates whether to use HTTPS protocol
-	UseHttps bool
+	// UseHTTPS indicates whether to use HTTPS protocol
+	UseHTTPS bool
 
 	// CommandLine stores all the command line parameters
 	CommandLine CommandParam

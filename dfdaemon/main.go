@@ -38,7 +38,7 @@ func main() {
 
 	var err error
 
-	if global.UseHttps {
+	if global.UseHTTPS {
 		err = http.ListenAndServeTLS(fmt.Sprintf(":%d", global.CommandLine.Port),
 			global.CommandLine.CertFile, global.CommandLine.KeyFile, nil)
 	} else {

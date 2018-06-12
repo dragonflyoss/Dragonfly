@@ -40,7 +40,7 @@ func Process(w http.ResponseWriter, r *http.Request) {
 	r.Host = r.URL.Host
 	r.Header.Set("Host", r.Host)
 	if r.URL.Scheme == "" {
-		if global.UseHttps {
+		if global.UseHTTPS {
 			r.URL.Scheme = "https"
 		} else {
 			r.URL.Scheme = "http"
@@ -49,19 +49,19 @@ func Process(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Debugf("pre access:%s", r.URL.String())
 
-	targetUrl := new(url.URL)
-	*targetUrl = *r.URL
-	targetUrl.Path = ""
-	targetUrl.RawQuery = ""
+	targetURL := new(url.URL)
+	*targetURL = *r.URL
+	targetURL.Path = ""
+	targetURL.RawQuery = ""
 
-	hostIp := util.ExtractHost(r.URL.Host)
-	switch hostIp {
-	case "127.0.0.1", "localhost", global.CommandLine.HostIp:
+	hostIP := util.ExtractHost(r.URL.Host)
+	switch hostIP {
+	case "127.0.0.1", "localhost", global.CommandLine.HostIP:
 		if len(global.CommandLine.Registry) > 0 {
-			targetUrl.Host = global.RegDomain
-			targetUrl.Scheme = global.RegProto
+			targetURL.Host = global.RegDomain
+			targetURL.Scheme = global.RegProto
 		} else {
-			log.Warnf("registry not config but url host is %s", hostIp)
+			log.Warnf("registry not config but url host is %s", hostIP)
 		}
 	default:
 		// non localhost access should be denied explicitly, otherwise we
@@ -73,10 +73,10 @@ func Process(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Debugf("post access:%s", targetUrl.String())
+	log.Debugf("post access:%s", targetURL.String())
 
 	// TODO: do we really need to construct this every time?
-	reverseProxy := httputil.NewSingleHostReverseProxy(targetUrl)
+	reverseProxy := httputil.NewSingleHostReverseProxy(targetURL)
 
 	reverseProxy.Transport = dfRoundTripper
 

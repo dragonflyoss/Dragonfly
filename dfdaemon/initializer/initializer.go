@@ -163,12 +163,12 @@ func initParam() {
 	flag.StringVar(&g.CommandLine.DfPath, "dfpath", defaultPath, "dfget path")
 	flag.StringVar(&g.CommandLine.RateLimit, "ratelimit", "", "net speed limit,format:xxxM/K")
 	flag.StringVar(&g.CommandLine.CallSystem, "callsystem", "com_ops_dragonfly", "caller name")
-	flag.StringVar(&g.CommandLine.Urlfilter, "urlfilter", "Signature&Expires&OSSAccessKeyId", "filter specified url fields")
+	flag.StringVar(&g.CommandLine.URLFilter, "urlfilter", "Signature&Expires&OSSAccessKeyId", "filter specified url fields")
 	flag.BoolVar(&g.CommandLine.Notbs, "notbs", true, "not try back source to download if throw exception")
 	flag.BoolVar(&g.CommandLine.Version, "v", false, "version")
 	flag.BoolVar(&g.CommandLine.Verbose, "verbose", false, "verbose")
 	flag.BoolVar(&g.CommandLine.Help, "h", false, "help")
-	flag.StringVar(&g.CommandLine.HostIp, "hostIp", "127.0.0.1", "dfdaemon host ip, default: 127.0.0.1")
+	flag.StringVar(&g.CommandLine.HostIP, "hostIp", "127.0.0.1", "dfdaemon host ip, default: 127.0.0.1")
 	flag.UintVar(&g.CommandLine.Port, "port", 65001, "dfdaemon will listen the port")
 	flag.StringVar(&g.CommandLine.Registry, "registry", "", "registry addr(https://abc.xx.x or http://abc.xx.x) and must exist if dfdaemon is used to mirror mode")
 	flag.StringVar(&g.CommandLine.DownRule, "rule", "", "download the url by P2P if url matches the specified pattern,format:reg1,reg2,reg3")
@@ -234,7 +234,7 @@ func initParam() {
 	}
 
 	if g.CommandLine.CertFile != "" && g.CommandLine.KeyFile != "" {
-		g.UseHttps = true
+		g.UseHTTPS = true
 	}
 
 	if g.CommandLine.Registry != "" {
