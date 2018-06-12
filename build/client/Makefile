@@ -19,13 +19,16 @@
 BUILD_CMD=./run.sh
 
 .PHONY: build
-build: pre dfdaemon dfget
+build: pre check dfdaemon dfget
 
 
 .PHONY: pre
 pre:
 	@${BUILD_CMD} pre
 
+.PHONY: check
+check:
+	@${BUILD_CMD} check
 
 .PHONY: dfget
 dfget:

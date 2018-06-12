@@ -46,6 +46,31 @@ pre() {
     createDir ${BIN_DIR}
 }
 
+check() {
+    cd ${DRAGONFLY_HOME}
+    exclude="target/|vendor/"
+
+    # gofmt
+    echo "CHECK: gofmt, check code formats"
+    result=`find . -name '*.go' | grep -vE "${exclude}" | xargs gofmt -s -l 2>/dev/null`
+    [ ${#result} -gt 0 ] && (echo "${result}" && echo "CHECK: please format Go code with 'gofmt -s -w .'" && false)
+
+    # golint
+    which golint > /dev/null || (echo "CHECK: install golint" \
+        && export GOPATH=${BUILD_GOPATH} \
+        && go get -u golang.org/x/lint/golint \
+        && export PATH=${BUILD_GOPATH}/bin:${PATH})
+
+    echo "CHECK: golint, check code style"
+    result=`go list ./... | grep -vE "${exclude}" | xargs golint`
+    ${#result} -gt 0 ] && (echo "${result}" && false)
+
+    # go vet check
+    echo "CHECK: go vet, check code syntax"
+    packages=`go list ./... | grep -vE "${exclude}" | sed 's/^_//'`
+    go vet ${packages} 2>&1
+}
+
 dfdaemon() {
     echo "BUILD: dfdaemon"
     test -f ${BIN_DIR}/${DFDAEMON_BINARY_NAME} && rm -f ${BIN_DIR}/${DFDAEMON_BINARY_NAME}
@@ -87,6 +112,7 @@ uninstall() {
 }
 
 clean() {
+    echo "delete ${BUILD_GOPATH}"
     test -d ${BUILD_GOPATH} && rm -rf ${BUILD_GOPATH}
 }
 
@@ -99,14 +125,15 @@ createDir() {
     mkdir -p $1
 }
 
+COMMANDS="pre|check|dfdaemon|dfget|package|install|uninstall|clean"
 usage() {
-    echo "Usage: $0 [pre|daemon|dfget|package|install|uninstall]"
+    echo "Usage: $0 [${COMMANDS}]"
     exit 1
 }
 
 
 main() {
-    cmd="pre dfdaemon dfget package install uninstall clean"
+    cmd="${COMMANDS}"
     action=`echo ${cmd} | grep -w "$1"`
     test -z $1 && usage
     $1
