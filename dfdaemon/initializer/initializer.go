@@ -68,7 +68,7 @@ func cleanLocalRepo() {
 	for {
 		time.Sleep(time.Minute * 2)
 		log.Info("scan repo and clean expired files")
-		filepath.Walk(g.G_CommandLine.DFRepo, func(path string, info os.FileInfo, err error) error {
+		filepath.Walk(g.CommandLine.DFRepo, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				log.Warnf("walk file:%s error:%v", path, err)
 				return nil
@@ -127,17 +127,17 @@ func rotateLog(logFile *os.File, logFilePath string) {
 
 func initLogger() {
 	if current, err := user.Current(); err == nil {
-		g.G_HomeDir = strings.TrimSpace(current.HomeDir)
+		g.HomeDir = strings.TrimSpace(current.HomeDir)
 	}
-	if g.G_HomeDir != "" {
-		if !strings.HasSuffix(g.G_HomeDir, "/") {
-			g.G_HomeDir += "/"
+	if g.HomeDir != "" {
+		if !strings.HasSuffix(g.HomeDir, "/") {
+			g.HomeDir += "/"
 		}
 	} else {
 		os.Exit(constant.CodeExitUserHomeNotExist)
 	}
 
-	logFilePath := g.G_HomeDir + ".small-dragonfly/logs/dfdaemon.log"
+	logFilePath := g.HomeDir + ".small-dragonfly/logs/dfdaemon.log"
 	log.SetFormatter(&log.TextFormatter{TimestampFormat: "2006-01-02 15:04:00", DisableColors: true})
 	if os.MkdirAll(filepath.Dir(logFilePath), 0755) == nil {
 		if logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_RDWR, 0644); err == nil {
@@ -150,80 +150,80 @@ func initLogger() {
 }
 
 func initParam() {
-	flag.StringVar(&g.G_CommandLine.DFRepo, "localrepo", g.G_HomeDir+".small-dragonfly/dfdaemon/data/", "temp output dir of dfdaemon")
+	flag.StringVar(&g.CommandLine.DFRepo, "localrepo", g.HomeDir+".small-dragonfly/dfdaemon/data/", "temp output dir of dfdaemon")
 
 	var defaultPath string
 	if path, err := exec.LookPath(os.Args[0]); err == nil {
 		if absPath, err := filepath.Abs(path); err == nil {
-			g.G_DfHome = filepath.Dir(absPath)
-			defaultPath = g.G_DfHome + "/dfget"
+			g.DfHome = filepath.Dir(absPath)
+			defaultPath = g.DfHome + "/dfget"
 		}
 
 	}
-	flag.StringVar(&g.G_CommandLine.DfPath, "dfpath", defaultPath, "dfget path")
-	flag.StringVar(&g.G_CommandLine.RateLimit, "ratelimit", "", "net speed limit,format:xxxM/K")
-	flag.StringVar(&g.G_CommandLine.CallSystem, "callsystem", "com_ops_dragonfly", "caller name")
-	flag.StringVar(&g.G_CommandLine.Urlfilter, "urlfilter", "Signature&Expires&OSSAccessKeyId", "filter specified url fields")
-	flag.BoolVar(&g.G_CommandLine.Notbs, "notbs", true, "not try back source to download if throw exception")
-	flag.BoolVar(&g.G_CommandLine.Version, "v", false, "version")
-	flag.BoolVar(&g.G_CommandLine.Verbose, "verbose", false, "verbose")
-	flag.BoolVar(&g.G_CommandLine.Help, "h", false, "help")
-	flag.StringVar(&g.G_CommandLine.HostIp, "hostIp", "127.0.0.1", "dfdaemon host ip, default: 127.0.0.1")
-	flag.UintVar(&g.G_CommandLine.Port, "port", 65001, "dfdaemon will listen the port")
-	flag.StringVar(&g.G_CommandLine.Registry, "registry", "", "registry addr(https://abc.xx.x or http://abc.xx.x) and must exist if dfdaemon is used to mirror mode")
-	flag.StringVar(&g.G_CommandLine.DownRule, "rule", "", "download the url by P2P if url matches the specified pattern,format:reg1,reg2,reg3")
-	flag.StringVar(&g.G_CommandLine.CertFile, "certpem", "", "cert.pem file path")
-	flag.StringVar(&g.G_CommandLine.KeyFile, "keypem", "", "key.pem file path")
-	flag.IntVar(&g.G_CommandLine.MaxProcs, "maxprocs", 4, "the maximum number of CPUs that the dfdaemon can use")
+	flag.StringVar(&g.CommandLine.DfPath, "dfpath", defaultPath, "dfget path")
+	flag.StringVar(&g.CommandLine.RateLimit, "ratelimit", "", "net speed limit,format:xxxM/K")
+	flag.StringVar(&g.CommandLine.CallSystem, "callsystem", "com_ops_dragonfly", "caller name")
+	flag.StringVar(&g.CommandLine.Urlfilter, "urlfilter", "Signature&Expires&OSSAccessKeyId", "filter specified url fields")
+	flag.BoolVar(&g.CommandLine.Notbs, "notbs", true, "not try back source to download if throw exception")
+	flag.BoolVar(&g.CommandLine.Version, "v", false, "version")
+	flag.BoolVar(&g.CommandLine.Verbose, "verbose", false, "verbose")
+	flag.BoolVar(&g.CommandLine.Help, "h", false, "help")
+	flag.StringVar(&g.CommandLine.HostIp, "hostIp", "127.0.0.1", "dfdaemon host ip, default: 127.0.0.1")
+	flag.UintVar(&g.CommandLine.Port, "port", 65001, "dfdaemon will listen the port")
+	flag.StringVar(&g.CommandLine.Registry, "registry", "", "registry addr(https://abc.xx.x or http://abc.xx.x) and must exist if dfdaemon is used to mirror mode")
+	flag.StringVar(&g.CommandLine.DownRule, "rule", "", "download the url by P2P if url matches the specified pattern,format:reg1,reg2,reg3")
+	flag.StringVar(&g.CommandLine.CertFile, "certpem", "", "cert.pem file path")
+	flag.StringVar(&g.CommandLine.KeyFile, "keypem", "", "key.pem file path")
+	flag.IntVar(&g.CommandLine.MaxProcs, "maxprocs", 4, "the maximum number of CPUs that the dfdaemon can use")
 
 	flag.Parse()
 
-	if g.G_CommandLine.Version {
+	if g.CommandLine.Version {
 		fmt.Print(constant.VERSION)
 		os.Exit(0)
 	}
-	if g.G_CommandLine.Help {
+	if g.CommandLine.Help {
 		flag.Usage()
 		os.Exit(0)
 	}
 
-	if g.G_CommandLine.Verbose {
+	if g.CommandLine.Verbose {
 		log.SetLevel(log.DebugLevel)
 	} else {
 		log.SetLevel(log.InfoLevel)
 	}
 
-	if !filepath.IsAbs(g.G_CommandLine.DFRepo) {
-		log.Errorf("local repo:%s is not abs", g.G_CommandLine.DFRepo)
+	if !filepath.IsAbs(g.CommandLine.DFRepo) {
+		log.Errorf("local repo:%s is not abs", g.CommandLine.DFRepo)
 		os.Exit(constant.CodeExitPathNotAbs)
 	}
-	if !strings.HasSuffix(g.G_CommandLine.DFRepo, "/") {
-		g.G_CommandLine.DFRepo += "/"
+	if !strings.HasSuffix(g.CommandLine.DFRepo, "/") {
+		g.CommandLine.DFRepo += "/"
 	}
-	if err := os.MkdirAll(g.G_CommandLine.DFRepo, 0755); err != nil {
-		log.Errorf("create local repo:%s err:%v", g.G_CommandLine.DFRepo, err)
+	if err := os.MkdirAll(g.CommandLine.DFRepo, 0755); err != nil {
+		log.Errorf("create local repo:%s err:%v", g.CommandLine.DFRepo, err)
 		os.Exit(constant.CodeExitRepoCreateFail)
 	}
 
-	if len(g.G_CommandLine.RateLimit) == 0 {
-		g.G_CommandLine.RateLimit = util.NetLimit()
-	} else if isMatch, _ := regexp.MatchString("^[[:digit:]]+[MK]$", g.G_CommandLine.RateLimit); !isMatch {
+	if len(g.CommandLine.RateLimit) == 0 {
+		g.CommandLine.RateLimit = util.NetLimit()
+	} else if isMatch, _ := regexp.MatchString("^[[:digit:]]+[MK]$", g.CommandLine.RateLimit); !isMatch {
 		os.Exit(constant.CodeExitRateLimitInvalid)
 	}
 
-	if g.G_CommandLine.Port <= 2000 || g.G_CommandLine.Port > 65535 {
+	if g.CommandLine.Port <= 2000 || g.CommandLine.Port > 65535 {
 		os.Exit(constant.CodeExitPortInvalid)
 	}
 
-	downRule := strings.Split(g.G_CommandLine.DownRule, ",")
+	downRule := strings.Split(g.CommandLine.DownRule, ",")
 	for _, rule := range downRule {
 		g.UpdateDFPattern(rule)
 	}
-	if _, err := os.Stat(g.G_CommandLine.DfPath); err != nil && os.IsNotExist(err) {
-		log.Errorf("dfpath:%s not found", g.G_CommandLine.DfPath)
+	if _, err := os.Stat(g.CommandLine.DfPath); err != nil && os.IsNotExist(err) {
+		log.Errorf("dfpath:%s not found", g.CommandLine.DfPath)
 		os.Exit(constant.CodeExitDfgetNotFound)
 	}
-	cmd := exec.Command(g.G_CommandLine.DfPath, "-v")
+	cmd := exec.Command(g.CommandLine.DfPath, "-v")
 	version, _ := cmd.CombinedOutput()
 
 	log.Infof("dfget version:%s", string(version))
@@ -233,17 +233,17 @@ func initParam() {
 		os.Exit(constant.CodeExitDfgetFail)
 	}
 
-	if g.G_CommandLine.CertFile != "" && g.G_CommandLine.KeyFile != "" {
-		g.G_UseHttps = true
+	if g.CommandLine.CertFile != "" && g.CommandLine.KeyFile != "" {
+		g.UseHttps = true
 	}
 
-	if g.G_CommandLine.Registry != "" {
-		protoAndDomain := strings.SplitN(g.G_CommandLine.Registry, "://", 2)
+	if g.CommandLine.Registry != "" {
+		protoAndDomain := strings.SplitN(g.CommandLine.Registry, "://", 2)
 		splitedCount := len(protoAndDomain)
-		g.G_RegProto = "http"
-		g.G_RegDomain = protoAndDomain[splitedCount-1]
+		g.RegProto = "http"
+		g.RegDomain = protoAndDomain[splitedCount-1]
 		if splitedCount == 2 {
-			g.G_RegProto = protoAndDomain[0]
+			g.RegProto = protoAndDomain[0]
 		}
 	}
 

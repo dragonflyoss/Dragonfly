@@ -39,7 +39,7 @@ func Process(w http.ResponseWriter, r *http.Request) {
 	r.Host = r.URL.Host
 	r.Header.Set("Host", r.Host)
 	if r.URL.Scheme == "" {
-		if global.G_UseHttps {
+		if global.UseHttps {
 			r.URL.Scheme = "https"
 		} else {
 			r.URL.Scheme = "http"
@@ -55,10 +55,10 @@ func Process(w http.ResponseWriter, r *http.Request) {
 
 	hostIp := util.ExtractHost(r.URL.Host)
 	switch hostIp {
-	case "127.0.0.1", "localhost", global.G_CommandLine.HostIp:
-		if len(global.G_CommandLine.Registry) > 0 {
-			targetUrl.Host = global.G_RegDomain
-			targetUrl.Scheme = global.G_RegProto
+	case "127.0.0.1", "localhost", global.CommandLine.HostIp:
+		if len(global.CommandLine.Registry) > 0 {
+			targetUrl.Host = global.RegDomain
+			targetUrl.Scheme = global.RegProto
 		} else {
 			log.Warnf("registry not config but url host is %s", hostIp)
 		}

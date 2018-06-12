@@ -30,9 +30,9 @@ func GetEnv(w http.ResponseWriter, r *http.Request) {
 
 	env["dfPattern"] = global.CopyDfPattern()
 
-	env["home"] = global.G_HomeDir
+	env["home"] = global.HomeDir
 
-	env["param"] = global.G_CommandLine
+	env["param"] = global.CommandLine
 
 	w.Write([]byte(fmt.Sprintf("%+v", env)))
 }

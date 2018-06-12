@@ -27,22 +27,22 @@ import (
 
 func main() {
 
-	// if G_CommandLine.MaxProcs <= 0, programs run with GOMAXPROCS set to the number of cores available
-	if global.G_CommandLine.MaxProcs > 0 {
-		runtime.GOMAXPROCS(global.G_CommandLine.MaxProcs)
+	// if CommandLine.MaxProcs <= 0, programs run with GOMAXPROCS set to the number of cores available
+	if global.CommandLine.MaxProcs > 0 {
+		runtime.GOMAXPROCS(global.CommandLine.MaxProcs)
 	}
 
-	logrus.Infof("start dfdaemon param:%+v", global.G_CommandLine)
+	logrus.Infof("start dfdaemon param:%+v", global.CommandLine)
 
-	fmt.Printf("\nlaunch dfdaemon on port:%d\n", global.G_CommandLine.Port)
+	fmt.Printf("\nlaunch dfdaemon on port:%d\n", global.CommandLine.Port)
 
 	var err error
 
-	if global.G_UseHttps {
-		err = http.ListenAndServeTLS(fmt.Sprintf(":%d", global.G_CommandLine.Port),
-			global.G_CommandLine.CertFile, global.G_CommandLine.KeyFile, nil)
+	if global.UseHttps {
+		err = http.ListenAndServeTLS(fmt.Sprintf(":%d", global.CommandLine.Port),
+			global.CommandLine.CertFile, global.CommandLine.KeyFile, nil)
 	} else {
-		err = http.ListenAndServe(fmt.Sprintf(":%d", global.G_CommandLine.Port), nil)
+		err = http.ListenAndServe(fmt.Sprintf(":%d", global.CommandLine.Port), nil)
 
 	}
 
