@@ -4,6 +4,7 @@
 [![License](https://img.shields.io/badge/license-Apache%202-brightgreen.svg)](https://github.com/alibaba/Dragonfly/blob/master/LICENSE)
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Falibaba%2FDragonfly.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Falibaba%2FDragonfly?ref=badge_shield)
 [![Build Status](https://travis-ci.org/alibaba/Dragonfly.svg?branch=master)](https://travis-ci.org/alibaba/Dragonfly)
+[![CircleCI](https://circleci.com/gh/alibaba/Dragonfly.svg?style=svg)](https://circleci.com/gh/alibaba/Dragonfly)
 
 ## ![Dragonfly](docs/images/logo.png)
 
