@@ -134,7 +134,7 @@ func initLogger() {
 			g.G_HomeDir += "/"
 		}
 	} else {
-		os.Exit(constant.CODE_EXIT_USER_HOME_NOT_EXIST)
+		os.Exit(constant.CodeExitUserHomeNotExist)
 	}
 
 	logFilePath := g.G_HomeDir + ".small-dragonfly/logs/dfdaemon.log"
@@ -195,24 +195,24 @@ func initParam() {
 
 	if !filepath.IsAbs(g.G_CommandLine.DFRepo) {
 		log.Errorf("local repo:%s is not abs", g.G_CommandLine.DFRepo)
-		os.Exit(constant.CODE_EXIT_PATH_NOT_ABS)
+		os.Exit(constant.CodeExitPathNotAbs)
 	}
 	if !strings.HasSuffix(g.G_CommandLine.DFRepo, "/") {
 		g.G_CommandLine.DFRepo += "/"
 	}
 	if err := os.MkdirAll(g.G_CommandLine.DFRepo, 0755); err != nil {
 		log.Errorf("create local repo:%s err:%v", g.G_CommandLine.DFRepo, err)
-		os.Exit(constant.CODE_EXIT_REPO_CREATE_FAIL)
+		os.Exit(constant.CodeExitRepoCreateFail)
 	}
 
 	if len(g.G_CommandLine.RateLimit) == 0 {
 		g.G_CommandLine.RateLimit = util.NetLimit()
 	} else if isMatch, _ := regexp.MatchString("^[[:digit:]]+[MK]$", g.G_CommandLine.RateLimit); !isMatch {
-		os.Exit(constant.CODE_EXIT_RATE_LIMIT_INVALID)
+		os.Exit(constant.CodeExitRateLimitInvalid)
 	}
 
 	if g.G_CommandLine.Port <= 2000 || g.G_CommandLine.Port > 65535 {
-		os.Exit(constant.CODE_EXIT_PORT_INVALID)
+		os.Exit(constant.CodeExitPortInvalid)
 	}
 
 	downRule := strings.Split(g.G_CommandLine.DownRule, ",")
@@ -221,7 +221,7 @@ func initParam() {
 	}
 	if _, err := os.Stat(g.G_CommandLine.DfPath); err != nil && os.IsNotExist(err) {
 		log.Errorf("dfpath:%s not found", g.G_CommandLine.DfPath)
-		os.Exit(constant.CODE_EXIT_DFGET_NOT_FOUND)
+		os.Exit(constant.CodeExitDfgetNotFound)
 	}
 	cmd := exec.Command(g.G_CommandLine.DfPath, "-v")
 	version, _ := cmd.CombinedOutput()
@@ -230,7 +230,7 @@ func initParam() {
 
 	if !cmd.ProcessState.Success() {
 		fmt.Println("\npython must be 2.7")
-		os.Exit(constant.CODE_EXIT_DFGET_FAIL)
+		os.Exit(constant.CodeExitDfgetFail)
 	}
 
 	if g.G_CommandLine.CertFile != "" && g.G_CommandLine.KeyFile != "" {

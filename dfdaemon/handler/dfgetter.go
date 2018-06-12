@@ -64,7 +64,7 @@ func (dfgetter *DFgetter) Download(url string, header map[string][]string, name 
 		return dstPath, nil
 	} else {
 		if value, ok := cmd.ProcessState.Sys().(syscall.WaitStatus); ok {
-			if value.ExitStatus() == constant.CODE_REQ_AUTH {
+			if value.ExitStatus() == constant.CodeReqAuth {
 				return "", &exception.AuthError{}
 			}
 		}
