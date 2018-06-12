@@ -14,10 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-curDir=`cd $(dirname $0) && pwd`
+#
+# env.sh must be executed in its parent directory
+#
+curDir=`pwd`
 
 DRAGONFLY_HOME=${curDir%/build/client*}
-BUILD_GOPATH=${curDir}/target
+BUILD_GOPATH=/tmp/dragonfly/build
 BUILD_SOURCE_HOME=${BUILD_GOPATH}/src/github.com/alibaba/Dragonfly
 
 INSTALL_HOME=${HOME}/.dragonfly

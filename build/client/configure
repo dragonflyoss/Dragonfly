@@ -35,14 +35,12 @@ fi
 echo "install home: ${INSTALL_HOME}"
 
 #
-# copy source files to temporary build directory
+# link source directory to temporary build directory
 #
-test -d ${BUILD_SOURCE_HOME} && rm -rf ${BUILD_SOURCE_HOME}
-mkdir -p ${BUILD_SOURCE_HOME}
-for codes in ${SOURCE_DIRECTORIES[@]}; do
-    echo "copy: ${DRAGONFLY_HOME}/${codes} to ${BUILD_SOURCE_HOME}"
-    cp -r ${DRAGONFLY_HOME}/${codes} ${BUILD_SOURCE_HOME}
-done
+test -d ${BUILD_SOURCE_HOME%Dragonfly*} || mkdir -p ${BUILD_SOURCE_HOME%Dragonfly*}
+test -L ${BUILD_SOURCE_HOME} && rm -f ${BUILD_SOURCE_HOME}
+echo "link ${BUILD_SOURCE_HOME} -> ${DRAGONFLY_HOME}"
+ln -s ${DRAGONFLY_HOME} ${BUILD_SOURCE_HOME}
 
 #
 # generate ${CONFIGURED_VARIABLES_FILE}

@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package util
 
 import (
@@ -26,7 +27,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
-//ParseInterfaceLimit parse speed of interface that it has prefix of eth
+// NetLimit parse speed of interface that it has prefix of eth
 func NetLimit() string {
 	defer func() {
 		if err := recover(); err != nil {

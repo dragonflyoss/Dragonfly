@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package handler
 
 import (
@@ -22,6 +23,7 @@ import (
 	"github.com/alibaba/Dragonfly/dfdaemon/global"
 )
 
+// GetEnv returns the environments of dfdaemon
 func GetEnv(w http.ResponseWriter, r *http.Request) {
 	logrus.Debugf("access:%s", r.URL.String())
 
@@ -29,9 +31,9 @@ func GetEnv(w http.ResponseWriter, r *http.Request) {
 
 	env["dfPattern"] = global.CopyDfPattern()
 
-	env["home"] = global.G_HomeDir
+	env["home"] = global.HomeDir
 
-	env["param"] = global.G_CommandLine
+	env["param"] = global.CommandLine
 
 	w.Write([]byte(fmt.Sprintf("%+v", env)))
 }
