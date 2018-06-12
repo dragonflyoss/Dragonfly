@@ -48,18 +48,20 @@ pre() {
 
 check() {
     cd ${DRAGONFLY_HOME}
-    exclude="target/|vendor/"
+    exclude="vendor/"
 
     # gofmt
     echo "CHECK: gofmt, check code formats"
     result=`find . -name '*.go' | grep -vE "${exclude}" | xargs gofmt -s -l 2>/dev/null`
-    [ ${#result} -gt 0 ] && (echo "${result}" && echo "CHECK: please format Go code with 'gofmt -s -w .'" && false)
+    [ ${#result} -gt 0 ] && (echo "${result}" \
+        && echo "CHECK: please format Go code with 'gofmt -s -w .'" && false)
 
     # golint
+    which golint > /dev/null || export PATH=${BUILD_GOPATH}:$PATH
     which golint > /dev/null || (echo "CHECK: install golint" \
-        && export GOPATH=${BUILD_GOPATH} \
-        && go get -u golang.org/x/lint/golint \
-        && export PATH=${BUILD_GOPATH}/bin:${PATH})
+        && export GOPATH=${BUILD_GOPATH}; \
+            go get -u golang.org/x/lint/golint; \
+            cp ${BUILD_GOPATH}/bin/golint ${BUILD_GOPATH}/)
 
     echo "CHECK: golint, check code style"
     result=`go list ./... | grep -vE "${exclude}" | xargs golint`

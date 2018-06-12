@@ -20,7 +20,7 @@
 curDir=`pwd`
 
 DRAGONFLY_HOME=${curDir%/build/client*}
-BUILD_GOPATH=${curDir}/target
+BUILD_GOPATH=/tmp/dragonfly/build
 BUILD_SOURCE_HOME=${BUILD_GOPATH}/src/github.com/alibaba/Dragonfly
 
 INSTALL_HOME=${HOME}/.dragonfly
