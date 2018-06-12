@@ -32,7 +32,9 @@ test -e ${CONFIGURED_VARIABLES_FILE} || (echo "ERROR: must execute './configure'
 
 #
 # =============================================================================
-#
+# scripts' variables
+
+export GOPATH=${BUILD_GOPATH}:${GOPATH}
 
 BIN_DIR=${BUILD_GOPATH}/bin
 PKG_DIR=${BUILD_GOPATH}/package
@@ -40,6 +42,10 @@ PKG_DIR=${BUILD_GOPATH}/package
 DFDAEMON_BINARY_NAME=dfdaemon
 
 PKG_NAME=df-client
+
+#
+# =============================================================================
+# build commands
 
 pre() {
     echo "PRE: clean and create ${BIN_DIR}"
@@ -59,8 +65,7 @@ check() {
     # golint
     which golint > /dev/null || export PATH=${BUILD_GOPATH}:$PATH
     which golint > /dev/null || (echo "CHECK: install golint" \
-        && export GOPATH=${BUILD_GOPATH}; \
-            go get -u golang.org/x/lint/golint; \
+        && go get -u golang.org/x/lint/golint; \
             cp ${BUILD_GOPATH}/bin/golint ${BUILD_GOPATH}/)
 
     echo "CHECK: golint, check code style"
@@ -76,7 +81,6 @@ check() {
 dfdaemon() {
     echo "BUILD: dfdaemon"
     test -f ${BIN_DIR}/${DFDAEMON_BINARY_NAME} && rm -f ${BIN_DIR}/${DFDAEMON_BINARY_NAME}
-    export GOPATH=${BUILD_GOPATH}
     cd ${BUILD_SOURCE_HOME}/dfdaemon
     go build -o ${BIN_DIR}/${DFDAEMON_BINARY_NAME}
     chmod a+x ${BIN_DIR}/${DFDAEMON_BINARY_NAME}
