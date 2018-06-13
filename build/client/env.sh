@@ -30,9 +30,7 @@ CONFIGURED_VARIABLES_FILE=${BUILD_GOPATH}/configured_variables.sh
 #
 # source directories
 #
-SOURCE_DIRECTORIES=( \
-    "vendor" \
+GO_SOURCE_DIRECTORIES=( \
     "dfdaemon" \
-    "src" \
 )
 

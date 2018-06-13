@@ -95,6 +95,26 @@ dfget() {
     chmod a+x ${dfgetDir}/dfget
 }
 
+unit-test() {
+    echo "TEST: unit test"
+    cd ${BUILD_SOURCE_HOME}
+    go test -i ./...
+
+    cmd="go list ./... "
+    for j in ${GO_SOURCE_DIRECTORIES[@]}; do
+        cmd+="| grep ${j} "
+    done
+
+    for d in $(eval ${cmd} |grep -vw '^github.com/alibaba/Dragonfly$' )
+    do
+        go test -race -coverprofile=profile.out -covermode=atomic ${d}
+        if [ -f profile.out ] ; then
+            cat profile.out >> coverage.txt
+            rm profile.out >/dev/null 2>&1
+        fi
+    done
+}
+
 package() {
     createDir ${PKG_DIR}/${PKG_NAME}
     cp -r ${BIN_DIR}/${PKG_NAME}/*          ${PKG_DIR}/${PKG_NAME}/
@@ -131,7 +151,7 @@ createDir() {
     mkdir -p $1
 }
 
-COMMANDS="pre|check|dfdaemon|dfget|package|install|uninstall|clean"
+COMMANDS="pre|check|dfdaemon|dfget|unit-test|package|install|uninstall|clean"
 usage() {
     echo "Usage: $0 [${COMMANDS}]"
     exit 1
