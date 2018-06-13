@@ -23,7 +23,7 @@
 ## Introduction
 
 Dragonfly is an intelligent P2P based file distribution system. It resolves issues like low-efficiency, low-success rate and waste of network bandwidth in large-scale file distribution scenarios such as application deployment, large-scale cache file distribution, data file distribution, image distribution etc.
-In Alibaba, the system transfers 2 billion times and distributes 3.4PB data every month, it becomes one of the most important infrastructures in Alibaba. The reliability is up to 99.9999%.
+At Alibaba, the system transfers 2 billion times and distributes 3.4PB of data every month, it has become one of the most important piece of infrastructure at Alibaba. The reliability is up to 99.9999%.
 
 
 DevOps takes a lot of benefits from container technologies, but at the same time, it also brings a lot of challenges: the efficiency of image distribution, especially when you have a lot of applications and require image distribution at the same time. Dragonfly works extremely well with  both Docker and [Pouch](https://github.com/alibaba/pouch), and actually we are compatible with any other container technologies without any modifications of container engine.
