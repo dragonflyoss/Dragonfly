@@ -11,7 +11,7 @@ jobs:
       - checkout
       - run:
         - name: unit test
-        - command: go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+        - command: (cd ./build/client && ./configure && make unit-test)
       - run:
         - name: upload code coverage report
         - command: bash <(curl -s https://codecov.io/bash)

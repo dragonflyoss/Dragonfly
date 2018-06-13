@@ -39,6 +39,9 @@ dfget:
 dfdaemon:
 	@${BUILD_CMD} dfdaemon
 
+.PHONY: unit-test
+unit-test:
+	@${BUILD_CMD} unit-test
 
 .PHONY: package
 package: 
