@@ -95,6 +95,13 @@ dfget() {
     chmod a+x ${dfgetDir}/dfget
 }
 
+unit-test() {
+    echo "TEST: unit test"
+    cd ${BUILD_SOURCE_HOME}
+    go test -i ./...
+    go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+}
+
 package() {
     createDir ${PKG_DIR}/${PKG_NAME}
     cp -r ${BIN_DIR}/${PKG_NAME}/*          ${PKG_DIR}/${PKG_NAME}/
@@ -131,7 +138,7 @@ createDir() {
     mkdir -p $1
 }
 
-COMMANDS="pre|check|dfdaemon|dfget|package|install|uninstall|clean"
+COMMANDS="pre|check|dfdaemon|dfget|unit-test|package|install|uninstall|clean"
 usage() {
     echo "Usage: $0 [${COMMANDS}]"
     exit 1
