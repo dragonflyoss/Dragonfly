@@ -8,6 +8,12 @@
 			"revision": ""
 		},
 		{
+			"checksumSHA1": "OED5RsS1Us385a/VH6IAlSl0xHo=",
+			"path": "github.com/go-check/check",
+			"revision": "20d25e2804050c1cd24a7eea1e7a6447dd0e74ec",
+			"revisionTime": "2016-12-08T18:13:25Z"
+		},
+		{
 			"checksumSHA1": "iOnDBM4xJIRsf8Hh9RxEBSACj9s=",
 			"path": "github.com/pborman/uuid",
 			"revision": ""

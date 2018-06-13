@@ -3,6 +3,21 @@
 # Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
 jobs:
+  test:
+    docker:
+      - image: circleci/golang:1.9
+    working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
+    steps:
+      - checkout
+      - run:
+        - name: unit test
+        - command: go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+      - run:
+        - name: upload code coverage report
+        - command: bash <(curl -s https://codecov.io/bash)
+      - run:
+        - name: rm coverage.txt
+        - command: rm coverage.txt
   build:
     docker:
       # specify the version
@@ -25,3 +40,10 @@ jobs:
       # - run: go get -v -t -d ./...
       # - run: go test -v ./...
       - run: ./build/build.sh client
+
+workflows:
+  version: 2
+  ci:
+    jobs:
+      - test
+      - build
