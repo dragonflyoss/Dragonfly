@@ -36,7 +36,7 @@ fi
 compileSupernode() {
     echo "====================================================================="
     info "supernode:source" "compiling source..."
-    mvn clean package cobertura:cobertura
+    mvn clean package
 }
 
 buildDockerImage() {
