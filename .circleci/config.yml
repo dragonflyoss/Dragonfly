@@ -10,14 +10,14 @@ jobs:
     steps:
       - checkout
       - run:
-        - name: unit test
-        - command: (cd ./build/client && ./configure && make unit-test)
+          name: unit test
+          command: (cd ./build/client && ./configure && make unit-test)
       - run:
-        - name: upload code coverage report
-        - command: bash <(curl -s https://codecov.io/bash)
+          name: upload code coverage report
+          command: bash <(curl -s https://codecov.io/bash)
       - run:
-        - name: rm coverage.txt
-        - command: rm coverage.txt
+          name: rm coverage.txt
+          command: rm coverage.txt
   build:
     docker:
       # specify the version
