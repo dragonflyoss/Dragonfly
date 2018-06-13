@@ -102,18 +102,17 @@ unit-test() {
 
     cmd="go list ./... "
     for j in ${GO_SOURCE_DIRECTORIES[@]}; do
-        cmd+="| grep -v \"${j}\" "
+        cmd+="| grep ${j} "
     done
 
     for d in $(eval ${cmd} |grep -vw '^github.com/alibaba/Dragonfly$' )
     do
-        go test -race -coverprofile=profile.out -covermode=atomic $d
+        go test -race -coverprofile=profile.out -covermode=atomic ${d}
         if [ -f profile.out ] ; then
             cat profile.out >> coverage.txt
             rm profile.out >/dev/null 2>&1
         fi
     done
-    go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 }
 
 package() {
