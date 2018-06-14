@@ -33,6 +33,7 @@ check:
 .PHONY: dfget
 dfget:
 	@${BUILD_CMD} dfget
+	@${BUILD_CMD} dfget-go
 
 
 .PHONY: dfdaemon

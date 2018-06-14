@@ -40,6 +40,7 @@ BIN_DIR=${BUILD_GOPATH}/bin
 PKG_DIR=${BUILD_GOPATH}/package
 
 DFDAEMON_BINARY_NAME=dfdaemon
+DFGET_BINARY_NAME=dfget-go
 
 PKG_NAME=df-client
 
@@ -95,22 +96,29 @@ dfget() {
     chmod a+x ${dfgetDir}/dfget
 }
 
+dfget-go() {
+    echo "BUILD: dfget-go"
+    test -f ${BIN_DIR}/${DFGET_BINARY_NAME} && rm -f ${BIN_DIR}/${DFGET_BINARY_NAME}
+    cd ${BUILD_SOURCE_HOME}/dfget
+    go build -o ${BIN_DIR}/${DFGET_BINARY_NAME}
+    chmod a+x ${BIN_DIR}/${DFGET_BINARY_NAME}
+}
+
 unit-test() {
     echo "TEST: unit test"
     cd ${BUILD_SOURCE_HOME}
     go test -i ./...
 
-    cmd="go list ./... "
-    for j in ${GO_SOURCE_DIRECTORIES[@]}; do
-        cmd+="| grep ${j} "
-    done
+    cmd="go list ./... | grep 'github.com/alibaba/Dragonfly/'"
+    sources=`echo ${GO_SOURCE_DIRECTORIES[@]} | sed 's/ /|/g'`
+    test -n "${sources}" && cmd+=" | grep -E '${sources}'"
 
-    for d in $(eval ${cmd} |grep -vw '^github.com/alibaba/Dragonfly$' )
+    for d in $(eval ${cmd})
     do
         go test -race -coverprofile=profile.out -covermode=atomic ${d}
         if [ -f profile.out ] ; then
             cat profile.out >> coverage.txt
-            rm profile.out >/dev/null 2>&1
+            rm profile.out > /dev/null 2>&1
         fi
     done
 }
@@ -119,6 +127,7 @@ package() {
     createDir ${PKG_DIR}/${PKG_NAME}
     cp -r ${BIN_DIR}/${PKG_NAME}/*          ${PKG_DIR}/${PKG_NAME}/
     cp ${BIN_DIR}/${DFDAEMON_BINARY_NAME}   ${PKG_DIR}/${PKG_NAME}/
+    cp ${BIN_DIR}/${DFGET_BINARY_NAME}      ${PKG_DIR}/${PKG_NAME}/
 
     cd ${PKG_DIR} && tar czf ${INSTALL_HOME}/${PKG_NAME}.tar.gz ./${PKG_NAME}
     rm -rf ${PKG_DIR}
@@ -130,6 +139,7 @@ install() {
     createDir ${installDir}
     cp -r ${BIN_DIR}/${PKG_NAME}/*          ${installDir}
     cp ${BIN_DIR}/${DFDAEMON_BINARY_NAME}   ${installDir}
+    cp ${BIN_DIR}/${DFGET_BINARY_NAME}      ${installDir}
 }
 
 uninstall() {
@@ -151,7 +161,7 @@ createDir() {
     mkdir -p $1
 }
 
-COMMANDS="pre|check|dfdaemon|dfget|unit-test|package|install|uninstall|clean"
+COMMANDS="pre|check|dfdaemon|dfget|dfget-go|unit-test|package|install|uninstall|clean"
 usage() {
     echo "Usage: $0 [${COMMANDS}]"
     exit 1
