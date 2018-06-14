@@ -62,12 +62,6 @@ check() {
     [ ${#result} -gt 0 ] && (echo "${result}" \
         && echo "CHECK: please format Go code with 'gofmt -s -w .'" && false)
 
-    # go vet check
-    echo "CHECK: go vet, check code syntax"
-    packages=`go list ./... | grep -vE "${exclude}" | sed 's/^_//'`
-    go vet ${packages} 2>&1
-
-    exit 0
     # golint
     which golint > /dev/null || export PATH=${BUILD_GOPATH}:$PATH
     which golint > /dev/null || (echo "CHECK: install golint" \
@@ -77,6 +71,11 @@ check() {
     echo "CHECK: golint, check code style"
     result=`go list ./... | grep -vE "${exclude}" | sed 's/^_//' | xargs golint`
     [ ${#result} -gt 0 ] && (echo "${result}" && false)
+
+    # go vet check
+    echo "CHECK: go vet, check code syntax"
+    packages=`go list ./... | grep -vE "${exclude}" | sed 's/^_//'`
+    go vet ${packages} 2>&1
 }
 
 dfdaemon() {
