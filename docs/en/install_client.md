@@ -11,15 +11,20 @@
   *Requirements: go1.7+ and the go cmd must be in environment variable named PATH.*
 
   - `git clone https://github.com/alibaba/Dragonfly.git`, clone source code from GitHub.
+  - install in $HOME/.dragonfly
 
-  - `cd source_dir/build/client`,source_dir is the directory where the source code is located.
+    ```bash
+    cd Dragonfly
+    # install `dfdaemon` and `dfget` in $HOME/.dragonfly/df-client
+    ./build/build.sh client
+    # set PATH
+    export PATH=$HOME/.dragonfly/df-client:$PATH
+    ```
+  - install in other directory
 
-  - `./configure --prefix=xxx`, --prefix=xxx specifies the installation directory, this cmd param is optional and current dir will be used if --prefix not be specified.
-
-  - `make`
-
-  - `make install`,you can execute `make package` to generate installation package.
-
-  - `make clean`
-
-  - Set environment variable named PATH: `export PATH=$PATH:xxx/df-client`
+    ```bash
+    cd Dragonfly/build/client
+    ./configure --prefix=${your_install_directory}
+    make && make install
+    export PATH=${your_install_directory}/df-client:$PATH
+    ```
