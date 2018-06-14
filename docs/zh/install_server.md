@@ -22,7 +22,6 @@ Docker                | 1.12.0 +
 Git                   | 1.9.1 +
 Jdk                   | 1.7 +
 Maven                 | 3.0.3 +
-Tomcat                | 7.0 +
 Nginx                 | 0.8 +
 
 ## 2. 获取蜻蜓源码
@@ -35,20 +34,20 @@ git clone https://github.com/alibaba/Dragonfly.git
 * 进入项目目录
 
   ```sh
-  cd dragonfly
+  cd Dragonfly
   ```
 * 构建Docker镜像
 
   - 构建镜像
 
     ```sh
-    docker image build -t "dragonfly:supernode" . -f ./build/supernode/Dockerfile
+    ./build/build.sh supernode
     ```
 
-  - 获取超级节点Docker镜像Id
+  - 获取最新的超级节点Docker镜像Id
 
     ```sh
-    docker image ls|grep -E 'dragonfly.*supernode'|awk '{print $3}'
+    docker image ls|grep 'supernode' |awk '{print $3}' | head -n1
     ```
 * 启动超级节点
 
@@ -60,7 +59,7 @@ git clone https://github.com/alibaba/Dragonfly.git
 * 进入项目目录
 
   ```sh
-  cd dragonfly/src/supernode
+  cd Dragonfly/src/supernode
   ```
 * 编译源码
 
@@ -69,23 +68,13 @@ git clone https://github.com/alibaba/Dragonfly.git
   ```
 * 将服务部署到tomcat
 
-  - 将war包拷贝到tomcat目录
+  - 启动supernode服务
 
     ```sh
-    copy target/supernode.war ${CATALINA_HOME}/webapps/supernode.war
+    # 'supernode.baseHome'若不指定, 默认为 '/home/admin/supernode'
+    java -Dsupernode.baseHome=/home/admin/supernode -jar target/supernode.jar
     ```
-  - 更改tomcat的context配置
 
-    将下列配置添加到tomcat的`server.xml`中:
-
-    ```xml
-    <Context path="/" docBase="${CATALINA_HOME}/webapps/supernode" debug="0" reloadable="true" crossContext="true" />
-    ```
-  - 启动tomcat
-
-    ```sh
-    ./${CATALINA_HOME}/bin/catalina.sh run
-    ```
 * 启动Nginx
 
   - 添加下列nginx配置
@@ -94,6 +83,7 @@ git clone https://github.com/alibaba/Dragonfly.git
     server {
       listen              8001;
       location / {
+        # 必须是 ${supernode.baseHome}/repo
         root /home/admin/supernode/repo;
       }
     }
@@ -106,7 +96,7 @@ git clone https://github.com/alibaba/Dragonfly.git
     }
     ```
 
-    > nginx配置例子: _build/supernode/docker/nginx/nginx.conf_
+    > nginx配置例子: _src/supernode/src/main/docker/sources/nginx.conf_
 
   - 启动nginx
 

@@ -19,7 +19,6 @@ Software              | Required Version
 Git                   | 1.9.1 +
 Jdk                   | 1.7 +
 Maven                 | 3.0.3 +
-Tomcat                | 7.0 +
 Nginx                 | 0.8 +
 
 ## Step2: Getting the source code
@@ -32,24 +31,24 @@ Nginx                 | 0.8 +
 * Enter the project directory
 
    ```
-   $ cd dragonfly
+   $ cd Dragonfly
    ```
 * Build Docker image
 
    - Build image
 
+   ```bash
+   ./build/build.sh supernode
    ```
-   $ docker image build -t "dragonfly:supernode" . -f ./build/supernode/Dockerfile
-   ```
-   - Show Docker image
+   - Show Docker images
 
+   ```bash
+   docker image ls
    ```
-   $ docker image ls
-   ```
-   - Get cluster manager (supernode) Docker imageId
+   - Get latest `supernode` Docker imageId
 
-   ```
-   $ docker image ls|grep -E 'dragonfly.*supernode'|awk '{print $3}'
+   ```bash
+   docker image ls | grep supernode |awk '{print $3}' | head -n1
    ```
 * Start Docker container
 
@@ -60,33 +59,21 @@ Nginx                 | 0.8 +
 ### 2. Run on physical machine
 * Enter the project directory
 
-   ```
-   $ cd dragonfly/src/supernode
+   ```bash
+   cd dragonfly/src/supernode
    ```
 * Build the source code
 
+   ```bash
+   mvn clean -U install -DskipTests=true
    ```
-   $ mvn clean -U install -DskipTests=true
-   ```
-* Deploy service on tomcat
+* Start `supernode` server
 
-   - Copy package to tomcat deployment directory  
+   - just start it with this command
 
-   ```
-   $ copy target/supernode.war ${CATALINA_HOME}/webapps/supernode.war
-   ```
-   - Change context config of tomcat
-
-   Add below config to server.xml of tomcat
-
-   ```
-   <Context path="/" docBase="${CATALINA_HOME}/webapps/supernode" debug="0" reloadable="true" crossContext="true" />
-
-   ```
-   - Start tomcat
-
-   ```
-   $ ./${CATALINA_HOME}/bin/catalina.sh run
+   ```bash
+   # the default value of 'supernode.baseHome' is '/home/admin/supernode' if you don't set
+   java -Dsupernode.baseHome=/home/admin/supernode -jar target/supernode.jar
    ```
 * Start nginx
 
@@ -96,6 +83,7 @@ Nginx                 | 0.8 +
   server {
         listen              8001;
         location / {
+            # must be ${supernode.baseHome}/repo
             root /home/admin/supernode/repo;
         }
     }
@@ -109,8 +97,8 @@ Nginx                 | 0.8 +
   ```
   - Example of nginx config
 
-  ```
-  $ less dragonfly/build/supernode/docker/nginx/nginx.conf
+  ```bash
+  less src/supernode/src/main/docker/sources/nginx.conf
   ```
   - Start nginx
 
