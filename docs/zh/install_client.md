@@ -21,24 +21,30 @@
   git clone https://github.com/alibaba/Dragonfly.git
   ```
 
-  - 进入客户端编译脚本目录:
-  ```sh
-  cd source_dir/build/client
-  ```
+  - 一键安装
 
-  - 编译安装:
-  ```sh
-  # --prefix=xxx 指定安装目录, 默认为当前目录
-  ./configure --prefix=xxx
-  # 编译
-  make
-  # 也可以使用'make package'生成安装包
-  make install
-  # 清理文件
-  make clean
-  ```
+    ```bash
+    cd Dragonfly && ./build/build.sh client && export PATH=$HOME/.dragonfly/df-client:$PATH
+    ```
+  - 或者自定义安装
+    - 进入客户端编译脚本目录:
+        ```sh
+        cd Dragonfly/build/client
+        ```
 
-  - 设置`PATH`环境变量:
-  ```sh
-  export PATH=$PATH:xxx/df-client
-  ```
+    - 编译安装:
+        ```sh
+        # --prefix=xxx 指定安装目录, 默认为当前目录
+        ./configure --prefix=xxx
+        # 编译
+        make
+        # 也可以使用'make package'生成安装包
+        make install
+        # 清理文件
+        make clean
+        ```
+
+    - 设置`PATH`环境变量:
+        ```sh
+        export PATH=$PATH:xxx/df-client
+        ```
