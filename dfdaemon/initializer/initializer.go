@@ -29,6 +29,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/alibaba/Dragonfly/version"
 
 	"github.com/alibaba/Dragonfly/dfdaemon/constant"
 	g "github.com/alibaba/Dragonfly/dfdaemon/global"
@@ -179,7 +180,7 @@ func initParam() {
 	flag.Parse()
 
 	if g.CommandLine.Version {
-		fmt.Print(constant.VERSION)
+		fmt.Println(version.DFDaemonVersion)
 		os.Exit(0)
 	}
 	if g.CommandLine.Help {
