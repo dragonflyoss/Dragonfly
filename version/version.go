@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package main
+// Package version represents the version the project Dragonfly.
+package version
 
-import (
-	"fmt"
+var (
+	// Version is the version of the project Dragonfly
+	Version = "0.2.0"
 
-	"github.com/alibaba/Dragonfly/version"
+	// DFDaemonVersion is the version of dfdaemon
+	DFDaemonVersion = Version
+
+	// DFGetVersion is the version of dfget
+	DFGetVersion = Version
 )
-
-func main() {
-	// TODO: refactor 'dfget' with GoLang
-	// the current dfget is written by python in 'src/getter'
-	fmt.Println("dfget version: " + version.DFGetVersion)
-}

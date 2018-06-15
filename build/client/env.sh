@@ -33,5 +33,6 @@ CONFIGURED_VARIABLES_FILE=${BUILD_GOPATH}/configured_variables.sh
 GO_SOURCE_DIRECTORIES=( \
     "dfdaemon" \
     "dfget" \
+    "version" \
 )
 
