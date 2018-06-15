@@ -14,18 +14,7 @@
  * limitations under the License.
  */
 
-package main
-
-import (
-	"fmt"
-
-	"github.com/alibaba/Dragonfly/version"
-)
-
-func main() {
-	// TODO: refactor 'dfget' with GoLang
-	// the current dfget is written by python in 'src/getter'
-	// This main function is just the entry of dfget, the other operations
-	// must be controlled in package CLI.
-	fmt.Println("dfget version: " + version.DFGetVersion)
-}
+// Package types defines all types of data send, received and stored.
+// Do not use 'map[string]string' to define a data transported between different
+// modules(systems). It's hard to read and maintain.
+package types

@@ -14,18 +14,9 @@
  * limitations under the License.
  */
 
-package main
-
-import (
-	"fmt"
-
-	"github.com/alibaba/Dragonfly/version"
-)
-
-func main() {
-	// TODO: refactor 'dfget' with GoLang
-	// the current dfget is written by python in 'src/getter'
-	// This main function is just the entry of dfget, the other operations
-	// must be controlled in package CLI.
-	fmt.Println("dfget version: " + version.DFGetVersion)
-}
+// Package downloader contains 2 types of downloader: P2PDownloader,
+// DirectDownloader.
+// P2PDownloader uses P2P pattern to download files from peers.
+// DirectDownloader downloads files from file source directly. It's
+// used when P2PDownloader download files failed.
+package downloader
