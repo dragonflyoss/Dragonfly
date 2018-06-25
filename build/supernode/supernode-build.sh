@@ -45,6 +45,11 @@ buildDockerImage() {
     mvn clean package -DskipTests docker:build
 }
 
+check() {
+    which docker > /dev/null && docker ps > /dev/null 2>&1 \
+        || (echo "Please install docker and start docker daemon first." && exit 3)
+}
+
 main() {
     cd ${SUPERNODE_SOURCE_HOME}
     case "${ACTION}" in
@@ -52,10 +57,10 @@ main() {
             compileSupernode
         ;;
         image)
-            buildDockerImage
+            check && buildDockerImage
         ;;
         all)
-            compileSupernode && buildDockerImage
+            check && compileSupernode && buildDockerImage
         ;;
         *)
             usage
