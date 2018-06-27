@@ -121,7 +121,7 @@ public class PeerController {
             String taskId = req.getTaskId();
             String cid = req.getCid();
             String dstCid = req.getDstCid();
-            String range = req.getRange();
+            String range = req.getPieceRange();
 
             if (StringUtils.isBlank(taskId) || StringUtils.isBlank(cid)
                 || StringUtils.isBlank(range)) {
