@@ -28,5 +28,5 @@ public class ReportPieceRequest {
     private String taskId;
     private String cid;
     private String dstCid;
-    private String range;
+    private String pieceRange;
 }
