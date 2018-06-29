@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-// Package config holds all properties of dfget.
-package config
+package types
 
-// Config holds all configurable properties.
-type Config struct {
-	Nodes      []string
-	LocalLimit int
-	TotalLimit int
+// ReportPieceRequest is send to the supernode when dfget downloaded a piece
+// successfully.
+type ReportPieceRequest struct {
+	TaskID     string
+	Cid        string
+	DstCid     string
+	PieceRange string
 }
