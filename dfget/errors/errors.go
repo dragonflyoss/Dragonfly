@@ -14,12 +14,5 @@
  * limitations under the License.
  */
 
-// Package config holds all properties of dfget.
-package config
-
-// Config holds all configurable properties.
-type Config struct {
-	Nodes      []string
-	LocalLimit int
-	TotalLimit int
-}
+// Package errors defines all exceptions happened in dfget's runtime.
+package errors

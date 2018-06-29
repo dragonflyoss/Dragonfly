@@ -14,5 +14,14 @@
  * limitations under the License.
  */
 
-// Package exception defines all exceptions happened in dfget's runtime.
-package exception
+package types
+
+// PullPieceTaskRequest is send to supernodes when pulling pieces.
+type PullPieceTaskRequest struct {
+	SrcCid string
+	DstCid string
+	Range  string
+	Result string
+	Status string
+	TaskID string
+}
