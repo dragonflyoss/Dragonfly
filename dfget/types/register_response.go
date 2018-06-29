@@ -14,12 +14,17 @@
  * limitations under the License.
  */
 
-// Package config holds all properties of dfget.
-package config
+package types
 
-// Config holds all configurable properties.
-type Config struct {
-	Nodes      []string
-	LocalLimit int
-	TotalLimit int
+// RegisterRes is the response of register request.
+type RegisterRes struct {
+	*BaseResponse
+	Data *RegisterResData `json:"data"`
+}
+
+// RegisterResData is the data when registering supernode successfully.
+type RegisterResData struct {
+	TaskID     string `json:"taskId"`
+	FileLength int64  `json:"fileLength"`
+	PieceSize  int32  `json:"pieceSize"`
 }

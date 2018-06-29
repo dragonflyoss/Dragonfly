@@ -37,8 +37,10 @@ import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -89,6 +91,11 @@ public class PeerController {
         }
         debug("doRegistry", req, res);
         return res;
+    }
+
+    @PostMapping(value = "/registry", consumes = {MediaType.APPLICATION_JSON_UTF8_VALUE, MediaType.APPLICATION_JSON_VALUE})
+    public ResultInfo doRegistryWithJson(@RequestBody RegistryRequest req) {
+        return doRegistry(req);
     }
 
     @GetMapping(value = "/task")
