@@ -29,6 +29,14 @@ type BaseResponse struct {
 	Msg string `json:"msg"`
 }
 
+// NewBaseResponse create a BaseResponse instance.
+func NewBaseResponse(code int, msg string) *BaseResponse {
+	res := new(BaseResponse)
+	res.Code = code
+	res.Msg = msg
+	return res
+}
+
 // IsSuccess is used for determining whether the response is successful.
 func (res *BaseResponse) IsSuccess() bool {
 	return res.Code == 1
