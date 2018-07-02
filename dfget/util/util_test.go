@@ -15,3 +15,33 @@
  */
 
 package util
+
+import (
+	"testing"
+
+	"github.com/go-check/check"
+)
+
+func Test(t *testing.T) {
+	check.TestingT(t)
+}
+
+type DFGetUtilSuite struct{}
+
+func init() {
+	check.Suite(&DFGetUtilSuite{})
+}
+
+func (suite *DFGetUtilSuite) TestMax(c *check.C) {
+	c.Assert(Max(1, 2), check.Not(check.Equals), 2)
+	c.Assert(Max(1, 2), check.Equals, int32(2))
+	c.Assert(Max(1, 1), check.Equals, int32(1))
+	c.Assert(Max(3, 2), check.Equals, int32(3))
+}
+
+func (suite *DFGetUtilSuite) TestMin(c *check.C) {
+	c.Assert(Min(1, 2), check.Not(check.Equals), 1)
+	c.Assert(Min(1, 2), check.Equals, int32(1))
+	c.Assert(Min(1, 1), check.Equals, int32(1))
+	c.Assert(Min(3, 2), check.Equals, int32(2))
+}
