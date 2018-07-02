@@ -16,14 +16,14 @@
 
 package types
 
-// RegisterRes is the response of register request.
-type RegisterRes struct {
+// RegisterResponse is the response of register request.
+type RegisterResponse struct {
 	*BaseResponse
-	Data *RegisterResData `json:"data"`
+	Data *RegisterResponseData `json:"data"`
 }
 
-// RegisterResData is the data when registering supernode successfully.
-type RegisterResData struct {
+// RegisterResponseData is the data when registering supernode successfully.
+type RegisterResponseData struct {
 	TaskID     string `json:"taskId"`
 	FileLength int64  `json:"fileLength"`
 	PieceSize  int32  `json:"pieceSize"`
