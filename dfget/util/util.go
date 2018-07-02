@@ -17,3 +17,19 @@
 // Package util provides some utility tools for other components.
 // Such as net-transporting, file-operating, rate-limiter.
 package util
+
+// Max returns the larger of x or y.
+func Max(x, y int32) int32 {
+	if x > y {
+		return x
+	}
+	return y
+}
+
+// Min returns the smaller of x or y.
+func Min(x, y int32) int32 {
+	if x < y {
+		return x
+	}
+	return y
+}
