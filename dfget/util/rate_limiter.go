@@ -95,9 +95,8 @@ func (rl *RateLimiter) acquire(token int32, blocking bool) int32 {
 	}
 
 	rl.mu.Lock()
-	res := process()
-	rl.mu.Unlock()
-	return res
+	defer rl.mu.Unlock()
+	return process()
 }
 
 func (rl *RateLimiter) setWindow(window int64) {
