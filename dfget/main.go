@@ -17,9 +17,7 @@
 package main
 
 import (
-	"fmt"
-
-	"github.com/alibaba/Dragonfly/version"
+	"github.com/alibaba/Dragonfly/dfget/cli"
 )
 
 func main() {
@@ -27,5 +25,5 @@ func main() {
 	// the current dfget is written by python in 'src/getter'
 	// This main function is just the entry of dfget, the other operations
 	// must be controlled in package CLI.
-	fmt.Println("dfget version: " + version.DFGetVersion)
+	cli.Run()
 }

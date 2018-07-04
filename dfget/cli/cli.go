@@ -18,3 +18,25 @@
 // invokes registrar to register itself on supernode, assigns tasks to
 // downloader and other modules.
 package cli
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/alibaba/Dragonfly/version"
+)
+
+// Run is running cli.
+func Run() {
+	initParameters(os.Args[1:])
+
+	if Params.Help {
+		Usage()
+		os.Exit(0)
+	}
+
+	if Params.Version {
+		fmt.Println(version.DFGetVersion)
+		os.Exit(0)
+	}
+}
