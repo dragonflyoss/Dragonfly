@@ -33,3 +33,8 @@ func Min(x, y int32) int32 {
 	}
 	return y
 }
+
+// IsEmptyStr returns whether the string x is empty.
+func IsEmptyStr(s string) bool {
+	return s == ""
+}
