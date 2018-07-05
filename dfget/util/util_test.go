@@ -45,3 +45,8 @@ func (suite *DFGetUtilSuite) TestMin(c *check.C) {
 	c.Assert(Min(1, 1), check.Equals, int32(1))
 	c.Assert(Min(3, 2), check.Equals, int32(2))
 }
+
+func (suite *DFGetUtilSuite) TestIsEmptyStr(c *check.C) {
+	c.Assert(IsEmptyStr(""), check.Equals, true)
+	c.Assert(IsEmptyStr("x"), check.Equals, false)
+}

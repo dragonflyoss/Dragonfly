@@ -17,109 +17,90 @@
 package cli
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+	"strconv"
+	"strings"
 
+	cfg "github.com/alibaba/Dragonfly/dfget/config"
+	"github.com/alibaba/Dragonfly/dfget/util"
 	"github.com/spf13/pflag"
 )
 
-// cliParameters holds all the parameters passed by CLI.
-type cliParameters struct {
-	URL        string   `json:"url"`
-	Output     string   `json:"output"`
-	LocalLimit string   `json:"locallimit,omitempty"`
-	TotalLimit string   `json:"totallimit,omitempty"`
-	Timeout    int      `json:"timeout,omitempty"`
-	Md5        string   `json:"md5,omitempty"`
-	Identifier string   `json:"identifier,omitempty"`
-	CallSystem string   `json:"callsystem,omitempty"`
-	Filter     string   `json:"filter,omitempty"`
-	Pattern    string   `json:"pattern,omitempty"`
-	Header     []string `json:"header,omitempty"`
-	Node       []string `json:"node,omitempty"`
-	Notbs      bool     `json:"notbs,omitempty"`
-	DFDaemon   bool     `json:"dfdaemon,omitempty"`
-	Version    bool     `json:"version,omitempty"`
-	ShowBar    bool     `json:"showbar,omitempty"`
-	Console    bool     `json:"console,omitempty"`
-	Verbose    bool     `json:"verbose,omitempty"`
-	Help       bool     `json:"help,omitempty"`
-}
-
-// Params is the parameters passed by CLI.
-var Params = new(cliParameters)
-
 var cliOut io.Writer = os.Stderr
 
-func (p *cliParameters) String() string {
-	js, _ := json.Marshal(Params)
-	return fmt.Sprintf("%s", js)
-}
-
-func initParameters(args []string) {
+func setupFlags(args []string) {
 	// url & output
-	pflag.StringVarP(&Params.URL, "url", "u", "",
+	pflag.StringVarP(&cfg.Ctx.URL, "url", "u", "",
 		"will download a file from this url")
-	pflag.StringVarP(&Params.Output, "output", "o", "",
+	pflag.StringVarP(&cfg.Ctx.Output, "output", "o", "",
 		"output path that not only contains the dir part but also name part")
 
 	// localLimit & totalLimit & timeout
-	pflag.StringVarP(&Params.LocalLimit, "locallimit", "s", "20M",
+	localLimit := pflag.StringP("locallimit", "s", "20M",
 		"rate limit about a single download task, its format is 20M/m/K/k")
-	pflag.StringVar(&Params.TotalLimit, "totallimit", "",
+	totalLimit := pflag.String("totallimit", "",
 		"rate limit about the whole host, its format is 20M/m/K/k")
-	pflag.IntVarP(&Params.Timeout, "timeout", "e", 0,
+	pflag.IntVarP(&cfg.Ctx.Timeout, "timeout", "e", 0,
 		"download timeout(second)")
-	pflag.IntVar(&Params.Timeout, "exceed", 0,
+	pflag.IntVar(&cfg.Ctx.Timeout, "exceed", 0,
 		"download timeout(second)")
 
 	// md5 & identifier
-	pflag.StringVarP(&Params.Md5, "md5", "m", "",
+	pflag.StringVarP(&cfg.Ctx.Md5, "md5", "m", "",
 		"expected file md5")
-	pflag.StringVarP(&Params.Identifier, "identifier", "i", "",
+	pflag.StringVarP(&cfg.Ctx.Identifier, "identifier", "i", "",
 		"identify download task, it is available merely when md5 param not exist")
 
-	pflag.StringVar(&Params.CallSystem, "callsystem", "",
+	pflag.StringVar(&cfg.Ctx.CallSystem, "callsystem", "",
 		"system name that executes dfget")
 
-	pflag.StringVarP(&Params.Filter, "filter", "f", "",
+	pflag.StringVarP(&cfg.Ctx.Pattern, "pattern", "p", "p2p",
+		"download pattern, must be 'p2p' or 'cdn'"+
+			"\ncdn pattern not support 'totallimit' flag")
+
+	filter := pflag.StringP("filter", "f", "",
 		"filter some query params of url, use char '&' to separate different params"+
 			"\neg: -f 'key&sign' will filter 'key' and 'sign' query param"+
 			"\nin this way, different urls correspond one same download task that can use p2p mode")
 
-	pflag.StringVarP(&Params.Pattern, "pattern", "p", "p2p",
-		"download pattern, must be 'p2p' or 'cdn'"+
-			"\ncdn pattern not support 'totallimit' flag")
-
-	pflag.StringSliceVar(&Params.Header, "header", nil,
+	pflag.StringSliceVar(&cfg.Ctx.Header, "header", nil,
 		"http header, eg: --header='Accept: *' --header='Host: abc'")
 
-	pflag.StringSliceVarP(&Params.Node, "node", "n", nil,
+	pflag.StringSliceVarP(&cfg.Ctx.Node, "node", "n", nil,
 		"specify supnernodes")
 
-	pflag.BoolVar(&Params.Notbs, "notbs", false,
+	pflag.BoolVar(&cfg.Ctx.Notbs, "notbs", false,
 		"not back source when p2p fail")
-	pflag.BoolVar(&Params.DFDaemon, "dfdaemon", false,
+	pflag.BoolVar(&cfg.Ctx.DFDaemon, "dfdaemon", false,
 		"caller is from dfdaemon")
 
 	// others
-	pflag.BoolVarP(&Params.Version, "version", "v", false,
+	pflag.BoolVarP(&cfg.Ctx.Version, "version", "v", false,
 		"show version")
-	pflag.BoolVarP(&Params.ShowBar, "showbar", "b", false,
+	pflag.BoolVarP(&cfg.Ctx.ShowBar, "showbar", "b", false,
 		"show progress bar")
-	pflag.BoolVar(&Params.Console, "console", false,
+	pflag.BoolVar(&cfg.Ctx.Console, "console", false,
 		"show log on console")
-	pflag.BoolVar(&Params.Verbose, "verbose", false,
+	pflag.BoolVar(&cfg.Ctx.Verbose, "verbose", false,
 		"be verbose")
-	pflag.BoolVarP(&Params.Help, "help", "h", false,
+	pflag.BoolVarP(&cfg.Ctx.Help, "help", "h", false,
 		"show help information")
 
 	flags := pflag.CommandLine
 	flags.SortFlags = false
 	flags.MarkDeprecated("exceed", "please use '--timeout' or '-e' instead")
 	flags.Parse(args)
+
+	// be compatible with dfget python version
+	var err error
+	cfg.Ctx.LocalLimit, err = transLimit(*localLimit)
+	panicIf(err, "convert locallimit error")
+	cfg.Ctx.TotalLimit, err = transLimit(*totalLimit)
+	panicIf(err, "convert totallimit error")
+
+	cfg.Ctx.Filter = transFilter(*filter)
 }
 
 // Usage shows the usage of this program.
@@ -127,4 +108,33 @@ func Usage() {
 	fmt.Fprintln(cliOut, "Dragonfly is a file distribution system based p2p.")
 	fmt.Fprintf(cliOut, "Usage of %s:\n", os.Args[0])
 	fmt.Fprintf(cliOut, "%s\n", pflag.CommandLine.FlagUsages())
+}
+
+func transLimit(limit string) (int, error) {
+	if util.IsEmptyStr(limit) {
+		return 0, nil
+	}
+	l := len(limit)
+	i, err := strconv.Atoi(limit[:l-1])
+
+	if err != nil {
+		return 0, err
+	}
+
+	unit := limit[l-1]
+	if unit == 'k' || unit == 'K' {
+		return i * 1024, nil
+	}
+	if unit == 'm' || unit == 'M' {
+		return i * 1024 * 1024, nil
+	}
+	return 0, fmt.Errorf("invalid unit '%c' of '%s', 'KkMm' are supported",
+		unit, limit)
+}
+
+func transFilter(filter string) []string {
+	if util.IsEmptyStr(filter) {
+		return nil
+	}
+	return strings.Split(filter, "&")
 }
