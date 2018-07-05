@@ -18,10 +18,10 @@ package types
 
 // BaseResponse defines the common fields of responses from supernode.
 // Types of supernode's responses could be defines as following:
-// type XXResponse struct {
-// 		*BaseResponse
-//		Data *CustomizedDataStruct
-// }
+// 		type XXResponse struct {
+// 				*BaseResponse
+//				Data *CustomizedDataStruct
+// 		}
 type BaseResponse struct {
 	// Code represents whether the response is successful.
 	Code int `json:"code"`
