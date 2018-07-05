@@ -23,6 +23,8 @@ import (
 	"strings"
 	"testing"
 
+	cfg "github.com/alibaba/Dragonfly/dfget/config"
+	"github.com/alibaba/Dragonfly/dfget/util"
 	"github.com/go-check/check"
 	"github.com/spf13/pflag"
 )
@@ -39,23 +41,22 @@ func init() {
 
 func (suite *CliSuite) SetUpTest(c *check.C) {
 	pflag.CommandLine = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
-	Params = new(cliParameters)
+	cfg.Reset()
 }
 
-func (suite *CliSuite) Test_initParameters_noArguments(c *check.C) {
-	initParameters(nil)
-	c.Assert(Params.LocalLimit, check.Equals, "20M")
-	c.Assert(Params.Notbs, check.Equals, false)
-	c.Assert(Params.DFDaemon, check.Equals, false)
-	c.Assert(Params.Version, check.Equals, false)
-	c.Assert(Params.ShowBar, check.Equals, false)
-	c.Assert(Params.Console, check.Equals, false)
-	c.Assert(Params.Verbose, check.Equals, false)
-	c.Assert(Params.Help, check.Equals, false)
-
+func (suite *CliSuite) Test_setupFlags_noArguments(c *check.C) {
+	setupFlags(nil)
+	c.Assert(cfg.Ctx.LocalLimit, check.Equals, 20971520)
+	c.Assert(cfg.Ctx.Notbs, check.Equals, false)
+	c.Assert(cfg.Ctx.DFDaemon, check.Equals, false)
+	c.Assert(cfg.Ctx.Version, check.Equals, false)
+	c.Assert(cfg.Ctx.ShowBar, check.Equals, false)
+	c.Assert(cfg.Ctx.Console, check.Equals, false)
+	c.Assert(cfg.Ctx.Verbose, check.Equals, false)
+	c.Assert(cfg.Ctx.Help, check.Equals, false)
 }
 
-func (suite *CliSuite) Test_initParameters_withArguments(c *check.C) {
+func (suite *CliSuite) Test_setupFlags_withArguments(c *check.C) {
 	arguments := map[string]string{
 		"url":        "http://www.taobao.com",
 		"output":     "/tmp/" + os.Args[0] + ".test",
@@ -76,44 +77,38 @@ func (suite *CliSuite) Test_initParameters_withArguments(c *check.C) {
 	for k, v := range arguments {
 		args = append(args, "--"+k, v)
 	}
-	initParameters(args)
+	setupFlags(args)
 
 	res := []struct {
 		actual   interface{}
 		expected interface{}
 	}{
-		{Params.URL, arguments["url"]},
-		{Params.Output, arguments["output"]},
-		{Params.LocalLimit, arguments["locallimit"]},
-		{Params.TotalLimit, arguments["totallimit"]},
-		{strconv.Itoa(Params.Timeout), arguments["timeout"]},
-		{Params.Md5, arguments["md5"]},
-		{Params.Identifier, arguments["identifier"]},
-		{Params.CallSystem, arguments["callsystem"]},
-		{Params.Filter, arguments["filter"]},
-		{Params.Pattern, arguments["pattern"]},
-		{strings.Join(Params.Header, ","), arguments["header"]},
-		{strings.Join(Params.Node, ","), arguments["node"]},
-		{Params.Notbs, arguments["notbs"] == "true"},
-		{Params.Verbose, arguments["notbs"] == "true"},
-		{Params.DFDaemon, false},
-		{Params.Version, false},
-		{Params.ShowBar, false},
-		{Params.Console, false},
-		{Params.Help, false},
+		{cfg.Ctx.URL, arguments["url"]},
+		{cfg.Ctx.Output, arguments["output"]},
+		{strconv.Itoa(cfg.Ctx.LocalLimit/1024/1024) + "M",
+			arguments["locallimit"]},
+		{strconv.Itoa(cfg.Ctx.TotalLimit/1024/1024) + "M",
+			arguments["totallimit"]},
+		{strconv.Itoa(cfg.Ctx.Timeout), arguments["timeout"]},
+		{cfg.Ctx.Md5, arguments["md5"]},
+		{cfg.Ctx.Identifier, arguments["identifier"]},
+		{cfg.Ctx.CallSystem, arguments["callsystem"]},
+		{strings.Join(cfg.Ctx.Filter, "&"), arguments["filter"]},
+		{cfg.Ctx.Pattern, arguments["pattern"]},
+		{strings.Join(cfg.Ctx.Header, ","), arguments["header"]},
+		{strings.Join(cfg.Ctx.Node, ","), arguments["node"]},
+		{cfg.Ctx.Notbs, arguments["notbs"] == "true"},
+		{cfg.Ctx.Verbose, arguments["notbs"] == "true"},
+		{cfg.Ctx.DFDaemon, false},
+		{cfg.Ctx.Version, false},
+		{cfg.Ctx.ShowBar, false},
+		{cfg.Ctx.Console, false},
+		{cfg.Ctx.Help, false},
 	}
 
 	for _, cc := range res {
 		c.Assert(cc.actual, check.Equals, cc.expected)
 	}
-}
-
-func (suite *CliSuite) TestCliParameters_String(c *check.C) {
-	expected := "{\"url\":\"\",\"output\":\"\"}"
-	c.Assert(Params.String(), check.Equals, expected)
-	initParameters([]string{"-v"})
-	expected = "{\"url\":\"\",\"output\":\"\",\"locallimit\":\"20M\",\"pattern\":\"p2p\",\"version\":true}"
-	c.Assert(Params.String(), check.Equals, expected)
 }
 
 func (suite *CliSuite) TestUsage(c *check.C) {
@@ -126,8 +121,35 @@ func (suite *CliSuite) TestUsage(c *check.C) {
 	c.Assert(strings.Contains(output, os.Args[0]), check.Equals, true)
 
 	buffer.Reset()
-	initParameters(nil)
+	setupFlags(nil)
 	Usage()
 	output = buffer.String()
 	c.Assert(strings.Contains(output, pflag.CommandLine.FlagUsages()), check.Equals, true)
+}
+
+func (suite *CliSuite) Test_transLimit(c *check.C) {
+	var cases = map[string]struct {
+		i   int
+		err string
+	}{
+		"20M":   {20971520, ""},
+		"20m":   {20971520, ""},
+		"10k":   {10240, ""},
+		"10K":   {10240, ""},
+		"10x":   {0, "invalid unit 'x' of '10x', 'KkMm' are supported"},
+		"10.0x": {0, "invalid syntax"},
+		"ab":    {0, "invalid syntax"},
+		"abM":   {0, "invalid syntax"},
+	}
+
+	for k, v := range cases {
+		i, e := transLimit(k)
+		c.Assert(i, check.Equals, v.i)
+		if util.IsEmptyStr(v.err) {
+			c.Assert(e, check.IsNil)
+		} else {
+			c.Assert(e, check.NotNil)
+			c.Assert(strings.Contains(e.Error(), v.err), check.Equals, true)
+		}
+	}
 }

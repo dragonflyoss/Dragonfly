@@ -23,20 +23,53 @@ import (
 	"fmt"
 	"os"
 
+	cfg "github.com/alibaba/Dragonfly/dfget/config"
 	"github.com/alibaba/Dragonfly/version"
 )
 
 // Run is running cli.
 func Run() {
-	initParameters(os.Args[1:])
+	initParameters()
+	initProperties()
+}
 
-	if Params.Help {
+func initParameters() {
+	setupFlags(os.Args[1:])
+	if cfg.Ctx.Help {
 		Usage()
 		os.Exit(0)
 	}
 
-	if Params.Version {
+	if cfg.Ctx.Version {
 		fmt.Println(version.DFGetVersion)
 		os.Exit(0)
+	}
+}
+
+func initProperties() {
+	path := "/etc/dragonfly.conf"
+	if err := cfg.Props.Load(path); err != nil {
+	}
+
+	if cfg.Ctx.Node == nil {
+		cfg.Ctx.Node = cfg.Props.Node
+	}
+
+	if cfg.Ctx.LocalLimit == 0 {
+		cfg.Ctx.LocalLimit = cfg.Props.LocalLimit
+	}
+
+	if cfg.Ctx.TotalLimit == 0 {
+		cfg.Ctx.TotalLimit = cfg.Props.TotalLimit
+	}
+
+	if cfg.Ctx.ClientQueueSize == 0 {
+		cfg.Ctx.ClientQueueSize = cfg.Props.ClientQueueSize
+	}
+}
+
+func panicIf(err error, msg string) {
+	if err != nil {
+		panic(fmt.Errorf("%s:%s", msg, err))
 	}
 }
