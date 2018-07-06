@@ -5,7 +5,7 @@
 
 2，支持https协议的私用仓库镜像下载
 
-3，集成：蜻蜓proxy与开源pouch整合；客户端合二为一（proxy与dfget）；与阿里云容器服务集成；无缝支持和K8S的集成
+3，集成：蜻蜓proxy与开源[PouchContainer](https://github.com/alibaba/pouch)整合；客户端合二为一（proxy与dfget）；与阿里云容器服务集成；无缝支持和K8S的集成
 
 4，P2P扩展：支持客户端采用P2P模式回源，降低对超级节点的硬件配置要求
 
