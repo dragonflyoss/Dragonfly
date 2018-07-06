@@ -25,7 +25,7 @@
 
   在每次执行`dfget`命令时添加参数`--node`，如下：
   ```sh
-  dfget -u "http://" --node nodeIp1,nodeIp2
+  dfget -u "http://www.taobao.com" -o /tmp/test.html --node nodeIp1,nodeIp2
   ```
 
   注意：**命令行参数会覆盖掉配置文件内容**
