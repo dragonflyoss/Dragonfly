@@ -25,13 +25,13 @@
 
 ## Introduction
 
-Dragonfly is an intelligent P2P based file distribution system. It resolves issues like low-efficiency, low-success rate and waste of network bandwidth in large-scale file distribution scenarios such as application deployment, large-scale cache file distribution, data file distribution, image distribution etc.
-At Alibaba, the system transfers 2 billion times and distributes 3.4PB of data every month, it has become one of the most important piece of infrastructure at Alibaba. The reliability is up to 99.9999%.
+Dragonfly is an intelligent P2P based file distribution system. It aims to resolve issues related to low-efficiency, low-success rate and waste of network bandwidth in file transferring process. Especially in large-scale file distribution scenarios such as application distribution, cache distribution, log distribution, image distribution, etc.
+In Alibaba, Dragonfly is invoiked 2 Billion times and the data distributed is 3.4PB every month. Dragonfly has become one of the most important pieces of infrastructure at Alibaba. The reliability is up to 99.9999% (*1).
 
 
-DevOps takes a lot of benefits from container technologies, but at the same time, it also brings a lot of challenges: the efficiency of image distribution, especially when you have a lot of applications and require image distribution at the same time. Dragonfly works extremely well with  both Docker and [PouchContainer](https://github.com/alibaba/pouch), and actually we are compatible with any other container technologies without any modifications of container engine.
+While container technologies makes devops life easier most of the time, it sure brings a some challenges: the efficiency of image distribution, especially when you have to replicate image distribution on several hosts. Dragonfly works extremely well with both Docker and [PouchContainer](https://github.com/alibaba/pouch) for this scenario. It also is compatible with any other container formats.
 
-It delivers up to 57 times the throughput of native docker and saves up to 99.5% the out bandwidth of registry.
+It delivers up to 57 times the throughput of native docker and saves up to 99.5% the out bandwidth of registry(*2).
 
 Dragonfly makes it simple and cost-effective to set up, operate, and scale any kind of files/images/data distribution.
 
