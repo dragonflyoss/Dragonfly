@@ -23,7 +23,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Sirupsen/logrus"
 	cfg "github.com/alibaba/Dragonfly/dfget/config"
 	"github.com/alibaba/Dragonfly/dfget/util"
 	"github.com/go-check/check"
@@ -153,5 +152,4 @@ func (suite *CliSuite) Test_transLimit(c *check.C) {
 			c.Assert(strings.Contains(e.Error(), v.err), check.Equals, true)
 		}
 	}
-	logrus.Info("hello")
 }
