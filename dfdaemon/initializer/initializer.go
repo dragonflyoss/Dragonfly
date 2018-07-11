@@ -141,7 +141,7 @@ func initLogger() {
 	logFilePath := g.HomeDir + ".small-dragonfly/logs/dfdaemon.log"
 	log.SetFormatter(&log.TextFormatter{TimestampFormat: "2006-01-02 15:04:00", DisableColors: true})
 	if os.MkdirAll(filepath.Dir(logFilePath), 0755) == nil {
-		if logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_RDWR, 0644); err == nil {
+		if logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644); err == nil {
 			logFile.Seek(0, 2)
 			log.SetOutput(logFile)
 			go rotateLog(logFile, logFilePath)
