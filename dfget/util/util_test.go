@@ -17,7 +17,9 @@
 package util
 
 import (
+	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/go-check/check"
 )
@@ -30,6 +32,10 @@ type DFGetUtilSuite struct{}
 
 func init() {
 	check.Suite(&DFGetUtilSuite{})
+}
+
+func (suite *DFGetUtilSuite) SetUpTest(c *check.C) {
+	rand.Seed(time.Now().UnixNano())
 }
 
 func (suite *DFGetUtilSuite) TestMax(c *check.C) {
