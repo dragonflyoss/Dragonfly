@@ -92,6 +92,8 @@ func (suite *DFGetUtilSuite) TestAddConsoleLog(c *check.C) {
 	logger, tmpFile, r, err := tempFileAndLogger("debug", "")
 	defer cleanTempFile(tmpFile, err)
 
+	// remove timestamp from logs to avoid testing failure
+	logger.Formatter = &logrus.TextFormatter{DisableTimestamp: true}
 	AddConsoleLog(logger)
 	testOut := &bytes.Buffer{}
 	for _, v := range logger.Hooks {
