@@ -20,13 +20,21 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"os/user"
+	"path"
+	"time"
+
+	"github.com/Sirupsen/logrus"
 )
 
-// Props is loaded from config file.
-var Props *Properties
+var (
+	// Props is loaded from config file.
+	Props *Properties
 
-// Ctx holds all the runtime Context information.
-var Ctx *Context
+	// Ctx holds all the runtime Context information.
+	Ctx *Context
+)
 
 func init() {
 	Reset()
@@ -39,7 +47,7 @@ func Reset() {
 		LocalLimit:      20 * 1024 * 1024,
 		ClientQueueSize: 6,
 	}
-	Ctx = new(Context)
+	Ctx = NewContext()
 }
 
 // ----------------------------------------------------------------------------
@@ -79,9 +87,35 @@ type Context struct {
 	Verbose         bool     `json:"verbose,omitempty"`
 	Help            bool     `json:"help,omitempty"`
 	ClientQueueSize int      `json:"clientQueueSize,omitempty"`
+
+	StartTime  time.Time `json:"startTime"`
+	Sign       string    `json:"sign"`
+	User       string    `json:"user"`
+	WorkHome   string    `json:"workHome"`
+	ConfigFile string    `json:"configFile"`
+
+	ClientLogger *logrus.Logger `json:"-"`
+	ServerLogger *logrus.Logger `json:"-"`
 }
 
 func (ctx *Context) String() string {
 	js, _ := json.Marshal(ctx)
 	return fmt.Sprintf("%s", js)
+}
+
+// NewContext creates and initialize a Context.
+func NewContext() *Context {
+	ctx := new(Context)
+	ctx.StartTime = time.Now()
+	ctx.Sign = fmt.Sprintf("%d-%.3f",
+		os.Getpid(), float64(time.Now().UnixNano())/float64(time.Second))
+
+	if currentUser, err := user.Current(); err == nil {
+		ctx.User = currentUser.Username
+		ctx.WorkHome = path.Join(currentUser.HomeDir, ".small-dragonfly")
+	} else {
+		panic(fmt.Errorf("get user error: %s", err))
+	}
+	ctx.ConfigFile = DefaultConfigFile
+	return ctx
 }

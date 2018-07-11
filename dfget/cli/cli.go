@@ -22,15 +22,25 @@ package cli
 import (
 	"fmt"
 	"os"
+	"path"
 
 	cfg "github.com/alibaba/Dragonfly/dfget/config"
+	"github.com/alibaba/Dragonfly/dfget/util"
 	"github.com/alibaba/Dragonfly/version"
+	"github.com/spf13/pflag"
 )
 
 // Run is running cli.
 func Run() {
+	initialize()
+}
+
+func initialize() {
 	initParameters()
+	initLog()
+	cfg.Ctx.ClientLogger.Infof("cmd params:%v", pflag.Args())
 	initProperties()
+	cfg.Ctx.ClientLogger.Infof("context:%s", cfg.Ctx)
 }
 
 func initParameters() {
@@ -47,8 +57,7 @@ func initParameters() {
 }
 
 func initProperties() {
-	path := "/etc/dragonfly.conf"
-	if err := cfg.Props.Load(path); err != nil {
+	if err := cfg.Props.Load(cfg.Ctx.ConfigFile); err != nil {
 	}
 
 	if cfg.Ctx.Node == nil {
@@ -68,8 +77,23 @@ func initProperties() {
 	}
 }
 
+func initLog() {
+	var (
+		logPath  = path.Join(cfg.Ctx.WorkHome, "logs")
+		logLevel = "info"
+	)
+	if cfg.Ctx.Verbose {
+		logLevel = "debug"
+	}
+	cfg.Ctx.ClientLogger = util.CreateLogger(logPath, "dfclient.log", logLevel, cfg.Ctx.Sign)
+	if cfg.Ctx.Console {
+		util.AddConsoleLog(cfg.Ctx.ClientLogger)
+	}
+	cfg.Ctx.ServerLogger = util.CreateLogger(logPath, "dfserver.log", logLevel, cfg.Ctx.Sign)
+}
+
 func panicIf(err error, msg string) {
 	if err != nil {
-		panic(fmt.Errorf("%s:%s", msg, err))
+		panic(fmt.Errorf("%s:%v", msg, err))
 	}
 }

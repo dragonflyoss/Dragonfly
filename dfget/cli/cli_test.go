@@ -153,3 +153,7 @@ func (suite *CliSuite) Test_transLimit(c *check.C) {
 		}
 	}
 }
+
+func TestRun(t *testing.T) {
+	Run()
+}
