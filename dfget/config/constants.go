@@ -59,7 +59,8 @@ const (
 
 /* others */
 const (
-	SchemaHTTP = "http"
+	DefaultConfigFile = "/etc/dragonfly.conf"
+	SchemaHTTP        = "http"
 
 	ServerPortLowerLimit = 15000
 	ServerPortUpperLimit = 65000
