@@ -55,16 +55,18 @@ var dfRoundTripper = &DFRoundTripper{
 var compiler = regexp.MustCompile("^.+/blobs/sha256.*$")
 
 func needUseGetter(req *http.Request, location string) bool {
-	var useGetter bool
-	if req.Method == http.MethodGet {
-		if compiler.MatchString(req.URL.Path) {
-			return true
-		}
-		if location != "" {
-			return global.MatchDfPattern(location)
-		}
+	if req.Method != http.MethodGet {
+		return false
 	}
-	return useGetter
+
+	if compiler.MatchString(req.URL.Path) {
+		return true
+	}
+	if location != "" {
+		return global.MatchDfPattern(location)
+	}
+
+	return false
 }
 
 // RoundTrip only process first redirect at present
@@ -86,19 +88,22 @@ func (roundTripper *DFRoundTripper) RoundTrip(req *http.Request) (*http.Response
 // download uses dfget to download
 func (roundTripper *DFRoundTripper) download(req *http.Request, urlString string) (*http.Response, error) {
 	dstPath, err := DownloadByGetter(urlString, req.Header, uuid.New())
-	if err == nil {
-		defer os.Remove(dstPath)
-		if fileReq, err := http.NewRequest("GET", "file:///"+dstPath, nil); err == nil {
-			response, err := dfRoundTripper.Round2.RoundTrip(fileReq)
-			if err == nil {
-				response.Header.Set("Content-Disposition", "attachment; filename="+dstPath)
-			} else {
-				logrus.Errorf("read response from file:%s error:%v", dstPath, err)
-			}
-			return response, err
-		}
+	if err != nil {
+		logrus.Errorf("download fail: %v", err)
 		return nil, err
 	}
-	logrus.Errorf("download fail:%v", err)
-	return nil, err
+	defer os.Remove(dstPath)
+
+	fileReq, err := http.NewRequest("GET", "file:///"+dstPath, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := dfRoundTripper.Round2.RoundTrip(fileReq)
+	if err == nil {
+		response.Header.Set("Content-Disposition", "attachment; filename="+dstPath)
+	} else {
+		logrus.Errorf("read response from file:%s error:%v", dstPath, err)
+	}
+	return response, err
 }
