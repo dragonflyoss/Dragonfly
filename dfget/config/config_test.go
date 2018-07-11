@@ -17,7 +17,13 @@
 package config
 
 import (
+	"fmt"
+	"os"
+	"os/user"
+	"path"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/go-check/check"
 )
@@ -37,12 +43,35 @@ func (suite *ConfigSuite) SetUpTest(c *check.C) {
 }
 
 func (suite *ConfigSuite) TestContext_String(c *check.C) {
-	expected := "{\"url\":\"\",\"output\":\"\"}"
-	c.Assert(Ctx.String(), check.Equals, expected)
+	expected := "{\"url\":\"\",\"output\":\"\""
+	c.Assert(strings.Contains(Ctx.String(), expected), check.Equals, true)
 	Ctx.LocalLimit = 20971520
 	Ctx.Pattern = "p2p"
 	Ctx.Version = true
-	expected = "{\"url\":\"\",\"output\":\"\",\"localLimit\":20971520," +
-		"\"pattern\":\"p2p\",\"version\":true}"
-	c.Assert(Ctx.String(), check.Equals, expected)
+	expected = "\"url\":\"\",\"output\":\"\",\"localLimit\":20971520," +
+		"\"pattern\":\"p2p\",\"version\":true"
+	c.Assert(strings.Contains(Ctx.String(), expected), check.Equals, true)
+}
+
+func (suite *ConfigSuite) TestNewContext(c *check.C) {
+	before := time.Now()
+	time.Sleep(time.Millisecond)
+	Ctx = NewContext()
+	time.Sleep(time.Millisecond)
+	after := time.Now()
+
+	c.Assert(Ctx.StartTime.After(before), check.Equals, true)
+	c.Assert(Ctx.StartTime.Before(after), check.Equals, true)
+
+	beforeSign := fmt.Sprintf("%d-%.3f",
+		os.Getpid(), float64(before.UnixNano())/float64(time.Second))
+	afterSign := fmt.Sprintf("%d-%.3f",
+		os.Getpid(), float64(after.UnixNano())/float64(time.Second))
+	c.Assert(beforeSign < Ctx.Sign, check.Equals, true)
+	c.Assert(afterSign > Ctx.Sign, check.Equals, true)
+
+	if curUser, err := user.Current(); err != nil {
+		c.Assert(Ctx.User, check.Equals, curUser.Username)
+		c.Assert(Ctx.WorkHome, check.Equals, path.Join(curUser.HomeDir, ".small-dragonfly"))
+	}
 }
