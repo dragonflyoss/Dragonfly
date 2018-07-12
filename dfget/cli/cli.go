@@ -27,7 +27,6 @@ import (
 	cfg "github.com/alibaba/Dragonfly/dfget/config"
 	"github.com/alibaba/Dragonfly/dfget/util"
 	"github.com/alibaba/Dragonfly/version"
-	"github.com/spf13/pflag"
 )
 
 // Run is running cli.
@@ -38,7 +37,7 @@ func Run() {
 func initialize() {
 	initParameters()
 	initLog()
-	cfg.Ctx.ClientLogger.Infof("cmd params:%v", pflag.Args())
+	cfg.Ctx.ClientLogger.Infof("cmd params:%v", os.Args)
 	initProperties()
 	cfg.Ctx.ClientLogger.Infof("context:%s", cfg.Ctx)
 }
