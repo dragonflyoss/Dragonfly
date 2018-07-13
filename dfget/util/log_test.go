@@ -130,7 +130,7 @@ func tempFileAndLogger(level string, sign string) (*logrus.Logger, *os.File, *bu
 }
 
 func cleanTempFile(file *os.File, err error) {
-	if err != nil {
+	if err == nil {
 		file.Close()
 		os.Remove(file.Name())
 	}
