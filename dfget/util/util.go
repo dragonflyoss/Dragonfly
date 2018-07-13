@@ -18,6 +18,16 @@
 // Such as net-transporting, file-operating, rate-limiter.
 package util
 
+import (
+	"fmt"
+	"reflect"
+)
+
+var (
+	// Printer is global StdPrinter.
+	Printer = &StdPrinter{}
+)
+
 // Max returns the larger of x or y.
 func Max(x, y int32) int32 {
 	if x > y {
@@ -37,4 +47,31 @@ func Min(x, y int32) int32 {
 // IsEmptyStr returns whether the string x is empty.
 func IsEmptyStr(s string) bool {
 	return s == ""
+}
+
+// IsNil returns whether the value  is nil.
+func IsNil(value interface{}) (result bool) {
+	if value == nil {
+		result = true
+	} else {
+		switch v := reflect.ValueOf(value); v.Kind() {
+		case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
+			return v.IsNil()
+		}
+	}
+	return
+}
+
+// PanicIfNil panic if the obj is nil.
+func PanicIfNil(obj interface{}, msg string) {
+	if IsNil(obj) {
+		panic(fmt.Errorf(msg))
+	}
+}
+
+// PanicIfError panic if an error happened.
+func PanicIfError(err error, msg string) {
+	if err != nil {
+		panic(fmt.Errorf("%s: %v", msg, err))
+	}
 }

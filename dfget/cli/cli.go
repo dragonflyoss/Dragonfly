@@ -32,11 +32,14 @@ import (
 // Run is running cli.
 func Run() {
 	initialize()
+	util.Printer.Println(fmt.Sprintf("--%s--  %s",
+		cfg.Ctx.StartTime.Format(cfg.DefaultTimestampFormat), cfg.Ctx.URL))
 }
 
 func initialize() {
 	initParameters()
 	initLog()
+	cfg.AssertContext(cfg.Ctx)
 	cfg.Ctx.ClientLogger.Infof("cmd params:%v", os.Args)
 	initProperties()
 	cfg.Ctx.ClientLogger.Infof("context:%s", cfg.Ctx)
