@@ -94,7 +94,7 @@ func (suite *ConfigSuite) TestAssertContext(c *check.C) {
 		output   string
 		expected string
 	}{
-		{expected: "xclient log"},
+		{expected: "client log"},
 		{clog: clog, expected: "server log"},
 		{clog: clog, slog: clog, expected: "invalid url"},
 		{clog: clog, slog: clog, url: "http://a.b", expected: ""},
