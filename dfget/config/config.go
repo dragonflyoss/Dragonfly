@@ -23,9 +23,14 @@ import (
 	"os"
 	"os/user"
 	"path"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"syscall"
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/alibaba/Dragonfly/dfget/util"
 )
 
 var (
@@ -118,4 +123,66 @@ func NewContext() *Context {
 	}
 	ctx.ConfigFile = DefaultConfigFile
 	return ctx
+}
+
+// AssertContext checks the ctx and panic if any error happens.
+func AssertContext(ctx *Context) {
+	util.PanicIfNil(ctx, "runtime context is not initialized")
+	util.PanicIfNil(ctx.ClientLogger, "client log is not initialized")
+	util.PanicIfNil(ctx.ServerLogger, "server log is not initialized")
+
+	defer func() {
+		if err := recover(); err != nil {
+			ctx.ClientLogger.Panic(err)
+		}
+	}()
+
+	util.PanicIfError(checkURL(ctx), "invalid url")
+	util.PanicIfError(checkOutput(ctx), "invalid output")
+}
+
+func checkURL(ctx *Context) error {
+	// shorter than the shortest case 'http://a.b'
+	if len(ctx.URL) < 10 {
+		return fmt.Errorf(ctx.URL)
+	}
+	reg := regexp.MustCompile(`(https?|HTTPS?)://([\w-]+\.)+[\w-]+(/[\w- ./?%&=]*)?`)
+	if url := reg.FindString(ctx.URL); util.IsEmptyStr(url) {
+		return fmt.Errorf(ctx.URL)
+	}
+	return nil
+}
+
+// This function must be called after checkURL
+func checkOutput(ctx *Context) error {
+	if util.IsEmptyStr(ctx.Output) {
+		url := strings.TrimRight(ctx.URL, "/")
+		idx := strings.LastIndexByte(url, '/')
+		if idx < 0 {
+			return fmt.Errorf("get output from url[%s] error", ctx.URL)
+		}
+		ctx.Output = url[idx+1:]
+	}
+
+	if !filepath.IsAbs(ctx.Output) {
+		absPath, err := filepath.Abs(ctx.Output)
+		if err != nil {
+			return fmt.Errorf("get absolute path[%s] error: %v", ctx.Output, err)
+		}
+		ctx.Output = absPath
+	}
+
+	if f, err := os.Stat(ctx.Output); err == nil && f.IsDir() {
+		return fmt.Errorf("path[%s] is directory but requires file path", ctx.Output)
+	}
+
+	// check permission
+	for dir := ctx.Output; !util.IsEmptyStr(dir); dir = filepath.Dir(dir) {
+		if err := syscall.Access(dir, syscall.O_RDWR); err == nil {
+			break
+		} else if os.IsPermission(err) {
+			return fmt.Errorf("user[%s] path[%s] %v", ctx.User, ctx.Output, err)
+		}
+	}
+	return nil
 }
