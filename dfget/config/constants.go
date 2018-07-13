@@ -59,8 +59,9 @@ const (
 
 /* others */
 const (
-	DefaultConfigFile = "/etc/dragonfly.conf"
-	SchemaHTTP        = "http"
+	DefaultConfigFile      = "/etc/dragonfly.conf"
+	DefaultTimestampFormat = "2006-01-02 15:04:05"
+	SchemaHTTP             = "http"
 
 	ServerPortLowerLimit = 15000
 	ServerPortUpperLimit = 65000

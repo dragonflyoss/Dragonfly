@@ -27,8 +27,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
-// DefaultTimeFormat defines the timestamp format.
-const DefaultTimeFormat = "2006-01-02 15:04:05.000"
+// DefaultLogTimeFormat defines the timestamp format.
+const DefaultLogTimeFormat = "2006-01-02 15:04:05.000"
 
 // CreateLogger creates a logger.
 func CreateLogger(logPath string, logName string, logLevel string, sign string) *log.Logger {
@@ -46,7 +46,7 @@ func CreateLogger(logPath string, logName string, logLevel string, sign string) 
 			logFile.Seek(0, 2)
 			logger = log.New()
 			logger.Out = logFile
-			logger.Formatter = &DragonflyFormatter{TimestampFormat: DefaultTimeFormat, Sign: sign}
+			logger.Formatter = &DragonflyFormatter{TimestampFormat: DefaultLogTimeFormat, Sign: sign}
 			logger.Level = level
 			return logger
 		}
@@ -112,7 +112,7 @@ func (f *DragonflyFormatter) Format(entry *log.Entry) ([]byte, error) {
 
 	timestampFormat := f.TimestampFormat
 	if timestampFormat == "" {
-		timestampFormat = DefaultTimeFormat
+		timestampFormat = DefaultLogTimeFormat
 	}
 	f.appendValue(b, entry.Time.Format(timestampFormat), true)
 	f.appendValue(b, strings.ToUpper(entry.Level.String()), true)
