@@ -29,26 +29,13 @@ type CommandParam struct {
 	CallSystem string
 	URLFilter  string
 	Notbs      bool
-	MaxProcs   int
-
-	Version  bool
-	Verbose  bool
-	Help     bool
-	HostIP   string
-	Port     uint
-	Registry string //https://xxx.xx.x:port or http://xxx.xx.x:port
-	DownRule string
-
-	CertFile string
-	KeyFile  string
+	HostIP     string
+	Registry   string //https://xxx.xx.x:port or http://xxx.xx.x:port
 }
 
 var (
 	// HomeDir is the user home
 	HomeDir string
-
-	// DfHome is the dfdaemon home
-	DfHome string
 
 	// UseHTTPS indicates whether to use HTTPS protocol
 	UseHTTPS bool
