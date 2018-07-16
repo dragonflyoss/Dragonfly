@@ -17,7 +17,7 @@
 // Package version represents the version the project Dragonfly.
 package version
 
-var (
+const (
 	// Version is the version of the project Dragonfly
 	Version = "0.2.0"
 
