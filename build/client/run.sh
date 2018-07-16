@@ -82,7 +82,7 @@ check() {
 dfdaemon() {
     echo "BUILD: dfdaemon"
     test -f ${BIN_DIR}/${DFDAEMON_BINARY_NAME} && rm -f ${BIN_DIR}/${DFDAEMON_BINARY_NAME}
-    cd ${BUILD_SOURCE_HOME}/dfdaemon
+    cd ${BUILD_SOURCE_HOME}/cmd/dfdaemon
     go build -o ${BIN_DIR}/${DFDAEMON_BINARY_NAME}
     chmod a+x ${BIN_DIR}/${DFDAEMON_BINARY_NAME}
 }
@@ -99,7 +99,7 @@ dfget() {
 dfget-go() {
     echo "BUILD: dfget-go"
     test -f ${BIN_DIR}/${DFGET_BINARY_NAME} && rm -f ${BIN_DIR}/${DFGET_BINARY_NAME}
-    cd ${BUILD_SOURCE_HOME}/dfget
+    cd ${BUILD_SOURCE_HOME}/cmd/dfget
     go build -o ${BIN_DIR}/${DFGET_BINARY_NAME}
     chmod a+x ${BIN_DIR}/${DFGET_BINARY_NAME}
 }
