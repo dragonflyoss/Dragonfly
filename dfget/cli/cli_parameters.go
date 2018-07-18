@@ -25,6 +25,7 @@ import (
 
 	cfg "github.com/alibaba/Dragonfly/dfget/config"
 	"github.com/alibaba/Dragonfly/dfget/util"
+	"github.com/alibaba/Dragonfly/version"
 	"github.com/spf13/pflag"
 )
 
@@ -106,7 +107,7 @@ func setupFlags(args []string) {
 // Usage shows the usage of this program.
 func Usage() {
 	fmt.Fprintln(cliOut, "Dragonfly is a file distribution system based p2p.")
-	fmt.Fprintf(cliOut, "Usage of %s:\n", os.Args[0])
+	fmt.Fprintf(cliOut, "Usage of %s[%s]:\n", os.Args[0], version.DFGetVersion)
 	fmt.Fprintf(cliOut, "%s\n", pflag.CommandLine.FlagUsages())
 }
 
