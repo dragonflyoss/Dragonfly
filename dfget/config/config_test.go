@@ -137,7 +137,11 @@ func (suite *ConfigSuite) TestCheckURL(c *check.C) {
 		"////a//":              false,
 		"a////a//":             false,
 		"a.com////a//":         true,
+		"a:b@a.com":            true,
+		"a:b@127.0.0.1":        true,
+		"a:b@127.0.0.1?a=b":    true,
 		"127.0.0.1":            true,
+		"127.0.0.1?a=b":        true,
 		"127.0.0.1:":           true,
 		"127.0.0.1:8080":       true,
 		"127.0.0.1:8080/我":     true,
@@ -163,14 +167,15 @@ func (suite *ConfigSuite) TestCheckURL(c *check.C) {
 }
 
 func (suite *ConfigSuite) TestCheckOutput(c *check.C) {
-	curDir, _ := filepath.Abs(".")
-
-	var j = func(p string) string { return filepath.Join(curDir, p) }
-	var cases = []struct {
+	type tester struct {
 		url      string
 		output   string
 		expected string
-	}{
+	}
+	curDir, _ := filepath.Abs(".")
+
+	var j = func(p string) string { return filepath.Join(curDir, p) }
+	var cases = []tester{
 		{"http://www.taobao.com", "", j("www.taobao.com")},
 		{"http://www.taobao.com", "/tmp/zj.test", "/tmp/zj.test"},
 		{"www.taobao.com", "", ""},
@@ -182,11 +187,7 @@ func (suite *ConfigSuite) TestCheckOutput(c *check.C) {
 	}
 
 	if Ctx.User != "root" {
-		cases = append(cases, struct {
-			url      string
-			output   string
-			expected string
-		}{url: "", output: "/root/zj.test", expected: ""})
+		cases = append(cases, tester{url: "", output: "/root/zj.test", expected: ""})
 	}
 	for _, v := range cases {
 		Ctx.URL = v.url

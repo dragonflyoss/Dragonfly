@@ -56,6 +56,7 @@ func Reset() {
 }
 
 // ----------------------------------------------------------------------------
+// Properties
 
 // Properties holds all configurable Properties.
 type Properties struct {
@@ -69,6 +70,9 @@ type Properties struct {
 func (p *Properties) Load(path string) error {
 	return nil
 }
+
+// ----------------------------------------------------------------------------
+// Context
 
 // Context holds all the runtime context information.
 type Context struct {
@@ -146,7 +150,7 @@ func checkURL(ctx *Context) error {
 	if len(ctx.URL) < 10 {
 		return fmt.Errorf(ctx.URL)
 	}
-	reg := regexp.MustCompile(`(https?|HTTPS?)://([\w-]+\.)+[\w-]+(/[\w- ./?%&=]*)?`)
+	reg := regexp.MustCompile(`(https?|HTTPS?)://([\w_]+:[\w_]+@)?([\w-]+\.)+[\w-]+(/[\w- ./?%&=]*)?`)
 	if url := reg.FindString(ctx.URL); util.IsEmptyStr(url) {
 		return fmt.Errorf(ctx.URL)
 	}
