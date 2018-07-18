@@ -40,12 +40,17 @@ func initialize() {
 	initParameters()
 	initLog()
 	cfg.AssertContext(cfg.Ctx)
-	cfg.Ctx.ClientLogger.Infof("cmd params:%v", os.Args)
+	cfg.Ctx.ClientLogger.Infof("cmd params:%q", os.Args)
 	initProperties()
 	cfg.Ctx.ClientLogger.Infof("context:%s", cfg.Ctx)
 }
 
 func initParameters() {
+	if len(os.Args) < 2 {
+		fmt.Println("please use '--help' or '-h' to show the help information")
+		os.Exit(0)
+	}
+
 	setupFlags(os.Args[1:])
 	if cfg.Ctx.Help {
 		Usage()

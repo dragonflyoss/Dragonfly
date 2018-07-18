@@ -18,13 +18,17 @@ package cli
 
 import (
 	"bytes"
+	"fmt"
+	"io/ioutil"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"testing"
 
 	cfg "github.com/alibaba/Dragonfly/dfget/config"
 	"github.com/alibaba/Dragonfly/dfget/util"
+	"github.com/alibaba/Dragonfly/version"
 	"github.com/go-check/check"
 	"github.com/spf13/pflag"
 )
@@ -40,6 +44,10 @@ func init() {
 }
 
 func (suite *CliSuite) SetUpTest(c *check.C) {
+	reset()
+}
+
+func reset() {
 	pflag.CommandLine = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
 	cfg.Reset()
 }
@@ -152,4 +160,67 @@ func (suite *CliSuite) Test_transLimit(c *check.C) {
 			c.Assert(strings.Contains(e.Error(), v.err), check.Equals, true)
 		}
 	}
+}
+
+func (suite *CliSuite) TestInitialize(c *check.C) {
+	const workHomeEnv = "DFGET_TEST_WORK_HOME"
+	if hasTestEnv() {
+		args := testArgs()
+		cfg.Ctx.WorkHome = os.Getenv(workHomeEnv)
+		os.Args = args
+		cliOut = os.Stdout
+		initialize()
+		return
+	}
+
+	tmpDir, _ := ioutil.TempDir("/tmp", "dfget-cli-test-")
+	defer os.RemoveAll(tmpDir)
+
+	var cases = []struct {
+		args   []string
+		exMsg  string
+		exCode int
+	}{
+		{args: []string{}, exMsg: "please use", exCode: 0},
+		{args: []string{"-h"}, exMsg: "Usage", exCode: 0},
+		{args: []string{"-v"}, exMsg: version.DFGetVersion, exCode: 0},
+		{args: []string{"-u"}, exMsg: "flag needs an argument", exCode: 2},
+		{args: []string{"-u", "http://www.taobao.com"}, exMsg: "", exCode: 0},
+	}
+
+	for _, v := range cases {
+		cmd := helperCommand("TestInitialize", v.args...)
+		cmd.Env = append(cmd.Env, fmt.Sprintf("%s=%s", workHomeEnv, tmpDir))
+		bs, err := cmd.Output()
+		c.Assert(strings.Contains(string(bs), v.exMsg), check.Equals, true,
+			check.Commentf("args:%v out:%s", v.args, bs))
+		if e, ok := err.(*exec.ExitError); ok {
+			c.Assert(e.Success(), check.Equals, v.exCode == 0, check.Commentf(
+				"args:%v err:%v", v.args, err))
+		}
+	}
+}
+
+func helperCommand(name string, args ...string) (cmd *exec.Cmd) {
+	cs := []string{"-check.f", fmt.Sprintf("^%s$", name), "--"}
+	cs = append(cs, args...)
+	cmd = exec.Command(os.Args[0], cs...)
+	cmd.Env = testEnv()
+	return cmd
+}
+
+func testArgs() []string {
+	args := []string{os.Args[0]}
+	if len(os.Args) > 4 {
+		args = append(args, os.Args[4:]...)
+	}
+	return args
+}
+
+func testEnv() []string {
+	return []string{"DFGET_TEST_HELPER_PROCESS=1"}
+}
+
+func hasTestEnv() bool {
+	return os.Getenv("DFGET_TEST_HELPER_PROCESS") == "1"
 }
