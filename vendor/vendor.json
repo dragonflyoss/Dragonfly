@@ -49,6 +49,30 @@
 			"path": "gopkg.in/gcfg.v1",
 			"revision": "61b2c08bc8f6068f7c5ca684372f9a6cb1c45ebe",
 			"revisionTime": "2018-05-17T20:24:47Z"
+		},
+		{
+			"checksumSHA1": "CYxB+G1UgkqEOFCEb90ObVPczMA=",
+			"path": "gopkg.in/gcfg.v1/scanner",
+			"revision": "61b2c08bc8f6068f7c5ca684372f9a6cb1c45ebe",
+			"revisionTime": "2018-05-17T20:24:47Z"
+		},
+		{
+			"checksumSHA1": "9agO8MliOVQGjMcOIV7g7LPHeFY=",
+			"path": "gopkg.in/gcfg.v1/token",
+			"revision": "61b2c08bc8f6068f7c5ca684372f9a6cb1c45ebe",
+			"revisionTime": "2018-05-17T20:24:47Z"
+		},
+		{
+			"checksumSHA1": "A2FpDz2muvMPC91Ec63wmUPfxFE=",
+			"path": "gopkg.in/gcfg.v1/types",
+			"revision": "61b2c08bc8f6068f7c5ca684372f9a6cb1c45ebe",
+			"revisionTime": "2018-05-17T20:24:47Z"
+		},
+		{
+			"checksumSHA1": "I4c3qsEX8KAUTeB9+2pwVX/2ojU=",
+			"path": "gopkg.in/warnings.v0",
+			"revision": "ec4a0fea49c7b46c2aeb0b51aac55779c607e52b",
+			"revisionTime": "2017-11-15T19:30:34Z"
 		}
 	],
 	"rootPath": "github.com/alibaba/Dragonfly"
