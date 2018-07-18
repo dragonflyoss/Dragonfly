@@ -15,6 +15,12 @@
 			"revisionTime": "2018-01-22T19:00:07Z"
 		},
 		{
+			"checksumSHA1": "IU0RLDrXScjlsTwNWAKQLLsLoc0=",
+			"path": "github.com/sirupsen/logrus",
+			"revision": "92052687f8ec598ff0da626d2909478cfd1e3a3c",
+			"revisionTime": "2018-07-12T20:16:18Z"
+		},
+		{
 			"checksumSHA1": "OJI0OgC5V8gZtfS1e0CDYMhkDNc=",
 			"path": "github.com/spf13/pflag",
 			"revision": "3ebe029320b2676d667ae88da602a5f854788a8a",
