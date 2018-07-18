@@ -15,34 +15,40 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
 	"runtime"
 
 	"github.com/Sirupsen/logrus"
 
-	"github.com/alibaba/Dragonfly/dfdaemon/global"
-	_ "github.com/alibaba/Dragonfly/dfdaemon/initializer"
+	"github.com/alibaba/Dragonfly/cmd/dfdaemon/options"
+	"github.com/alibaba/Dragonfly/dfdaemon/initializer"
 )
 
 func main() {
+	options := options.New()
+	options.AddFlags(flag.CommandLine)
+	flag.Parse()
+
+	initializer.Init(options)
 
 	// if CommandLine.MaxProcs <= 0, programs run with GOMAXPROCS set to the number of cores available
-	if global.CommandLine.MaxProcs > 0 {
-		runtime.GOMAXPROCS(global.CommandLine.MaxProcs)
+	if options.MaxProcs > 0 {
+		runtime.GOMAXPROCS(options.MaxProcs)
 	}
 
-	logrus.Infof("start dfdaemon param:%+v", global.CommandLine)
+	logrus.Infof("start dfdaemon param:%+v", options)
 
-	fmt.Printf("\nlaunch dfdaemon on port:%d\n", global.CommandLine.Port)
+	fmt.Printf("\nlaunch dfdaemon on port:%d\n", options.Port)
 
 	var err error
 
-	if global.UseHTTPS {
-		err = http.ListenAndServeTLS(fmt.Sprintf(":%d", global.CommandLine.Port),
-			global.CommandLine.CertFile, global.CommandLine.KeyFile, nil)
+	if options.CertFile != "" && options.KeyFile != "" {
+		err = http.ListenAndServeTLS(fmt.Sprintf(":%d", options.Port),
+			options.CertFile, options.KeyFile, nil)
 	} else {
-		err = http.ListenAndServe(fmt.Sprintf(":%d", global.CommandLine.Port), nil)
+		err = http.ListenAndServe(fmt.Sprintf(":%d", options.Port), nil)
 
 	}
 
