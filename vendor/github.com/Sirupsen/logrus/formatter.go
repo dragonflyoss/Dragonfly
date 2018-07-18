@@ -2,7 +2,7 @@ package logrus
 
 import "time"
 
-const DefaultTimestampFormat = time.RFC3339
+const defaultTimestampFormat = time.RFC3339
 
 // The Formatter interface is used to implement a custom Formatter. It takes an
 // `Entry`. It exposes all the fields, including the default ones:
@@ -30,19 +30,22 @@ type Formatter interface {
 //
 // It's not exported because it's still using Data in an opinionated way. It's to
 // avoid code duplication between the two default formatters.
-func prefixFieldClashes(data Fields) {
-	_, ok := data["time"]
-	if ok {
-		data["fields.time"] = data["time"]
+func prefixFieldClashes(data Fields, fieldMap FieldMap) {
+	timeKey := fieldMap.resolve(FieldKeyTime)
+	if t, ok := data[timeKey]; ok {
+		data["fields."+timeKey] = t
+		delete(data, timeKey)
 	}
 
-	_, ok = data["msg"]
-	if ok {
-		data["fields.msg"] = data["msg"]
+	msgKey := fieldMap.resolve(FieldKeyMsg)
+	if m, ok := data[msgKey]; ok {
+		data["fields."+msgKey] = m
+		delete(data, msgKey)
 	}
 
-	_, ok = data["level"]
-	if ok {
-		data["fields.level"] = data["level"]
+	levelKey := fieldMap.resolve(FieldKeyLevel)
+	if l, ok := data[levelKey]; ok {
+		data["fields."+levelKey] = l
+		delete(data, levelKey)
 	}
 }

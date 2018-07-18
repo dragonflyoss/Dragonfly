@@ -18,7 +18,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 // GetArgs returns all the arguments of command-line except the program name.

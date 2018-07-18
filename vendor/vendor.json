@@ -3,20 +3,22 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "0UBymFkwim2m871PQsx3Ag0vrxc=",
-			"path": "github.com/Sirupsen/logrus",
-			"revision": ""
-		},
-		{
 			"checksumSHA1": "OED5RsS1Us385a/VH6IAlSl0xHo=",
 			"path": "github.com/go-check/check",
 			"revision": "20d25e2804050c1cd24a7eea1e7a6447dd0e74ec",
 			"revisionTime": "2016-12-08T18:13:25Z"
 		},
 		{
-			"checksumSHA1": "iOnDBM4xJIRsf8Hh9RxEBSACj9s=",
+			"checksumSHA1": "As1PSFJop3xi3W8tAYSm/8YesAQ=",
 			"path": "github.com/pborman/uuid",
-			"revision": ""
+			"revision": "c65b2f87fee37d1c7854c9164a450713c28d50cd",
+			"revisionTime": "2018-01-22T19:00:07Z"
+		},
+		{
+			"checksumSHA1": "IU0RLDrXScjlsTwNWAKQLLsLoc0=",
+			"path": "github.com/sirupsen/logrus",
+			"revision": "92052687f8ec598ff0da626d2909478cfd1e3a3c",
+			"revisionTime": "2018-07-12T20:16:18Z"
 		},
 		{
 			"checksumSHA1": "OJI0OgC5V8gZtfS1e0CDYMhkDNc=",
@@ -29,6 +31,12 @@
 			"path": "golang.org/x/sys/unix",
 			"revision": "d8f5ea21b9295e315e612b4bcf4bedea93454d4d",
 			"revisionTime": "2017-08-03T09:04:06Z"
+		},
+		{
+			"checksumSHA1": "N/AMbVzEuShvKz2WXrdwwMWylik=",
+			"path": "gopkg.in/gcfg.v1",
+			"revision": "61b2c08bc8f6068f7c5ca684372f9a6cb1c45ebe",
+			"revisionTime": "2018-05-17T20:24:47Z"
 		}
 	],
 	"rootPath": "github.com/alibaba/Dragonfly"

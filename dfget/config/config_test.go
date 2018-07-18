@@ -27,9 +27,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/alibaba/Dragonfly/dfget/util"
 	"github.com/go-check/check"
+	"github.com/sirupsen/logrus"
 )
 
 func Test(t *testing.T) {
