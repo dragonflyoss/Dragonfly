@@ -26,8 +26,8 @@ import (
 	"path"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/go-check/check"
+	"github.com/sirupsen/logrus"
 )
 
 func (suite *DFGetUtilSuite) TestCreateLogger(c *check.C) {

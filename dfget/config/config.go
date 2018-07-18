@@ -29,8 +29,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/alibaba/Dragonfly/dfget/util"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -68,7 +68,33 @@ type Properties struct {
 
 // Load loads properties from config file.
 func (p *Properties) Load(path string) error {
+	switch p.fileType(path) {
+	case "conf", "ini":
+		return p.loadFromConf(path)
+	case "yaml":
+		return p.loadFromYaml(path)
+	}
+	return fmt.Errorf("extension of %s is not in 'conf/ini/yaml/yml'", path)
+}
+
+func (p *Properties) loadFromConf(path string) error {
 	return nil
+}
+
+func (p *Properties) loadFromYaml(path string) error {
+	return nil
+}
+
+func (p *Properties) fileType(path string) string {
+	ext := filepath.Ext(path)
+	switch v := strings.ToLower(ext); v {
+	case "conf", "ini":
+		return "conf"
+	case "yaml", "yml":
+		return "yaml"
+	default:
+		return v
+	}
 }
 
 // ----------------------------------------------------------------------------

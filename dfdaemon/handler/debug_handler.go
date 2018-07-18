@@ -19,8 +19,8 @@ import (
 	"net/http/pprof"
 	"strings"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/alibaba/Dragonfly/version"
+	"github.com/sirupsen/logrus"
 )
 
 // DebugInfo responds the inner http server running information.

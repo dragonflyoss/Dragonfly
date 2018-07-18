@@ -19,7 +19,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/alibaba/Dragonfly/dfdaemon/global"
 	"github.com/alibaba/Dragonfly/dfdaemon/util"

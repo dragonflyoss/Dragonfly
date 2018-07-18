@@ -20,7 +20,7 @@ import (
 	"net/http"
 	"runtime"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 
 	"github.com/alibaba/Dragonfly/cmd/dfdaemon/options"
 	"github.com/alibaba/Dragonfly/dfdaemon/initializer"

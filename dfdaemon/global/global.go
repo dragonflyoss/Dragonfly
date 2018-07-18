@@ -18,7 +18,7 @@ import (
 	"regexp"
 	"sync"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 // CommandParam is a struct that stores all the command line parameters

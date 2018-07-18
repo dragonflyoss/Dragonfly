@@ -24,7 +24,7 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 // NetLimit parse speed of interface that it has prefix of eth
