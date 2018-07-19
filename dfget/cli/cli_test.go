@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -30,6 +31,7 @@ import (
 	"github.com/alibaba/Dragonfly/dfget/util"
 	"github.com/alibaba/Dragonfly/version"
 	"github.com/go-check/check"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 )
 
@@ -54,7 +56,9 @@ func reset() {
 
 func (suite *CliSuite) Test_setupFlags_noArguments(c *check.C) {
 	setupFlags(nil)
-	c.Assert(cfg.Ctx.LocalLimit, check.Equals, 20971520)
+	c.Assert(cfg.Ctx.Node, check.IsNil)
+	c.Assert(cfg.Ctx.LocalLimit, check.Equals, 0)
+	c.Assert(cfg.Ctx.TotalLimit, check.Equals, 0)
 	c.Assert(cfg.Ctx.Notbs, check.Equals, false)
 	c.Assert(cfg.Ctx.DFDaemon, check.Equals, false)
 	c.Assert(cfg.Ctx.Version, check.Equals, false)
@@ -160,6 +164,66 @@ func (suite *CliSuite) Test_transLimit(c *check.C) {
 			c.Assert(strings.Contains(e.Error(), v.err), check.Equals, true)
 		}
 	}
+}
+
+func (suite *CliSuite) TestInitProperties(c *check.C) {
+	cfg.Ctx.ConfigFiles = nil
+	dirName, _ := ioutil.TempDir("/tmp", "dfget-TestInitProperties-")
+	defer os.RemoveAll(dirName)
+
+	iniFile := filepath.Join(dirName, "dragonfly.ini")
+	yamlFile := filepath.Join(dirName, "dragonfly.yaml")
+	iniContent := []byte("[node]\naddress=1.1.1.1")
+	yamlContent := []byte("nodes:\n  - 1.1.1.2\nlocalLimit: 1024000")
+	ioutil.WriteFile(iniFile, iniContent, os.ModePerm)
+	ioutil.WriteFile(yamlFile, yamlContent, os.ModePerm)
+
+	var buf = &bytes.Buffer{}
+	logrus.StandardLogger().Out = buf
+
+	var cases = []struct {
+		configs  []string
+		expected *cfg.Properties
+	}{
+		{configs: nil,
+			expected: cfg.NewProperties()},
+		{configs: []string{iniFile, yamlFile},
+			expected: newProp(0, 0, 0, "1.1.1.1")},
+		{configs: []string{yamlFile, iniFile},
+			expected: newProp(1024000, 0, 0, "1.1.1.2")},
+		{configs: []string{filepath.Join(dirName, "x"), yamlFile},
+			expected: newProp(1024000, 0, 0, "1.1.1.2")},
+	}
+
+	for _, v := range cases {
+		cfg.Reset()
+		buf.Reset()
+		cfg.Ctx.ClientLogger = logrus.StandardLogger()
+		cfg.Ctx.ConfigFiles = v.configs
+
+		initProperties()
+		c.Assert(cfg.Ctx.Node, check.DeepEquals, v.expected.Nodes)
+		c.Assert(cfg.Ctx.LocalLimit, check.Equals, v.expected.LocalLimit)
+		c.Assert(cfg.Ctx.TotalLimit, check.Equals, v.expected.TotalLimit)
+		c.Assert(cfg.Ctx.ClientQueueSize, check.Equals, v.expected.ClientQueueSize)
+	}
+}
+
+func newProp(local int, total int, size int, nodes ...string) *cfg.Properties {
+	p := cfg.NewProperties()
+	if nodes != nil {
+		p.Nodes = nodes
+	}
+	if local != 0 {
+		p.LocalLimit = local
+	}
+	if total != 0 {
+		p.TotalLimit = total
+	}
+	if size != 0 {
+		p.ClientQueueSize = size
+	}
+	return p
 }
 
 func (suite *CliSuite) TestInitialize(c *check.C) {
