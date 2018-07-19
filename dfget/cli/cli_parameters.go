@@ -39,7 +39,7 @@ func setupFlags(args []string) {
 		"output path that not only contains the dir part but also name part")
 
 	// localLimit & totalLimit & timeout
-	localLimit := pflag.StringP("locallimit", "s", "20M",
+	localLimit := pflag.StringP("locallimit", "s", "",
 		"rate limit about a single download task, its format is 20M/m/K/k")
 	totalLimit := pflag.String("totallimit", "",
 		"rate limit about the whole host, its format is 20M/m/K/k")
