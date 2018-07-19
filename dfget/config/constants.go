@@ -57,9 +57,17 @@ const (
 	ForceNotBackSourceAddition    = 1000
 )
 
+/* properties */
+const (
+	DefaultYamlConfigFile  = "/etc/dragonfly.yaml"
+	DefaultIniConfigFile   = "/etc/dragonfly.conf"
+	DefaultNode            = "127.0.0.1"
+	DefaultLocalLimit      = 20 * 1024 * 1024
+	DefaultClientQueueSize = 6
+)
+
 /* others */
 const (
-	DefaultConfigFile      = "/etc/dragonfly.conf"
 	DefaultTimestampFormat = "2006-01-02 15:04:05"
 	SchemaHTTP             = "http"
 

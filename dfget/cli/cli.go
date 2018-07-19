@@ -63,12 +63,19 @@ func initParameters() {
 	}
 }
 
+// initProperties
 func initProperties() {
-	if err := cfg.Props.Load(cfg.Ctx.ConfigFile); err != nil {
+	for _, v := range cfg.Ctx.ConfigFiles {
+		if err := cfg.Props.Load(v); err == nil {
+			cfg.Ctx.ClientLogger.Infof("initProperties[%s] success: %v", v, cfg.Props)
+			break
+		} else {
+			cfg.Ctx.ClientLogger.Warnf("initProperties[%s] fail: %v", v, err)
+		}
 	}
 
 	if cfg.Ctx.Node == nil {
-		cfg.Ctx.Node = cfg.Props.Node
+		cfg.Ctx.Node = cfg.Props.Nodes
 	}
 
 	if cfg.Ctx.LocalLimit == 0 {

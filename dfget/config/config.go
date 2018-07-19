@@ -20,6 +20,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/user"
 	"path"
@@ -31,6 +32,9 @@ import (
 
 	"github.com/alibaba/Dragonfly/dfget/util"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/gcfg.v1"
+	"gopkg.in/warnings.v0"
+	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -47,11 +51,7 @@ func init() {
 
 // Reset configuration and Context.
 func Reset() {
-	Props = &Properties{
-		Node:            []string{"127.0.0.1"},
-		LocalLimit:      20 * 1024 * 1024,
-		ClientQueueSize: 6,
-	}
+	Props = NewProperties()
 	Ctx = NewContext()
 }
 
@@ -59,38 +59,86 @@ func Reset() {
 // Properties
 
 // Properties holds all configurable Properties.
+// Support INI(or conf) and YAML(since 0.2.0).
+// Before 0.2.0, only support INI config and only have one property(node):
+// 		[node]
+// 			address=127.0.0.1,10.10.10.1
+// Since 0.2.0, the INI config is just to be compatible with previous versions.
+// The YAML config will have more properties:
+// 		nodes:
+// 			- 127.0.0.1
+// 			- 10.10.10.1
+// 		localLimit: 20971520
+// 		totalLimit: 20971520
+// 		clientQueueSize: 6
 type Properties struct {
-	Node            []string
-	LocalLimit      int
-	TotalLimit      int
-	ClientQueueSize int
+	Nodes           []string `yaml:"nodes"`
+	LocalLimit      int      `yaml:"localLimit"`
+	TotalLimit      int      `yaml:"totalLimit"`
+	ClientQueueSize int      `yaml:"clientQueueSize"`
+}
+
+// NewProperties create a new properties with default values.
+func NewProperties() *Properties {
+	return &Properties{
+		Nodes:           []string{DefaultNode},
+		LocalLimit:      DefaultLocalLimit,
+		ClientQueueSize: DefaultClientQueueSize,
+	}
+}
+
+func (p *Properties) String() string {
+	str, _ := json.Marshal(p)
+	return string(str)
 }
 
 // Load loads properties from config file.
 func (p *Properties) Load(path string) error {
 	switch p.fileType(path) {
-	case "conf", "ini":
-		return p.loadFromConf(path)
+	case "ini":
+		return p.loadFromIni(path)
 	case "yaml":
 		return p.loadFromYaml(path)
 	}
 	return fmt.Errorf("extension of %s is not in 'conf/ini/yaml/yml'", path)
 }
 
-func (p *Properties) loadFromConf(path string) error {
+// loadFromIni to be compatible with previous versions(before 0.2.0).
+func (p *Properties) loadFromIni(path string) error {
+	oldConfig := struct {
+		Node struct {
+			Address string
+		}
+	}{}
+
+	if err := gcfg.ReadFileInto(&oldConfig, path); err != nil {
+		// only fail on a fatal error occurred
+		if e, ok := err.(warnings.List); !ok || e.Fatal != nil {
+			return fmt.Errorf("read ini config from %s error: %v", path, err)
+		}
+	}
+	p.Nodes = strings.Split(oldConfig.Node.Address, ",")
 	return nil
 }
 
 func (p *Properties) loadFromYaml(path string) error {
+	yamlFile, err := ioutil.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("read yaml config from %s error: %v", path, err)
+	}
+	err = yaml.Unmarshal(yamlFile, p)
+	if err != nil {
+		return fmt.Errorf("unmarshal yaml error:%v", err)
+	}
 	return nil
 }
 
 func (p *Properties) fileType(path string) string {
 	ext := filepath.Ext(path)
 	switch v := strings.ToLower(ext); v {
-	case "conf", "ini":
-		return "conf"
-	case "yaml", "yml":
+	case ".conf", ".ini":
+		return "ini"
+	case ".yaml", ".yml":
 		return "yaml"
 	default:
 		return v
@@ -123,11 +171,11 @@ type Context struct {
 	Help            bool     `json:"help,omitempty"`
 	ClientQueueSize int      `json:"clientQueueSize,omitempty"`
 
-	StartTime  time.Time `json:"startTime"`
-	Sign       string    `json:"sign"`
-	User       string    `json:"user"`
-	WorkHome   string    `json:"workHome"`
-	ConfigFile string    `json:"configFile"`
+	StartTime   time.Time `json:"startTime"`
+	Sign        string    `json:"sign"`
+	User        string    `json:"user"`
+	WorkHome    string    `json:"workHome"`
+	ConfigFiles []string  `json:"configFile"`
 
 	ClientLogger *logrus.Logger `json:"-"`
 	ServerLogger *logrus.Logger `json:"-"`
@@ -151,7 +199,7 @@ func NewContext() *Context {
 	} else {
 		panic(fmt.Errorf("get user error: %s", err))
 	}
-	ctx.ConfigFile = DefaultConfigFile
+	ctx.ConfigFiles = []string{DefaultYamlConfigFile, DefaultIniConfigFile}
 	return ctx
 }
 
