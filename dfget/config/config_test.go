@@ -19,6 +19,7 @@ package config
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/user"
 	"path"
@@ -197,6 +198,56 @@ func (suite *ConfigSuite) TestCheckOutput(c *check.C) {
 		} else {
 			c.Assert(checkOutput(Ctx), check.IsNil, check.Commentf("%v", v))
 			c.Assert(Ctx.Output, check.Equals, v.expected, check.Commentf("%v", v))
+		}
+	}
+}
+
+func (suite *ConfigSuite) TestProperties_Load(c *check.C) {
+	dirName, _ := ioutil.TempDir("/tmp", "dfget-TestProperties_Load-")
+	defer os.RemoveAll(dirName)
+
+	var cases = []struct {
+		create   bool
+		ext      string
+		content  string
+		errMsg   string
+		expected *Properties
+	}{
+		{create: false, ext: "x", errMsg: "extension of"},
+		{create: false, ext: "yaml", errMsg: "read yaml config from", expected: nil},
+		{create: true, ext: "yaml",
+			content: "nodes:\n\t- 10.10.10.1", errMsg: "unmarshal yaml error", expected: nil},
+		{create: true, ext: "yaml",
+			content: "nodes:\n  - 10.10.10.1\n  - 10.10.10.2\n",
+			errMsg:  "", expected: &Properties{Nodes: []string{"10.10.10.1", "10.10.10.2"}}},
+		{create: true, ext: "yaml",
+			content: "totalLimit: 10485760",
+			errMsg:  "", expected: &Properties{TotalLimit: 10485760}},
+		{create: false, ext: "ini", content: "[node]\naddress=1.1.1.1", errMsg: "read ini config"},
+		{create: true, ext: "ini", content: "[node]\naddress=1.1.1.1",
+			expected: &Properties{Nodes: []string{"1.1.1.1"}}},
+		{create: true, ext: "conf", content: "[node]\naddress=1.1.1.1",
+			expected: &Properties{Nodes: []string{"1.1.1.1"}}},
+		{create: true, ext: "conf", content: "[node]\naddress=1.1.1.1,1.1.1.2",
+			expected: &Properties{Nodes: []string{"1.1.1.1", "1.1.1.2"}}},
+		{create: true, ext: "conf", content: "[node]\naddress=1.1.1.1\n[totalLimit]",
+			expected: &Properties{Nodes: []string{"1.1.1.1"}}},
+	}
+
+	for idx, v := range cases {
+		filename := filepath.Join(dirName, fmt.Sprintf("%d.%s", idx, v.ext))
+		if v.create {
+			ioutil.WriteFile(filename, []byte(v.content), os.ModePerm)
+		}
+		p := &Properties{}
+		err := p.Load(filename)
+		if v.expected != nil {
+			c.Assert(err, check.IsNil)
+			c.Assert(p, check.DeepEquals, v.expected)
+		} else {
+			c.Assert(err, check.NotNil)
+			c.Assert(strings.Contains(err.Error(), v.errMsg), check.Equals, true,
+				check.Commentf("error:%v expected:%s", err, v.errMsg))
 		}
 	}
 }
