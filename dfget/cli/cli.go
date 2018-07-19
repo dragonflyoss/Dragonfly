@@ -105,9 +105,3 @@ func initLog() {
 	}
 	cfg.Ctx.ServerLogger = util.CreateLogger(logPath, "dfserver.log", logLevel, cfg.Ctx.Sign)
 }
-
-func panicIf(err error, msg string) {
-	if err != nil {
-		panic(fmt.Errorf("%s:%v", msg, err))
-	}
-}

@@ -97,9 +97,9 @@ func setupFlags(args []string) {
 	// be compatible with dfget python version
 	var err error
 	cfg.Ctx.LocalLimit, err = transLimit(*localLimit)
-	panicIf(err, "convert locallimit error")
+	util.PanicIfError(err, "convert locallimit error")
 	cfg.Ctx.TotalLimit, err = transLimit(*totalLimit)
-	panicIf(err, "convert totallimit error")
+	util.PanicIfError(err, "convert totallimit error")
 
 	cfg.Ctx.Filter = transFilter(*filter)
 }
