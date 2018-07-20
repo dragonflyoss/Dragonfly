@@ -49,7 +49,6 @@ func main() {
 			options.CertFile, options.KeyFile, nil)
 	} else {
 		err = http.ListenAndServe(fmt.Sprintf(":%d", options.Port), nil)
-
 	}
 
 	if err != nil {
