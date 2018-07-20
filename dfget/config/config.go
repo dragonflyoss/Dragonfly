@@ -62,12 +62,12 @@ func Reset() {
 // Support INI(or conf) and YAML(since 0.2.0).
 // Before 0.2.0, only support INI config and only have one property(node):
 // 		[node]
-// 			address=127.0.0.1,10.10.10.1
+// 		address=127.0.0.1,10.10.10.1
 // Since 0.2.0, the INI config is just to be compatible with previous versions.
 // The YAML config will have more properties:
 // 		nodes:
-// 			- 127.0.0.1
-// 			- 10.10.10.1
+// 		    - 127.0.0.1
+// 		    - 10.10.10.1
 // 		localLimit: 20971520
 // 		totalLimit: 20971520
 // 		clientQueueSize: 6
