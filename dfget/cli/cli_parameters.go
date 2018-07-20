@@ -81,9 +81,9 @@ func setupFlags(args []string) {
 	pflag.BoolVarP(&cfg.Ctx.Version, "version", "v", false,
 		"show version")
 	pflag.BoolVarP(&cfg.Ctx.ShowBar, "showbar", "b", false,
-		"show progress bar")
+		"show progress bar, it's conflict with '--console'")
 	pflag.BoolVar(&cfg.Ctx.Console, "console", false,
-		"show log on console")
+		"show log on console, it's conflict with '--showbar")
 	pflag.BoolVar(&cfg.Ctx.Verbose, "verbose", false,
 		"be verbose")
 	pflag.BoolVarP(&cfg.Ctx.Help, "help", "h", false,
