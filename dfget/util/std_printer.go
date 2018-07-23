@@ -18,13 +18,24 @@ package util
 
 import (
 	"fmt"
+	"io"
 )
 
 // StdPrinter output info to console directly.
 type StdPrinter struct {
+	Out io.Writer
 }
 
 // Println output info to console directly.
 func (sp *StdPrinter) Println(msg string) {
-	fmt.Println(msg)
+	if sp.Out != nil {
+		fmt.Fprintln(sp.Out, msg)
+	}
+}
+
+// Printf formats according to a format specifier.
+func (sp *StdPrinter) Printf(format string, a ...interface{}) {
+	if sp.Out != nil {
+		fmt.Fprintf(sp.Out, format+"\n", a...)
+	}
 }
