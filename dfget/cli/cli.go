@@ -67,10 +67,10 @@ func initParameters() {
 func initProperties() {
 	for _, v := range cfg.Ctx.ConfigFiles {
 		if err := cfg.Props.Load(v); err == nil {
-			cfg.Ctx.ClientLogger.Infof("initProperties[%s] success: %v", v, cfg.Props)
+			cfg.Ctx.ClientLogger.Debugf("initProperties[%s] success: %v", v, cfg.Props)
 			break
 		} else {
-			cfg.Ctx.ClientLogger.Warnf("initProperties[%s] fail: %v", v, err)
+			cfg.Ctx.ClientLogger.Debugf("initProperties[%s] fail: %v", v, err)
 		}
 	}
 
@@ -103,5 +103,7 @@ func initLog() {
 	if cfg.Ctx.Console {
 		util.AddConsoleLog(cfg.Ctx.ClientLogger)
 	}
-	cfg.Ctx.ServerLogger = util.CreateLogger(logPath, "dfserver.log", logLevel, cfg.Ctx.Sign)
+	if cfg.Ctx.Pattern == "p2p" {
+		cfg.Ctx.ServerLogger = util.CreateLogger(logPath, "dfserver.log", logLevel, cfg.Ctx.Sign)
+	}
 }
