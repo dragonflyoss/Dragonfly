@@ -183,7 +183,7 @@ type Context struct {
 
 func (ctx *Context) String() string {
 	js, _ := json.Marshal(ctx)
-	return fmt.Sprintf("%s", js)
+	return string(js)
 }
 
 // NewContext creates and initialize a Context.
