@@ -14,4 +14,37 @@
  * limitations under the License.
  */
 
-package errors_test
+package errors
+
+import (
+	"testing"
+
+	"github.com/go-check/check"
+)
+
+func Test(t *testing.T) {
+	check.TestingT(t)
+}
+
+type ErrorTestSuite struct{}
+
+func init() {
+	check.Suite(&ErrorTestSuite{})
+}
+
+func (suite *ErrorTestSuite) TestNew(c *check.C) {
+	err := New(1, "test")
+	c.Assert(err.Code, check.Equals, 1)
+	c.Assert(err.Msg, check.Equals, "test")
+}
+
+func (suite *ErrorTestSuite) TestNewf(c *check.C) {
+	err := Newf(1, "test-%d", 2)
+	c.Assert(err.Code, check.Equals, 1)
+	c.Assert(err.Msg, check.Equals, "test-2")
+}
+
+func (suite *ErrorTestSuite) TestError(c *check.C) {
+	err := New(1, "test")
+	c.Assert(err.Error(), check.Equals, "{\"Code\":1,\"Msg\":\"test\"}")
+}

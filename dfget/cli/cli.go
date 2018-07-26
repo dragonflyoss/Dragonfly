@@ -25,6 +25,7 @@ import (
 	"path"
 
 	cfg "github.com/alibaba/Dragonfly/dfget/config"
+	"github.com/alibaba/Dragonfly/dfget/core"
 	"github.com/alibaba/Dragonfly/dfget/util"
 	"github.com/alibaba/Dragonfly/version"
 )
@@ -32,8 +33,11 @@ import (
 // Run is running cli.
 func Run() {
 	initialize()
-	util.Printer.Println(fmt.Sprintf("--%s--  %s",
-		cfg.Ctx.StartTime.Format(cfg.DefaultTimestampFormat), cfg.Ctx.URL))
+	err := core.Start(cfg.Ctx)
+	if err != nil {
+		os.Exit(err.Code)
+	}
+	os.Exit(0)
 }
 
 func initialize() {

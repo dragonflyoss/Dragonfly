@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-// Package downloader contains 2 types of downloader: P2PDownloader,
-// DirectDownloader.
-// P2PDownloader uses P2P pattern to download files from peers.
-// DirectDownloader downloads files from file source directly. It's
-// used when P2PDownloader download files failed.
 package downloader
 
-// Downloader is the interface to download files
-type Downloader interface {
-	Run()
+// BackDownloader downloads the file from file resource.
+type BackDownloader struct {
+}
+
+// Run starts to download the file.
+func (bd *BackDownloader) Run() {
+
 }
