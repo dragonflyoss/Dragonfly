@@ -36,12 +36,16 @@ const (
 
 /* the task code get from supernode */
 const (
-	TaskCodeFinish   = 600
-	TaskCodeContinue = 601
-	TaskCodeWait     = 602
-	TaskCodeLimited  = 603
-	TaskCodeNeedAuth = 608
-	TaskCodeWaitAuth = 609
+	TaskCodeFinish          = 600
+	TaskCodeContinue        = 601
+	TaskCodeWait            = 602
+	TaskCodeLimited         = 603
+	TaskCodeSuperFail       = 604
+	TaskCodeUnknownError    = 605
+	TaskCodeTaskConflict    = 606
+	TaskCodeURLNotReachable = 607
+	TaskCodeNeedAuth        = 608
+	TaskCodeWaitAuth        = 609
 )
 
 /* the reason of backing to source */
@@ -54,6 +58,8 @@ const (
 	BackSourceReasonInitError     = 5
 	BackSourceReasonWriteError    = 6
 	BackSourceReasonHostSysError  = 7
+	BackSourceReasonNodeEmpty     = 8
+	BackSourceReasonByUser        = 100
 	ForceNotBackSourceAddition    = 1000
 )
 
