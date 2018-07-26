@@ -49,20 +49,3 @@ func checkConnectSupernode(nodes []string) (localIP string) {
 func launchPeerServer() (port string) {
 	return
 }
-
-/*
-  def parse_super():
-    nodes_len = len(nodes) if nodes else 0
-    while nodes_len > 0:
-        node = nodes.pop(0)
-        nodes_len -= 1
-        if node:
-            addr_fields = node.split(":")
-            if len(addr_fields) == 1:
-                addr_fields.append(8002)
-            local_ip = netutil.check_connect(addr_fields[0], int(addr_fields[1]), timeout=2)
-            if local_ip:
-                nodes.insert(0, node)
-                return local_ip
-    return None
-*/
