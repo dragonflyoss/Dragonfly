@@ -17,9 +17,8 @@
 package core
 
 import (
-	"math/rand"
-
 	"github.com/alibaba/Dragonfly/dfget/config"
+	"github.com/alibaba/Dragonfly/dfget/util"
 )
 
 func register(ctx *config.Context) error {
@@ -36,10 +35,8 @@ func adjustSupernodeList(nodes []string) []string {
 	case 1:
 		return append(nodes, nodes[0])
 	default:
-		rand.Shuffle(nodesLen, func(i, j int) {
-			tmp := nodes[i]
-			nodes[i] = nodes[j]
-			nodes[j] = tmp
+		util.Shuffle(nodesLen, func(i, j int) {
+			nodes[i], nodes[j] = nodes[j], nodes[i]
 		})
 		return append(nodes, nodes...)
 	}
