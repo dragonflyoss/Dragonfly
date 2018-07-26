@@ -177,6 +177,15 @@ type Context struct {
 	WorkHome    string    `json:"workHome"`
 	ConfigFiles []string  `json:"configFile"`
 
+	MetaPath      string `json:"-"`
+	SystemDataDir string `json:"-"`
+	DataDir       string `json:"-"`
+	RealTarget    string `json:"-"`
+	TargetDir     string `json:"-"`
+	TempTarget    string `json:"-"`
+
+	BackSourceReason int `json:"-"`
+
 	ClientLogger *logrus.Logger `json:"-"`
 	ServerLogger *logrus.Logger `json:"-"`
 }
@@ -196,6 +205,8 @@ func NewContext() *Context {
 	if currentUser, err := user.Current(); err == nil {
 		ctx.User = currentUser.Username
 		ctx.WorkHome = path.Join(currentUser.HomeDir, ".small-dragonfly")
+		ctx.MetaPath = path.Join(ctx.WorkHome, "meta", "host.meta")
+		ctx.SystemDataDir = path.Join(ctx.WorkHome, "data")
 	} else {
 		panic(fmt.Errorf("get user error: %s", err))
 	}

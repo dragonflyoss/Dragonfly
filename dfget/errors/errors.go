@@ -16,3 +16,34 @@
 
 // Package errors defines all exceptions happened in dfget's runtime.
 package errors
+
+import (
+	"fmt"
+)
+
+// New function creates a DFGetError.
+func New(code int, msg string) *DFGetError {
+	return &DFGetError{
+		Code: code,
+		Msg:  msg,
+	}
+}
+
+// Newf function creates a DFGetError with a message according to
+// a format specifier.
+func Newf(code int, format string, a ...interface{}) *DFGetError {
+	return &DFGetError{
+		Code: code,
+		Msg:  fmt.Sprintf(format, a...),
+	}
+}
+
+// DFGetError represents a error created by dfget.
+type DFGetError struct {
+	Code int
+	Msg  string
+}
+
+func (e *DFGetError) Error() string {
+	return fmt.Sprintf("{\"Code\":%d,\"Msg\":\"%s\"}", e.Code, e.Msg)
+}

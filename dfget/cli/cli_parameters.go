@@ -58,8 +58,8 @@ func setupFlags(args []string) {
 		"system name that executes dfget")
 
 	pflag.StringVarP(&cfg.Ctx.Pattern, "pattern", "p", "p2p",
-		"download pattern, must be 'p2p' or 'cdn'"+
-			"\ncdn pattern not support 'totallimit' flag")
+		"download pattern, must be 'p2p' or 'cdn' or 'source'"+
+			"\ncdn/source pattern not support 'totallimit' flag")
 
 	filter := pflag.StringP("filter", "f", "",
 		"filter some query params of url, use char '&' to separate different params"+
