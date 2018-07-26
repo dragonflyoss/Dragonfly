@@ -137,7 +137,7 @@ install() {
     installDir=${INSTALL_HOME}/${PKG_NAME}
     echo "INSTALL: ${installDir}"
     createDir ${installDir}
-    cp -r ${BIN_DIR}/${PKG_NAME}/*          ${installDir}
+    # cp -r ${BIN_DIR}/${PKG_NAME}/*          ${installDir}
     cp ${BIN_DIR}/${DFDAEMON_BINARY_NAME}   ${installDir}
     cp ${BIN_DIR}/${DFGET_BINARY_NAME}      ${installDir}
 }
