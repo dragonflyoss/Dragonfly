@@ -79,3 +79,113 @@ func (s *FileUtilTestSuite) TestIsDir(c *check.C) {
 	os.Mkdir(pathStr, 0000)
 	c.Assert(IsDir(pathStr), check.Equals, true)
 }
+
+func (s *FileUtilTestSuite) TestDeleteFile(c *check.C) {
+	pathStr := path.Join(s.tmpDir, "TestDeleteFile")
+	os.Create(pathStr)
+	err := DeleteFile(pathStr)
+	c.Assert(err, check.IsNil)
+
+	dirStr := path.Join(s.tmpDir, "test_delete_file")
+	os.Mkdir(dirStr, 0000)
+	err = DeleteFile(dirStr)
+	c.Assert(err, check.NotNil)
+
+	f := path.Join(s.tmpDir, "test", "empty", "file")
+	err = DeleteFile(f)
+	c.Assert(err, check.NotNil)
+
+}
+
+func (s *FileUtilTestSuite) TestDeleteFiles(c *check.C) {
+	f1 := path.Join(s.tmpDir, "TestDeleteFile001")
+	f2 := path.Join(s.tmpDir, "TestDeleteFile002")
+	os.Create(f1)
+	//os.Create(f2)
+	DeleteFiles(f1, f2)
+	c.Assert(PathExist(f1) || PathExist(f2), check.Equals, false)
+
+}
+
+func (s *FileUtilTestSuite) TestMoveFile(c *check.C) {
+
+	f1 := path.Join(s.tmpDir, "TestMovefileSrc01")
+	f2 := path.Join(s.tmpDir, "TestMovefileDstExist")
+	os.Create(f1)
+	os.Create(f2)
+	ioutil.WriteFile(f1, []byte("Test move file src"), 0755)
+	f1Md5 := Md5Sum(f1)
+	err := MoveFile(f1, f2)
+	c.Assert(err, check.IsNil)
+
+	f2Md5 := Md5Sum(f2)
+	c.Assert(f1Md5, check.Equals, f2Md5)
+
+	f3 := path.Join(s.tmpDir, "TestMovefileSrc02")
+	f4 := path.Join(s.tmpDir, "TestMovefileDstNonExist")
+	os.Create(f3)
+	ioutil.WriteFile(f3, []byte("Test move file src when dst not exist"), 0755)
+	f3Md5 := Md5Sum(f3)
+	err = MoveFile(f3, f4)
+	c.Assert(err, check.IsNil)
+	f4Md5 := Md5Sum(f4)
+	c.Assert(f3Md5, check.Equals, f4Md5)
+}
+
+func (s *FileUtilTestSuite) TestOpenFile(c *check.C) {
+	f1 := path.Join(s.tmpDir, "dir1", "TestOpenFile")
+	_, err := OpenFile(f1, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0755)
+	c.Assert(err, check.IsNil)
+
+	f2 := path.Join(s.tmpDir, "TestOpenFile")
+	os.Create(f2)
+	_, err = OpenFile(f2, os.O_RDONLY, 0666)
+	c.Assert(err, check.IsNil)
+
+}
+
+func (s *FileUtilTestSuite) TestLink(c *check.C) {
+	pathStr := path.Join(s.tmpDir, "TestLinkFile")
+	os.Create(pathStr)
+	linkStr := path.Join(s.tmpDir, "TestLinkName")
+
+	err := Link(pathStr, linkStr)
+	c.Assert(err, check.IsNil)
+	c.Assert(PathExist(linkStr), check.Equals, true)
+
+	linkStr = path.Join(s.tmpDir, "TestLinkNameExist")
+	os.Create(linkStr)
+	err = Link(pathStr, linkStr)
+	c.Assert(err, check.IsNil)
+	c.Assert(PathExist(linkStr), check.Equals, true)
+}
+
+func (s *FileUtilTestSuite) TestCopyFile(c *check.C) {
+	srcPath := path.Join(s.tmpDir, "TestCopyFileSrc")
+	dstPath := path.Join(s.tmpDir, "TestCopyFileDst")
+	err := CopyFile(srcPath, dstPath)
+	c.Assert(err, check.NotNil)
+
+	os.Create(srcPath)
+	os.Create(dstPath)
+	ioutil.WriteFile(srcPath, []byte("Test copy file"), 0755)
+	err = CopyFile(srcPath, dstPath)
+	c.Assert(err, check.NotNil)
+
+	tmpPath := path.Join(s.tmpDir, "TestCopyFileTmp")
+	err = CopyFile(srcPath, tmpPath)
+	c.Assert(err, check.IsNil)
+
+}
+
+func (s *FileUtilTestSuite) TestMoveFileAfterCheckMd5(c *check.C) {
+	srcPath := path.Join(s.tmpDir, "TestMoveFileAfterCheckMd5Src")
+	dstPath := path.Join(s.tmpDir, "TestMoveFileAfterCheckMd5Dst")
+	os.Create(srcPath)
+	ioutil.WriteFile(srcPath, []byte("Test move file after check md5"), 0755)
+	srcPathMd5 := Md5Sum(srcPath)
+	err := MoveFileAfterCheckMd5(srcPath, dstPath, srcPathMd5)
+	c.Assert(err, check.IsNil)
+	dstPathMd5 := Md5Sum(dstPath)
+	c.Assert(srcPathMd5, check.Equals, dstPathMd5)
+}
