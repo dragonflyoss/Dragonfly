@@ -130,6 +130,12 @@ func (s *FileUtilTestSuite) TestMoveFile(c *check.C) {
 	c.Assert(err, check.IsNil)
 	f4Md5 := Md5Sum(f4)
 	c.Assert(f3Md5, check.Equals, f4Md5)
+
+	f1 = path.Join(s.tmpDir, "TestMovefileSrcDir")
+	os.Mkdir(f1, 0755)
+	err = MoveFile(f1, f2)
+	c.Assert(err, check.NotNil)
+
 }
 
 func (s *FileUtilTestSuite) TestOpenFile(c *check.C) {
@@ -158,6 +164,13 @@ func (s *FileUtilTestSuite) TestLink(c *check.C) {
 	err = Link(pathStr, linkStr)
 	c.Assert(err, check.IsNil)
 	c.Assert(PathExist(linkStr), check.Equals, true)
+
+	linkStr = path.Join(s.tmpDir, "testLinkNonExistDir")
+	os.Mkdir(linkStr, 0755)
+	err = Link(pathStr, linkStr)
+	err = Link(pathStr, linkStr)
+	c.Assert(err, check.NotNil)
+
 }
 
 func (s *FileUtilTestSuite) TestCopyFile(c *check.C) {
@@ -188,4 +201,27 @@ func (s *FileUtilTestSuite) TestMoveFileAfterCheckMd5(c *check.C) {
 	c.Assert(err, check.IsNil)
 	dstPathMd5 := Md5Sum(dstPath)
 	c.Assert(srcPathMd5, check.Equals, dstPathMd5)
+
+	ioutil.WriteFile(srcPath, []byte("Test move file afte md5, change content"), 0755)
+	err = MoveFileAfterCheckMd5(srcPath, dstPath, srcPathMd5)
+	c.Assert(err, check.NotNil)
+
+	srcPath = path.Join(s.tmpDir, "TestMoveFileAfterCheckMd5Dir")
+	os.Mkdir(srcPath, 0755)
+	err = MoveFileAfterCheckMd5(srcPath, dstPath, srcPathMd5)
+	c.Assert(err, check.NotNil)
+
+}
+
+func (s *FileUtilTestSuite) TestMd5sum(c *check.C) {
+	pathStr := path.Join(s.tmpDir, "TestMd5Sum")
+	_, _ = OpenFile(pathStr, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0000)
+	pathStrMd5 := Md5Sum(pathStr)
+	c.Assert(pathStrMd5, check.Equals, "")
+
+	pathStr = path.Join(s.tmpDir, "TestMd5SumDir")
+	os.Mkdir(pathStr, 0755)
+	pathStrMd5 = Md5Sum(pathStr)
+	c.Assert(pathStrMd5, check.Equals, "")
+
 }

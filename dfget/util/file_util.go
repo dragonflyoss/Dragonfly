@@ -70,22 +70,26 @@ func OpenFile(path string, flag int, perm os.FileMode) (*os.File, error) {
 		return os.OpenFile(path, flag, perm)
 	}
 	pathDir := filepath.Dir(path)
-	// when path is only a file name, e.g: a.txt, the pathDir is current path ".", then just create it
-	if pathDir == "." {
-		return os.OpenFile(path, flag, perm)
+
+	if !PathExist(pathDir) {
+		if err := CreateDirectory(pathDir); err != nil {
+			return nil, err
+		}
 	}
-	if err := CreateDirectory(pathDir); err != nil {
-		return nil, err
-	}
+
 	return os.OpenFile(path, flag, perm)
 }
 
-// Link creates a hard link pointing to src named linkName.
+// Link creates a hard link pointing to src named linkName for a file.
 func Link(src string, linkName string) error {
 	if PathExist(linkName) {
+		if IsDir(linkName) {
+			return fmt.Errorf("link %s to %s: error, link name already exists and is a directory", linkName, src)
+		}
 		if err := DeleteFile(linkName); err != nil {
 			return err
 		}
+
 	}
 	return os.Link(src, linkName)
 }
