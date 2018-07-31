@@ -17,13 +17,20 @@
 package core
 
 import (
+	"fmt"
+
 	"github.com/alibaba/Dragonfly/dfget/config"
 	"github.com/alibaba/Dragonfly/dfget/util"
 )
 
 func register(ctx *config.Context) error {
+	if ctx.Pattern == config.PatternSource {
+		ctx.BackSourceReason = config.BackSourceReasonByUser
+		return fmt.Errorf("not register, pattern:%s", ctx.Pattern)
+	}
 	if len(ctx.Node) == 0 {
 		ctx.BackSourceReason = config.BackSourceReasonNodeEmpty
+		return fmt.Errorf("register fail, no available supernodes")
 	}
 	return nil
 }

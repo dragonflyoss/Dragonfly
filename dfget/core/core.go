@@ -84,11 +84,7 @@ func prepare(ctx *config.Context) (err error) {
 }
 
 func registerToSuperNode(ctx *config.Context) error {
-	if ctx.Pattern == "source" {
-		ctx.BackSourceReason = config.BackSourceReasonByUser
-		return nil
-	}
-	return nil
+	return register(ctx)
 }
 
 func downloadFile(ctx *config.Context) error {
@@ -113,12 +109,13 @@ func createTempTargetFile(targetDir string, sign string) (name string, e error) 
 		}
 	}()
 
-	f, e = ioutil.TempFile(targetDir, "dfget-"+sign)
+	prefix := "dfget" + sign + ".tmp-"
+	f, e = ioutil.TempFile(targetDir, prefix)
 	if e == nil {
 		return f.Name(), e
 	}
 
-	f, e = os.OpenFile(path.Join(targetDir, "dfget-"+sign),
+	f, e = os.OpenFile(path.Join(targetDir, fmt.Sprintf("%s%d", prefix, rand.Uint64())),
 		os.O_CREATE|os.O_EXCL, 0755)
 	if e == nil {
 		return f.Name(), e
