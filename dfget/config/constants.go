@@ -63,6 +63,13 @@ const (
 	ForceNotBackSourceAddition    = 1000
 )
 
+/* download pattern */
+const (
+	PatternP2P    = "p2p"
+	PatternCDN    = "cdn"
+	PatternSource = "source"
+)
+
 /* properties */
 const (
 	DefaultYamlConfigFile  = "/etc/dragonfly.yaml"
