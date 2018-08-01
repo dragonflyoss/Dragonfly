@@ -109,7 +109,7 @@ func createTempTargetFile(targetDir string, sign string) (name string, e error) 
 		}
 	}()
 
-	prefix := "dfget" + sign + ".tmp-"
+	prefix := "dfget-" + sign + ".tmp-"
 	f, e = ioutil.TempFile(targetDir, prefix)
 	if e == nil {
 		return f.Name(), e

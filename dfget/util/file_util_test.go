@@ -94,7 +94,6 @@ func (s *FileUtilTestSuite) TestDeleteFile(c *check.C) {
 	f := path.Join(s.tmpDir, "test", "empty", "file")
 	err = DeleteFile(f)
 	c.Assert(err, check.NotNil)
-
 }
 
 func (s *FileUtilTestSuite) TestDeleteFiles(c *check.C) {
@@ -104,7 +103,6 @@ func (s *FileUtilTestSuite) TestDeleteFiles(c *check.C) {
 	//os.Create(f2)
 	DeleteFiles(f1, f2)
 	c.Assert(PathExist(f1) || PathExist(f2), check.Equals, false)
-
 }
 
 func (s *FileUtilTestSuite) TestMoveFile(c *check.C) {
@@ -135,7 +133,6 @@ func (s *FileUtilTestSuite) TestMoveFile(c *check.C) {
 	os.Mkdir(f1, 0755)
 	err = MoveFile(f1, f2)
 	c.Assert(err, check.NotNil)
-
 }
 
 func (s *FileUtilTestSuite) TestOpenFile(c *check.C) {
@@ -147,7 +144,6 @@ func (s *FileUtilTestSuite) TestOpenFile(c *check.C) {
 	os.Create(f2)
 	_, err = OpenFile(f2, os.O_RDONLY, 0666)
 	c.Assert(err, check.IsNil)
-
 }
 
 func (s *FileUtilTestSuite) TestLink(c *check.C) {
@@ -170,7 +166,6 @@ func (s *FileUtilTestSuite) TestLink(c *check.C) {
 	err = Link(pathStr, linkStr)
 	err = Link(pathStr, linkStr)
 	c.Assert(err, check.NotNil)
-
 }
 
 func (s *FileUtilTestSuite) TestCopyFile(c *check.C) {
@@ -188,7 +183,6 @@ func (s *FileUtilTestSuite) TestCopyFile(c *check.C) {
 	tmpPath := path.Join(s.tmpDir, "TestCopyFileTmp")
 	err = CopyFile(srcPath, tmpPath)
 	c.Assert(err, check.IsNil)
-
 }
 
 func (s *FileUtilTestSuite) TestMoveFileAfterCheckMd5(c *check.C) {
@@ -210,7 +204,6 @@ func (s *FileUtilTestSuite) TestMoveFileAfterCheckMd5(c *check.C) {
 	os.Mkdir(srcPath, 0755)
 	err = MoveFileAfterCheckMd5(srcPath, dstPath, srcPathMd5)
 	c.Assert(err, check.NotNil)
-
 }
 
 func (s *FileUtilTestSuite) TestMd5sum(c *check.C) {
@@ -223,5 +216,4 @@ func (s *FileUtilTestSuite) TestMd5sum(c *check.C) {
 	os.Mkdir(pathStr, 0755)
 	pathStrMd5 = Md5Sum(pathStr)
 	c.Assert(pathStrMd5, check.Equals, "")
-
 }

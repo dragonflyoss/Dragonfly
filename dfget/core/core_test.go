@@ -57,6 +57,7 @@ func (s *CoreTestSuite) TearDownSuite(c *check.C) {
 func (s *CoreTestSuite) TestPrepare(c *check.C) {
 	buf := &bytes.Buffer{}
 	ctx := s.createContext(buf)
+	ctx.Output = path.Join(s.workHome, "test.output")
 
 	err := prepare(ctx)
 	fmt.Printf("%s\nerror:%v", buf.String(), err)
