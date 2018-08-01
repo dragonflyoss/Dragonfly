@@ -55,26 +55,19 @@ func DeleteFile(filePath string) error {
 func DeleteFiles(filePaths ...string) {
 	if len(filePaths) > 0 {
 		for _, f := range filePaths {
-			if err := DeleteFile(f); err != nil {
-				continue
-			}
+			DeleteFile(f)
 		}
 	}
-
 }
 
-// OpenFile open a file. If the file isn't exist, it will create the file.
-// If the directory isn't exist, it will create the directory.
+// OpenFile open a file. If the parent directory of the file isn't exist,
+// it will create the directory.
 func OpenFile(path string, flag int, perm os.FileMode) (*os.File, error) {
 	if PathExist(path) {
 		return os.OpenFile(path, flag, perm)
 	}
-	pathDir := filepath.Dir(path)
-
-	if !PathExist(pathDir) {
-		if err := CreateDirectory(pathDir); err != nil {
-			return nil, err
-		}
+	if err := CreateDirectory(filepath.Dir(path)); err != nil {
+		return nil, err
 	}
 
 	return os.OpenFile(path, flag, perm)
@@ -95,12 +88,15 @@ func Link(src string, linkName string) error {
 }
 
 // CopyFile copies the file src to dst.
-func CopyFile(src string, dst string) error {
+func CopyFile(src string, dst string) (err error) {
+	var (
+		s *os.File
+		d *os.File
+	)
 	if !IsRegularFile(src) {
 		return fmt.Errorf("copy file:%s error, is not a regular file", src)
 	}
-	s, err := OpenFile(src, os.O_RDONLY, 0666)
-	if err != nil {
+	if s, err = os.Open(src); err != nil {
 		return err
 	}
 	defer s.Close()
@@ -109,8 +105,7 @@ func CopyFile(src string, dst string) error {
 		return fmt.Errorf("copy file:%s error, dst file already exists", dst)
 	}
 
-	d, err := OpenFile(dst, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0755)
-	if err != nil {
+	if d, err = OpenFile(dst, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0755); err != nil {
 		return err
 	}
 	defer d.Close()
@@ -148,11 +143,13 @@ func MoveFile(src string, dst string) error {
 // before move the file src to dst.
 func MoveFileAfterCheckMd5(src string, dst string, md5 string) error {
 	if !IsRegularFile(src) {
-		return fmt.Errorf("move file with md5 check:%s error, is not a regular file", src)
+		return fmt.Errorf("move file with md5 check:%s error, is not a "+
+			"regular file", src)
 	}
 	m := Md5Sum(src)
 	if m != md5 {
-		return fmt.Errorf("move file with md5 check:%s error, md5 of srouce file doesn't match against the given md5 value", src)
+		return fmt.Errorf("move file with md5 check:%s error, md5 of srouce "+
+			"file doesn't match against the given md5 value", src)
 	}
 	return MoveFile(src, dst)
 }
@@ -173,7 +170,8 @@ func IsDir(name string) bool {
 	return f.IsDir()
 }
 
-// IsRegularFile reports whether the file is a regular file
+// IsRegularFile reports whether the file is a regular file.
+// If the given file is a symbol link, it will follow the link.
 func IsRegularFile(name string) bool {
 	f, e := os.Stat(name)
 	if e != nil {
@@ -187,7 +185,7 @@ func Md5Sum(name string) string {
 	if !IsRegularFile(name) {
 		return ""
 	}
-	f, err := OpenFile(name, os.O_RDONLY, 0666)
+	f, err := os.Open(name)
 	if err != nil {
 		return ""
 	}
@@ -201,5 +199,4 @@ func Md5Sum(name string) string {
 	}
 
 	return fmt.Sprintf("%x", h.Sum(nil))
-
 }
