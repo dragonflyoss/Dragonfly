@@ -95,6 +95,10 @@ func (dfGetter *DFGetter) parseCommand(url string, header map[string][]string, n
 
 	if header != nil {
 		for key, value := range header {
+			// discard HTTP host header for backing to source successfully
+			if strings.EqualFold(key, "host") {
+				continue
+			}
 			if value != nil && len(value) > 0 {
 				for _, oneV := range value {
 					args = append(append(args, "--header"), fmt.Sprintf("%s:%s", key, oneV))
