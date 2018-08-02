@@ -23,12 +23,13 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
+/* http content types */
 const (
-	ApplicationJsonUtf8Value = "application/json;charset=utf-8"
+	ApplicationJSONUtf8Value = "application/json;charset=utf-8"
 )
 
-// PostJson
-func PostJson(url string, body interface{}, timeout time.Duration) (
+// PostJSON send a POST request whose content-type is 'application/json;charset=utf-8'.
+func PostJSON(url string, body interface{}, timeout time.Duration) (
 	code int, resBody []byte, err error) {
 
 	var jsonByte []byte
@@ -46,7 +47,7 @@ func PostJson(url string, body interface{}, timeout time.Duration) (
 	req.SetRequestURI(url)
 	req.SetBody(jsonByte)
 	req.Header.SetMethod("POST")
-	req.Header.SetContentType(ApplicationJsonUtf8Value)
+	req.Header.SetContentType(ApplicationJSONUtf8Value)
 
 	resp := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseResponse(resp)
