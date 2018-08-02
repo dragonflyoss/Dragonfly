@@ -20,6 +20,7 @@
 - [Documents](./docs/documents.md)
 - [Contributing](CONTRIBUTING.md)
 - [FAQ](FAQ.md)
+- [Adoptors](./docs/en/adoptors.md)
 - [LICENSE](LICENSE)
 - [Commercial Support](#commercial-support)
 

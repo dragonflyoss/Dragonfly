@@ -14,6 +14,7 @@
 - [Comparison](#comparison) 
 - [Documents](./documents.md)
 - [Contributing](./en/CONTRIBUTING.md)
+- [Adoptors](./en/adoptors.md)
 - [LICENSE](./en/LICENSE)
 - [Commercial Support](#commercial-support)
 
