@@ -9,6 +9,30 @@
 			"revisionTime": "2016-12-08T18:13:25Z"
 		},
 		{
+			"checksumSHA1": "5BFhwYqOy2dR2NwDe3cCauuxEYM=",
+			"path": "github.com/klauspost/compress/flate",
+			"revision": "b939724e787a27c0005cabe3f78e7ed7987ac74f",
+			"revisionTime": "2018-07-08T15:37:41Z"
+		},
+		{
+			"checksumSHA1": "kWBC7CTgppTdJFXizt4XkURbyCE=",
+			"path": "github.com/klauspost/compress/gzip",
+			"revision": "b939724e787a27c0005cabe3f78e7ed7987ac74f",
+			"revisionTime": "2018-07-08T15:37:41Z"
+		},
+		{
+			"checksumSHA1": "KQ77MI2l4iDQE0Z/DiDeO0S963o=",
+			"path": "github.com/klauspost/compress/zlib",
+			"revision": "b939724e787a27c0005cabe3f78e7ed7987ac74f",
+			"revisionTime": "2018-07-08T15:37:41Z"
+		},
+		{
+			"checksumSHA1": "xEHEfywV/9zZ/nPy/PJBF6xVn1o=",
+			"path": "github.com/klauspost/cpuid",
+			"revision": "e7e905edc00ea8827e58662220139109efea09db",
+			"revisionTime": "2018-04-05T13:32:22Z"
+		},
+		{
 			"checksumSHA1": "As1PSFJop3xi3W8tAYSm/8YesAQ=",
 			"path": "github.com/pborman/uuid",
 			"revision": "c65b2f87fee37d1c7854c9164a450713c28d50cd",
@@ -25,6 +49,30 @@
 			"path": "github.com/spf13/pflag",
 			"revision": "3ebe029320b2676d667ae88da602a5f854788a8a",
 			"revisionTime": "2018-06-01T13:25:42Z"
+		},
+		{
+			"checksumSHA1": "LTOa3BADhwvT0wFCknPueQALm8I=",
+			"path": "github.com/valyala/bytebufferpool",
+			"revision": "e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7",
+			"revisionTime": "2016-08-17T18:16:52Z"
+		},
+		{
+			"checksumSHA1": "eq08pJz4K+i3qiS39A7ENDBMoF0=",
+			"path": "github.com/valyala/fasthttp",
+			"revision": "e5f51c11919d4f66400334047b897ef0a94c6f3c",
+			"revisionTime": "2017-12-07T12:09:41Z"
+		},
+		{
+			"checksumSHA1": "nFdyJk6jdHzVNgEMdjDuWMk4z5o=",
+			"path": "github.com/valyala/fasthttp/fasthttputil",
+			"revision": "e5f51c11919d4f66400334047b897ef0a94c6f3c",
+			"revisionTime": "2017-12-07T12:09:41Z"
+		},
+		{
+			"checksumSHA1": "YXXy4b1yOQx/iL3Icv6svTmcGss=",
+			"path": "github.com/valyala/fasthttp/stackless",
+			"revision": "e5f51c11919d4f66400334047b897ef0a94c6f3c",
+			"revisionTime": "2017-12-07T12:09:41Z"
 		},
 		{
 			"checksumSHA1": "BGm8lKZmvJbf/YOJLeL1rw2WVjA=",
