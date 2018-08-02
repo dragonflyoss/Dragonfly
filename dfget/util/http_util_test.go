@@ -27,27 +27,27 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-type HttpUtilTestSuite struct {
+type HTTPUtilTestSuite struct {
 	host string
 	ln   net.Listener
 }
 
 func init() {
 	rand.Seed(time.Now().Unix())
-	check.Suite(&HttpUtilTestSuite{})
+	check.Suite(&HTTPUtilTestSuite{})
 }
 
-func (s *HttpUtilTestSuite) SetUpSuite(c *check.C) {
+func (s *HTTPUtilTestSuite) SetUpSuite(c *check.C) {
 	port := rand.Intn(1000) + 63000
 	s.host = fmt.Sprintf("127.0.0.1:%d", port)
 
 	s.ln, _ = net.Listen("tcp", s.host)
 	go fasthttp.Serve(s.ln, func(ctx *fasthttp.RequestCtx) {
-		ctx.SetContentType(ApplicationJsonUtf8Value)
+		ctx.SetContentType(ApplicationJSONUtf8Value)
 		ctx.SetStatusCode(fasthttp.StatusOK)
-		req := &testJsonReq{}
+		req := &testJSONReq{}
 		json.Unmarshal(ctx.Request.Body(), req)
-		res := testJsonRes{
+		res := testJSONRes{
 			Sum: req.A + req.B,
 		}
 		resByte, _ := json.Marshal(res)
@@ -56,44 +56,44 @@ func (s *HttpUtilTestSuite) SetUpSuite(c *check.C) {
 	})
 }
 
-func (s *HttpUtilTestSuite) TearDownSuite(c *check.C) {
+func (s *HTTPUtilTestSuite) TearDownSuite(c *check.C) {
 	s.ln.Close()
 }
 
-func (s *HttpUtilTestSuite) TestPostJson(c *check.C) {
+func (s *HTTPUtilTestSuite) TestPostJson(c *check.C) {
 	var checkOk = func(code int, body []byte, e error, sum int) {
 		c.Assert(e, check.IsNil)
 		c.Assert(code, check.Equals, fasthttp.StatusOK)
 
-		var res = &testJsonRes{}
+		var res = &testJSONRes{}
 		e = json.Unmarshal(body, res)
 		c.Check(e, check.IsNil)
 		c.Check(res.Sum, check.Equals, sum)
 	}
 
-	code, body, e := PostJson("http://"+s.host, req(1, 2), 55*time.Millisecond)
+	code, body, e := PostJSON("http://"+s.host, req(1, 2), 55*time.Millisecond)
 	checkOk(code, body, e, 3)
 
-	code, body, e = PostJson("http://"+s.host, req(1, 2), 50*time.Millisecond)
+	code, body, e = PostJSON("http://"+s.host, req(1, 2), 50*time.Millisecond)
 	c.Assert(e, check.NotNil)
 	c.Assert(e.Error(), check.Equals, "timeout")
 
-	code, body, e = PostJson("http://"+s.host, req(2, 3), 0)
+	code, body, e = PostJSON("http://"+s.host, req(2, 3), 0)
 	checkOk(code, body, e, 5)
 
-	code, body, e = PostJson("http://"+s.host, nil, 0)
+	code, body, e = PostJSON("http://"+s.host, nil, 0)
 	checkOk(code, body, e, 0)
 }
 
-func req(x int, y int) *testJsonReq {
-	return &testJsonReq{x, y}
+func req(x int, y int) *testJSONReq {
+	return &testJSONReq{x, y}
 }
 
-type testJsonReq struct {
+type testJSONReq struct {
 	A int
 	B int
 }
 
-type testJsonRes struct {
+type testJSONRes struct {
 	Sum int
 }
