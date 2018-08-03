@@ -19,7 +19,7 @@ package version
 
 const (
 	// Version is the version of the project Dragonfly
-	Version = "0.2.0"
+	Version = "0.2.1"
 
 	// DFDaemonVersion is the version of dfdaemon
 	DFDaemonVersion = Version
