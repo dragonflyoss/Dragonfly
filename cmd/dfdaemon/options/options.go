@@ -41,7 +41,7 @@ func New() *Options {
 	}
 
 	o := &Options{
-		DFRepo:     os.Getenv("HOME") + ".small-dragonfly/dfdaemon/data/",
+		DFRepo:     filepath.Join(os.Getenv("HOME"), ".small-dragonfly/dfdaemon/data/"),
 		DfPath:     defaultPath,
 		CallSystem: "com_ops_dragonfly",
 		URLFilter:  "Signature&Expires&OSSAccessKeyId",
