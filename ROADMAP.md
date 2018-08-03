@@ -3,11 +3,11 @@
 ## Functionality
 
 * Support private image in dfdaemon
-* Support authetication in SuperNode
-* Supoort transmission securely
+* Support authentication in SuperNode
+* Support transmission securely
 * Add solution for SuperNode's downgrading
 * Preheat file or image
-* Refactor supernode with Golang
+* Refactor superNode with Golang
 * Support working among multi-zones
 
 ## Test
@@ -22,5 +22,5 @@
 
 ## Ecosystem
 
-* Support deploying SupnerNode with Helm in Kubernetes
-* Support deploying dfclient and dfdaemon with daemonset mode in Kubernetes
+* Support deploying SuperNode with Helm in Kubernetes
+* Support deploying dfclient and dfdaemon with DaemonSet mode in Kubernetes
