@@ -30,7 +30,7 @@ func Test(t *testing.T) {
 // mockHTTPClient fakes a customized implementation of util.SimpleHTTPClient.
 type mockHTTPClient struct {
 	postJSON func(string, interface{}, time.Duration) (int, []byte, error)
-	get func(string, time.Duration) (int, []byte, error)
+	get      func(string, time.Duration) (int, []byte, error)
 }
 
 func (m *mockHTTPClient) PostJSON(url string, body interface{}, timeout time.Duration) (
