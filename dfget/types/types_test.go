@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/alibaba/Dragonfly/dfget/config"
 	"github.com/go-check/check"
 )
 
@@ -39,6 +40,7 @@ func (suite *TypesSuite) SetUpTest(c *check.C) {
 	rand.Seed(time.Now().UnixNano())
 }
 
+// ----------------------------------------------------------------------------
 // Testing BaseResponse
 
 func (suite *TypesSuite) TestNewBaseResponse(c *check.C) {
@@ -67,4 +69,39 @@ func (suite *TypesSuite) TestBaseResponse_IsSuccess(c *check.C) {
 		res = NewBaseResponse(cc.code, "")
 		c.Assert(res.IsSuccess(), check.Equals, cc.expected)
 	}
+}
+
+// ----------------------------------------------------------------------------
+// Testing PullPieceTaskResponse
+
+func (suite *TypesSuite) TestPullPieceTaskResponse_FinishData(c *check.C) {
+	res := &PullPieceTaskResponse{BaseResponse: &BaseResponse{}}
+
+	c.Assert(res.FinishData(), check.IsNil)
+
+	res.Code = config.TaskCodeFinish
+	c.Assert(res.FinishData(), check.IsNil)
+
+	res.Data = []byte("x")
+	c.Assert(res.FinishData(), check.IsNil)
+
+	res.Data = []byte("{\"fileLength\":1}")
+	c.Assert(res.FinishData(), check.NotNil)
+	c.Assert(res.FinishData().FileLength, check.Equals, int64(1))
+}
+
+func (suite *TypesSuite) TestPullPieceTaskResponse_ContinueData(c *check.C) {
+	res := &PullPieceTaskResponse{BaseResponse: &BaseResponse{}}
+
+	c.Assert(res.ContinueData(), check.IsNil)
+
+	res.Code = config.TaskCodeContinue
+	c.Assert(res.ContinueData(), check.IsNil)
+
+	res.Data = []byte("x")
+	c.Assert(res.ContinueData(), check.IsNil)
+
+	res.Data = []byte("{\"pieceNum\":1}")
+	c.Assert(res.ContinueData(), check.NotNil)
+	c.Assert(res.ContinueData().PieceNum, check.Equals, 1)
 }

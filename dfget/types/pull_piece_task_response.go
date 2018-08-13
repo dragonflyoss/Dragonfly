@@ -42,7 +42,7 @@ func (res *PullPieceTaskResponse) FinishData() *PullPieceTaskResponseFinishData 
 		return nil
 	}
 	if res.data == nil {
-		data := new(PullPieceTaskResponseContinueData)
+		data := new(PullPieceTaskResponseFinishData)
 		if e := json.Unmarshal(res.Data, data); e != nil {
 			return nil
 		}
