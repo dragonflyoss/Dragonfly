@@ -60,29 +60,61 @@ func (s *HTTPUtilTestSuite) TearDownSuite(c *check.C) {
 	s.ln.Close()
 }
 
+// ----------------------------------------------------------------------------
+// unit tests
+
 func (s *HTTPUtilTestSuite) TestPostJson(c *check.C) {
-	var checkOk = func(code int, body []byte, e error, sum int) {
-		c.Assert(e, check.IsNil)
-		c.Assert(code, check.Equals, fasthttp.StatusOK)
-
-		var res = &testJSONRes{}
-		e = json.Unmarshal(body, res)
-		c.Check(e, check.IsNil)
-		c.Check(res.Sum, check.Equals, sum)
-	}
-
 	code, body, e := PostJSON("http://"+s.host, req(1, 2), 55*time.Millisecond)
-	checkOk(code, body, e, 3)
+	checkOk(c, code, body, e, 3)
 
 	code, body, e = PostJSON("http://"+s.host, req(1, 2), 50*time.Millisecond)
 	c.Assert(e, check.NotNil)
 	c.Assert(e.Error(), check.Equals, "timeout")
 
 	code, body, e = PostJSON("http://"+s.host, req(2, 3), 0)
-	checkOk(code, body, e, 5)
+	checkOk(c, code, body, e, 5)
 
 	code, body, e = PostJSON("http://"+s.host, nil, 0)
-	checkOk(code, body, e, 0)
+	checkOk(c, code, body, e, 0)
+}
+
+func (s *HTTPUtilTestSuite) TestGet(c *check.C) {
+	code, body, e := Get("http://"+s.host, 0)
+	checkOk(c, code, body, e, 0)
+
+	code, body, e = Get("http://"+s.host, 50*time.Millisecond)
+	c.Assert(e, check.NotNil)
+	c.Assert(e.Error(), check.Equals, "timeout")
+}
+
+func (s *HTTPUtilTestSuite) TestHTTPStatusOk(c *check.C) {
+	for i := fasthttp.StatusContinue; i <= fasthttp.StatusNetworkAuthenticationRequired; i++ {
+		c.Assert(HTTPStatusOk(i), check.Equals, i == fasthttp.StatusOK)
+	}
+}
+
+func (s *HTTPUtilTestSuite) TestParseQuery(c *check.C) {
+	type req struct {
+		A int    `request:"a"`
+		B string `request:"b"`
+		C int
+	}
+	r := req{1, "test", 3}
+	x := ParseQuery(&r)
+	c.Assert(x, check.Equals, "a=1&b=test")
+}
+
+// ----------------------------------------------------------------------------
+// helper functions and structures
+
+func checkOk(c *check.C, code int, body []byte, e error, sum int) {
+	c.Assert(e, check.IsNil)
+	c.Assert(code, check.Equals, fasthttp.StatusOK)
+
+	var res = &testJSONRes{}
+	e = json.Unmarshal(body, res)
+	c.Check(e, check.IsNil)
+	c.Check(res.Sum, check.Equals, sum)
 }
 
 func req(x int, y int) *testJSONReq {

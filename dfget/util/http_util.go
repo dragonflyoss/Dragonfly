@@ -17,7 +17,10 @@
 package util
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/valyala/fasthttp"
@@ -28,8 +31,30 @@ const (
 	ApplicationJSONUtf8Value = "application/json;charset=utf-8"
 )
 
+const (
+	// RequestTag is the tag name for parsing structure to query parameters.
+	// see function ParseQuery.
+	RequestTag = "request"
+)
+
+// DefaultHTTPClient is the default implementation of SimpleHTTPClient.
+var DefaultHTTPClient SimpleHTTPClient = &defaultHTTPClient{}
+
+// SimpleHTTPClient defines some http functions used frequently.
+type SimpleHTTPClient interface {
+	PostJSON(url string, body interface{}, timeout time.Duration) (code int, res []byte, e error)
+	Get(url string, timeout time.Duration) (code int, res []byte, e error)
+}
+
+// ----------------------------------------------------------------------------
+// defaultHTTPClient
+
+type defaultHTTPClient struct {
+}
+
 // PostJSON send a POST request whose content-type is 'application/json;charset=utf-8'.
-func PostJSON(url string, body interface{}, timeout time.Duration) (
+// When timeout <= 0, it will block until receiving response from server.
+func (c *defaultHTTPClient) PostJSON(url string, body interface{}, timeout time.Duration) (
 	code int, resBody []byte, err error) {
 
 	var jsonByte []byte
@@ -58,4 +83,55 @@ func PostJSON(url string, body interface{}, timeout time.Duration) (
 		err = fasthttp.Do(req, resp)
 	}
 	return resp.StatusCode(), resp.Body(), err
+}
+
+// Get sends a GET request to server.
+// When timeout <= 0, it will block until receiving response from server.
+func (c *defaultHTTPClient) Get(url string, timeout time.Duration) (
+	code int, body []byte, e error) {
+	if timeout > 0 {
+		return fasthttp.GetTimeout(nil, url, timeout)
+	}
+	return fasthttp.Get(nil, url)
+}
+
+// ---------------------------------------------------------------------------
+// util functions
+
+// PostJSON send a POST request whose content-type is 'application/json;charset=utf-8'.
+func PostJSON(url string, body interface{}, timeout time.Duration) (int, []byte, error) {
+	return DefaultHTTPClient.PostJSON(url, body, timeout)
+}
+
+// Get sends a GET request to server.
+// When timeout <= 0, it will block until receiving response from server.
+func Get(url string, timeout time.Duration) (int, []byte, error) {
+	return DefaultHTTPClient.Get(url, timeout)
+}
+
+// HTTPStatusOk reports whether the http response code is 200.
+func HTTPStatusOk(code int) bool {
+	return fasthttp.StatusOK == code
+}
+
+// ParseQuery only parses the fields with tag 'request' of the query to parameters.
+// query must be a pointer to a struct.
+func ParseQuery(query interface{}) string {
+	b := bytes.Buffer{}
+	wrote := false
+	t := reflect.TypeOf(query).Elem()
+	v := reflect.ValueOf(query).Elem()
+	for i := 0; i < t.NumField(); i++ {
+		tag := t.Field(i).Tag.Get(RequestTag)
+		if tag != "" {
+			if wrote {
+				b.WriteByte('&')
+			}
+			b.WriteString(tag)
+			b.WriteByte('=')
+			b.WriteString(fmt.Sprintf("%v", v.Field(i)))
+			wrote = true
+		}
+	}
+	return b.String()
 }

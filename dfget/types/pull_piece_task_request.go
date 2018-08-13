@@ -18,10 +18,10 @@ package types
 
 // PullPieceTaskRequest is send to supernodes when pulling pieces.
 type PullPieceTaskRequest struct {
-	SrcCid string
-	DstCid string
-	Range  string
-	Result string
-	Status string
-	TaskID string
+	SrcCid string `request:"srcCid"`
+	DstCid string `request:"dstCid"`
+	Range  string `request:"range"`
+	Result string `request:"result"`
+	Status string `request:"status"`
+	TaskID string `request:"taskId"`
 }

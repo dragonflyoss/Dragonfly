@@ -16,10 +16,21 @@
 
 package types
 
+import (
+	"encoding/json"
+)
+
 // RegisterResponse is the response of register request.
 type RegisterResponse struct {
 	*BaseResponse
-	Data *RegisterResponseData `json:"data"`
+	Data *RegisterResponseData `json:"data,omitempty"`
+}
+
+func (res *RegisterResponse) String() string {
+	if b, e := json.Marshal(res); e == nil {
+		return string(b)
+	}
+	return ""
 }
 
 // RegisterResponseData is the data when registering supernode successfully.

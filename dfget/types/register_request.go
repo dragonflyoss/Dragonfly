@@ -16,20 +16,31 @@
 
 package types
 
+import (
+	"encoding/json"
+)
+
 // RegisterRequest contains all the parameters that need to be passed to the
 // supernode when registering a downloading task.
 type RegisterRequest struct {
-	RawURL     string `json:"rawUrl"`
-	TaskURL    string `json:"taskUrl"`
-	Md5        string `json:"md5"`
-	Identifier string `json:"identifier"`
-	Version    string `json:"version"`
-	Port       int    `json:"port"`
-	Path       string `json:"path"`
-	CallSystem string `json:"callSystem"`
-	Cid        string `json:"cid"`
-	IP         string `json:"ip"`
-	HostName   string `json:"hostName"`
-	Headers    string `json:"headers"`
-	Dfdaemon   bool   `json:"dfdaemon"`
+	RawURL     string   `json:"rawUrl"`
+	TaskURL    string   `json:"taskUrl"`
+	Cid        string   `json:"cid"`
+	IP         string   `json:"ip"`
+	HostName   string   `json:"hostName"`
+	Port       int      `json:"port"`
+	Path       string   `json:"path"`
+	Version    string   `json:"version,omitempty"`
+	Md5        string   `json:"md5,omitempty"`
+	Identifier string   `json:"identifier,omitempty"`
+	CallSystem string   `json:"callSystem,omitempty"`
+	Headers    []string `json:"headers,omitempty"`
+	Dfdaemon   bool     `json:"dfdaemon,omitempty"`
+}
+
+func (r *RegisterRequest) String() string {
+	if b, e := json.Marshal(r); e == nil {
+		return string(b)
+	}
+	return ""
 }
