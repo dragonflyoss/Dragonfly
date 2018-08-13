@@ -102,6 +102,8 @@ func (s *HTTPUtilTestSuite) TestParseQuery(c *check.C) {
 	r := req{1, "test", 3}
 	x := ParseQuery(&r)
 	c.Assert(x, check.Equals, "a=1&b=test")
+
+	c.Assert(ParseQuery(nil), check.Equals, "")
 }
 
 // ----------------------------------------------------------------------------
