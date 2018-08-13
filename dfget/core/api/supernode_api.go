@@ -83,17 +83,54 @@ func (api *supernodeAPI) Register(ip string, req *types.RegisterRequest) (
 // response that describes from which peer to download.
 func (api *supernodeAPI) PullPieceTask(ip string, req *types.PullPieceTaskRequest) (
 	resp *types.PullPieceTaskResponse, e error) {
+
+	url := fmt.Sprintf("%s://%s:%d%s?%s",
+		api.Scheme, ip, api.ServicePort, peerPullPieceTaskPath, util.ParseQuery(req))
+
+	resp = new(types.PullPieceTaskResponse)
+	e = api.get(url, resp)
 	return
 }
 
 // ReportPiece reports the status of piece downloading task to supernode.
 func (api *supernodeAPI) ReportPiece(ip string, req *types.ReportPieceRequest) (
 	resp *types.BaseResponse, e error) {
+
+	url := fmt.Sprintf("%s://%s:%d%s?%s",
+		api.Scheme, ip, api.ServicePort, peerReportPiecePath, util.ParseQuery(req))
+
+	resp = new(types.BaseResponse)
+	e = api.get(url, resp)
 	return
 }
 
 // ServiceDown reports the status of the local peer to supernode.
 func (api *supernodeAPI) ServiceDown(ip string, taskID string, cid string) (
 	resp *types.BaseResponse, e error) {
+
+	url := fmt.Sprintf("%s://%s:%d%s?taskId=%s&cid=%s",
+		api.Scheme, ip, api.ServicePort, peerServiceDownPath, taskID, cid)
+
+	resp = new(types.BaseResponse)
+	e = api.get(url, resp)
 	return
+}
+
+func (api *supernodeAPI) get(url string, resp interface{}) error {
+	var (
+		code int
+		body []byte
+		e    error
+	)
+	if url == "" {
+		return fmt.Errorf("invalid url")
+	}
+	if code, body, e = api.HTTPClient.Get(url, api.Timeout); e != nil {
+		return e
+	}
+	if !util.HTTPStatusOk(code) {
+		return fmt.Errorf("%d:%s", code, body)
+	}
+	e = json.Unmarshal(body, resp)
+	return e
 }
