@@ -18,6 +18,7 @@ package api
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/alibaba/Dragonfly/dfget/config"
 	"github.com/alibaba/Dragonfly/dfget/types"
@@ -73,6 +74,73 @@ func (s *SupernodeAPITestSuite) TestSupernodeAPI_Register(c *check.C) {
 	c.Assert(r, check.NotNil)
 	c.Assert(r.Code, check.Equals, config.HTTPSuccess)
 	c.Assert(r.Data.FileLength, check.Equals, res.Data.FileLength)
+}
+
+func (s *SupernodeAPITestSuite) TestSupernodeAPI_PullPieceTask(c *check.C) {
+	ip := "127.0.0.1"
+
+	res := &types.PullPieceTaskResponse{BaseResponse: &types.BaseResponse{}}
+	res.Code = config.TaskCodeFinish
+	res.Data = []byte(`{"fileLength":2}`)
+	s.mock.get = s.mock.createGetFunc(200, []byte(res.String()), nil)
+
+	r, e := s.api.PullPieceTask(ip, nil)
+
+	c.Assert(e, check.IsNil)
+	c.Assert(r.Code, check.Equals, res.Code)
+	c.Assert(r.FinishData().FileLength, check.Equals, int64(2))
+}
+
+func (s *SupernodeAPITestSuite) TestSupernodeAPI_ReportPiece(c *check.C) {
+	ip := "127.0.0.1"
+
+	s.mock.get = s.mock.createGetFunc(200, []byte(`{"Code":700}`), nil)
+	r, e := s.api.ReportPiece(ip, nil)
+	c.Check(e, check.IsNil)
+	c.Check(r.Code, check.Equals, 700)
+}
+
+func (s *SupernodeAPITestSuite) TestSupernodeAPI_ServiceDown(c *check.C) {
+	ip := "127.0.0.1"
+
+	s.mock.get = s.mock.createGetFunc(200, []byte(`{"Code":200}`), nil)
+	r, e := s.api.ServiceDown(ip, "", "")
+	c.Check(e, check.IsNil)
+	c.Check(r.Code, check.Equals, 200)
+}
+
+func (s *SupernodeAPITestSuite) TestSupernodeAPI_get(c *check.C) {
+	type testRes struct {
+		A int
+	}
+
+	api := s.api.(*supernodeAPI)
+	f := func(code int, res string, e error) (*testRes, error, string) {
+		s.mock.get = s.mock.createGetFunc(code, []byte(res), e)
+		msg := fmt.Sprintf("code:%d res:%s e:%v", code, res, e)
+		resp := new(testRes)
+		err := api.get("http://localhost", resp)
+		return resp, err, msg
+	}
+
+	r, e, m := f(0, "test", nil)
+	c.Assert(r.A, check.Equals, 0, check.Commentf(m))
+	c.Assert(e.Error(), check.Equals, "0:test", check.Commentf(m))
+
+	r, e, m = f(0, "x", fmt.Errorf("test error"))
+	c.Assert(e.Error(), check.Equals, "test error", check.Commentf(m))
+
+	r, e, m = f(200, "x", nil)
+	c.Assert(r.A, check.Equals, 0, check.Commentf(m))
+	c.Assert(strings.Contains(e.Error(), "invalid character"),
+		check.Equals, true, check.Commentf(m))
+
+	r, e, m = f(200, `{"A":1}`, nil)
+	c.Assert(r.A, check.Equals, 1, check.Commentf(m))
+	c.Assert(e, check.IsNil, check.Commentf(m))
+
+	e = api.get("", nil)
+	c.Assert(e.Error(), check.Equals, "invalid url")
 }
 
 // ----------------------------------------------------------------------------
