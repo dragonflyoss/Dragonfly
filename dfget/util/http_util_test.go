@@ -64,28 +64,27 @@ func (s *HTTPUtilTestSuite) TearDownSuite(c *check.C) {
 // unit tests
 
 func (s *HTTPUtilTestSuite) TestPostJson(c *check.C) {
-	var checkOk = func(code int, body []byte, e error, sum int) {
-		c.Assert(e, check.IsNil)
-		c.Assert(code, check.Equals, fasthttp.StatusOK)
-
-		var res = &testJSONRes{}
-		e = json.Unmarshal(body, res)
-		c.Check(e, check.IsNil)
-		c.Check(res.Sum, check.Equals, sum)
-	}
-
 	code, body, e := PostJSON("http://"+s.host, req(1, 2), 55*time.Millisecond)
-	checkOk(code, body, e, 3)
+	checkOk(c, code, body, e, 3)
 
 	code, body, e = PostJSON("http://"+s.host, req(1, 2), 50*time.Millisecond)
 	c.Assert(e, check.NotNil)
 	c.Assert(e.Error(), check.Equals, "timeout")
 
 	code, body, e = PostJSON("http://"+s.host, req(2, 3), 0)
-	checkOk(code, body, e, 5)
+	checkOk(c, code, body, e, 5)
 
 	code, body, e = PostJSON("http://"+s.host, nil, 0)
-	checkOk(code, body, e, 0)
+	checkOk(c, code, body, e, 0)
+}
+
+func (s *HTTPUtilTestSuite) TestGet(c *check.C) {
+	code, body, e := Get("http://"+s.host, 0)
+	checkOk(c, code, body, e, 0)
+
+	code, body, e = PostJSON("http://"+s.host, req(1, 2), 50*time.Millisecond)
+	c.Assert(e, check.NotNil)
+	c.Assert(e.Error(), check.Equals, "timeout")
 }
 
 func (s *HTTPUtilTestSuite) TestHTTPStatusOk(c *check.C) {
@@ -107,6 +106,16 @@ func (s *HTTPUtilTestSuite) TestParseQuery(c *check.C) {
 
 // ----------------------------------------------------------------------------
 // helper functions and structures
+
+func checkOk(c *check.C, code int, body []byte, e error, sum int) {
+	c.Assert(e, check.IsNil)
+	c.Assert(code, check.Equals, fasthttp.StatusOK)
+
+	var res = &testJSONRes{}
+	e = json.Unmarshal(body, res)
+	c.Check(e, check.IsNil)
+	c.Check(res.Sum, check.Equals, sum)
+}
 
 func req(x int, y int) *testJSONReq {
 	return &testJSONReq{x, y}

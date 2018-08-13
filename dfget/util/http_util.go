@@ -103,6 +103,12 @@ func PostJSON(url string, body interface{}, timeout time.Duration) (int, []byte,
 	return DefaultHTTPClient.PostJSON(url, body, timeout)
 }
 
+// Get sends a GET request to server.
+// When timeout <= 0, it will block until receiving response from server.
+func Get(url string, timeout time.Duration) (int, []byte, error) {
+	return DefaultHTTPClient.Get(url, timeout)
+}
+
 // HTTPStatusOk reports whether the http response code is 200.
 func HTTPStatusOk(code int) bool {
 	return fasthttp.StatusOK == code
