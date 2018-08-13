@@ -82,7 +82,7 @@ func (s *HTTPUtilTestSuite) TestGet(c *check.C) {
 	code, body, e := Get("http://"+s.host, 0)
 	checkOk(c, code, body, e, 0)
 
-	code, body, e = PostJSON("http://"+s.host, req(1, 2), 50*time.Millisecond)
+	code, body, e = Get("http://"+s.host, 50*time.Millisecond)
 	c.Assert(e, check.NotNil)
 	c.Assert(e.Error(), check.Equals, "timeout")
 }
