@@ -27,10 +27,10 @@ import (
 
 /* the url paths of supernode APIs*/
 const (
-	PeerRegisterPath      = "/peer/registry"
-	PeerPullPieceTaskPath = "/peer/task"
-	PeerReportPiecePath   = "/peer/piece/suc"
-	PeerServiceDownPath   = "/peer/service/down"
+	peerRegisterPath      = "/peer/registry"
+	peerPullPieceTaskPath = "/peer/task"
+	peerReportPiecePath   = "/peer/piece/suc"
+	peerServiceDownPath   = "/peer/service/down"
 )
 
 // NewSupernodeAPI creates a new instance of SupernodeAPI with default value.
@@ -67,7 +67,7 @@ func (api *supernodeAPI) Register(ip string, req *types.RegisterRequest) (
 		body []byte
 	)
 	url := fmt.Sprintf("%s://%s:%d%s",
-		api.Scheme, ip, api.ServicePort, PeerRegisterPath)
+		api.Scheme, ip, api.ServicePort, peerRegisterPath)
 	if code, body, e = api.HTTPClient.PostJSON(url, req, api.Timeout); e != nil {
 		return nil, e
 	}
