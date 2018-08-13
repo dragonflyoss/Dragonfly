@@ -19,6 +19,7 @@ package api
 import (
 	"fmt"
 
+	"github.com/alibaba/Dragonfly/dfget/config"
 	"github.com/alibaba/Dragonfly/dfget/types"
 	"github.com/alibaba/Dragonfly/dfget/util"
 	"github.com/go-check/check"
@@ -40,6 +41,10 @@ func (s *SupernodeAPITestSuite) TearDownSuite(c *check.C) {
 	util.DefaultHTTPClient = s.origin
 }
 
+func (s *SupernodeAPITestSuite) TearDownTest(c *check.C) {
+	s.mock.reset()
+}
+
 func init() {
 	check.Suite(&SupernodeAPITestSuite{})
 }
@@ -50,9 +55,32 @@ func init() {
 func (s *SupernodeAPITestSuite) TestSupernodeAPI_Register(c *check.C) {
 	api := NewSupernodeAPI()
 	api.ServicePort = 8080
-	r, e := api.Register("localhost", createRegisterRequest())
-	fmt.Printf("res: %v\n", r)
-	fmt.Printf("err: %v\n", e)
+	ip := "127.0.0.1"
+
+	s.mock.postJSON = s.mock.createPostJSONFunc(0, nil, nil)
+	r, e := api.Register(ip, createRegisterRequest())
+	c.Assert(r, check.IsNil)
+	c.Assert(e.Error(), check.Equals, "0:")
+
+	s.mock.postJSON = s.mock.createPostJSONFunc(0, nil,
+		fmt.Errorf("test"))
+	r, e = api.Register(ip, createRegisterRequest())
+	c.Assert(r, check.IsNil)
+	c.Assert(e.Error(), check.Equals, "test")
+
+	res := types.RegisterResponse{BaseResponse: &types.BaseResponse{}}
+	s.mock.postJSON = s.mock.createPostJSONFunc(200, []byte(res.String()), nil)
+	r, e = api.Register(ip, createRegisterRequest())
+	c.Assert(r, check.NotNil)
+	c.Assert(r.Code, check.Equals, 0)
+
+	res.Code = config.HTTPSuccess
+	res.Data = &types.RegisterResponseData{FileLength: int64(32)}
+	s.mock.postJSON = s.mock.createPostJSONFunc(200, []byte(res.String()), nil)
+	r, e = api.Register(ip, createRegisterRequest())
+	c.Assert(r, check.NotNil)
+	c.Assert(r.Code, check.Equals, config.HTTPSuccess)
+	c.Assert(r.Data.FileLength, check.Equals, res.Data.FileLength)
 }
 
 // ----------------------------------------------------------------------------
