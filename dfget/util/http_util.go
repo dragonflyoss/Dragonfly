@@ -117,6 +117,10 @@ func HTTPStatusOk(code int) bool {
 // ParseQuery only parses the fields with tag 'request' of the query to parameters.
 // query must be a pointer to a struct.
 func ParseQuery(query interface{}) string {
+	if IsNil(query) {
+		return ""
+	}
+
 	b := bytes.Buffer{}
 	wrote := false
 	t := reflect.TypeOf(query).Elem()
