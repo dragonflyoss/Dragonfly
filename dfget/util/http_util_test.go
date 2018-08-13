@@ -60,6 +60,9 @@ func (s *HTTPUtilTestSuite) TearDownSuite(c *check.C) {
 	s.ln.Close()
 }
 
+// ----------------------------------------------------------------------------
+// unit tests
+
 func (s *HTTPUtilTestSuite) TestPostJson(c *check.C) {
 	var checkOk = func(code int, body []byte, e error, sum int) {
 		c.Assert(e, check.IsNil)
@@ -84,6 +87,26 @@ func (s *HTTPUtilTestSuite) TestPostJson(c *check.C) {
 	code, body, e = PostJSON("http://"+s.host, nil, 0)
 	checkOk(code, body, e, 0)
 }
+
+func (s *HTTPUtilTestSuite) TestHTTPStatusOk(c *check.C) {
+	for i := fasthttp.StatusContinue; i <= fasthttp.StatusNetworkAuthenticationRequired; i++ {
+		c.Assert(HTTPStatusOk(i), check.Equals, i == fasthttp.StatusOK)
+	}
+}
+
+func (s *HTTPUtilTestSuite) TestParseQuery(c *check.C) {
+	type req struct {
+		A int    `request:"a"`
+		B string `request:"b"`
+		C int
+	}
+	r := req{1, "test", 3}
+	x := ParseQuery(&r)
+	c.Assert(x, check.Equals, "a=1&b=test")
+}
+
+// ----------------------------------------------------------------------------
+// helper functions and structures
 
 func req(x int, y int) *testJSONReq {
 	return &testJSONReq{x, y}

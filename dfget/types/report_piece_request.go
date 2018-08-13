@@ -19,8 +19,8 @@ package types
 // ReportPieceRequest is send to the supernode when dfget downloaded a piece
 // successfully.
 type ReportPieceRequest struct {
-	TaskID     string
-	Cid        string
-	DstCid     string
-	PieceRange string
+	TaskID     string `request:"taskId"`
+	Cid        string `request:"cid"`
+	DstCid     string `request:"dstCid"`
+	PieceRange string `request:"pieceRange"`
 }
