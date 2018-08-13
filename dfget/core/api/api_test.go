@@ -27,10 +27,13 @@ func Test(t *testing.T) {
 	check.TestingT(t)
 }
 
+type postJSONFunc = func(url string, body interface{}, timeout time.Duration) (int, []byte, error)
+type getFunc = func(url string, timeout time.Duration) (int, []byte, error)
+
 // mockHTTPClient fakes a customized implementation of util.SimpleHTTPClient.
 type mockHTTPClient struct {
-	postJSON func(string, interface{}, time.Duration) (int, []byte, error)
-	get      func(string, time.Duration) (int, []byte, error)
+	postJSON postJSONFunc
+	get      getFunc
 }
 
 func (m *mockHTTPClient) PostJSON(url string, body interface{}, timeout time.Duration) (
@@ -51,4 +54,16 @@ func (m *mockHTTPClient) Get(url string, timeout time.Duration) (int, []byte, er
 func (m *mockHTTPClient) reset() {
 	m.postJSON = nil
 	m.get = nil
+}
+
+func (m *mockHTTPClient) createPostJSONFunc(code int, res []byte, e error) postJSONFunc {
+	return func(string, interface{}, time.Duration) (int, []byte, error) {
+		return code, res, e
+	}
+}
+
+func (m *mockHTTPClient) createGetFunc(code int, res []byte, e error) getFunc {
+	return func(string, time.Duration) (int, []byte, error) {
+		return code, res, e
+	}
 }
