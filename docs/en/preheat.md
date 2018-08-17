@@ -19,9 +19,7 @@
   </pre>
   </td>
   </tr>
-  </tbody
-  </table>
-  
+  </tbody></table>
 
 ## POST /api/preheat
 
@@ -39,8 +37,7 @@
     "header": ["string"]
   }
   </pre>Dragonfly sends a request taking the 'header' to the 'url'.</td></tr>
-  </tbody
-  </table>
+  </tbody></table>
 
 * **Response**: `Content-type: application/json`
   <table width="100%">
@@ -62,7 +59,7 @@
     "msg": "detailed error message"
   }
   </pre></td></tr>
-  </tbody
+  </tbody></table>
 
 ## GET /api/preheat/{taskId}
 
@@ -89,4 +86,4 @@
     "msg": "detailed error message"
   }
   </pre></td></tr>
-  </tbody
+  </tbody></table>
