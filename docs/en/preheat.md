@@ -6,7 +6,7 @@
 
 * **Parameters**
 * **Response**: `Content-type: application/json`
-  <table>
+  <table width="100%">
   <thead><tr><th>HTTP Code</th><th>Response Body</th></tr></thead>
   <tbody>
   <tr>
@@ -26,7 +26,7 @@
 
 > request to Dragonfly to start a preheat task
 * **Parameters**: `Content-type: application/json`
-  <table>
+  <table width="100%">
   <thead><tr><th>Parameter Type</th><th>Data Type</th></tr></thead>
   <tbody>
   <tr><td>body</td>
@@ -41,7 +41,7 @@
   </table>
 
 * **Response**: `Content-type: application/json`
-  <table>
+  <table width="100%">
   <thead><tr><th>HTTP Code</th><th>Response Body</th></tr></thead>
   <tbody>
   <tr><td>200</td>
@@ -67,7 +67,7 @@
 > query the current status of the preheat task which id is `taskId`
 
 * **Response**: `Content-type: application/json`
-  <table>
+  <table width="100%">
   <thead><tr><th>HTTP Code</th><th>Response Body</th></tr></thead>
   <tbody>
   <tr><td>200</td>
