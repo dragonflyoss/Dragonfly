@@ -24,7 +24,6 @@ import (
 	"os"
 	"path"
 	"testing"
-	"time"
 
 	"github.com/alibaba/Dragonfly/dfget/config"
 	"github.com/go-check/check"
@@ -77,12 +76,4 @@ func (s *CoreTestSuite) createContext(writer io.Writer) *config.Context {
 	ctx.ClientLogger = logrus.StandardLogger()
 	ctx.ServerLogger = logrus.StandardLogger()
 	return ctx
-}
-
-func TestStart(t *testing.T) {
-	a := []int{1, 2}
-	b := a
-	b[0] = 2
-	fmt.Println(a)
-	fmt.Printf("%.3f", time.Since(time.Now()).Seconds())
 }
