@@ -285,6 +285,7 @@ type RuntimeVariable struct {
 	TaskFileName  string
 	LocalIP       string
 	PeerPort      int
+	FileLength    int64
 }
 
 func (rv *RuntimeVariable) String() string {
