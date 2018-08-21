@@ -276,7 +276,7 @@ func (suite *CliSuite) TestResultMsg(c *check.C) {
 
 	ctx.BackSourceReason = cfg.BackSourceReasonRegisterFail
 	msg = resultMsg(ctx, end, errors.New(1, "TestFail"))
-	c.Assert(msg, check.Equals, "download FAIL(1) cost:0.100s length:0 reason:1 error:" +
+	c.Assert(msg, check.Equals, "download FAIL(1) cost:0.100s length:0 reason:1 error:"+
 		`{"Code":1,"Msg":"TestFail"}`)
 }
 
