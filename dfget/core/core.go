@@ -197,7 +197,10 @@ func getTaskURL(rawURL string, filters []string) string {
 			params = append(params, p)
 		}
 	}
-	return rawURL[:idx+1] + strings.Join(params, "&")
+	if len(params) > 0 {
+		return rawURL[:idx+1] + strings.Join(params, "&")
+	}
+	return rawURL[:idx]
 }
 
 func getTaskPath(taskFileName string) string {
@@ -231,10 +234,12 @@ func checkConnectSupernode(nodes []string) (localIP string) {
 		if len(nodeFields) == 2 {
 			port, _ = strconv.Atoi(nodeFields[1])
 		}
-		if localIP, e = util.CheckConnect(n, port, 1000); e == nil {
+		if localIP, e = util.CheckConnect(nodeFields[0], port, 1000); e == nil {
 			return localIP
 		}
-		config.Ctx.ClientLogger.Errorf("connect to node:%s error: %v", n, e)
+		if config.Ctx.ClientLogger != nil {
+			config.Ctx.ClientLogger.Errorf("connect to node:%s error: %v", n, e)
+		}
 	}
 	return ""
 }
