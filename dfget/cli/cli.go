@@ -23,9 +23,11 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"time"
 
 	cfg "github.com/alibaba/Dragonfly/dfget/config"
 	"github.com/alibaba/Dragonfly/dfget/core"
+	"github.com/alibaba/Dragonfly/dfget/errors"
 	"github.com/alibaba/Dragonfly/dfget/util"
 	"github.com/alibaba/Dragonfly/version"
 )
@@ -35,8 +37,10 @@ func Run() {
 	initialize()
 	err := core.Start(cfg.Ctx)
 	if err != nil {
+		util.Printer.Println(resultMsg(cfg.Ctx, time.Now(), err))
 		os.Exit(err.Code)
 	}
+	util.Printer.Println(resultMsg(cfg.Ctx, time.Now(), err))
 	os.Exit(0)
 }
 
@@ -110,4 +114,14 @@ func initLog() {
 	if cfg.Ctx.Pattern == "p2p" {
 		cfg.Ctx.ServerLogger = util.CreateLogger(logPath, "dfserver.log", logLevel, cfg.Ctx.Sign)
 	}
+}
+
+func resultMsg(ctx *cfg.Context, end time.Time, e *errors.DFGetError) string {
+	if e != nil {
+		return fmt.Sprintf("download FAIL(%d) cost:%.3fs length:%d reason:%d error:%v",
+			e.Code, end.Sub(ctx.StartTime).Seconds(), ctx.RV.FileLength,
+			ctx.BackSourceReason, e)
+	}
+	return fmt.Sprintf("download SUCCESS(0) cost:%.3fs length:%d reason:%d",
+		end.Sub(ctx.StartTime).Seconds(), ctx.RV.FileLength, ctx.BackSourceReason)
 }
