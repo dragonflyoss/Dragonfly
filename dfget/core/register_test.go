@@ -76,7 +76,7 @@ func (s *CoreTestSuite) TestSupernodeRegister_Register(c *check.C) {
 	f(config.TaskCodeWaitAuth, "wait auth", nil)
 
 	ctx.Node = []string{"x"}
-	ctx.URL = "https://lowzj.com"
+	ctx.URL = "http://lowzj.com"
 	f(config.Success, "", &RegisterResult{
 		Node: "x", RemainderNodes: []string{}, URL: ctx.URL, TaskID: "a",
 		FileLength: 100, PieceSize: 10})
@@ -123,7 +123,7 @@ func createRegisterFunc() RegisterFuncType {
 			return newResponse(config.TaskCodeWaitAuth, "wait auth"), nil
 		case "http://x.com":
 			return newResponse(config.TaskCodeURLNotReachable, "not reachable"), nil
-		case "https://lowzj.com":
+		case "http://lowzj.com":
 			resp := newResponse(config.Success, "")
 			resp.Data = &types.RegisterResponseData{
 				TaskID:     "a",
