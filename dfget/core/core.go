@@ -23,9 +23,13 @@ import (
 	"math/rand"
 	"os"
 	"path"
+	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/alibaba/Dragonfly/dfget/config"
+	"github.com/alibaba/Dragonfly/dfget/core/api"
 	"github.com/alibaba/Dragonfly/dfget/core/downloader"
 	"github.com/alibaba/Dragonfly/dfget/errors"
 	"github.com/alibaba/Dragonfly/dfget/util"
@@ -38,7 +42,12 @@ func init() {
 
 // Start function creates a new task and starts it to download file.
 func Start(ctx *config.Context) *errors.DFGetError {
-	var err error
+	var (
+		supernodeAPI = api.NewSupernodeAPI()
+		register     = NewSupernodeRegister(ctx, supernodeAPI)
+		err          error
+		result       *RegisterResult
+	)
 
 	util.Printer.Println(fmt.Sprintf("--%s--  %s",
 		ctx.StartTime.Format(config.DefaultTimestampFormat), ctx.URL))
@@ -47,11 +56,11 @@ func Start(ctx *config.Context) *errors.DFGetError {
 		return errors.New(1100, err.Error())
 	}
 
-	if err = registerToSuperNode(ctx); err != nil {
+	if result, err = registerToSuperNode(ctx, register); err != nil {
 		return errors.New(1200, err.Error())
 	}
 
-	if err = downloadFile(ctx); err != nil {
+	if err = downloadFile(ctx, supernodeAPI, register, result); err != nil {
 		return errors.New(1300, err.Error())
 	}
 
@@ -69,25 +78,69 @@ func prepare(ctx *config.Context) (err error) {
 	util.Printer.Printf("workspace:%s sign:%s", ctx.WorkHome, ctx.Sign)
 	ctx.ClientLogger.Infof("target file path:%s", ctx.Output)
 
-	ctx.RealTarget = ctx.Output
-	ctx.TargetDir = path.Dir(ctx.RealTarget)
-	panicIf(util.CreateDirectory(ctx.TargetDir))
-	ctx.TempTarget, err = createTempTargetFile(ctx.TargetDir, ctx.Sign)
+	rv := &ctx.RV
+
+	rv.RealTarget = ctx.Output
+	rv.TargetDir = path.Dir(rv.RealTarget)
+	panicIf(util.CreateDirectory(rv.TargetDir))
+	ctx.RV.TempTarget, err = createTempTargetFile(rv.TargetDir, ctx.Sign)
 	panicIf(err)
 
-	panicIf(util.CreateDirectory(path.Dir(ctx.MetaPath)))
+	panicIf(util.CreateDirectory(path.Dir(rv.MetaPath)))
 	panicIf(util.CreateDirectory(ctx.WorkHome))
-	panicIf(util.CreateDirectory(ctx.SystemDataDir))
-	ctx.DataDir = ctx.SystemDataDir
+	panicIf(util.CreateDirectory(rv.SystemDataDir))
+	rv.DataDir = ctx.RV.SystemDataDir
+
+	ctx.Node = adjustSupernodeList(ctx.Node)
+	rv.LocalIP = checkConnectSupernode(ctx.Node)
+	rv.Cid = getCid(rv.LocalIP, ctx.Sign)
+	rv.TaskFileName = getTaskFileName(rv.RealTarget, ctx.Sign)
+	rv.TaskURL = getTaskURL(ctx.URL, ctx.Filter)
+	ctx.ClientLogger.Info("runtimeVariable: " + ctx.RV.String())
 
 	return nil
 }
 
-func registerToSuperNode(ctx *config.Context) error {
-	return register(ctx)
+func launchPeerServer(ctx *config.Context) error {
+	return fmt.Errorf("not implemented")
 }
 
-func downloadFile(ctx *config.Context) error {
+func registerToSuperNode(ctx *config.Context, register SupernodeRegister) (*RegisterResult, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			ctx.ClientLogger.Warnf("register fail but try to download from source, "+
+				"reason:%d(%v)", ctx.BackSourceReason, r)
+		}
+	}()
+	if ctx.Pattern == config.PatternSource {
+		ctx.BackSourceReason = config.BackSourceReasonUserSpecified
+		panic("user specified")
+	}
+
+	if len(ctx.Node) == 0 {
+		ctx.BackSourceReason = config.BackSourceReasonNodeEmpty
+		panic("supernode empty")
+	}
+
+	if ctx.Pattern == config.PatternP2P {
+		if e := launchPeerServer(ctx); e != nil {
+			ctx.ClientLogger.Warnf("start peer server error:%v, change to CDN pattern", e)
+		}
+	}
+
+	result, e := register.Register(ctx.RV.PeerPort)
+	if e != nil {
+		if e.Code == config.TaskCodeNeedAuth {
+			return nil, e
+		}
+		ctx.BackSourceReason = config.BackSourceReasonRegisterFail
+		panic(e.Error())
+	}
+	return result, nil
+}
+
+func downloadFile(ctx *config.Context, supernodeAPI api.SupernodeAPI,
+	register SupernodeRegister, result *RegisterResult) error {
 	var getter downloader.Downloader
 	if ctx.BackSourceReason > 0 {
 		getter = &downloader.BackDownloader{}
@@ -121,6 +174,69 @@ func createTempTargetFile(targetDir string, sign string) (name string, e error) 
 		return f.Name(), e
 	}
 	return "", e
+}
+
+func getTaskFileName(realTarget string, sign string) string {
+	return filepath.Base(realTarget) + "-" + sign
+}
+
+func getCid(localIP string, sign string) string {
+	return localIP + "-" + sign
+}
+
+func getTaskURL(rawURL string, filters []string) string {
+	idx := strings.IndexByte(rawURL, '?')
+	if len(filters) <= 0 || idx < 0 || idx >= len(rawURL)-1 {
+		return rawURL
+	}
+
+	var params []string
+	for _, p := range strings.Split(rawURL[idx+1:], "&") {
+		kv := strings.Split(p, "=")
+		if !util.ContainsString(filters, kv[0]) {
+			params = append(params, p)
+		}
+	}
+	return rawURL[:idx+1] + strings.Join(params, "&")
+}
+
+func getTaskPath(taskFileName string) string {
+	if !util.IsEmptyStr(taskFileName) {
+		return config.PeerHTTPPathPrefix + taskFileName
+	}
+	return ""
+}
+
+func adjustSupernodeList(nodes []string) []string {
+	switch nodesLen := len(nodes); nodesLen {
+	case 0:
+		return nodes
+	case 1:
+		return append(nodes, nodes[0])
+	default:
+		util.Shuffle(nodesLen, func(i, j int) {
+			nodes[i], nodes[j] = nodes[j], nodes[i]
+		})
+		return append(nodes, nodes...)
+	}
+}
+
+func checkConnectSupernode(nodes []string) (localIP string) {
+	var (
+		e    error
+		port = 8002
+	)
+	for _, n := range nodes {
+		nodeFields := strings.Split(n, ":")
+		if len(nodeFields) == 2 {
+			port, _ = strconv.Atoi(nodeFields[1])
+		}
+		if localIP, e = util.CheckConnect(n, port, 1000); e == nil {
+			return localIP
+		}
+		config.Ctx.ClientLogger.Errorf("connect to node:%s error: %v", n, e)
+	}
+	return ""
 }
 
 func panicIf(err error) {

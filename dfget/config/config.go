@@ -177,12 +177,7 @@ type Context struct {
 	WorkHome    string    `json:"workHome"`
 	ConfigFiles []string  `json:"configFile"`
 
-	MetaPath      string `json:"-"`
-	SystemDataDir string `json:"-"`
-	DataDir       string `json:"-"`
-	RealTarget    string `json:"-"`
-	TargetDir     string `json:"-"`
-	TempTarget    string `json:"-"`
+	RV RuntimeVariable `json:"-"`
 
 	BackSourceReason int `json:"-"`
 
@@ -205,8 +200,8 @@ func NewContext() *Context {
 	if currentUser, err := user.Current(); err == nil {
 		ctx.User = currentUser.Username
 		ctx.WorkHome = path.Join(currentUser.HomeDir, ".small-dragonfly")
-		ctx.MetaPath = path.Join(ctx.WorkHome, "meta", "host.meta")
-		ctx.SystemDataDir = path.Join(ctx.WorkHome, "data")
+		ctx.RV.MetaPath = path.Join(ctx.WorkHome, "meta", "host.meta")
+		ctx.RV.SystemDataDir = path.Join(ctx.WorkHome, "data")
 	} else {
 		panic(fmt.Errorf("get user error: %s", err))
 	}
@@ -274,4 +269,25 @@ func checkOutput(ctx *Context) error {
 		}
 	}
 	return nil
+}
+
+// RuntimeVariable stores the variables that are initialized and used
+// at downloading task executing.
+type RuntimeVariable struct {
+	MetaPath      string
+	SystemDataDir string
+	DataDir       string
+	RealTarget    string
+	TargetDir     string
+	TempTarget    string
+	Cid           string
+	TaskURL       string
+	TaskFileName  string
+	LocalIP       string
+	PeerPort      int
+}
+
+func (rv *RuntimeVariable) String() string {
+	js, _ := json.Marshal(rv)
+	return string(js)
 }
