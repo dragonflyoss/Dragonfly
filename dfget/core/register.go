@@ -17,7 +17,6 @@
 package core
 
 import (
-	"encoding/json"
 	"os"
 	"time"
 
@@ -25,6 +24,7 @@ import (
 	"github.com/alibaba/Dragonfly/dfget/core/api"
 	"github.com/alibaba/Dragonfly/dfget/errors"
 	"github.com/alibaba/Dragonfly/dfget/types"
+	"github.com/alibaba/Dragonfly/dfget/util"
 	"github.com/alibaba/Dragonfly/version"
 )
 
@@ -49,10 +49,11 @@ func NewSupernodeRegister(ctx *config.Context, api api.SupernodeAPI) SupernodeRe
 // Register processes the flow of register.
 func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errors.DFGetError) {
 	var (
-		resp  *types.RegisterResponse
-		e     error
-		i     int
-		start = time.Now()
+		resp       *types.RegisterResponse
+		e          error
+		i          int
+		retryTimes = 0
+		start      = time.Now()
 	)
 
 	s.ctx.ClientLogger.Infof("do register to one of %v", s.ctx.Node)
@@ -69,11 +70,11 @@ func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errors.DFG
 		if resp.Code == config.Success || resp.Code == config.TaskCodeNeedAuth {
 			break
 		}
-		if resp.Code == config.TaskCodeWaitAuth {
-			s.ctx.ClientLogger.Info("sleep 2.5s to wait auth...")
-			time.Sleep(2500 * time.Millisecond)
-			// retry
+		if resp.Code == config.TaskCodeWaitAuth && retryTimes < 3 {
 			i--
+			retryTimes++
+			s.ctx.ClientLogger.Infof("sleep 2.5s to wait auth(%d/3)...", retryTimes, 3)
+			time.Sleep(2500 * time.Millisecond)
 		}
 	}
 	s.setRemainderNodes(i)
@@ -92,13 +93,10 @@ func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errors.DFG
 
 func (s *supernodeRegister) checkResponse(resp *types.RegisterResponse, e error) *errors.DFGetError {
 	if e != nil {
-		return errors.New(0, e.Error())
+		return errors.New(config.HTTPError, e.Error())
 	}
 	if resp == nil {
-		return errors.New(0, "empty response, unknown error")
-	}
-	if resp.Code == config.TaskCodeNeedAuth {
-		return errors.New(resp.Code, "task need auth")
+		return errors.New(config.HTTPError, "empty response, unknown error")
 	}
 	if resp.Code != config.Success {
 		return errors.New(resp.Code, resp.Msg)
@@ -166,8 +164,5 @@ type RegisterResult struct {
 }
 
 func (r *RegisterResult) String() string {
-	if res, e := json.Marshal(r); e != nil {
-		return string(res)
-	}
-	return ""
+	return util.JSONString(r)
 }

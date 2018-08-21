@@ -98,3 +98,17 @@ func (suite *DFGetUtilSuite) TestPanicIfError(c *check.C) {
 	c.Assert(f(nil, ""), check.Equals, "")
 	c.Assert(f(fmt.Errorf("test"), "error"), check.Equals, "error: test")
 }
+
+func (suite *DFGetUtilSuite) TestJsonString(c *check.C) {
+	type T1 struct {
+		A int
+	}
+	v1 := &T1{A: 1}
+	c.Assert(JSONString(v1), check.Equals, `{"A":1}`)
+
+	type T2 struct {
+		F func()
+	}
+	v2 := &T2{nil}
+	c.Assert(JSONString(v2), check.Equals, ``)
+}

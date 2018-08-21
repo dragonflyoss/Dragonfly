@@ -18,6 +18,7 @@ package config
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -250,4 +251,16 @@ func (suite *ConfigSuite) TestProperties_Load(c *check.C) {
 				check.Commentf("error:%v expected:%s", err, v.errMsg))
 		}
 	}
+}
+
+func (suite *ConfigSuite) TestRuntimeVariable_String(c *check.C) {
+	rv := RuntimeVariable{
+		LocalIP: "127.0.0.1",
+	}
+	c.Assert(strings.Contains(rv.String(), "127.0.0.1"), check.Equals, true)
+
+	jRv := &RuntimeVariable{}
+	e := json.Unmarshal([]byte(rv.String()), jRv)
+	c.Assert(e, check.IsNil)
+	c.Assert(jRv.LocalIP, check.Equals, rv.LocalIP)
 }
