@@ -18,8 +18,10 @@ package config
 
 /* the response code from supernode */
 const (
-	// HTTPSuccess represents the http request is success.
-	HTTPSuccess   = 200
+	// HTTPError represents that there is an error between client and server.
+	HTTPError = -100
+	// Success represents the request is success.
+	Success       = 200
 	ResultFail    = 500
 	ResultSuc     = 501
 	ResultInvalid = 502
@@ -59,7 +61,7 @@ const (
 	BackSourceReasonWriteError    = 6
 	BackSourceReasonHostSysError  = 7
 	BackSourceReasonNodeEmpty     = 8
-	BackSourceReasonByUser        = 100
+	BackSourceReasonUserSpecified = 100
 	ForceNotBackSourceAddition    = 1000
 )
 

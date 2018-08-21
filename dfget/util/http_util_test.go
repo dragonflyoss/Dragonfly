@@ -28,6 +28,7 @@ import (
 )
 
 type HTTPUtilTestSuite struct {
+	port int
 	host string
 	ln   net.Listener
 }
@@ -38,8 +39,8 @@ func init() {
 }
 
 func (s *HTTPUtilTestSuite) SetUpSuite(c *check.C) {
-	port := rand.Intn(1000) + 63000
-	s.host = fmt.Sprintf("127.0.0.1:%d", port)
+	s.port = rand.Intn(1000) + 63000
+	s.host = fmt.Sprintf("127.0.0.1:%d", s.port)
 
 	s.ln, _ = net.Listen("tcp", s.host)
 	go fasthttp.Serve(s.ln, func(ctx *fasthttp.RequestCtx) {
@@ -104,6 +105,12 @@ func (s *HTTPUtilTestSuite) TestParseQuery(c *check.C) {
 	c.Assert(x, check.Equals, "a=1&b=test")
 
 	c.Assert(ParseQuery(nil), check.Equals, "")
+}
+
+func (s *HTTPUtilTestSuite) TestCheckConnect(c *check.C) {
+	ip, e := CheckConnect("127.0.0.1", s.port, 0)
+	c.Assert(e, check.IsNil)
+	c.Assert(ip, check.Equals, "127.0.0.1")
 }
 
 // ----------------------------------------------------------------------------

@@ -99,17 +99,16 @@ func (suite *DFGetUtilSuite) TestPanicIfError(c *check.C) {
 	c.Assert(f(fmt.Errorf("test"), "error"), check.Equals, "error: test")
 }
 
-func (suite *DFGetUtilSuite) TestShuffle(c *check.C) {
-	// Check that Shuffle allows n=0 and n=1, but that swap is never called for them.
-	rand.Seed(1)
-	for n := 0; n <= 1; n++ {
-		Shuffle(n, func(i, j int) { c.Fatalf("swap called, n=%d i=%d j=%d", n, i, j) })
+func (suite *DFGetUtilSuite) TestJsonString(c *check.C) {
+	type T1 struct {
+		A int
 	}
+	v1 := &T1{A: 1}
+	c.Assert(JSONString(v1), check.Equals, `{"A":1}`)
 
-	// Check that Shuffle calls swap n-1 times when n >= 2.
-	for n := 2; n <= 100; n++ {
-		isRun := 0
-		Shuffle(n, func(i, j int) { isRun++ })
-		c.Assert(isRun, check.Equals, n-1)
+	type T2 struct {
+		F func()
 	}
+	v2 := &T2{nil}
+	c.Assert(JSONString(v2), check.Equals, ``)
 }

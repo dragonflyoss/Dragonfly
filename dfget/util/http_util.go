@@ -20,7 +20,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/valyala/fasthttp"
@@ -138,4 +140,25 @@ func ParseQuery(query interface{}) string {
 		}
 	}
 	return b.String()
+}
+
+// CheckConnect checks the network connectivity between local and remote.
+// param timeout: its unit is milliseconds, reset to 500 ms if <= 0
+// returns localIP
+func CheckConnect(ip string, port int, timeout int) (localIP string, e error) {
+	if timeout <= 0 {
+		timeout = 500
+	}
+
+	var conn net.Conn
+	t := time.Duration(timeout) * time.Millisecond
+	addr := fmt.Sprintf("%s:%d", ip, port)
+	if conn, e = net.DialTimeout("tcp", addr, t); e == nil {
+		localIP = conn.LocalAddr().String()
+		conn.Close()
+		if idx := strings.LastIndexByte(localIP, ':'); idx >= 0 {
+			localIP = localIP[:idx]
+		}
+	}
+	return
 }
