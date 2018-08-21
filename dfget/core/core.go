@@ -136,6 +136,9 @@ func registerToSuperNode(ctx *config.Context, register SupernodeRegister) (*Regi
 		ctx.BackSourceReason = config.BackSourceReasonRegisterFail
 		panic(e.Error())
 	}
+	ctx.RV.FileLength = result.FileLength
+	util.Printer.Printf("client:%s connected to node:%s", ctx.RV.LocalIP, result.Node)
+	util.Printer.Printf("start download by dragonfly")
 	return result, nil
 }
 

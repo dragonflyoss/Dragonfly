@@ -26,8 +26,10 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	cfg "github.com/alibaba/Dragonfly/dfget/config"
+	"github.com/alibaba/Dragonfly/dfget/errors"
 	"github.com/alibaba/Dragonfly/dfget/util"
 	"github.com/alibaba/Dragonfly/version"
 	"github.com/go-check/check"
@@ -264,6 +266,22 @@ func (suite *CliSuite) TestInitialize(c *check.C) {
 		}
 	}
 }
+
+func (suite *CliSuite) TestResultMsg(c *check.C) {
+	ctx := cfg.NewContext()
+	end := ctx.StartTime.Add(100 * time.Millisecond)
+
+	msg := resultMsg(ctx, end, nil)
+	c.Assert(msg, check.Equals, "download SUCCESS(0) cost:0.100s length:0 reason:0")
+
+	ctx.BackSourceReason = cfg.BackSourceReasonRegisterFail
+	msg = resultMsg(ctx, end, errors.New(1, "TestFail"))
+	c.Assert(msg, check.Equals, "download FAIL(1) cost:0.100s length:0 reason:1 error:"+
+		`{"Code":1,"Msg":"TestFail"}`)
+}
+
+// ----------------------------------------------------------------------------
+// helper functions
 
 func helperCommand(name string, args ...string) (cmd *exec.Cmd) {
 	cs := []string{"-check.f", fmt.Sprintf("^%s$", name), "--"}
