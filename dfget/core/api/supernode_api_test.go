@@ -67,12 +67,12 @@ func (s *SupernodeAPITestSuite) TestSupernodeAPI_Register(c *check.C) {
 	c.Assert(r, check.NotNil)
 	c.Assert(r.Code, check.Equals, 0)
 
-	res.Code = config.HTTPSuccess
+	res.Code = config.Success
 	res.Data = &types.RegisterResponseData{FileLength: int64(32)}
 	s.mock.postJSON = s.mock.createPostJSONFunc(200, []byte(res.String()), nil)
 	r, e = s.api.Register(ip, createRegisterRequest())
 	c.Assert(r, check.NotNil)
-	c.Assert(r.Code, check.Equals, config.HTTPSuccess)
+	c.Assert(r.Code, check.Equals, config.Success)
 	c.Assert(r.Data.FileLength, check.Equals, res.Data.FileLength)
 }
 
