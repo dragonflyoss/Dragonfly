@@ -19,6 +19,7 @@
 package util
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"reflect"
@@ -75,4 +76,12 @@ func PanicIfError(err error, msg string) {
 	if err != nil {
 		panic(fmt.Errorf("%s: %v", msg, err))
 	}
+}
+
+// JSONString returns json string of the v.
+func JSONString(v interface{}) string {
+	if str, e := json.Marshal(v); e == nil {
+		return string(str)
+	}
+	return ""
 }

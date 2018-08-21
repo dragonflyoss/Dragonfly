@@ -18,6 +18,8 @@ package config
 
 /* the response code from supernode */
 const (
+	// HTTPError represents that there is an error between client and server.
+	HTTPError = -100
 	// Success represents the request is success.
 	Success       = 200
 	ResultFail    = 500
