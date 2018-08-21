@@ -19,8 +19,8 @@
 package util
 
 import (
+	"encoding/json"
 	"fmt"
-	"math/rand"
 	"os"
 	"reflect"
 )
@@ -78,36 +78,10 @@ func PanicIfError(err error, msg string) {
 	}
 }
 
-// Shuffle pseudo-randomizes the order of elements.
-// n is the number of elements.
-// swap swaps the elements with indexes i and j.
-// copy from rand.Shuffle of go1.10.
-func Shuffle(n int, swap func(int, int)) {
-	if n < 2 {
-		return
+// JSONString returns json string of the v.
+func JSONString(v interface{}) string {
+	if str, e := json.Marshal(v); e == nil {
+		return string(str)
 	}
-	i := n - 1
-	for ; i > 1<<31-1-1; i-- {
-		j := int(rand.Int63n(int64(i + 1)))
-		swap(i, j)
-	}
-	for ; i > 0; i-- {
-		j := int(int31n(int32(i + 1)))
-		swap(i, j)
-	}
-}
-
-func int31n(n int32) int32 {
-	v := rand.Uint32()
-	prod := uint64(v) * uint64(n)
-	low := uint32(prod)
-	if low < uint32(n) {
-		thresh := uint32(-n) % uint32(n)
-		for low < thresh {
-			v = rand.Uint32()
-			prod = uint64(v) * uint64(n)
-			low = uint32(prod)
-		}
-	}
-	return int32(prod >> 32)
+	return ""
 }

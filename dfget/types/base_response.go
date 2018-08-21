@@ -26,7 +26,7 @@ type BaseResponse struct {
 	// Code represents whether the response is successful.
 	Code int `json:"code"`
 	// Msg describes the detailed error message if the response is failed.
-	Msg string `json:"msg"`
+	Msg string `json:"msg,omitempty"`
 }
 
 // NewBaseResponse create a BaseResponse instance.
