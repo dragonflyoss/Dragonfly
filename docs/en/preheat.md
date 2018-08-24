@@ -33,11 +33,29 @@
   <td><pre>
   {
     "type": "image|file",
-    "url": "string",
-    "header": ["string"]
+    "url": "<string>",
+    "header": {
+      "<name>": "<value>"
+    }
   }
   </pre>Dragonfly sends a request taking the 'header' to the 'url'.</td></tr>
   </tbody></table>
+
+  If there is any authentication step of the remote server, the `header` should contain authenticated information.
+
+  If the `type` is `image`, then the `url` should be image url: `<registry_host>/<image_name>:<image_tag>`.
+  Dragonfly will preheat the image according to [registry API spec](https://docs.docker.com/registry/spec/api/#pulling-an-image), the steps are:
+  * construct `manifest_url`:
+      ```
+      https://<harbor_host>/v2/<image_name>/manifests/<image_tag>
+      ```
+  * pull the manifest of the image from `manifest_url`
+  * get the` fsLayers` from manifest and construct `layer_url` of each layer:
+      ```
+      https://<harbor_host>/v2/<name>/blobs/<digest>
+      ```
+  * request these `layer_url`s above to handle any redirection response to get real downloading urls
+  * supernodes use these real downloading urls to preheat layers of this image
 
 * **Response**: `Content-type: application/json`
   <table width="100%">
@@ -48,7 +66,7 @@
   {
     "code": 200,
     "data": {
-        "taskId": "string"
+        "taskId": "<string>"
     }
   }
   </pre>Use 'taskId' to query the status of the preheat task.</td></tr>
@@ -56,7 +74,7 @@
   <td>Error Response:<pre>
   {
     "code": 400,
-    "msg": "detailed error message"
+    "msg": "<detailed error message>"
   }
   </pre></td></tr>
   </tbody></table>
@@ -74,7 +92,7 @@
   {
     "code": 200,
     "data": {
-        "taskId": "string",
+        "taskId": "<string>",
         "status": "RUNNING|SUCCESS|FAIL"
     }
   }
@@ -83,7 +101,7 @@
   <td>Error Response:<pre>
   {
     "code": 400,
-    "msg": "detailed error message"
+    "msg": "<detailed error message>"
   }
   </pre></td></tr>
   </tbody></table>
