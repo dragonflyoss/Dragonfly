@@ -33,9 +33,9 @@
   <td><pre>
   {
     "type": "image|file",
-    "url": "<string>",
+    "url": "&lt;string&gt;",
     "header": {
-      "<name>": "<value>"
+      "&lt;name&gt;": "&lt;value&gt;"
     }
   }
   </pre>Dragonfly sends a request taking the 'header' to the 'url'.</td></tr>
@@ -66,7 +66,7 @@
   {
     "code": 200,
     "data": {
-        "taskId": "<string>"
+        "taskId": "&lt;string&gt;"
     }
   }
   </pre>Use 'taskId' to query the status of the preheat task.</td></tr>
@@ -74,7 +74,7 @@
   <td>Error Response:<pre>
   {
     "code": 400,
-    "msg": "<detailed error message>"
+    "msg": "&lt;detailed error message&gt;"
   }
   </pre></td></tr>
   </tbody></table>
@@ -92,7 +92,7 @@
   {
     "code": 200,
     "data": {
-        "taskId": "<string>",
+        "taskId": "&lt;string&gt;",
         "status": "RUNNING|SUCCESS|FAIL"
     }
   }
@@ -101,7 +101,7 @@
   <td>Error Response:<pre>
   {
     "code": 400,
-    "msg": "<detailed error message>"
+    "msg": "&lt;detailed error message&gt;"
   }
   </pre></td></tr>
   </tbody></table>
