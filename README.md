@@ -27,7 +27,7 @@
 ## Introduction
 
 Dragonfly is an intelligent P2P based file distribution system. It aims to resolve issues related to low-efficiency, low-success rate and waste of network bandwidth in file transferring process. Especially in large-scale file distribution scenarios such as application distribution, cache distribution, log distribution, image distribution, etc.
-In Alibaba, Dragonfly is invoiked 2 Billion times and the data distributed is 3.4PB every month. Dragonfly has become one of the most important pieces of infrastructure at Alibaba. The reliability is up to 99.9999% (*1).
+In Alibaba, Dragonfly is invoked 2 Billion times and the data distributed is 3.4PB every month. Dragonfly has become one of the most important pieces of infrastructure at Alibaba. The reliability is up to 99.9999% (*1).
 
 
 While container technologies makes devops life easier most of the time, it sure brings a some challenges: the efficiency of image distribution, especially when you have to replicate image distribution on several hosts. Dragonfly works extremely well with both Docker and [PouchContainer](https://github.com/alibaba/pouch) for this scenario. It also is compatible with any other container formats.
@@ -44,11 +44,11 @@ Dragonfly makes it simple and cost-effective to set up, operate, and scale any 
 - **Host level speed limit**: Many downloading tools(wget/curl) only have rate limit for the current download task,but dragonfly
 also provides rate limit for the entire host.
 - **Passive CDN**: The CDN mechanism can avoid repetitive remote downloads.
-- **Strong consistency**： Dragonfly can guarantee that all downloaded files must be consistent even if users do not provide any check code(MD5).
+- **Strong consistency**: Dragonfly can guarantee that all downloaded files must be consistent even if users do not provide any check code(MD5).
 - **Disk protection and high efficient IO**: Precheck Disk space, delay synchronization, write file-block in the best order,
 split net-read / disk-write, and so on.
 - **High performance**: Cluster Manager is completely closed-loop, which means, it does not rely on any DB or distributed cache,
-processing requests with extremely high performance. 
+processing requests with extremely high performance.
 - **Exception auto isolation**: Dragonfly will automatically isolate exception nodes(peer or Cluster Manager) to improve download stability.
 - **No pressure on file source**: Generally, as long as a few Cluster Managers download file from the source.
 - **Support standard http header**: Support http header, Submit authentication information through http header.
