@@ -17,6 +17,7 @@
 - [Introduction](#introduction)
 - [Features](#features)
 - [Comparison](#comparison) 
+- [Quick Start](./docs/en/quick_start.md)
 - [Documents](./docs/documents.md)
 - [Contributing](CONTRIBUTING.md)
 - [FAQ](FAQ.md)
