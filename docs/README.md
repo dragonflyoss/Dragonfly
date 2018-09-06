@@ -12,6 +12,7 @@
 - [Introduction](#introduction)
 - [Features](#features)
 - [Comparison](#comparison) 
+- [Quick Start](./en/quick_start.md)
 - [Documents](./documents.md)
 - [Contributing](./en/CONTRIBUTING.md)
 - [Adoptors](./en/adoptors.md)
