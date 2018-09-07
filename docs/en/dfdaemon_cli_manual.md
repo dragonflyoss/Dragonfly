@@ -17,14 +17,14 @@ dfdaemon [options]...
   -certpem string
     	cert.pem file path
   -dfpath string
-    	dfget path (default "/Users/zj/.dragonfly/df-client/dfget")
+    	dfget path (default is your installed path)
   -h	help
   -hostIp string
     	dfdaemon host ip, default: 127.0.0.1 (default "127.0.0.1")
   -keypem string
     	key.pem file path
   -localrepo string
-    	temp output dir of dfdaemon (default "/Users/zj/.small-dragonfly/dfdaemon/data")
+    	temp output dir of dfdaemon (default is "${HOME}/.small-dragonfly/dfdaemon/data")
   -maxprocs int
     	the maximum number of CPUs that the dfdaemon can use (default 4)
   -notbs
