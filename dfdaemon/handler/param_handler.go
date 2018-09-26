@@ -15,6 +15,7 @@
 package handler
 
 import (
+	"github.com/alibaba/Dragonfly/dfdaemon/global"
 	"net/http"
 	"os"
 
@@ -24,13 +25,21 @@ import (
 // GetArgs returns all the arguments of command-line except the program name.
 func GetArgs(w http.ResponseWriter, r *http.Request) {
 	logrus.Debugf("access:%s", r.URL.String())
-
-	w.WriteHeader(http.StatusOK)
-	w.Header().Set("Content-Type", "text/plain;charset=utf-8")
-	for index, value := range os.Args {
-		if index > 0 {
-			w.Write([]byte(value + " "))
+	r.ParseForm()
+	if len(r.Form) > 0 {
+		for k, v := range r.Form {
+			if k == "registry" {
+				global.RegDomain = v[0]
+			}
 		}
-
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "text/plain;charset=utf-8")
+		for index, value := range os.Args {
+			if index > 0 {
+				w.Write([]byte(value + " "))
+			}
+		}
 	}
 }
