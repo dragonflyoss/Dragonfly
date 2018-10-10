@@ -34,12 +34,12 @@
 
 > 如果仅用蜻蜓下载普通文件，则忽略此步骤。**若用于镜像下载，则此步骤必须。**
 
-* 启动`dfget proxy`(即`df-damoen`)
+* 启动`dfget proxy`(即`df-daemon`)
   ```sh
   # 查看帮助信息
-  df-deaemon -h
-  # 启动`dfdaemon`，指定镜像仓库地址，默认端口为`65001`
-  dfdaemon --registry https://xxx.xx.x
+  df-daemon -h
+  # 启动`df-daemon`，指定镜像仓库地址，默认端口为`65001`
+  df-daemon --registry https://xxx.xx.x
   # 查看`dfdaemon`日志
   tailf ~/.small-dragonfly/logs/dfdaemon.log
   ```
@@ -78,4 +78,4 @@ less ~/.small-dragonfly/logs/dfclient.log
 
 直接使用`docker pull imageName`下载镜像即可。
 
-> **注意**：镜像名称不要包含镜像仓库地址，因为仓库域名已经由`dfdaemon`的启动参数`--registry`指定。
+> **注意**：镜像名称不要包含镜像仓库地址，因为仓库域名已经由`df-daemon`的启动参数`--registry`指定。
