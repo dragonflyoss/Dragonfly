@@ -148,8 +148,8 @@ func (suite *ConfigSuite) TestCheckURL(c *check.C) {
 		"127.0.0.1:8080":       true,
 		"127.0.0.1:8080/我":     true,
 		"127.0.0.1:8080/我?x=1": true,
-		"a.b":            true,
-		"www.taobao.com": true,
+		"a.b":                  true,
+		"www.taobao.com":       true,
 		"https://github.com/alibaba/Dragonfly/issues?" +
 			"q=is%3Aissue+is%3Aclosed": true,
 	}
