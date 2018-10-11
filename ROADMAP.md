@@ -1,26 +1,33 @@
-# Roadmap
+# ROADMAP
 
-## Functionality
+## CNCF Ecosystem
 
-* Support private image in dfdaemon
-* Support authentication in SuperNode
-* Support transmission securely
-* Add solution for SuperNode's downgrading
-* Preheat file or image
-* Refactor superNode with Golang
-* Support working among multi-zones
+* Deploy SuperNode using Helm in Kubernetes
+* Deploy dfget & dfdaemon using DaemonSet in Kubernetes
+* Integration with Harbor: preheat image feature
 
-## Test
+## Security
 
-* Add more unit test
-* Add more integration test
+* Support private container image
+* Support authentication in SuperNode API
+* Different encryption algorithm in data transmission
 
-## Documents
+## Efficiency
 
-* Add QuickStart
-* Add troubleshooting
+* Dynamic downloading rate limiting and scheduling algorithm
+* Use IPFS to share block datas between SuperNodes
 
-## Ecosystem
+## Openness
 
-* Support deploying SuperNode with Helm in Kubernetes
-* Support deploying dfclient and dfdaemon with DaemonSet mode in Kubernetes
+* Plug-In policy for CNCF projects
+* Highly user-customized modules
+* Refactor SuperNode with Golang
+
+## Scalability
+
+* Simplify the complexity of scaling SuperNodes in Kubernetes
+
+## Stability
+
+* Cluster the SuperNode to decrease possibility of failure
+
