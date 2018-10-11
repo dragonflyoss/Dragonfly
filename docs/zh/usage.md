@@ -34,7 +34,7 @@
 
 > 如果仅用蜻蜓下载普通文件，则忽略此步骤。**若用于镜像下载，则此步骤必须。**
 
-* 启动`dfget proxy`(即`df-damoen`)
+* 启动`dfget proxy`(即`df-daemon`)
   ```sh
   # 查看帮助信息
   df-deaemon -h
