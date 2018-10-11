@@ -37,10 +37,10 @@
 * 启动`dfget proxy`(即`df-daemon`)
   ```sh
   # 查看帮助信息
-  df-daemon -h
+  df-deaemon -h
   # 启动`df-daemon`，指定镜像仓库地址，默认端口为`65001`
   df-daemon --registry https://xxx.xx.x
-  # 查看`dfdaemon`日志
+  # 查看`df-daemon`日志
   tailf ~/.small-dragonfly/logs/dfdaemon.log
   ```
 
