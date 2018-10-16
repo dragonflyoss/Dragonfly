@@ -1,111 +1,122 @@
 # 安装服务端
 
-本指南给开发者提供了从源码构建和运行超级节点的操作命令。建议在同一机房或集群内至少有2台8核16G且千兆网络的机器用于部署超级节点。
+本文介绍了如何安装 Dragonfly 服务端。
 
-本文中提供了两种方式来安装超级节点:
-* Docker部署： 本地快速部署测试。
-* 物理机部署：建议生产环境使用。
+**提示：**对一个机房或集群而言，建议至少准备 2 台 8 核、16G 内存、千兆网络的机器，用于部署超级节点。
 
-## 1. 环境配置
+## 背景信息
 
-### 1.1. Docker部署
+Dragonfly 的系统架构包含两层：超级节点（服务端）和主机（客户端）。您可以选择以下方法之一来安装超级节点。
 
-软件                  | 版本要求
-----------------------|--------------------------
-Git                   | 1.9.1 +
-Docker                | 1.12.0 +
+- Docker 部署：适用于在本地快速部署和测试。
+- 物理机部署：适用于生产环境。
 
-### 1.2. 物理机部署
+## 前提条件
 
-软件                  | 版本要求
-----------------------|--------------------------
-Git                   | 1.9.1 +
-Jdk                   | 1.7 +
-Maven                 | 3.0.3 +
-Nginx                 | 0.8 +
+如果采用 Docker 部署方式安装超级节点，必须满足以下前提条件。
 
-## 2. 获取蜻蜓源码
-```sh
-git clone https://github.com/alibaba/Dragonfly.git
-```
+必需软件|版本要求
+|-|-|
+|Git|1.9.1+|
+|Docker|1.12.0+|
 
-## 3. 构建与执行
-### 3.1. Docker方式
-* 进入项目目录
+如果采用物理机部署方式安装超级节点，必须满足以下前提条件。
+
+|必需软件|版本要求
+|-|-|
+|Git|1.9.1+|
+|JDK|1.7+|
+|Maven|3.0.3+|
+|Nginx|0.8+|
+
+## 操作步骤 - Docker 部署方式
+
+1. 获取 Dragonfly 源代码。
+
+  ```sh
+  git clone https://github.com/alibaba/Dragonfly.git
+  ```
+
+2. 进入项目目录。
 
   ```sh
   cd Dragonfly
   ```
-* 构建Docker镜像
 
-  - 构建镜像
+3. 构建 Docker 镜像。
 
-    ```sh
-    ./build/build.sh supernode
-    ```
+  ```sh
+  ./build/build.sh supernode
+  ```
 
-  - 获取最新的超级节点Docker镜像Id
+4. 获取最新的超级节点 Docker 镜像 ID。
 
-    ```sh
-    docker image ls|grep 'supernode' |awk '{print $3}' | head -n1
-    ```
-* 启动超级节点
+  ```sh
+  docker image ls|grep 'supernode' |awk '{print $3}' | head -n1
+  ```
 
-   ```sh
-   docker run -d -p 8001:8001 -p 8002:8002 ${superNodeDockerImageId}
-   ```
+5. 启动超级节点。
 
-### 3.2. 物理机部署
-* 进入项目目录
+  ```sh
+  docker run -d -p 8001:8001 -p 8002:8002 ${superNodeDockerImageId}
+  ```
+
+## 操作步骤 - 物理机部署方式
+
+1. 获取 Dragonfly 源代码。
+
+  ```sh
+  git clone https://github.com/alibaba/Dragonfly.git
+  ```
+
+2. 进入项目目录。
 
   ```sh
   cd Dragonfly/src/supernode
   ```
-* 编译源码
+
+3. 编译源代码。
 
   ```sh
   mvn clean -U install -DskipTests=true
   ```
-* 将服务部署到tomcat
 
-  - 启动supernode服务
+4. 启动 supernode 服务。
 
-    ```sh
-    # 'supernode.baseHome'若不指定, 默认为 '/home/admin/supernode'
-    java -Dsupernode.baseHome=/home/admin/supernode -jar target/supernode.jar
-    ```
+  ```sh
+  # 如果不指定 'supernode.baseHome'，则使用默认值 '/home/admin/supernode'。
+  java -Dsupernode.baseHome=/home/admin/supernode -jar target/supernode.jar
+  ```
 
-* 启动Nginx
+5. 在 Nginx 配置文件中添加以下配置。
 
-  - 添加下列nginx配置
+  **提示：**Nginx 配置文件路径例如 _src/supernode/src/main/docker/sources/nginx.conf_。
 
-    ```
-    server {
-      listen              8001;
-      location / {
-        # 必须是 ${supernode.baseHome}/repo
-        root /home/admin/supernode/repo;
-      }
-    }
+  ```
+  server {
+    listen 8001;
+    location / {
+      # 必须是 ${supernode.baseHome}/repo
+      root /home/admin/supernode/repo;
+     }
+  }
 
-    server {
-      listen              8002;
-      location /peer {
-        proxy_pass   http://127.0.0.1:8080;
-      }
-    }
-    ```
+  server {
+    listen 8002;
+    location /peer {
+      proxy_pass http://127.0.0.1:8080;
+     }
+  }
+  ```
+6. 启动 Nginx。
 
-    > nginx配置例子: _src/supernode/src/main/docker/sources/nginx.conf_
+  ```sh
+  sudo nginx
+  ```
 
-  - 启动nginx
+## 后续步骤
 
-    ```sh
-    sudo nginx
-    ```
-
-## 4. 测试验证
-* 检测nginx和tomcat是否启动，端口`8001`，`8002`是否可用
+- 安装完超级节点后，可通过以下命令验证 Nginx 和 Tomcat 是否已启动，以及端口 `8001`、`8002` 是否可用。
 
   ```sh
   ps aux|grep nginx
@@ -114,7 +125,7 @@ git clone https://github.com/alibaba/Dragonfly.git
   telent 127.0.0.1 8002
   ```
 
-* 安装蜻蜓客户端并使用蜻蜓下载资源
+- 安装 Dragonfly 客户端并测试能否下载资源。
 
   ```sh
   dfget --url "http://${resourceUrl}" --output ./resource.png --node "127.0.0.1"
