@@ -1,8 +1,10 @@
 # 安装客户端
 
+本文介绍了如何安装 Dragonfly 客户端。
+
 - **通过最新软件包安装**
 
-  - 下载软件包: [df-client.linux-amd64.tar.gz](https://github.com/alibaba/Dragonfly/raw/master/package/df-client.linux-amd64.tar.gz)
+  - 下载软件包：[df-client.linux-amd64.tar.gz](https://github.com/alibaba/Dragonfly/raw/master/package/df-client.linux-amd64.tar.gz)
   - 执行命令，其中“xxx”是安装目录：
   ```sh
   tar xzvf df-client.linux-amd64.tar.gz -C xxx
