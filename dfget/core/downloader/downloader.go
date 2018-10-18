@@ -21,7 +21,78 @@
 // used when P2PDownloader download files failed.
 package downloader
 
+import (
+	"fmt"
+	"time"
+
+	"github.com/alibaba/Dragonfly/dfget/config"
+	"github.com/alibaba/Dragonfly/dfget/core/api"
+	"github.com/alibaba/Dragonfly/dfget/core/regist"
+)
+
 // Downloader is the interface to download files
 type Downloader interface {
-	Run()
+	Run() error
+	Cleanup()
+}
+
+// NewBackDownloader create BackDownloader
+func NewBackDownloader(ctx *config.Context, result *regist.RegisterResult) Downloader {
+	var (
+		taskID string
+		node   string
+	)
+	if result != nil {
+		taskID = result.TaskID
+		node = result.Node
+	}
+	return &BackDownloader{
+		Ctx:     ctx,
+		URL:     ctx.URL,
+		Target:  ctx.RV.RealTarget,
+		Md5:     ctx.Md5,
+		TaskID:  taskID,
+		Node:    node,
+		Total:   0,
+		Success: false,
+	}
+}
+
+// NewP2PDownloader create P2PDownloader
+func NewP2PDownloader(ctx *config.Context,
+	api api.SupernodeAPI,
+	register regist.SupernodeRegister,
+	result *regist.RegisterResult) Downloader {
+	return &P2PDownloader{
+		Ctx:      ctx,
+		API:      api,
+		Register: register,
+		Result:   result,
+	}
+}
+
+// DoDownloadTimeout downloads the file and waits for response during
+// the given timeout duration.
+func DoDownloadTimeout(downloader Downloader, timeout time.Duration) error {
+	if timeout <= 0 {
+		return fmt.Errorf("download timeout(%ds)", int(timeout.Seconds()))
+	}
+
+	var ch = make(chan error)
+	go func() {
+		ch <- downloader.Run()
+	}()
+	tc := time.NewTimer(timeout)
+	var err error
+	select {
+	case err = <-ch:
+		return err
+	case <-tc.C:
+		err = fmt.Errorf("download timeout(%ds)", int(timeout.Seconds()))
+		downloader.Cleanup()
+	}
+	return err
+}
+
+func fillHeader() {
 }

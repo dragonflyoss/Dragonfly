@@ -31,6 +31,7 @@ import (
 	"github.com/alibaba/Dragonfly/dfget/config"
 	"github.com/alibaba/Dragonfly/dfget/core/api"
 	"github.com/alibaba/Dragonfly/dfget/core/downloader"
+	"github.com/alibaba/Dragonfly/dfget/core/regist"
 	"github.com/alibaba/Dragonfly/dfget/errors"
 	"github.com/alibaba/Dragonfly/dfget/util"
 	"github.com/alibaba/Dragonfly/version"
@@ -44,9 +45,9 @@ func init() {
 func Start(ctx *config.Context) *errors.DFGetError {
 	var (
 		supernodeAPI = api.NewSupernodeAPI()
-		register     = NewSupernodeRegister(ctx, supernodeAPI)
+		register     = regist.NewSupernodeRegister(ctx, supernodeAPI)
 		err          error
-		result       *RegisterResult
+		result       *regist.RegisterResult
 	)
 
 	util.Printer.Println(fmt.Sprintf("--%s--  %s",
@@ -105,7 +106,8 @@ func launchPeerServer(ctx *config.Context) error {
 	return fmt.Errorf("not implemented")
 }
 
-func registerToSuperNode(ctx *config.Context, register SupernodeRegister) (*RegisterResult, error) {
+func registerToSuperNode(ctx *config.Context, register regist.SupernodeRegister) (
+	*regist.RegisterResult, error) {
 	defer func() {
 		if r := recover(); r != nil {
 			ctx.ClientLogger.Warnf("register fail but try to download from source, "+
@@ -138,20 +140,30 @@ func registerToSuperNode(ctx *config.Context, register SupernodeRegister) (*Regi
 	}
 	ctx.RV.FileLength = result.FileLength
 	util.Printer.Printf("client:%s connected to node:%s", ctx.RV.LocalIP, result.Node)
-	util.Printer.Printf("start download by dragonfly")
 	return result, nil
 }
 
 func downloadFile(ctx *config.Context, supernodeAPI api.SupernodeAPI,
-	register SupernodeRegister, result *RegisterResult) error {
+	register regist.SupernodeRegister, result *regist.RegisterResult) error {
 	var getter downloader.Downloader
 	if ctx.BackSourceReason > 0 {
-		getter = &downloader.BackDownloader{}
+		getter = downloader.NewBackDownloader(ctx, result)
 	} else {
-		getter = &downloader.P2PDownloader{}
+		util.Printer.Printf("start download by dragonfly")
+		getter = downloader.NewP2PDownloader(ctx, supernodeAPI, register, result)
 	}
-	getter.Run()
-	return nil
+
+	timeout := calculateTimeout(ctx.RV.FileLength, ctx.Timeout)
+	err := downloader.DoDownloadTimeout(getter, timeout)
+	success := "SUCCESS"
+	if err != nil {
+		ctx.ClientLogger.Error(err)
+		success = "FAIL"
+	}
+	os.Remove(ctx.RV.TempTarget)
+	ctx.ClientLogger.Infof("download %s cost:%.3fs length:%d reason:%d",
+		success, time.Since(ctx.StartTime).Seconds(), ctx.RV.FileLength, ctx.BackSourceReason)
+	return err
 }
 
 func createTempTargetFile(targetDir string, sign string) (name string, e error) {
@@ -245,6 +257,17 @@ func checkConnectSupernode(nodes []string) (localIP string) {
 		}
 	}
 	return ""
+}
+
+func calculateTimeout(fileLength int64, defaultTimeoutSecond int) time.Duration {
+	timeout := 5 * 60
+
+	if defaultTimeoutSecond > 0 {
+		timeout = defaultTimeoutSecond
+	} else if fileLength > 0 {
+		timeout = int(fileLength/(64*1024) + 10)
+	}
+	return time.Duration(timeout) * time.Second
 }
 
 func panicIf(err error) {

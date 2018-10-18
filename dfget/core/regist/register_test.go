@@ -14,19 +14,47 @@
  * limitations under the License.
  */
 
-package core
+package regist
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+	"testing"
 
 	"github.com/alibaba/Dragonfly/dfget/config"
-	"github.com/alibaba/Dragonfly/dfget/types"
+	. "github.com/alibaba/Dragonfly/dfget/core/helper"
 	"github.com/go-check/check"
 )
 
-func (s *CoreTestSuite) TestNewRegisterResult(c *check.C) {
+func Test(t *testing.T) {
+	check.TestingT(t)
+}
+
+func init() {
+	check.Suite(&RegistTestSuite{})
+}
+
+type RegistTestSuite struct {
+	workHome string
+}
+
+func (s *RegistTestSuite) SetUpSuite(c *check.C) {
+	s.workHome, _ = ioutil.TempDir("/tmp", "dfget-CoreTestSuite-")
+}
+
+func (s *RegistTestSuite) TearDownSuite(c *check.C) {
+	if s.workHome != "" {
+		if err := os.RemoveAll(s.workHome); err != nil {
+			fmt.Printf("remove path:%s error", s.workHome)
+		}
+	}
+}
+
+func (s *RegistTestSuite) TestNewRegisterResult(c *check.C) {
 	result := NewRegisterResult("node", []string{"1"}, "url", "taskID",
 		10, 1)
 	c.Assert(result.Node, check.Equals, "node")
@@ -40,11 +68,11 @@ func (s *CoreTestSuite) TestNewRegisterResult(c *check.C) {
 	c.Assert(result.String(), check.Equals, string(str))
 }
 
-func (s *CoreTestSuite) TestSupernodeRegister_Register(c *check.C) {
+func (s *RegistTestSuite) TestSupernodeRegister_Register(c *check.C) {
 	buf := &bytes.Buffer{}
 	ctx := s.createContext(buf)
 	m := new(MockSupernodeAPI)
-	m.RegisterFunc = createRegisterFunc()
+	m.RegisterFunc = CreateRegisterFunc()
 
 	register := NewSupernodeRegister(ctx, m)
 
@@ -84,7 +112,7 @@ func (s *CoreTestSuite) TestSupernodeRegister_Register(c *check.C) {
 	f(config.HTTPError, "empty response, unknown error", nil)
 }
 
-func (s *CoreTestSuite) TestSupernodeRegister_constructRegisterRequest(c *check.C) {
+func (s *RegistTestSuite) TestSupernodeRegister_constructRegisterRequest(c *check.C) {
 	buf := &bytes.Buffer{}
 	ctx := s.createContext(buf)
 	register := &supernodeRegister{nil, ctx}
@@ -103,80 +131,6 @@ func (s *CoreTestSuite) TestSupernodeRegister_constructRegisterRequest(c *check.
 // ----------------------------------------------------------------------------
 // helper functions
 
-func createRegisterFunc() RegisterFuncType {
-	var newResponse = func(code int, msg string) *types.RegisterResponse {
-		return &types.RegisterResponse{
-			BaseResponse: &types.BaseResponse{Code: code, Msg: msg},
-		}
-	}
-
-	return func(ip string, req *types.RegisterRequest) (*types.RegisterResponse, error) {
-		if ip == "" {
-			return nil, fmt.Errorf("connection refused")
-		}
-		switch req.RawURL {
-		case "":
-			return newResponse(501, "invalid source url"), nil
-		case "http://taobao.com":
-			return newResponse(config.TaskCodeNeedAuth, "need auth"), nil
-		case "http://github.com":
-			return newResponse(config.TaskCodeWaitAuth, "wait auth"), nil
-		case "http://x.com":
-			return newResponse(config.TaskCodeURLNotReachable, "not reachable"), nil
-		case "http://lowzj.com":
-			resp := newResponse(config.Success, "")
-			resp.Data = &types.RegisterResponseData{
-				TaskID:     "a",
-				FileLength: 100,
-				PieceSize:  10,
-			}
-			return resp, nil
-		}
-		return nil, nil
-	}
-}
-
-// ----------------------------------------------------------------------------
-// MockSupernodeAPI
-
-type RegisterFuncType func(ip string, req *types.RegisterRequest) (*types.RegisterResponse, error)
-type PullFuncType func(ip string, req *types.PullPieceTaskRequest) (*types.PullPieceTaskResponse, error)
-type ReportFuncType func(ip string, req *types.ReportPieceRequest) (*types.BaseResponse, error)
-type ServiceDownFuncType func(ip string, taskID string, cid string) (*types.BaseResponse, error)
-
-type MockSupernodeAPI struct {
-	RegisterFunc    RegisterFuncType
-	PullFunc        PullFuncType
-	ReportFunc      ReportFuncType
-	ServiceDownFunc ServiceDownFuncType
-}
-
-func (m *MockSupernodeAPI) Register(ip string, req *types.RegisterRequest) (
-	*types.RegisterResponse, error) {
-	if m.RegisterFunc != nil {
-		return m.RegisterFunc(ip, req)
-	}
-	return nil, nil
-}
-
-func (m *MockSupernodeAPI) PullPieceTask(ip string, req *types.PullPieceTaskRequest) (
-	*types.PullPieceTaskResponse, error) {
-	if m.PullFunc != nil {
-		return m.PullFunc(ip, req)
-	}
-	return nil, nil
-}
-func (m *MockSupernodeAPI) ReportPiece(ip string, req *types.ReportPieceRequest) (
-	*types.BaseResponse, error) {
-	if m.ReportFunc != nil {
-		return m.ReportFunc(ip, req)
-	}
-	return nil, nil
-}
-func (m *MockSupernodeAPI) ServiceDown(ip string, taskID string, cid string) (
-	*types.BaseResponse, error) {
-	if m.ServiceDownFunc != nil {
-		return m.ServiceDownFunc(ip, taskID, cid)
-	}
-	return nil, nil
+func (s *RegistTestSuite) createContext(writer io.Writer) *config.Context {
+	return CreateContext(writer, s.workHome)
 }
