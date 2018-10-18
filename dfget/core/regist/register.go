@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package core
+package regist
 
 import (
 	"os"
@@ -138,6 +138,13 @@ func (s *supernodeRegister) constructRegisterRequest(port int) *types.RegisterRe
 		req.Identifier = ctx.Identifier
 	}
 	return req
+}
+
+func getTaskPath(taskFileName string) string {
+	if !util.IsEmptyStr(taskFileName) {
+		return config.PeerHTTPPathPrefix + taskFileName
+	}
+	return ""
 }
 
 // NewRegisterResult creates a instance of RegisterResult.
