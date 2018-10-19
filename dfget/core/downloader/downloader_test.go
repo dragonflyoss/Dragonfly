@@ -17,11 +17,23 @@
 package downloader
 
 import (
+	"os"
 	"testing"
 
+	"github.com/alibaba/Dragonfly/dfget/util"
 	"github.com/go-check/check"
 )
 
 func Test(t *testing.T) {
 	check.TestingT(t)
+}
+
+func createTestFile(name string) string {
+	f, err := os.Create(name)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+	f.WriteString("test downloader")
+	return util.Md5Sum(f.Name())
 }

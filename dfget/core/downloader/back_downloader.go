@@ -17,7 +17,6 @@
 package downloader
 
 import (
-	"crypto/md5"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -71,17 +70,24 @@ func (bd *BackDownloader) Run() error {
 	bd.tempFileName = f.Name()
 	defer f.Close()
 
-	if resp, err = http.Get(bd.URL); err != nil {
+	if resp, err = httpGetWithHeaders(bd.URL, convertHeaders(bd.Ctx.Header)); err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
 	buf := make([]byte, 512*1024)
-	reader := NewLimitReader(resp.Body, bd.Ctx.LocalLimit, md5.New())
+	reader := NewLimitReader(resp.Body, bd.Ctx.LocalLimit, bd.Md5 != "")
 	if bd.Total, err = io.CopyBuffer(f, reader, buf); err != nil {
 		return err
 	}
-	err = os.Rename(bd.tempFileName, bd.Target)
+
+	realMd5 := reader.Md5()
+	if bd.Md5 == "" || bd.Md5 == realMd5 {
+		err = moveFile(bd.tempFileName, bd.Target, "", bd.Ctx.ClientLogger)
+	} else {
+		err = fmt.Errorf("md5 not match, expected:%s real:%s", bd.Md5, realMd5)
+	}
+	bd.Success = err == nil
 	return err
 }
 

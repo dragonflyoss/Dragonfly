@@ -17,6 +17,7 @@
 package downloader
 
 import (
+	"crypto/md5"
 	"fmt"
 	"hash"
 	"io"
@@ -27,7 +28,11 @@ import (
 // NewLimitReader create LimitReader
 // src: reader
 // rate: bytes/second
-func NewLimitReader(src io.Reader, rate int, md5sum hash.Hash) *LimitReader {
+func NewLimitReader(src io.Reader, rate int, calculateMd5 bool) *LimitReader {
+	var md5sum hash.Hash
+	if calculateMd5 {
+		md5sum = md5.New()
+	}
 	if rate <= 0 {
 		rate = 10 * 1024 * 1024
 	}
@@ -35,7 +40,7 @@ func NewLimitReader(src io.Reader, rate int, md5sum hash.Hash) *LimitReader {
 	return &LimitReader{
 		Src:     src,
 		Limiter: util.NewRateLimiter(int32(rate), 2),
-		Md5sum:  md5sum,
+		md5sum:  md5sum,
 	}
 }
 
@@ -43,7 +48,7 @@ func NewLimitReader(src io.Reader, rate int, md5sum hash.Hash) *LimitReader {
 type LimitReader struct {
 	Src     io.Reader
 	Limiter *util.RateLimiter
-	Md5sum  hash.Hash
+	md5sum  hash.Hash
 }
 
 func (lr *LimitReader) Read(p []byte) (n int, err error) {
@@ -51,8 +56,8 @@ func (lr *LimitReader) Read(p []byte) (n int, err error) {
 	if e != nil {
 		return n, e
 	}
-	if lr.Md5sum != nil {
-		lr.Md5sum.Write(p[:n])
+	if lr.md5sum != nil {
+		lr.md5sum.Write(p[:n])
 	}
 	lr.Limiter.AcquireBlocking(int32(n))
 	return n, e
@@ -60,8 +65,8 @@ func (lr *LimitReader) Read(p []byte) (n int, err error) {
 
 // Md5 calculate the md5 of all contents read
 func (lr *LimitReader) Md5() string {
-	if lr.Md5sum != nil {
-		return fmt.Sprintf("%x", lr.Md5sum.Sum(nil))
+	if lr.md5sum != nil {
+		return fmt.Sprintf("%x", lr.md5sum.Sum(nil))
 	}
 	return ""
 }
