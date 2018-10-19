@@ -101,7 +101,8 @@ func (suite *TypesSuite) TestPullPieceTaskResponse_ContinueData(c *check.C) {
 	res.Data = []byte("x")
 	c.Assert(res.ContinueData(), check.IsNil)
 
-	res.Data = []byte("{\"pieceNum\":1}")
+	res.Data = []byte("[{\"pieceNum\":1}]")
 	c.Assert(res.ContinueData(), check.NotNil)
-	c.Assert(res.ContinueData().PieceNum, check.Equals, 1)
+	c.Assert(len(res.ContinueData()), check.Equals, 1)
+	c.Assert(res.ContinueData()[0].PieceNum, check.Equals, 1)
 }
