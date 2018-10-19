@@ -23,11 +23,15 @@ package downloader
 
 import (
 	"fmt"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/alibaba/Dragonfly/dfget/config"
 	"github.com/alibaba/Dragonfly/dfget/core/api"
 	"github.com/alibaba/Dragonfly/dfget/core/regist"
+	"github.com/alibaba/Dragonfly/dfget/util"
+	"github.com/sirupsen/logrus"
 )
 
 // Downloader is the interface to download files
@@ -94,5 +98,55 @@ func DoDownloadTimeout(downloader Downloader, timeout time.Duration) error {
 	return err
 }
 
-func fillHeader() {
+func convertHeaders(headers []string) map[string]string {
+	if len(headers) == 0 {
+		return nil
+	}
+	hm := make(map[string]string)
+	for _, header := range headers {
+		kv := strings.SplitN(header, ":", 2)
+		if len(kv) != 2 {
+			continue
+		}
+		k, v := strings.TrimSpace(kv[0]), strings.TrimSpace(kv[1])
+		if v == "" {
+			continue
+		}
+		if _, in := hm[k]; in {
+			hm[k] = hm[k] + "," + v
+		} else {
+			hm[k] = v
+		}
+	}
+	return hm
+}
+
+func moveFile(src string, dst string, expectMd5 string, log *logrus.Logger) error {
+	start := time.Now()
+	if expectMd5 != "" {
+		realMd5 := util.Md5Sum(src)
+		log.Infof("compute raw md5:%s for file:%s cost:%.3fs", realMd5,
+			src, time.Since(start).Seconds())
+		if realMd5 != expectMd5 {
+			return fmt.Errorf("Md5NotMatch, real:%s expect:%s", realMd5, expectMd5)
+		}
+	}
+	err := util.MoveFile(src, dst)
+
+	log.Infof("move src:%s to dst:%s result:%s cost:%.3f",
+		src, dst, err == nil, time.Since(start).Seconds())
+	return err
+}
+
+func httpGetWithHeaders(url string, headers map[string]string) (*http.Response, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range headers {
+		req.Header.Add(k, v)
+	}
+
+	return http.DefaultClient.Do(req)
 }
