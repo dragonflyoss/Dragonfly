@@ -29,9 +29,10 @@ import (
 	"testing"
 
 	"github.com/alibaba/Dragonfly/dfget/config"
+	. "github.com/alibaba/Dragonfly/dfget/core/helper"
+	"github.com/alibaba/Dragonfly/dfget/core/regist"
 	"github.com/alibaba/Dragonfly/dfget/util"
 	"github.com/go-check/check"
-	"github.com/sirupsen/logrus"
 	"github.com/valyala/fasthttp"
 )
 
@@ -71,10 +72,10 @@ func (s *CoreTestSuite) TestPrepare(c *check.C) {
 func (s *CoreTestSuite) TestRegisterToSupernode(c *check.C) {
 	ctx := s.createContext(&bytes.Buffer{})
 	m := new(MockSupernodeAPI)
-	m.RegisterFunc = createRegisterFunc()
-	register := NewSupernodeRegister(ctx, m)
+	m.RegisterFunc = CreateRegisterFunc()
+	register := regist.NewSupernodeRegister(ctx, m)
 
-	var f = func(bc int, errIsNil bool, data *RegisterResult) {
+	var f = func(bc int, errIsNil bool, data *regist.RegisterResult) {
 		res, e := registerToSuperNode(ctx, register)
 		c.Assert(res == nil, check.Equals, data == nil)
 		c.Assert(e == nil, check.Equals, errIsNil)
@@ -102,7 +103,7 @@ func (s *CoreTestSuite) TestRegisterToSupernode(c *check.C) {
 
 	ctx.Node = []string{"x"}
 	ctx.URL = "http://lowzj.com"
-	f(config.BackSourceReasonNone, true, &RegisterResult{
+	f(config.BackSourceReasonNone, true, &regist.RegisterResult{
 		Node: "x", RemainderNodes: []string{}, URL: ctx.URL, TaskID: "a",
 		FileLength: 100, PieceSize: 10})
 }
@@ -170,16 +171,5 @@ func (s *CoreTestSuite) TestCheckConnectSupernode(c *check.C) {
 // helper functions
 
 func (s *CoreTestSuite) createContext(writer io.Writer) *config.Context {
-	if writer == nil {
-		writer = &bytes.Buffer{}
-	}
-	ctx := config.NewContext()
-	ctx.WorkHome = s.workHome
-	ctx.RV.MetaPath = path.Join(ctx.WorkHome, "meta", "host.meta")
-	ctx.RV.SystemDataDir = path.Join(ctx.WorkHome, "data")
-
-	logrus.StandardLogger().Out = writer
-	ctx.ClientLogger = logrus.StandardLogger()
-	ctx.ServerLogger = logrus.StandardLogger()
-	return ctx
+	return CreateContext(writer, s.workHome)
 }
