@@ -79,7 +79,7 @@ func NewP2PDownloader(ctx *config.Context,
 // the given timeout duration.
 func DoDownloadTimeout(downloader Downloader, timeout time.Duration) error {
 	if timeout <= 0 {
-		return fmt.Errorf("download timeout(%ds)", int(timeout.Seconds()))
+		return fmt.Errorf("download timeout(%.3fs)", timeout.Seconds())
 	}
 
 	var ch = make(chan error)
@@ -92,7 +92,7 @@ func DoDownloadTimeout(downloader Downloader, timeout time.Duration) error {
 	case err = <-ch:
 		return err
 	case <-tc.C:
-		err = fmt.Errorf("download timeout(%ds)", int(timeout.Seconds()))
+		err = fmt.Errorf("download timeout(%.3fs)", timeout.Seconds())
 		downloader.Cleanup()
 	}
 	return err
