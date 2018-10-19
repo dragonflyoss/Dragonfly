@@ -59,7 +59,7 @@ check() {
 
     # gofmt
     echo "CHECK: gofmt, check code formats"
-    result=`find . -name '*.go' | grep -vE "${exclude}" | xargs gofmt -s -l 2>/dev/null`
+    result=`find . -name '*.go' | grep -vE "${exclude}" | xargs gofmt -s -l -d 2>/dev/null`
     [ ${#result} -gt 0 ] && (echo "${result}" \
         && echo "CHECK: please format Go code with 'gofmt -s -w .'" && false)
 
