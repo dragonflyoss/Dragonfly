@@ -52,18 +52,18 @@ func (res *PullPieceTaskResponse) FinishData() *PullPieceTaskResponseFinishData 
 }
 
 // ContinueData gets structured data from json.RawMessage when the task is continuing.
-func (res *PullPieceTaskResponse) ContinueData() *PullPieceTaskResponseContinueData {
+func (res *PullPieceTaskResponse) ContinueData() []*PullPieceTaskResponseContinueData {
 	if res.Code != config.TaskCodeContinue || res.Data == nil {
 		return nil
 	}
 	if res.data == nil {
-		data := new(PullPieceTaskResponseContinueData)
-		if e := json.Unmarshal(res.Data, data); e != nil {
+		var data []*PullPieceTaskResponseContinueData
+		if e := json.Unmarshal(res.Data, &data); e != nil {
 			return nil
 		}
 		res.data = data
 	}
-	return res.data.(*PullPieceTaskResponseContinueData)
+	return res.data.([]*PullPieceTaskResponseContinueData)
 }
 
 // PullPieceTaskResponseFinishData is the data when successfully pulling piece task
