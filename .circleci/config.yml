@@ -3,7 +3,23 @@
 # Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
 jobs:
-  build:
+  markdownlint-misspell:
+    docker:
+      # this image is build from Dockerfile located in ./.circleci/Dockerfile
+      - image: allencloud/pouchlint:v0.1
+    working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
+    steps:
+      - checkout
+      - run:
+          name: use markdownlint v0.4.0 to lint markdown file (https://github.com/markdownlint/markdownlint)
+          command: |
+            find  ./ -name  "*.md" | grep -v vendor | grep -v commandline |  grep -v .github |  grep -v swagger |  grep -v api |  xargs mdl -r ~MD010,~MD013,~MD024,~MD029,~MD033,~MD036
+      - run:
+          name: use opensource tool client9/misspell to correct commonly misspelled English words 
+          command: |
+            find  ./* -name  "*"  | grep -v vendor | xargs misspell -error
+
+  unit-test-golang:
     docker:
       - image: circleci/golang:1.9
     working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
@@ -21,4 +37,11 @@ jobs:
       - run:
           name: build client
           command: ./build/build.sh client
+
+workflows:
+  version: 2
+  ci:
+    jobs:
+      - markdownlint-misspell
+      - unit-test-golang
 

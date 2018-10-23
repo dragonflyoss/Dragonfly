@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 
 public class RangeParseUtil {
 
-    private static final String SEPERATOR = "-";
+    private static final String SEPARATOR = "-";
     private static final Logger logger = LoggerFactory.getLogger(RangeParseUtil.class);
 
     /**
@@ -29,7 +29,7 @@ public class RangeParseUtil {
      */
     public static int calculatePieceNum(String range) {
         try {
-            String[] rangeArr = range.split(SEPERATOR);
+            String[] rangeArr = range.split(SEPARATOR);
             long startIndex = Long.parseLong(rangeArr[0]);
             long endIndex = Long.parseLong(rangeArr[1]);
             long pieceSize = endIndex - startIndex + 1;
@@ -58,13 +58,13 @@ public class RangeParseUtil {
         if (start > end) {
             throw new IndexOutOfBoundsException("start:" + start + " larger than end:" + end);
         }
-        return start + SEPERATOR + end;
+        return start + SEPARATOR + end;
     }
 
     public static String calculatePieceRange(int pieceNum, Integer pieceSize) {
         long startIndex = pieceNum * (long)pieceSize;
         long endIndex = startIndex + pieceSize - 1;
-        return startIndex + SEPERATOR + endIndex;
+        return startIndex + SEPARATOR + endIndex;
     }
 
 }

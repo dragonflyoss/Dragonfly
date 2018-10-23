@@ -5,6 +5,8 @@ chapter = false
 pre = "<b>6. </b>"
 +++
 
+# FAQ
+
 ## How can I pull images by Dragonfly
 
 See [Use Dragonfly to Pull an Image](docs/en/quick_start.md#use-dragonfly-to-pull-an-image)
@@ -16,7 +18,8 @@ See [Use Dragonfly to Download a File](docs/en/quick_start.md#use-dragonfly-to-d
 ## What is SuperNode
 
 SuperNode is a long-time process with two primary responsibilities:
-* It's the tracker and scheduler in the P2P network that choose appropriate downloading net-path for each peer. 
+
+* It's the tracker and scheduler in the P2P network that choose appropriate downloading net-path for each peer.
 * It's also a CDN server that caches downloaded data from source to avoid downloading same files repeatedly.
 
 ## What is dfget

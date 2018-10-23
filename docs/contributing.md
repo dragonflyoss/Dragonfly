@@ -2,6 +2,8 @@
 title: "Contributing Guide"
 ---
 
+# How to Contribute
+
 It is warmly welcomed if you have interest to hack on Dragonfly. First, we encourage this kind of willing very much. And here is a list of contributing guide for you.
 
 ## Topics
@@ -40,7 +42,7 @@ Also we must remind that when filing a new issue, please remember to remove the 
 
 ## Code and doc contribution
 
-Every action to make project Dragonfly better is encouraged. On GitHub, every improvement for Dragonfly could be via a PR (short for pull request). 
+Every action to make project Dragonfly better is encouraged. On GitHub, every improvement for Dragonfly could be via a PR (short for pull request).
 
 * If you find a typo, try to fix it!
 * If you find a bug, try to fix it!
@@ -53,7 +55,7 @@ Every action to make project Dragonfly better is encouraged. On GitHub, every im
 * If you find document incorrect, just do it and fix that!
 * ...
 
-Actually it is impossible to list them completely. Just remember one princinple: 
+Actually it is impossible to list them completely. Just remember one princinple:
 
 > WE ARE LOOKING FORWARD TO ANY PR FROM YOU.
 
@@ -70,15 +72,17 @@ To put forward a PR, we assume you have registered a GitHub ID. Then you could f
 
 1. **FORK** Dragonfly to your repository. To make this work, you just need to click the button Fork in right-left of [alibaba/Dragonfly](https://github.com/alibaba/Dragonfly) main page. Then you will end up with your repository in `https://github.com/<your-username>/Dragonfly`, in which `your-username` is your GitHub username.
 
-2. **CLONE** your own repository to develop locally. Use `git clone https://github.com/<your-username>/Dragonfly.git` to clone repository to your local machine. Then you can create new branches to finish the change you wish to make. 
+1. **CLONE** your own repository to develop locally. Use `git clone https://github.com/<your-username>/Dragonfly.git` to clone repository to your local machine. Then you can create new branches to finish the change you wish to make.
 
-3. **Set Remote** upstream to be https://github.com/alibaba/Dragonfly.git using the following two commands:
+1. **Set Remote** upstream to be `https://github.com/alibaba/Dragonfly.git` using the following two commands:
+
 ```
 git remote add upstream https://github.com/alibaba/Dragonfly.git
 git remote set-url --push upstream no-pushing
 ```
 
 With this remote setting, you can check your git remote configuration like this:
+
 ```
 $ git remote -v
 origin     https://github.com/<your-username>/Dragonfly.git (fetch)
@@ -110,7 +114,7 @@ Actually in Dragonfly, we take two rules serious when committing:
 
 #### Commit Message
 
-Commit message could help reviewers better understand what is the purpose of submitted PR. It could help accelerate the code review procedure as well. We encourage contributors to use **EXPLICIT** commit message rather than ambiguous message. In general, we advocate the following commit message type: 
+Commit message could help reviewers better understand what is the purpose of submitted PR. It could help accelerate the code review procedure as well. We encourage contributors to use **EXPLICIT** commit message rather than ambiguous message. In general, we advocate the following commit message type:
 
 * docs: xxxx. For example, "docs: add docs about storage installation".
 * feature: xxxx.For example, "feature: make result show in sorted order".
@@ -134,7 +138,7 @@ Commit content represents all content changes included in one commit. We had bet
 * avoid very large change in a commit;
 * complete and reviewable for each commit.
 
-No matter commit message, or commit content, we do take more emphasis on code review. 
+No matter commit message, or commit content, we do take more emphasis on code review.
 
 ### PR Description
 
@@ -151,44 +155,3 @@ We choose GitHub as the primary place for Dragonfly to collaborate. So the lates
 * discuss about Dragonfly to make things clearer;
 * advocate Dragonfly technology beyond GitHub;
 * write blogs on Dragonfly and so on.
-
-## Issue template
-
-Use this template to create an issue.
-
-**Issue Description**
-
-**Describe what happened**:
-
-**Describe what you expected to happen**:
-
-**How to reproduce it (as minimally and precisely as possible)**:
-1.
-2.
-3.
-
-**Anything else we need to know?**:
-
-**Environment**:
-- Dragonfly version (see file:VERSION):
-- OS (e.g. from /etc/os-release):
-- Kernel (e.g. `uname -a`):
-- Others:
-
-## Pull request template
-
-Use this template to create an issue.
-
-**1.Describe what this PR did**
-
-**2.Does this pull request fix one issue?** 
-<!--If that, add "fixes #xxxx" below in the next line, for example, fixes #15. Otherwise, add "NONE" -->
-
-**3.Describe how you did it**
-
-**4.Describe how to verify it**
-
-**5.Special notes for reviews**
-
-
-

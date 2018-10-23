@@ -10,9 +10,11 @@
 ### 配置
 
 #### 通过配置文件或命令行参数指定超级节点
+
 > 确保超级节点已经启动，部署参考：*[超级节点部署指南](./install_server.md)*
 
 * 配置文件方式：用于分发容器镜像和普通文件
+
   ```sh
   # 编辑蜻蜓配置文件
   vi /etc/dragonfly.conf
@@ -24,6 +26,7 @@
 * 命令行参数方式：适用于下载普通文件
 
   在每次执行`dfget`命令时添加参数`--node`，如下：
+
   ```sh
   dfget -u "http://www.taobao.com" -o /tmp/test.html --node nodeIp1,nodeIp2
   ```
@@ -35,6 +38,7 @@
 > 如果仅用蜻蜓下载普通文件，则忽略此步骤。**若用于镜像下载，则此步骤必须。**
 
 * 启动`dfget proxy`(即`df-daemon`)
+
   ```sh
   # 查看帮助信息
   df-deaemon -h
@@ -47,6 +51,7 @@
 * 配置 Daemon Mirror
 
   _如下是配置Docker Daemon Mirror的标准方法_
+
   ```sh
   # 1. 编辑`/etc/docker/daemon.json`
   vi /etc/docker/daemon.json
@@ -55,6 +60,7 @@
   # 3. 重启docker deamon
   systemctl restart docker
   ```
+
   > 关于`/etc/docker/daemon.json`，详情参考[官网文档](https://docs.docker.com/registry/recipes/mirror/#configure-the-cache)
 
 ### 运行

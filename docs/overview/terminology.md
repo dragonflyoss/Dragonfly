@@ -3,12 +3,15 @@ title: "Terminology"
 weight: 5
 ---
 
+# Terminology
+
 This topic lists the common terms used throughout Dragonfly.
 
 ## SuperNode
 
 SuperNode is a long-time process with two primary responsibilities:
-* It's the tracker and scheduler in the P2P network that choose appropriate downloading net-path for each peer. 
+
+* It's the tracker and scheduler in the P2P network that choose appropriate downloading net-path for each peer.
 * It's also a CDN server that caches downloaded data from source to avoid downloading same files repeatedly.
 
 ## dfget
