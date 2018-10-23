@@ -52,9 +52,6 @@ func NetLimit() string {
 	var maxInterfaceLimit = uint64(0)
 	interfaces, err := net.Interfaces()
 	if err != nil {
-		if maxInterfaceLimit > 0 {
-			return strconv.FormatUint(maxInterfaceLimit/8, 10) + "M"
-		}
 		return "20M"
 	}
 	compile := regexp.MustCompile("^[[:space:]]*([[:digit:]]+)[[:space:]]*Mb/s[[:space:]]*$")
