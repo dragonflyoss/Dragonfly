@@ -26,6 +26,7 @@ This topic explains how to install the client.
     # set PATH
     export PATH=$HOME/.dragonfly/df-client:$PATH
     ```
+
   - install in other directory
 
     ```bash

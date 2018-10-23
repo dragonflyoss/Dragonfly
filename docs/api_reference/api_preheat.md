@@ -52,14 +52,18 @@ This topic explains how to use the Preheat API.
   If the `type` is `image`, then the `url` should be image url: `<registry_host>/<image_name>:<image_tag>`.
   Dragonfly will preheat the image according to [registry API spec](https://docs.docker.com/registry/spec/api/#pulling-an-image), the steps are:
   * construct `manifest_url`:
+
       ```
       https://<harbor_host>/v2/<image_name>/manifests/<image_tag>
       ```
+
   * pull the manifest of the image from `manifest_url`
-  * get the` fsLayers` from manifest and construct `layer_url` of each layer:
+  * get the `fsLayers` from manifest and construct `layer_url` of each layer:
+
       ```
       https://<harbor_host>/v2/<name>/blobs/<digest>
       ```
+
   * request these `layer_url`s above to handle any redirection response to get real downloading urls
   * supernodes use these real downloading urls to preheat layers of this image
 
