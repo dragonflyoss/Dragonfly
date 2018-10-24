@@ -150,38 +150,99 @@ func (p *Properties) fileType(path string) string {
 
 // Context holds all the runtime context information.
 type Context struct {
-	URL             string   `json:"url"`
-	Output          string   `json:"output"`
-	LocalLimit      int      `json:"localLimit,omitempty"`
-	TotalLimit      int      `json:"totalLimit,omitempty"`
-	Timeout         int      `json:"timeout,omitempty"`
-	Md5             string   `json:"md5,omitempty"`
-	Identifier      string   `json:"identifier,omitempty"`
-	CallSystem      string   `json:"callSystem,omitempty"`
-	Pattern         string   `json:"pattern,omitempty"`
-	Filter          []string `json:"filter,omitempty"`
-	Header          []string `json:"header,omitempty"`
-	Node            []string `json:"node,omitempty"`
-	Notbs           bool     `json:"notbs,omitempty"`
-	DFDaemon        bool     `json:"dfdaemon,omitempty"`
-	Version         bool     `json:"version,omitempty"`
-	ShowBar         bool     `json:"showBar,omitempty"`
-	Console         bool     `json:"console,omitempty"`
-	Verbose         bool     `json:"verbose,omitempty"`
-	Help            bool     `json:"help,omitempty"`
-	ClientQueueSize int      `json:"clientQueueSize,omitempty"`
+	// URL download URL.
+	URL string `json:"url"`
 
-	StartTime   time.Time `json:"startTime"`
-	Sign        string    `json:"sign"`
-	User        string    `json:"user"`
-	WorkHome    string    `json:"workHome"`
-	ConfigFiles []string  `json:"configFile"`
+	// Output full output path.
+	Output string `json:"output"`
 
+	// LocalLimit rate limit about a single download task,format: 20M/m/K/k.
+	LocalLimit int `json:"localLimit,omitempty"`
+
+	// TotalLimit rate limit about the whole host,format: 20M/m/K/k.
+	TotalLimit int `json:"totalLimit,omitempty"`
+
+	// Timeout download timeout(second).
+	Timeout int `json:"timeout,omitempty"`
+
+	// Md5 expected file md5.
+	Md5 string `json:"md5,omitempty"`
+
+	// Identifier identify download task, it is available merely when md5 param not exist.
+	Identifier string `json:"identifier,omitempty"`
+
+	// CallSystem system name that executes dfget.
+	CallSystem string `json:"callSystem,omitempty"`
+
+	// Pattern download pattern, must be 'p2p' or 'cdn' or 'source',
+	// default:`p2p`.
+	Pattern string `json:"pattern,omitempty"`
+
+	// Filter filter some query params of url, use char '&' to separate different params.
+	// eg: -f 'key&sign' will filter 'key' and 'sign' query param.
+	// in this way, different urls correspond one same download task that can use p2p mode.
+	Filter []string `json:"filter,omitempty"`
+
+	// Header of http request.
+	// eg: --header='Accept: *' --header='Host: abc'.
+	Header []string `json:"header,omitempty"`
+
+	// Node specify supernodes.
+	Node []string `json:"node,omitempty"`
+
+	// Notbs indicates whether to not back source when p2p fail.
+	Notbs bool `json:"notbs,omitempty"`
+
+	// DFDaemon indicates whether the caller is from dfdaemon
+	DFDaemon bool `json:"dfdaemon,omitempty"`
+
+	// Version show version.
+	Version bool `json:"version,omitempty"`
+
+	// ShowBar show progress bar, it's conflict with `--console`.
+	ShowBar bool `json:"showBar,omitempty"`
+
+	// Console show log on console, it's conflict with `--showbar`.
+	Console bool `json:"console,omitempty"`
+
+	// Verbose indicates whether to be verbose.
+	// If set true, log level will be 'debug'.
+	Verbose bool `json:"verbose,omitempty"`
+
+	// Help show help information.
+	Help bool `json:"help,omitempty"`
+
+	// Client queue size.
+	// TODO: support setupFlags
+	ClientQueueSize int `json:"clientQueueSize,omitempty"`
+
+	// Start time.
+	StartTime time.Time `json:"startTime"`
+
+	// Sign the value is 'Pid + float64(time.Now().UnixNano())/float64(time.Second) format: "%d-%.3f"'.
+	Sign string `json:"sign"`
+
+	// Username of the system currently logged in.
+	User string `json:"user"`
+
+	// WorkHome work home path,
+	// default: `$HOME/.small-dragonfly`.
+	WorkHome string `json:"workHome"`
+
+	// Config file paths,
+	// default:["/etc/dragonfly.yaml","/etc/dragonfly.conf"].
+	ConfigFiles []string `json:"configFile"`
+
+	// RV stores the variables that are initialized and used at downloading task executing.
 	RV RuntimeVariable `json:"-"`
 
+	// The reason of backing to source.
 	BackSourceReason int `json:"-"`
 
+	// Client logger.
 	ClientLogger *logrus.Logger `json:"-"`
+
+	// Server logger, only created when Pattern equals 'p2p'.
 	ServerLogger *logrus.Logger `json:"-"`
 }
 

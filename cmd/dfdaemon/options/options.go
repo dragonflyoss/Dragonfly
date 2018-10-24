@@ -9,24 +9,57 @@ import (
 
 // Options is the configuration
 type Options struct {
-	DfPath     string
-	DFRepo     string
-	RateLimit  string
-	CallSystem string
-	URLFilter  string
-	Notbs      bool
-	MaxProcs   int
+	// DfPath `dfget` path.
+	DfPath string
 
-	Version  bool
-	Verbose  bool
-	Help     bool
-	HostIP   string
-	Port     uint
-	Registry string //https://xxx.xx.x:port or http://xxx.xx.x:port
+	// DFRepo the default value is `$HOME/.small-dragonfly/dfdaemon/data/`.
+	DFRepo string
+
+	// RateLimit limit net speed,
+	// format:xxxM/K.
+	RateLimit string
+
+	// Call system name.
+	CallSystem string
+
+	// Filter specified url fields.
+	URLFilter string
+
+	// Notbs not try back source to download if throw exception.
+	Notbs bool
+
+	// MaxProcs the maximum number of CPUs that the dfdaemon can use.
+	MaxProcs int
+
+	// Version show version.
+	Version bool
+
+	// Verbose indicates whether to be verbose.
+	// If set true, log level will be 'debug'.
+	Verbose bool
+
+	// Help show help information.
+	Help bool
+
+	// HostIP dfdaemon host ip, default: 127.0.0.1.
+	HostIP string
+
+	// Port that dfdaemon will listen, default: 65001.
+	Port uint
+
+	// Registry addr and must exist if dfdaemon is used to mirror mode,
+	// format: https://xxx.xx.x:port or http://xxx.xx.x:port.
+	Registry string
+
+	// The regex download the url by P2P if url matches,
+	// format:reg1,reg2,reg3.
 	DownRule string
 
+	// Cert file path,
 	CertFile string
-	KeyFile  string
+
+	// Key file path.
+	KeyFile string
 }
 
 // New returns the default options.
