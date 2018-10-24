@@ -45,8 +45,6 @@ func setupFlags(args []string) {
 		"rate limit about the whole host, its format is 20M/m/K/k")
 	pflag.IntVarP(&cfg.Ctx.Timeout, "timeout", "e", 0,
 		"download timeout(second)")
-	pflag.IntVar(&cfg.Ctx.Timeout, "exceed", 0,
-		"download timeout(second)")
 
 	// md5 & identifier
 	pflag.StringVarP(&cfg.Ctx.Md5, "md5", "m", "",
@@ -83,7 +81,7 @@ func setupFlags(args []string) {
 	pflag.BoolVarP(&cfg.Ctx.ShowBar, "showbar", "b", false,
 		"show progress bar, it's conflict with '--console'")
 	pflag.BoolVar(&cfg.Ctx.Console, "console", false,
-		"show log on console, it's conflict with '--showbar")
+		"show log on console, it's conflict with '--showbar'")
 	pflag.BoolVar(&cfg.Ctx.Verbose, "verbose", false,
 		"be verbose")
 	pflag.BoolVarP(&cfg.Ctx.Help, "help", "h", false,
