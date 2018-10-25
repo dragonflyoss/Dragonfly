@@ -1,0 +1,42 @@
+#body img {
+/*    margin: 3rem auto;*/
+    margin: auto;
+    display: inline;
+    text-align: center;
+}
+#body .video-container {
+    margin: 3rem auto;
+    display: block;
+    text-align: center;
+}
+body {
+    font-family: "Work Sans", "Helvetica", "source-han-sans-simplified-c", "Tahoma", "Geneva", "Arial", sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+    font-size: 18px !important;
+}
+h2, h3, h4, h5, h6 {
+    font-family: "Work Sans", "Helvetica", "source-han-sans-simplified-c", "Tahoma", "Geneva", "Arial", sans-serif;
+    text-rendering: optimizeLegibility;
+    color: #5e5e5e;
+    font-weight: 400;
+    letter-spacing: -1px;
+}
+h1 {
+    font-family: "Novacento Sans Wide", "Helvetica", "source-han-sans-simplified-c", "Tahoma", "Geneva", "Arial", sans-serif;
+    text-align: center;
+    text-transform: uppercase;
+    color: #222;
+    font-weight: 200;
+}
+#chapter h3 {
+    font-family: "Work Sans", "Helvetica", "source-han-sans-simplified-c", "Tahoma", "Geneva", "Arial", sans-serif;
+    font-weight: 300;
+    text-align: center;
+}
+#sidebar #shortcuts h3 {
+    font-family: "Novacento Sans Wide", "Helvetica", "source-han-sans-simplified-c", "Tahoma", "Geneva", "Arial", sans-serif;
+    color: white ;
+    margin-top:1rem;
+    padding-left: 1rem;
+}
