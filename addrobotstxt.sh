@@ -1,0 +1,1 @@
+echo "User-agent: *\nDisallow:" > static/robots.txt
