@@ -1,7 +1,6 @@
 baseURL = "https://alibaba.github.io/Dragonfly"
 languageCode = "en-US"
 defaultContentLanguage = "en"
-hasCJKLanguage = true
 
 title = "DragonFly Documentation"
 theme = "hugo-theme-learn-master"
@@ -10,9 +9,9 @@ metaDataFormat = "yaml"
 defaultContentLanguageInSubdir= true
 
 [params]
-  editURL = "https://github.com/aliware-os/dragonfly-test/edit/master/content/"
-  description = "Documentation for DragonFly"
-  author = "Aliware Docs"
+  editURL = "https://github.com/alibaba/Dragonfly/edit/master/content/"
+  description = "DragonFly Documentation"
+  author = "Team Dragonfly"
   showVisitedLinks = true
   disableBreadcrumb = true
   disableNextPrev = true
@@ -23,12 +22,12 @@ home = [ "HTML", "RSS", "JSON"]
 
 [Languages]
 [Languages.en]
-title = "Documentation for DragonFly"
+title = "DragonFly Documentation"
 weight = 1
 languageName = "English"
 
 [[Languages.en.menu.shortcuts]]
-name = "<i class='fab fa-fw fa-github'></i> Github Repo"
+name = "<i class='fab fa-fw fa-github'></i> View on Github"
 identifier = "ds"
 url = "https://github.com/alibaba/Dragonfly"
 weight = 1
@@ -48,28 +47,7 @@ name = "<i class='fas fa-fw fa-user-cog'></i> Maintainers"
 url = "maintainers"
 weight = 4
 
-[Languages.zh-cn]
-title = "Dragonfly 文档"
-weight = 2
-languageName = "简体中文"
-
-[[Languages.zh-cn.menu.shortcuts]]
-name = "<i class='fab fa-fw fa-github'></i> Github 仓库"
-identifier = "ds"
-url = "https://github.com/alibaba/Dragonfly"
-weight = 1
-
-[[Languages.zh-cn.menu.shortcuts]]
-name = "<i class='fas fa-fw fa-map-signs'></i> 路线图"
-url = "roadmap"
-weight = 2
-
-[[Languages.zh-cn.menu.shortcuts]]
-name = "<i class='fas fa-fw fa-lightbulb'></i> 贡献指南"
-url = "contributing"
-weight = 3
-
-[[Languages.zh-cn.menu.shortcuts]]
-name = "<i class='fas fa-fw fa-user-cog'></i> 维护者"
-url = "maintainers"
-weight = 4
+[[Languages.en.menu.shortcuts]]
+name = "<i class='fas fa-fw fa-gavel'></i> Code of Conduct"
+url = "code_of_conduct"
+weight = 5

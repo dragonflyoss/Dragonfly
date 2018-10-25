@@ -1,4 +1,6 @@
-# Contributing to Dragonfly
+---
+title: "Contributing Guide"
+---
 
 It is warmly welcomed if you have interest to hack on Dragonfly. First, we encourage this kind of willing very much. And here is a list of contributing guide for you.
 
@@ -76,7 +78,7 @@ git remote add upstream https://github.com/alibaba/Dragonfly.git
 git remote set-url --push upstream no-pushing
 ```
 
-With this remote setting, you can check you git remote configuration like this:
+With this remote setting, you can check your git remote configuration like this:
 ```
 $ git remote -v
 origin     https://github.com/<your-username>/Dragonfly.git (fetch)
@@ -149,4 +151,44 @@ We choose GitHub as the primary place for Dragonfly to collaborate. So the lates
 * discuss about Dragonfly to make things clearer;
 * advocate Dragonfly technology beyond GitHub;
 * write blogs on Dragonfly and so on.
+
+## Issue template
+
+Use this template to create an issue.
+
+**Issue Description**
+
+**Describe what happened**:
+
+**Describe what you expected to happen**:
+
+**How to reproduce it (as minimally and precisely as possible)**:
+1.
+2.
+3.
+
+**Anything else we need to know?**:
+
+**Environment**:
+- Dragonfly version (see file:VERSION):
+- OS (e.g. from /etc/os-release):
+- Kernel (e.g. `uname -a`):
+- Others:
+
+## Pull request template
+
+Use this template to create an issue.
+
+**1.Describe what this PR did**
+
+**2.Does this pull request fix one issue?** 
+<!--If that, add "fixes #xxxx" below in the next line, for example, fixes #15. Otherwise, add "NONE" -->
+
+**3.Describe how you did it**
+
+**4.Describe how to verify it**
+
+**5.Special notes for reviews**
+
+
 

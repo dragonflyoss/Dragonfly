@@ -1,5 +1,5 @@
 +++
-title = "如何使用本网站"
+title = "Before Starting"
 weight = 1
 pre = "<b>0. </b>"
 +++
@@ -48,14 +48,6 @@ To perform a search, type your key words in the search box on the top of the lef
 ![](../../images/f_search_box_en.png)
 
 In the search results, click any link to jump to the topic, and your key words will be highlighted in yellow.
-
-## Switching display language
-
-The Dragonfly documentation portal is a multi-language website.
-
-To switch the display language, in the left-side navigation pane, select a language in the language drop-down list.
-
-![](../../images/f_language_switch_en.png)
 
 ## Improving the documentation
 
