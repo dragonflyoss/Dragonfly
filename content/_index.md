@@ -7,7 +7,7 @@ title: "Dragonfly"
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Falibaba%2FDragonfly.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Falibaba%2FDragonfly?ref=badge_shield)
 [![Build Status](https://travis-ci.org/alibaba/Dragonfly.svg?branch=master)](https://travis-ci.org/alibaba/Dragonfly)
 
-![Dragonfly](../images/logo.png)
+![Dragonfly](images/logo.png)
 
 ## What is Dragonfly?
 
@@ -50,7 +50,7 @@ processing requests with extremely high performance.
 |Target file size|200MB|
 |Executed Date|2016-04-20|
 
-![How it stacks up](../images/performance.png)
+![How it stacks up](images/performance.png)
 
 For Dragonfly, no matter how many clients issue the file downloading, the average downloading time is always around 12 seconds.
 And for wget, the downloading time keeps increasing when you have more clients, and as the amount of wget clients reaches 1200, the file source will crash, then it can not serve any client.
@@ -59,16 +59,16 @@ And for wget, the downloading time keeps increasing when you have more clients, 
 
 Below are the adoptors of project Dragonfly. If you are using to Dragonfly to improve your distribution, please contact us with.
 
-<a href="https://www.alibabagroup.com" border="0" target="_blank"><img alt="trendmicro" src="../images/adoptor_logo/AlibabaGroup.jpg" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
-<a href="https://www.alibabacloud.com/zh" border="0" target="_blank"><img alt="trendmicro" src="../images/adoptor_logo/AlibabaCloud.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
-<a href="http://www.10086.cn/" border="0" target="_blank"><img alt="OnStar" src="../images/adoptor_logo/ChinaMobile.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
-<a href="https://www.antfin.com/" border="0" target="_blank"><img alt="OnStar" src="../images/adoptor_logo/AntFinancial.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
-<a href="https://www.cainiao.com/" border="0" target="_blank"><img alt="OnStar" src="../images/adoptor_logo/CaiNiao.gif" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
-<a href="http://www.iflytek.com/" border="0" target="_blank"><img alt="OnStar" src="../images/adoptor_logo/iFLYTEK.jpeg" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
-<a href="https://www.didiglobal.com" border="0" target="_blank"><img alt="OnStar" src="../images/adoptor_logo/didi.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
-<a href="https://www.meituan.com" border="0" target="_blank"><img alt="OnStar" src="../images/adoptor_logo/meituan.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
-<a href="https://www.amap.com/" border="0" target="_blank"><img alt="OnStar" src="../images/adoptor_logo/amap.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
-<a href="https://www.lazada.com/" border="0" target="_blank"><img alt="OnStar" src="../images/adoptor_logo/lazada.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
+<a href="https://www.alibabagroup.com" border="0" target="_blank"><img alt="trendmicro" src="images/adoptor_logo/AlibabaGroup.jpg" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
+<a href="https://www.alibabacloud.com/zh" border="0" target="_blank"><img alt="trendmicro" src="images/adoptor_logo/AlibabaCloud.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
+<a href="http://www.10086.cn/" border="0" target="_blank"><img alt="OnStar" src="images/adoptor_logo/ChinaMobile.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
+<a href="https://www.antfin.com/" border="0" target="_blank"><img alt="OnStar" src="images/adoptor_logo/AntFinancial.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
+<a href="https://www.cainiao.com/" border="0" target="_blank"><img alt="OnStar" src="images/adoptor_logo/CaiNiao.gif" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
+<a href="http://www.iflytek.com/" border="0" target="_blank"><img alt="OnStar" src="images/adoptor_logo/iFLYTEK.jpeg" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
+<a href="https://www.didiglobal.com" border="0" target="_blank"><img alt="OnStar" src="images/adoptor_logo/didi.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
+<a href="https://www.meituan.com" border="0" target="_blank"><img alt="OnStar" src="images/adoptor_logo/meituan.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
+<a href="https://www.amap.com/" border="0" target="_blank"><img alt="OnStar" src="images/adoptor_logo/amap.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
+<a href="https://www.lazada.com/" border="0" target="_blank"><img alt="OnStar" src="images/adoptor_logo/lazada.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
 
 ## License
 

@@ -46,7 +46,7 @@ processing requests with extremely high performance.
 |Target file size|200MB|
 |Executed Date|2016-04-20|
 
-![How it stacks up](../../../images/performance.png)
+![How it stacks up](../../images/performance.png)
 
 For Dragonfly, no matter how many clients issue the file downloading, the average downloading time is always around 12 seconds.
 And for wget, the downloading time keeps increasing when you have more clients, and as the amount of wget clients reaches 1200, the file source will crash, then it can not serve any client.
@@ -55,19 +55,19 @@ And for wget, the downloading time keeps increasing when you have more clients, 
 
 ### Distributing General Files
 
-![Distributing General Files](../../../images/dfget.png)
+![Distributing General Files](../../images/dfget.png)
 
 The cluster manager is also called supernode, which is responsible for CDN and scheduling every peer to transfer blocks between them. dfget is the client of P2P, also called 'peer',which is mainly used to download and share blocks. 
 
 ### Distributing Container Images
 
-![Distributing Container Images](../../../images/dfget-combine-container.png)
+![Distributing Container Images](../../images/dfget-combine-container.png)
 
 Registry is similar to the file server above. dfget proxy is also called dfdaemon, which intercepts http-requests from docker pull or docker push,and then determines which requests need use dfget to handle.
 
 ### How file blocks are downloaded
 
-![How file blocks are downloaded](../../../images/distributing.png)
+![How file blocks are downloaded](../../images/distributing.png)
 
 Every File is divided into multiple blocks, which are transmitted between peers,one peer is one P2P client.
 Cluster manager will judge whether the corresponding file exists in the local disk, if not, 
