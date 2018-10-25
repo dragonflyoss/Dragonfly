@@ -143,7 +143,7 @@ func (q *infiniteQueue) notifyChan() <-chan struct{} {
 	return *((*chan struct{})(ptr))
 }
 
-// broadcast notify all the Poll goroutines to re-check the queue whether is empty.
+// broadcast notify all the Poll goroutines to re-check whether the queue is empty.
 func (q *infiniteQueue) broadcast() {
 	c := make(chan struct{})
 	old := atomic.SwapPointer(&q.empty, unsafe.Pointer(&c))
