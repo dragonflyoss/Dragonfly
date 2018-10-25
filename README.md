@@ -66,21 +66,28 @@ processing requests with extremely high performance.
 |Target file size|200MB|
 |Executed Date|2016-04-20|
 
-<div>
-<img src="docs/images/performance.png"/>
-</div>
+![Performance](docs/images/performance.png)
 
 For Dragonfly, no matter how many clients issue the file downloading, the average downloading time is always around 12 seconds.
 And for wget, the downloading time keeps increasing when you have more clients, and as the amount of wget clients reaches 1200, the file source will crash, then it can not serve any client.
 
+## Roadmap
+
+For more details about roadmap, please refer to file [ROADMAP.md](ROADMAP.md).
+
+## Community
+
+You are encouraged to communicate most things via GitHub issues or pull requests.
+
+Other active channels:
+
+* **Gitter Chat**: [dragonfly](https://gitter.im/alibaba/Dragonfly)
+* **Twitter**: [@dragonfly_oss](https://twitter.com/dragonfly_oss)
+
+## Contributing
+
+You are warmly welcomed to hack on Dragonfly. We have prepared a detailed guide [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
-Dragonfly is available under the [Apache 2.0 License](https://github.com/alibaba/Dragonfly/blob/master/LICENSE).
-
-## Commercial Support
-
-If you need commercial support of Dragonfly, please contact us for more information: [云效](https://www.aliyun.com/product/yunxiao).
-
-Dragonfly is already integrated with AliCloud Container Services
-If you need commercial support of AliCloud Container Service, please contact us for more information: [Container Service
-](https://www.alibabacloud.com/product/container-service)
+Dragonfly is licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for the full license text.
