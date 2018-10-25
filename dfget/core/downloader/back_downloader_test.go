@@ -85,6 +85,12 @@ func (s *BackDownloaderTestSuite) TestBackDownloader_Run(c *check.C) {
 	md5sum := util.Md5Sum(dst)
 	c.Assert(testFileMd5, check.Equals, md5sum)
 
+	// test: realMd5 doesn't equal to expectedMd5
 	bd.Md5 = "x"
 	c.Assert(bd.Run(), check.NotNil)
+
+	// test: realMd5 equals to expectedMd5
+	bd.cleaned = false
+	bd.Md5 = testFileMd5
+	c.Assert(bd.Run(), check.IsNil)
 }
