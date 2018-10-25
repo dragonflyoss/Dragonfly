@@ -53,13 +53,15 @@ type LimitReader struct {
 
 func (lr *LimitReader) Read(p []byte) (n int, err error) {
 	n, e := lr.Src.Read(p)
-	if e != nil {
+	if e != nil && e != io.EOF {
 		return n, e
 	}
-	if lr.md5sum != nil {
-		lr.md5sum.Write(p[:n])
+	if n > 0 {
+		if lr.md5sum != nil {
+			lr.md5sum.Write(p[:n])
+		}
+		lr.Limiter.AcquireBlocking(int32(n))
 	}
-	lr.Limiter.AcquireBlocking(int32(n))
 	return n, e
 }
 
