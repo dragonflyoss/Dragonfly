@@ -1,7 +1,11 @@
-Quick Start
----
++++
+title = "Quick Start"
+weight = 20
+pre = "<b>2. </b>"
++++
 
 The latest release version is 0.2.0, you can quickly experience Dragonfly in the following simple steps.
+<!--more-->
 
 ## Start SuperNode on Docker Container
 
@@ -34,18 +38,21 @@ dfget -u 'https://github.com/alibaba/Dragonfly/blob/master/docs/images/logo.png'
 ## Use Dragonfly to Pull an Image
 
 We have 2 steps to do before we pull an image:
-1. start `dfdaemon` with a specified registry:
+
+1. start `df-daemon` with a specified registry:
+
     ```bash
-    dfdaemon --registry https://index.docker.io
+    df-daemon --registry https://index.docker.io
     ```
 2. configure dockerd and restart:
+
     ```json
     "registry-mirrors": ["http://127.0.0.1:65001"]
     ```
-
 > NOTE: make sure the SuperNode is running
 
 That's all we need to do, then we can pull an image by Dragonfly just as usual:
+
 ```bash
 docker pull nginx:latest
 ```

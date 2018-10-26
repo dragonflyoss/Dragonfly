@@ -1,4 +1,10 @@
-# Preheating API
+---
+title: "Preheat API"
+weight: 5
+---
+
+This topic explains how to use the Preheat API.
+<!--more-->
 
 ## GET /api/check
 

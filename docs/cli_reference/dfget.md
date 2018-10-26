@@ -1,5 +1,10 @@
-Dfget CLI Manual
 ---
+title: "dfget"
+weight: 5
+---
+
+This topic explains how to use the dfget command.
+<!--more-->
 
 ## NAME
 

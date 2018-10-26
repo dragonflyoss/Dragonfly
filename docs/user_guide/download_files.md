@@ -1,4 +1,10 @@
-# Usage Guide
+---
+title: "Distribuiting Files"
+weight: 10
+---
+
+This topic explains how to distribute files with Dragonfly.
+<!--more-->
 
 ## Requirements
 
