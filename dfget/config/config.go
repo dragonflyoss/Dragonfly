@@ -190,7 +190,7 @@ type Context struct {
 	// Node specify supernodes.
 	Node []string `json:"node,omitempty"`
 
-	// Notbs indicates whether to not back source when p2p fail.
+	// Notbs indicates whether to not back source to download when p2p fails.
 	Notbs bool `json:"notbs,omitempty"`
 
 	// DFDaemon indicates whether the caller is from dfdaemon
