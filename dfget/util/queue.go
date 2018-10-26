@@ -26,19 +26,19 @@ import (
 
 // Queue blocking queue. The items putted into queue mustn't be nil.
 type Queue interface {
-	// Put puts item into the queue and keep blocking if the queue is full.
+	// Put puts item into the queue and keeps blocking if the queue is full.
 	// It will return immediately and do nothing if the item is nil.
 	Put(item interface{})
 
-	// PutTimeout puts item into the queue and wait for timeout if the queue is full.
+	// PutTimeout puts item into the queue and waits for timeout if the queue is full.
 	// If timeout <= 0, it will return false immediately when queue is full.
 	// It will return immediately and do nothing if the item is nil.
 	PutTimeout(item interface{}, timeout time.Duration) bool
 
-	// Poll get an item from the queue and keep blocking if the queue is empty.
+	// Poll gets an item from the queue and keeps blocking if the queue is empty.
 	Poll() interface{}
 
-	// PollTimeout get an item from the queue and wait for timeout if the queue is empty.
+	// PollTimeout gets an item from the queue and waits for timeout if the queue is empty.
 	// If timeout <= 0, it will return (nil, bool) immediately when queue is empty.
 	PollTimeout(timeout time.Duration) (interface{}, bool)
 
