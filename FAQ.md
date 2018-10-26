@@ -16,11 +16,11 @@ Dragonfly makes it simple and cost-effective to set up, operate, and scale any 
 
 ## How can I pull images by Dragonfly
 
-See [Use Dragonfly to Pull an Image](docs/en/quick_start.md#use-dragonfly-to-pull-an-image)
+See [Use Dragonfly to Pull an Image](docs/quick_start/_index.md#use-dragonfly-to-pull-an-image)
 
 ## How can I download files by Dragonfly
 
-See [Use Dragonfly to Download a File](docs/en/quick_start.md#use-dragonfly-to-download-a-file)
+See [Use Dragonfly to Download a File](docs/quick_start/_index.md#use-dragonfly-to-download-a-file)
 
 ## What is SuperNode
 
