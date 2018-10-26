@@ -64,6 +64,8 @@ func (p2p *P2PDownloader) init() {
 		p2p.RegisterResult.PieceSize, p2p.RegisterResult.PieceSize
 
 	p2p.queue = util.NewQueue(0)
+	p2p.queue.Put(NewPieceSimple(p2p.taskID, p2p.node, config.TaskStatusStart))
+
 	p2p.clientQueue = util.NewQueue(config.DefaultClientQueueSize)
 	p2p.writerDone = make(chan struct{})
 
@@ -73,7 +75,7 @@ func (p2p *P2PDownloader) init() {
 // Run starts to download the file.
 func (p2p *P2PDownloader) Run() error {
 	var (
-		lastItem *PieceItem
+		lastItem *Piece
 		goNext   bool
 	)
 
@@ -85,7 +87,7 @@ func (p2p *P2PDownloader) Run() error {
 		p2p.Ctx.ClientLogger.Infof("p2p download:%v", lastItem)
 
 		curItem := *lastItem
-		curItem.PieceContents = bytes.Buffer{}
+		curItem.Content = &bytes.Buffer{}
 		lastItem = nil
 
 		response, err := p2p.pullPieceTask(&curItem)
@@ -120,7 +122,7 @@ func (p2p *P2PDownloader) Run() error {
 func (p2p *P2PDownloader) Cleanup() {
 }
 
-func (p2p *P2PDownloader) pullPieceTask(item *PieceItem) (
+func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 	*types.PullPieceTaskResponse, error) {
 	var (
 		res *types.PullPieceTaskResponse
@@ -176,12 +178,12 @@ func (p2p *P2PDownloader) pullRate(data *types.PullPieceTaskResponseContinueData
 func (p2p *P2PDownloader) startTask(data *types.PullPieceTaskResponseContinueData) {
 }
 
-func (p2p *P2PDownloader) getItem(latestItem *PieceItem) (bool, *PieceItem) {
+func (p2p *P2PDownloader) getItem(latestItem *Piece) (bool, *Piece) {
 	var (
 		needMerge = true
 	)
-	if ok, v := p2p.queue.PollTimeout(2 * time.Second); ok {
-		item := v.(*PieceItem)
+	if v, ok := p2p.queue.PollTimeout(2 * time.Second); ok {
+		item := v.(*Piece)
 		if item.PieceSize != 0 && item.PieceSize != p2p.pieceSizeHistory[1] {
 			return false, latestItem
 		}
@@ -198,7 +200,7 @@ func (p2p *P2PDownloader) getItem(latestItem *PieceItem) (bool, *PieceItem) {
 			}
 			if !v && (item.Result == config.ResultSemiSuc ||
 				item.Result == config.ResultSuc) {
-				p2p.total += int64(item.PieceContents.Len())
+				p2p.total += int64(item.Content.Len())
 				p2p.pieceSet[item.Range] = true
 			} else if !v {
 				delete(p2p.pieceSet, item.Range)
@@ -230,7 +232,7 @@ func (p2p *P2PDownloader) getItem(latestItem *PieceItem) (bool, *PieceItem) {
 }
 
 func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
-	item *PieceItem) {
+	item *Piece) {
 
 }
 
@@ -238,6 +240,6 @@ func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse) {
 
 }
 
-func (p2p *P2PDownloader) refresh(item *PieceItem) {
+func (p2p *P2PDownloader) refresh(item *Piece) {
 
 }
