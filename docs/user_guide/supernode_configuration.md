@@ -1,5 +1,10 @@
-SuperNode Configuration
 ---
+title: "SuperNode Configuration"
+weight: 15
+---
+
+This topic explains the configuration of SuperNode.
+<!--more-->
 
 ## Properties
 
