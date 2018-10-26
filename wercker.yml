@@ -26,7 +26,9 @@ build:
     - script:
         name: download hugo-theme-learn
         cwd: docs/.build
-        code: git clone https://github.com/matcornic/hugo-theme-learn.git hugo-theme-learn && rm -rf hugo-theme-learn/.git
+        code: |
+            test -d ./themes || mkdir ./themes
+            git clone https://github.com/matcornic/hugo-theme-learn.git ./themes/hugo-theme-learn && rm -rf hugo-theme-learn/.git
     - script:
         name: prepare contents
         cwd: docs/.build
