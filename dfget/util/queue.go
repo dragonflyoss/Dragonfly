@@ -26,20 +26,20 @@ import (
 
 // Queue blocking queue. The items putted into queue mustn't be nil.
 type Queue interface {
-	// Put puts item into the queue and blocking if the queue is full.
+	// Put puts item into the queue and keeps blocking if the queue is full.
 	// It will return immediately and do nothing if the item is nil.
 	Put(item interface{})
 
-	// PutTimeout puts item into the queue and wait for timeout if the queue is full.
-	// If timeout <= 0, it will returns false immediately when queue is full.
+	// PutTimeout puts item into the queue and waits for timeout if the queue is full.
+	// If timeout <= 0, it will return false immediately when queue is full.
 	// It will return immediately and do nothing if the item is nil.
 	PutTimeout(item interface{}, timeout time.Duration) bool
 
-	// Poll get an item from the queue and blocking if the queue is empty.
+	// Poll gets an item from the queue and keeps blocking if the queue is empty.
 	Poll() interface{}
 
-	// PollTimeout get an item from the queue and wait for timeout if the queue is empty.
-	// If timeout <= 0, it will returns (nil, bool) immediately when queue is empty.
+	// PollTimeout gets an item from the queue and waits for timeout if the queue is empty.
+	// If timeout <= 0, it will return (nil, bool) immediately when queue is empty.
 	PollTimeout(timeout time.Duration) (interface{}, bool)
 
 	// Len returns the current size of the queue.
@@ -143,14 +143,14 @@ func (q *infiniteQueue) notifyChan() <-chan struct{} {
 	return *((*chan struct{})(ptr))
 }
 
-// broadcast notify all the Poll goroutines to re-check whether the queue is empty.
+// broadcast notifies all the Poll goroutines to re-check whether the queue is empty.
 func (q *infiniteQueue) broadcast() {
 	c := make(chan struct{})
 	old := atomic.SwapPointer(&q.empty, unsafe.Pointer(&c))
 	close(*(*chan struct{})(old))
 }
 
-// finiteQueue implements finite blocking queue by buffered channels.
+// finiteQueue implements finite blocking queue by buffered channel.
 type finiteQueue struct {
 	store chan interface{}
 }
