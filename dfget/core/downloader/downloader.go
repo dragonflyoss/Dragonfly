@@ -67,12 +67,14 @@ func NewP2PDownloader(ctx *config.Context,
 	api api.SupernodeAPI,
 	register regist.SupernodeRegister,
 	result *regist.RegisterResult) Downloader {
-	return &P2PDownloader{
-		Ctx:      ctx,
-		API:      api,
-		Register: register,
-		Result:   result,
+	p2p := &P2PDownloader{
+		Ctx:            ctx,
+		API:            api,
+		Register:       register,
+		RegisterResult: result,
 	}
+	p2p.init()
+	return p2p
 }
 
 // DoDownloadTimeout downloads the file and waits for response during
@@ -86,12 +88,11 @@ func DoDownloadTimeout(downloader Downloader, timeout time.Duration) error {
 	go func() {
 		ch <- downloader.Run()
 	}()
-	tc := time.NewTimer(timeout)
 	var err error
 	select {
 	case err = <-ch:
 		return err
-	case <-tc.C:
+	case <-time.After(timeout):
 		err = fmt.Errorf("download timeout(%.3fs)", timeout.Seconds())
 		downloader.Cleanup()
 	}

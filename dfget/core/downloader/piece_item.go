@@ -14,14 +14,32 @@
  * limitations under the License.
  */
 
-package types
+package downloader
 
-// PullPieceTaskRequest is send to supernodes when pulling pieces.
-type PullPieceTaskRequest struct {
-	SrcCid string `request:"srcCid"`
-	DstCid string `request:"dstCid"`
-	Range  string `request:"range"`
-	Result int    `request:"result"`
-	Status int    `request:"status"`
-	TaskID string `request:"taskId"`
+import (
+	"bytes"
+)
+
+// PieceItem contains all information of a piece.
+type PieceItem struct {
+	DstCid        string
+	SrcCid        string
+	Range         string
+	TaskID        string
+	SuperNode     string
+	Result        int
+	Status        int
+	PieceSize     int32
+	PieceNum      int
+	PieceContents bytes.Buffer
+}
+
+// RawContents return raw contents.
+func (p *PieceItem) RawContents() *bytes.Buffer {
+	contents := p.PieceContents.Bytes()
+	length := len(contents)
+	if length >= 5 {
+		return bytes.NewBuffer(contents[4 : length-1])
+	}
+	return nil
 }
