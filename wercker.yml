@@ -1,0 +1,54 @@
+# This references a standard debian container from the
+# Docker Hub https://registry.hub.docker.com/_/debian/
+# Read more about containers on our dev center
+# https://devcenter.wercker.com/overview-and-core-concepts/containers/
+box: debian
+# You can also use services such as databases. Read more on our dev center:
+# https://devcenter.wercker.com/administration/services/
+# services:
+    # - postgres
+    # https://devcenter.wercker.com/administration/services/examples/postgresql/
+
+    # - mongo
+    # https://devcenter.wercker.com/administration/services/examples/mongodb/
+
+# This is the build pipeline. Pipelines are the core of wercker
+# Read more about pipelines on our dev center
+# https://devcenter.wercker.com/development/pipelines/
+build:
+    # Steps make up the actions in your pipeline
+    # Read more about steps on our dev center:
+    # https://devcenter.wercker.com/development/steps/
+
+  steps:
+    - install-packages:
+        packages: git
+    - script:
+        name: download hugo-theme-learn
+        cwd: docs/.build
+        code: |
+            test -d ./themes || mkdir ./themes
+            git clone https://github.com/matcornic/hugo-theme-learn.git ./themes/hugo-theme-learn && rm -rf hugo-theme-learn/.git
+    - script:
+        name: prepare contents
+        cwd: docs/.build
+        code: |
+            echo "copy contents to docs/.build/content"
+            test -d ./content || mkdir ./content
+            cp -r ../* ./content/
+            echo "copy images"
+            test -d ./static || mkdir ./static
+            mv ./content/images ./static/
+    - arjen/hugo-build:
+        basedir: "docs/.build"
+        version: "0.47"
+        theme: hugo-theme-learn
+        flags: --buildDrafts=true
+
+deploy:
+  steps:
+    - install-packages:
+        packages: git ssh-client
+    - lukevivier/gh-pages@0.2.1:
+        token: $GIT_TOKEN
+        basedir: docs/.build/public

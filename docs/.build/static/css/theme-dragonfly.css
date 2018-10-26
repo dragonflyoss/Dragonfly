@@ -1,0 +1,11 @@
+#body img {
+/*    margin: 3rem auto;*/
+    margin: auto;
+    display: inline;
+    text-align: center;
+}
+#body .video-container {
+    margin: 3rem auto;
+    display: block;
+    text-align: center;
+}
