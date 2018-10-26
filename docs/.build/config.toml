@@ -1,0 +1,53 @@
+baseURL = "https://alibaba.github.io/Dragonfly"
+languageCode = "en-US"
+defaultContentLanguage = "en"
+
+title = "Dragonfly Documentation"
+theme = "hugo-theme-learn-master"
+themesdir = "themes"
+metaDataFormat = "yaml"
+defaultContentLanguageInSubdir= true
+
+[params]
+  editURL = "https://github.com/alibaba/Dragonfly/edit/master/docs/"
+  description = "DragonFly Documentation"
+  author = "Team Dragonfly"
+  showVisitedLinks = true
+  disableBreadcrumb = true
+  disableNextPrev = true
+  themeVariant = "dragonfly"
+
+[outputs]
+home = [ "HTML", "RSS", "JSON"]
+
+[Languages]
+[Languages.en]
+title = "DragonFly Documentation"
+weight = 1
+languageName = "English"
+
+[[Languages.en.menu.shortcuts]]
+name = "<i class='fab fa-fw fa-github'></i> View on Github"
+identifier = "ds"
+url = "https://github.com/alibaba/Dragonfly"
+weight = 1
+
+[[Languages.en.menu.shortcuts]]
+name = "<i class='fas fa-fw fa-map-signs'></i> Roadmap"
+url = "roadmap"
+weight = 2
+
+[[Languages.en.menu.shortcuts]]
+name = "<i class='fas fa-fw fa-lightbulb'></i> Contributing Guide"
+url = "contributing"
+weight = 3
+
+[[Languages.en.menu.shortcuts]]
+name = "<i class='fas fa-fw fa-user-cog'></i> Maintainers"
+url = "maintainers"
+weight = 4
+
+[[Languages.en.menu.shortcuts]]
+name = "<i class='fas fa-fw fa-gavel'></i> Code of Conduct"
+url = "code_of_conduct"
+weight = 5
