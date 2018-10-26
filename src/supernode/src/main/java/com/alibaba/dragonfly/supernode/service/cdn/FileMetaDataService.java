@@ -29,7 +29,7 @@ public interface FileMetaDataService {
 
     boolean updateAccessTime(String taskId, long accessTime);
 
-    boolean updateLastModified(String taskId, long lastModified);
+    boolean updateLastModifiedAndETag(String taskId, long lastModified, String eTag);
 
     boolean updateStatusAndResult(String taskId, boolean finish, boolean success, String realMd5, Long fileLength);
 

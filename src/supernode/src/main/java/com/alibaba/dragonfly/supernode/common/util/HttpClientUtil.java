@@ -71,8 +71,8 @@ public class HttpClientUtil {
         }
     }
 
-    public static boolean isExpired(String fileUrl, long lastModified, String[] headers) throws MalformedURLException {
-        if (lastModified <= 0) {
+    public static boolean isExpired(String fileUrl, long lastModified, String eTag, String[] headers) throws MalformedURLException {
+        if (lastModified <= 0 && eTag == null) {
             return true;
         }
         int times = 2;
@@ -86,14 +86,19 @@ public class HttpClientUtil {
                 conn.setUseCaches(false);
                 conn.setConnectTimeout(2000);
                 conn.setReadTimeout(1000);
-                conn.setIfModifiedSince(lastModified);
+                if (lastModified > 0) {
+                    conn.setIfModifiedSince(lastModified);
+                }
+                if (eTag != null) {
+                    conn.setRequestProperty("If-None-Match", eTag);
+                }
 
                 conn.connect();
                 code = conn.getResponseCode();
                 if (REDIRECTED_CODE.contains(code)) {
                     fileUrl = conn.getHeaderField("Location");
                     if (StringUtils.isNotBlank(fileUrl)) {
-                        return isExpired(fileUrl, lastModified, null);
+                        return isExpired(fileUrl, lastModified, eTag, null);
                     }
                 }
                 if (code == HttpURLConnection.HTTP_NOT_MODIFIED) {
