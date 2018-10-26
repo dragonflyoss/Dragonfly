@@ -32,8 +32,10 @@ build:
         cwd: docs/.build
         code: |
             echo "copy contents to docs/.build/content"
-            cp -r ../* ./content
+            test -d ./content || mkdir ./content
+            cp -r ../* ./content/
             echo "copy images"
+            test -d ./static || mkdir ./static
             mv ./content/images ./static/
     - arjen/hugo-build:
         basedir: "docs/.build"
