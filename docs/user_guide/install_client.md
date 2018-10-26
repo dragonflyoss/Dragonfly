@@ -1,4 +1,10 @@
-# Install Client
+---
+title: "Install Client"
+weight: 5
+---
+
+This topic explains how to install the client.
+<!--more-->
 
 - **Install From Latest Package**
 

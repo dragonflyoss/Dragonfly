@@ -36,6 +36,7 @@ build:
             echo "copy contents to docs/.build/content"
             test -d ./content || mkdir ./content
             cp -r ../* ./content/
+            rm -rf ./content/zh
             echo "copy images"
             test -d ./static || mkdir ./static
             mv ./content/images ./static/

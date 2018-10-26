@@ -1,5 +1,10 @@
-API
-===
+---
+title: "APIs Provided by Supernode"
+weight: 1
+---
+
+This topic explains how to use the APIs provided by Supernode.
+<!--more-->
 
 This section describes APIs that is provided by the supernode, aka cluster manager.
 
