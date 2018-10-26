@@ -48,6 +48,7 @@ const (
 	TaskCodeURLNotReachable = 607
 	TaskCodeNeedAuth        = 608
 	TaskCodeWaitAuth        = 609
+	TaskCodeSourceError     = 610
 )
 
 /* the reason of backing to source */
@@ -61,6 +62,7 @@ const (
 	BackSourceReasonWriteError    = 6
 	BackSourceReasonHostSysError  = 7
 	BackSourceReasonNodeEmpty     = 8
+	BackSourceReasonSourceError   = 10
 	BackSourceReasonUserSpecified = 100
 	ForceNotBackSourceAddition    = 1000
 )

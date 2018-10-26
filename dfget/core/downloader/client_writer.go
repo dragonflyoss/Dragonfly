@@ -14,14 +14,8 @@
  * limitations under the License.
  */
 
-package types
+package downloader
 
-// PullPieceTaskRequest is send to supernodes when pulling pieces.
-type PullPieceTaskRequest struct {
-	SrcCid string `request:"srcCid"`
-	DstCid string `request:"dstCid"`
-	Range  string `request:"range"`
-	Result int    `request:"result"`
-	Status int    `request:"status"`
-	TaskID string `request:"taskId"`
+// ClientWriter x
+type ClientWriter struct {
 }
