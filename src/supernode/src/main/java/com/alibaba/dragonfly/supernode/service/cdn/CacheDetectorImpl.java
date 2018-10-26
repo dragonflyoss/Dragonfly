@@ -113,8 +113,8 @@ public class CacheDetectorImpl implements CacheDetector {
     }
 
     private int parseBreakNum(Task task, FileMetaData fileMetaData) throws MalformedURLException {
-        if (fileMetaData.getLastModified() >= 0
-            && HttpClientUtil.isExpired(task.getSourceUrl(), fileMetaData.getLastModified(), task.getHeaders())) {
+        // both lastModified and eTag not satisfy
+        if (HttpClientUtil.isExpired(task.getSourceUrl(), fileMetaData.getLastModified(), fileMetaData.getETag(), task.getHeaders())) {
             return 0;
         }
 

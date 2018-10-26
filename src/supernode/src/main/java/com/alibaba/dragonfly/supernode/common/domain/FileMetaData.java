@@ -30,6 +30,7 @@ public class FileMetaData {
     private long accessTime;
 
     private long lastModified;
+    private String eTag;
     private boolean finish;
     private boolean success;
     /**
@@ -140,5 +141,13 @@ public class FileMetaData {
 
     public void setPieceSize(Integer pieceSize) {
         this.pieceSize = pieceSize;
+    }
+
+    public String getETag() {
+        return eTag;
+    }
+
+    public void setETag(String eTag) {
+        this.eTag = eTag;
     }
 }
