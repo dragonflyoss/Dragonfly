@@ -1,5 +1,10 @@
-Dfdaemon CLI Manual
 ---
+title: "dfdaemon"
+weight: 1
+---
+
+This topic explains how to use the dfdaemon command.
+<!--more-->
 
 ## NAME
 
