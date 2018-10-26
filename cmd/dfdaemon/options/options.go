@@ -25,7 +25,7 @@ type Options struct {
 	// Filter specified url fields.
 	URLFilter string
 
-	// Notbs not try back source to download if throw exception.
+	// Notbs indicates whether to not back source to download when p2p fails.
 	Notbs bool
 
 	// MaxProcs the maximum number of CPUs that the dfdaemon can use.
