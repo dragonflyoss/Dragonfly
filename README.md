@@ -9,7 +9,7 @@
 [![CircleCI](https://circleci.com/gh/alibaba/Dragonfly.svg?style=svg)](https://circleci.com/gh/alibaba/Dragonfly)
 [![codecov](https://codecov.io/gh/alibaba/Dragonfly/branch/master/graph/badge.svg)](https://codecov.io/gh/alibaba/Dragonfly)
 
-## ![Dragonfly](docs/images/logo.png)
+![Dragonfly](docs/images/logo/dragonfly-linear.png)
 
 ## Contents
 
