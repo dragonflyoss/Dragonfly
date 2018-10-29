@@ -1,7 +1,11 @@
+---
 Frequently Asked Questions
 ---
 
+# Frequently Asked Questions (FAQ)
+
 ## What is Dragonfly
+
 **Dragonfly is an intelligent P2P based image and file distribution system.**
 
 It aims to resolve issues related to low-efficiency, low-success rate and waste of network bandwidth in file transferring process. Especially in large-scale file distribution scenarios such as application distribution, cache distribution, log distribution, image distribution, etc.
@@ -25,7 +29,8 @@ See [Use Dragonfly to Download a File](docs/quick_start/_index.md#use-dragonfly-
 ## What is SuperNode
 
 SuperNode is a long-time process with two primary responsibilities:
-* It's the tracker and scheduler in the P2P network that choose appropriate downloading net-path for each peer. 
+
+* It's the tracker and scheduler in the P2P network that choose appropriate downloading net-path for each peer.
 * It's also a CDN server that caches downloaded data from source to avoid downloading same files repeatedly.
 
 ## What is dfget

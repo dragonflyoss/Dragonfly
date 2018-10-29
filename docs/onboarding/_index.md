@@ -4,6 +4,8 @@ weight = 1
 pre = "<b>0. </b>"
 +++
 
+# Onboarding
+
 Before getting started, let's take a quick look at how to use this documentation portal of Dragonfly.
 
 ## Navigating
@@ -33,7 +35,7 @@ Some topics can be lengthy. To jump to a specific section, do the following:
     ![](../images/bt_mini_toc_en.png)
 2. In the mini TOC overlay, click a section heading.
 
-    ![](../images/sc_mini_toc_en.png)  
+    ![](../images/sc_mini_toc_en.png)
 
 ### Navigating to other related resources
 
@@ -43,7 +45,7 @@ To navigate to other related resources, such as the Dragonfly roadmap, github re
 
 Given that the Dragonfly documentation portal is a static website, you can find target information in a blink of an eye.
 
-To perform a search, type your key words in the search box on the top of the left-side navigation pane, and matching results will appear in the overlay. 
+To perform a search, type your key words in the search box on the top of the left-side navigation pane, and matching results will appear in the overlay.
 
 ![](../images/f_search_box_en.png)
 

@@ -3,14 +3,15 @@ title: "dfdaemon"
 weight: 1
 ---
 
+# dfdaemon
+
 This topic explains how to use the dfdaemon command.
-<!--more-->
 
 ## NAME
 
 dfdaemon - a proxy between pouchd/dockerd and registry used for pulling images.
 
-##SYNOPSIS
+## SYNOPSIS
 
 dfdaemon [options]...
 
