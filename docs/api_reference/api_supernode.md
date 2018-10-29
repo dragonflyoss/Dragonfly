@@ -125,7 +125,7 @@ An example resonse:
 ```
 
 This means the client has to wait, since no peer can serve this piece now. And if
-there is a peer which can serve this request, there will be a reponse like this:
+there is a peer which can serve this request, there will be a response like this:
 
 ```json
 {

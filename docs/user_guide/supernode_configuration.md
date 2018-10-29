@@ -3,6 +3,8 @@ title: "SuperNode Configuration"
 weight: 15
 ---
 
+# SuperNode Configuration
+
 This topic explains the configuration of SuperNode.
 <!--more-->
 
@@ -20,11 +22,13 @@ supernode.schedulerCorePoolSize | 10 | the core pool size of ScheduledExecutorSe
 Currently, the SuperNode is written by Java based on spring-boot. It can easily set properties through the following methods:
 
 * Commandline parameter:
+
     ```bash
     java -D<propertyName>=<propertyValue> -jar supernode.jar
     ```
-    
+
 * Configuration file:
+
     ```bash
     java -Dspring.config.location=./config.properties,<otherConfigFilePath> -jar supernode.jar
     ```
