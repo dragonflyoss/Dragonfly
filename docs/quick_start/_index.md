@@ -60,17 +60,24 @@ dfget -u 'https://github.com/alibaba/Dragonfly/blob/master/docs/images/logo.png'
 
 We have 2 steps to do before we pull an image:
 
-1. start `dfdaemon` with a specified registry:
+* start `dfdaemon` with a specified registry, such as `https://index.docker.io`:
 
     ```bash
-    dfdaemon --registry https://index.docker.io
+    nohup dfdaemon --registry https://index.docker.io > /dev/null 2>&1 &
     ```
 
-2. configure dockerd and restart:
+* configure dockerd and restart:
+  * Add this line to dockerd config file [/etc/docker/daemon.json](https://docs.docker.com/registry/recipes/mirror/#configure-the-docker-daemon)
 
-    ```json
-    "registry-mirrors": ["http://127.0.0.1:65001"]
-    ```
+      ```json
+      "registry-mirrors": ["http://127.0.0.1:65001"]
+      ```
+
+  * restart dockerd
+
+      ```bash
+      systemctl restart docker
+      ```
 
 > NOTE: make sure the SuperNode is running
 
