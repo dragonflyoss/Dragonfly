@@ -60,10 +60,10 @@ dfget -u 'https://github.com/alibaba/Dragonfly/blob/master/docs/images/logo.png'
 
 We have 2 steps to do before we pull an image:
 
-1. start `df-daemon` with a specified registry:
+1. start `dfdaemon` with a specified registry:
 
     ```bash
-    df-daemon --registry https://index.docker.io
+    dfdaemon --registry https://index.docker.io
     ```
 
 2. configure dockerd and restart:
