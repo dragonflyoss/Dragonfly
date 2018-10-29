@@ -28,10 +28,25 @@ docker run -d -p 8001:8001 -p 8002:8002 ${imageName}
 
 Download the proper package for your operating system and architecture:
 
-* [df-client: macOS 64-bit](https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_darwin_amd64.tar.gz)
-* [df-client: linux 64-bit](https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz)
+* df-client: linux 64-bit
+  * [Download from GitHub](https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz)
+  * [Download from OSS](http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_linux_amd64.tar.gz)
+* df-client: macOS 64-bit
+  * [Download from GitHub](https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_darwin_amd64.tar.gz)
+  * [Download from OSS](http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_darwin_amd64.tar.gz)
 
 Uncompress the package and add the directory `df-client` to your `PATH` environment variable to make you can directly use `dfget` and `dfdaemon`.
+
+Here is the commands to download and install `df-client` in `$HOME`:
+
+```bash
+cd $HOME
+# select an URL listed above
+wget https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz
+tar -zxf df-client_0.2.0_linux_amd64.tar.gz
+# execute or add this line to ~/.bashrc
+export PATH=$PATH:$HOME/df-client/
+```
 
 ## Use Dragonfly to Download a File
 
