@@ -17,20 +17,20 @@
 #
 # env.sh must be executed in its parent directory
 #
-curDir=`pwd`
+curDir=$(pwd)
 
-DRAGONFLY_HOME=${curDir%/build/client*}
-BUILD_GOPATH=/tmp/dragonfly/build
-BUILD_SOURCE_HOME=${BUILD_GOPATH}/src/github.com/alibaba/Dragonfly
+export DRAGONFLY_HOME=${curDir%/build/client*}
+export BUILD_GOPATH=/tmp/dragonfly/build
+export BUILD_SOURCE_HOME="${BUILD_GOPATH}/src/github.com/alibaba/Dragonfly"
 
-INSTALL_HOME=${HOME}/.dragonfly
+export INSTALL_HOME="${HOME}/.dragonfly"
 
-CONFIGURED_VARIABLES_FILE=${BUILD_GOPATH}/configured_variables.sh
+export CONFIGURED_VARIABLES_FILE="${BUILD_GOPATH}/configured_variables.sh"
 
 #
 # source directories
 #
-GO_SOURCE_DIRECTORIES=( \
+export GO_SOURCE_DIRECTORIES=( \
     "dfdaemon" \
     "dfget" \
     "version" \
