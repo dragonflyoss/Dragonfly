@@ -230,7 +230,7 @@ public class Downloader implements Callable<Boolean> {
                         }
                     }
                     if (code == checkCode) {
-                        fileMetaDataService.updateLastModified(taskId, conn.getLastModified());
+                        fileMetaDataService.updateLastModifiedAndETag(taskId, conn.getLastModified(), conn.getHeaderField("ETag"));
                         isConnected = true;
                         break;
                     }

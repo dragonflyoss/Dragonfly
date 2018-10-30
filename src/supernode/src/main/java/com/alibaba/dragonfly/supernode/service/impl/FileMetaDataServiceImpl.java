@@ -116,7 +116,7 @@ public class FileMetaDataServiceImpl implements FileMetaDataService {
     }
 
     @Override
-    public boolean updateLastModified(String taskId, long lastModified) {
+    public boolean updateLastModifiedAndETag(String taskId, long lastModified, String eTag) {
         String lockName = lockService.getLockName(LockConstants.FILE_META_DATA_LOCK, taskId);
         lockService.lock(lockName);
         try {
@@ -124,11 +124,12 @@ public class FileMetaDataServiceImpl implements FileMetaDataService {
             FileMetaData metaData = readMetaDataByUnlock(metaPath);
             if (metaData != null) {
                 metaData.setLastModified(lastModified);
+                metaData.setETag(eTag);
                 Files.write(metaPath, JSON.toJSONBytes(metaData));
                 return true;
             }
         } catch (Exception e) {
-            logger.error("E_updateLastModified taskId:{}", taskId, e);
+            logger.error("E_updateLastModifiedAndETag taskId:{}", taskId, e);
         } finally {
             lockService.unlock(lockName);
         }
