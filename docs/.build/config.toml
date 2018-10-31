@@ -36,18 +36,3 @@ weight = 1
 name = "<i class='fas fa-fw fa-map-signs'></i> Roadmap"
 url = "roadmap"
 weight = 2
-
-[[Languages.en.menu.shortcuts]]
-name = "<i class='fas fa-fw fa-lightbulb'></i> Contributing Guide"
-url = "contributing"
-weight = 3
-
-[[Languages.en.menu.shortcuts]]
-name = "<i class='fas fa-fw fa-user-cog'></i> Maintainers"
-url = "maintainers"
-weight = 4
-
-[[Languages.en.menu.shortcuts]]
-name = "<i class='fas fa-fw fa-gavel'></i> Code of Conduct"
-url = "code_of_conduct"
-weight = 5

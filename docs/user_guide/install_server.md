@@ -3,146 +3,139 @@ title: "Installing Server"
 weight: 1
 ---
 
-# Server Installation
-
-This guide provides instructions for developers to build and run cluster manager (supernode) from source code.
+This topic explains how to install the Dragonfly server.
 <!--more-->
 
 {{% notice tip %}}
-The recommended deployment for the cluster manager is that at least two machines with at least 8-core 16G and best to provide Gigabit Ethernet.
+For a data center or a cluster, we recommend that you use at least two machines with eight cores, 16GB RAM and Gigabit Ethernet connections for deploying supernodes.
 {{% /notice %}}
 
-## Step 1: Requirements
+## Context
 
-You can either deploy the cluster manager (supernode) on the Docker container or on the physical machine.
+There are two layers in Dragonfly’s architecture: server (supernodes) and client (hosts). Install the supernodes in one of the following ways:
 
-### 1. Deployed on the Docker container
+- Deploying with Docker: Recommended for quick local deployment and test.
+- Deploying with physical machines: Recommended for production usage.
 
-Software              | Required Version
-----------------------|--------------------------
-Git                   | 1.9.1 +
-Docker                | 1.12.0 +
+## Prerequisites
 
-### 2. Deployed on the physical machine
+When deploying with Docker, the following conditions must be met.
 
-Software              | Required Version
-----------------------|--------------------------
-Git                   | 1.9.1 +
-Jdk                   | 1.7 +
-Maven                 | 3.0.3 +
-Nginx                 | 0.8 +
+Required Software | Version Limit
+---|---
+Git|1.9.1+
+Docker|1.12.0+
 
-## Step2: Getting the source code
+When deploying with physical machines, the following conditions must be met.
 
-   ```
-   $ git clone https://github.com/alibaba/Dragonfly.git
-   ```
+Required Software | Version Limit
+---|---
+Git|1.9.1+
+JDK|1.7+
+Maven|3.0.3+
+Nginx|0.8+
 
-## Step3：Build and run
+## Procedure - When Deploying with Docker
 
-### 1. Run on Docker
+1. Obtain the source code of Dragonfly.
 
-Enter the project directory
+    ```sh
+    git clone https://github.com/alibaba/Dragonfly.git
+    ```
 
-   ```
-   $ cd Dragonfly
-   ```
+2. Enter the project directory.
 
-Build Docker image
+    ```sh
+    cd Dragonfly
+    ```
 
-Build image
+3. Build the Docker image.
 
-   ```bash
-   ./build/build.sh supernode
-   ```
+    ```sh
+    ./build/build.sh supernode
+    ```
 
-Show Docker images
+4. Obtain the latest Docker image ID of the supernode.
 
-   ```bash
-   docker image ls
-   ```
+    ```sh
+    docker image ls|grep 'supernode' |awk '{print $3}' | head -n1
+    ```
 
-Get latest `supernode` Docker imageId
+5. Start the supernode.
 
-   ```bash
-   docker image ls | grep supernode |awk '{print $3}' | head -n1
-   ```
+    ```sh
+    # Replace ${supernodeDockerImageId} with the ID obtained at the previous step
+    docker run -d -p 8001:8001 -p 8002:8002 ${supernodeDockerImageId}
+    ```
 
-Start Docker container
+## Procedure - When Deploying with Physical Machines
 
-   ```
-   $ docker run -d -p 8001:8001 -p 8002:8002 ${superNodeDockerImageId}
-   ```
+1. Obtain the source code of Dragonfly.
 
-### 2. Run on physical machine
+    ```sh
+    git clone https://github.com/alibaba/Dragonfly.git
+    ```
 
-Enter the project directory
+2. Enter the project directory.
 
-   ```bash
-   cd dragonfly/src/supernode
-   ```
+    ```sh
+    cd Dragonfly/src/supernode
+    ```
 
-Build the source code
+3. Compile the source code.
 
-   ```bash
-   mvn clean -U install -DskipTests=true
-   ```
+    ```sh
+    mvn clean -U install -DskipTests=true
+    ```
 
-Start `supernode` server
+4. Start the supernode.
 
-just start it with this command
+    ```sh
+    # If the 'supernode.baseHome’ is not specified, then the default value '/home/admin/supernode’ will be used.
+    java -Dsupernode.baseHome=/home/admin/supernode -jar target/supernode.jar
+    ```
 
-   ```bash
-   # the default value of 'supernode.baseHome' is '/home/admin/supernode' if you don't set
-   java -Dsupernode.baseHome=/home/admin/supernode -jar target/supernode.jar
-   ```
+5. Add the following configuration items to the Nginx configuration file.
 
-Start nginx
+    {{% notice tip %}} The path of the Nginx configuration file is something like `src/supernode/src/main/docker/sources/nginx.conf`.
+    {{% /notice %}}
 
-Add nginx config
-
-  ```
-  server {
-        listen              8001;
-        location / {
-            # must be ${supernode.baseHome}/repo
-            root /home/admin/supernode/repo;
-        }
+    ```
+    server {
+    listen 8001;
+    location / {
+      # Must be ${supernode.baseHome}/repo
+      root /home/admin/supernode/repo;
+     }
     }
 
     server {
-        listen              8002;
-        location /peer {
-            proxy_pass   http://127.0.0.1:8080;
-        }
+    listen 8002;
+    location /peer {
+      proxy_pass http://127.0.0.1:8080;
+     }
     }
-  ```
+    ```
 
-Example of nginx config
+6. Start Nginx.
 
-  ```bash
-  less src/supernode/src/main/docker/sources/nginx.conf
-  ```
+    ```sh
+    sudo nginx
+    ```
 
-Start nginx
+## After this Task
 
-  ```
-  $ sudo nginx
-  ```
+- After the supernode is installed, run the following commands to verify if Nginx and Tomcat are started, and if Port `8001` and `8002` are available.
 
-## Step4: Verify installation
+    ```sh
+    ps aux|grep nginx
+    ps aux|grep tomcat
+    telnet 127.0.0.1 8001
+    telent 127.0.0.1 8002
+    ```
 
-Check if nginx and tomcat is started and port (8001,8002) is available.
+- Install the Dragonfly client and test if the downloading works.
 
-  ```
-  $ ps aux|grep nginx
-  $ ps aux|grep tomcat
-  $ telnet 127.0.0.1 8001
-  $ telent 127.0.0.1 8002
-  ```
-
-Install dragonfly client and use dragonfly client to download resource through dragonfly.
-
-  ```
-  $ dfget --url "http://${resourceUrl}" --output ./resource.png --node "127.0.0.1"
-  ```
+    ```sh
+    dfget --url "http://${resourceUrl}" --output ./resource.png --node "127.0.0.1"
+    ```

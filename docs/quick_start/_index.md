@@ -4,85 +4,130 @@ weight = 20
 pre = "<b>2. </b>"
 +++
 
-# Quick Start
-
-The latest release version is 0.2.0, you can quickly experience Dragonfly in the following simple steps.
+Simply by starting a supernode in your Docker container, and installing the Dragonfly client, you can start downloading with Dragonfly.
 <!--more-->
 
-## Start SuperNode on Docker Container
+## Prerequisites
 
-We provide 2 images in different places to speed up your pulling, you can choose one of them according to your location.
+You have started your Docker container.
 
-* China: registry.cn-hangzhou.aliyuncs.com/alidragonfly/supernode:0.2.0
-* USA: registry.us-west-1.aliyuncs.com/alidragonfly/supernode:0.2.0
+## Starting a Supernode in Your Docker Container
 
-Here is the commands if you choose the registry `registry.cn-hangzhou.aliyuncs.com/alidragonfly/supernode:0.2.0`:
+1. Pull the docker image we provided.
+
+    ```bash
+    # Replace ${imageName} with the real image name
+    docker pull ${imageName}
+    ```
+
+2. Start a supernode.
+
+    ```bash
+    # Replace ${imageName} with the real image name
+    docker run -d -p 8001:8001 -p 8002:8002 ${imageName}
+    ```
+
+We provided two images in different locations:
+
+- China: `registry.cn-hangzhou.aliyuncs.com/alidragonfly/supernode:0.2.0`
+- US: `registry.us-west-1.aliyuncs.com/alidragonfly/supernode:0.2.0`
+
+For example, if you're in China, run the following commands:
 
 ```bash
-imageName="registry.cn-hangzhou.aliyuncs.com/alidragonfly/supernode:0.2.0"
-docker pull ${imageName}
-docker run -d -p 8001:8001 -p 8002:8002 ${imageName}
+docker pull registry.cn-hangzhou.aliyuncs.com/alidragonfly/supernode:0.2.0
+docker run -d -p 8001:8001 -p 8002:8002 registry.cn-hangzhou.aliyuncs.com/alidragonfly/supernode:0.2.0
 ```
 
-## Install Dragonfly Client
+## Installing Dragonfly Client
 
-Download the proper package for your operating system and architecture:
+1. Download a package of the client.
 
-* df-client: linux 64-bit
-  * [Download from GitHub](https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz)
-  * [Download from OSS](http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_linux_amd64.tar.gz)
-* df-client: macOS 64-bit
-  * [Download from GitHub](https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_darwin_amd64.tar.gz)
-  * [Download from OSS](http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_darwin_amd64.tar.gz)
+    ```bash
+    cd $HOME
+    # Replace ${package} with a package appropriate for your operating system and location
+    wget ${package}
+    ```
 
-Uncompress the package and add the directory `df-client` to your `PATH` environment variable to make you can directly use `dfget` and `dfdaemon`.
+2. Unzip the package.
 
-Here is the commands to download and install `df-client` in `$HOME`:
+    ```bash
+    tar -zxf df-client_0.2.0_linux_amd64.tar.gz
+    ```
+
+3. Add the directory of `df-client` to your `PATH` environment variable to make sure you can directly use `dfget` and `dfdaemon` command.
+
+    ```bash
+    # Execute or add this line to ~/.bashrc
+    export PATH=$PATH:$HOME/df-client/
+    ```
+
+We provided different packages to suit your need. Please choose one and replace the `${package}` with it.
+
+- If you're in China:
+
+    - [Linux 64-bit](http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_linux_amd64.tar.gz): `http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_linux_amd64.tar.gz`
+
+    - [MacOS 64-bit](http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_darwin_amd64.tar.gz): `http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_darwin_amd64.tar.gz`
+
+- If you're not in China:
+
+    - [Linux 64-bit](https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz): `https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz`
+
+    - [MacOS 64-bit](https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_darwin_amd64.tar.gz): `https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_darwin_amd64.tar.gz`
+
+For example, if you're in China and using Linux, run the following commands:
 
 ```bash
 cd $HOME
-# select an URL listed above
-wget https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz
+wget http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_linux_amd64.tar.gz
 tar -zxf df-client_0.2.0_linux_amd64.tar.gz
 # execute or add this line to ~/.bashrc
 export PATH=$PATH:$HOME/df-client/
 ```
 
-## Use Dragonfly to Download a File
+## Downloading a File with Dragonfly
 
-It's very simple to use Dragonfly to download a file, just like this:
+Once you have installed the Dragonfly client, you can use the `dfget` command to download a file.
 
 ```bash
 dfget -u 'https://github.com/alibaba/Dragonfly/blob/master/docs/images/logo.png' -o /tmp/logo.png
 ```
 
-## Use Dragonfly to Pull an Image
+{{% notice tip %}}
+For more information on the dfget command, see [dfget]({{< ref "dfget.md" >}}).
+{{% /notice %}}
 
-We have 2 steps to do before we pull an image:
+## Pulling an Image with Dragonfly
 
-* start `dfdaemon` with a specified registry, such as `https://index.docker.io`:
+1. Start `dfdaemon` with a specified registry, such as `https://index.docker.io`.
 
     ```bash
     nohup dfdaemon --registry https://index.docker.io > /dev/null 2>&1 &
     ```
 
-* configure dockerd and restart:
-  * Add this line to dockerd config file [/etc/docker/daemon.json](https://docs.docker.com/registry/recipes/mirror/#configure-the-docker-daemon)
+2. Add the following line to the dockerd configuration file [/etc/docker/daemon.json](https://docs.docker.com/registry/recipes/mirror/#configure-the-docker-daemon).
 
-      ```json
-      "registry-mirrors": ["http://127.0.0.1:65001"]
-      ```
+    ```json
+    "registry-mirrors": ["http://127.0.0.1:65001"]
+    ```
 
-  * restart dockerd
+3. Restart dockerd.
 
-      ```bash
-      systemctl restart docker
-      ```
+    ```bash
+    systemctl restart docker
+    ```
 
-> NOTE: make sure the SuperNode is running
+4. Download an image with Dragonfly.
 
-That's all we need to do, then we can pull an image by Dragonfly just as usual:
+    ```bash
+    docker pull nginx:latest
+    ```
 
-```bash
-docker pull nginx:latest
-```
+## Related Topics
+
+- [Installing Server]({{< ref "install_server.md" >}})
+- [Installing Client]({{< ref "install_client.md" >}})
+- [Downloading Files]({{< ref "download_files.md" >}})
+- [supernode Configuration]({{< ref "supernode_configuration.md" >}})
+- [dfget]({{< ref "dfget.md" >}})
