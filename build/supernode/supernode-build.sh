@@ -14,12 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-curDir=`cd $(dirname $0) && pwd`
+curDir=$(cd "$(dirname "$0")" && pwd)
 SUPERNODE_SOURCE_HOME="${curDir}/../../src/supernode"
 
 ACTION=$1
 
-. ${curDir}/../log.sh
+. "${curDir}/../log.sh"
 
 usage() {
     echo "Usage: $0 {source|image|all}"
@@ -51,7 +51,7 @@ check() {
 }
 
 main() {
-    cd ${SUPERNODE_SOURCE_HOME}
+    cd "${SUPERNODE_SOURCE_HOME}"
     case "${ACTION}" in
         source)
             compileSupernode
