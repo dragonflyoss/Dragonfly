@@ -76,7 +76,7 @@ check() {
     # go vet check
     echo "CHECK: go vet, check code syntax"
     packages=$(go list ./... | grep -vE "${exclude}" | sed 's/^_//')
-    go vet "${packages}" 2>&1
+    echo "${packages}" | xargs go vet 2>&1
 }
 
 dfdaemon() {
@@ -170,7 +170,6 @@ usage() {
 
 main() {
     cmd="${COMMANDS}"
-    export action=$(echo ${cmd} | grep -w "$1")
     test -z "$1" && usage
     $1
 }
