@@ -14,19 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-curDir=`cd $(dirname $0) && pwd`
-BASE_HOME=`cd ${curDir}/.. && pwd`
-SOURCE_DIR="${BASE_HOME}/src"
+curDir=$(cd "$(dirname "$0")" && pwd)
+BASE_HOME=$(cd "${curDir}"/.. && pwd)
+
 BUILD_DIR="${BASE_HOME}/build"
 
 INSTALL_PREFIX="${HOME}/.dragonfly"
 
-. ${BUILD_DIR}/log.sh
+. "${BUILD_DIR}/log.sh"
 
 printResult() {
     filed=$1
     result=$2
-    if [ ${result} -eq 0 ]; then
+    if [ "${result}" -eq 0 ]; then
         info "${filed}" "SUCCESS"
     else
         error "${filed}" "FAILURE"
@@ -36,9 +36,9 @@ buildClient() {
     field="dfdaemon&dfget"
     echo "====================================================================="
     info "${field}" "compiling dfdaemon and dfget..."
-    cd ${BUILD_DIR}/client
-    test -d ${INSTALL_PREFIX} || mkdir -p ${INSTALL_PREFIX}
-    ./configure --prefix=${INSTALL_PREFIX}
+    cd "${BUILD_DIR}/client"
+    test -d "${INSTALL_PREFIX}" || mkdir -p "${INSTALL_PREFIX}"
+    ./configure --prefix="${INSTALL_PREFIX}"
     make && make install && export PATH=$PATH:${INSTALL_PREFIX}/df-client
     retCode=$?
     make clean
@@ -50,7 +50,7 @@ buildSupernode() {
     field="supernode"
     echo "====================================================================="
     info "${field}" "compiling source and building image..."
-    ${BUILD_DIR}/supernode/supernode-build.sh all
+    "${BUILD_DIR}/supernode/supernode-build.sh" all
     retCode=$?
     printResult "${field}" ${retCode}
     return ${retCode}
