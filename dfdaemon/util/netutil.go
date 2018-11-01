@@ -27,6 +27,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var defaultRateLimit = "20M"
+
 // NetLimit parse speed of interface that it has prefix of eth
 func NetLimit() string {
 	defer func() {
@@ -35,7 +37,7 @@ func NetLimit() string {
 		}
 	}()
 	if runtime.NumCPU() < 24 {
-		return "20M"
+		return defaultRateLimit
 	}
 
 	var ethtool string
@@ -46,13 +48,13 @@ func NetLimit() string {
 	}
 	if ethtool == "" {
 		log.Warn("ethtool not found")
-		return "20M"
+		return defaultRateLimit
 	}
 
 	var maxInterfaceLimit = uint64(0)
 	interfaces, err := net.Interfaces()
 	if err != nil {
-		return "20M"
+		return defaultRateLimit
 	}
 	compile := regexp.MustCompile("^[[:space:]]*([[:digit:]]+)[[:space:]]*Mb/s[[:space:]]*$")
 
@@ -96,5 +98,5 @@ func NetLimit() string {
 		return strconv.FormatUint(maxInterfaceLimit/8, 10) + "M"
 	}
 
-	return "20M"
+	return defaultRateLimit
 }

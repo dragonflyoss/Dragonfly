@@ -218,13 +218,6 @@ func getTaskURL(rawURL string, filters []string) string {
 	return rawURL[:idx]
 }
 
-func getTaskPath(taskFileName string) string {
-	if !util.IsEmptyStr(taskFileName) {
-		return config.PeerHTTPPathPrefix + taskFileName
-	}
-	return ""
-}
-
 func adjustSupernodeList(nodes []string) []string {
 	switch nodesLen := len(nodes); nodesLen {
 	case 0:

@@ -5,15 +5,16 @@ version: 2
 jobs:
   markdownlint-misspell-shellcheck:
     docker:
-      # this image is build from Dockerfile located in ./.circleci/Dockerfile
-      - image: allencloud/pouchlint:v0.1
-    working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
+      # this image is build from Dockerfile 
+      # https://github.com/pouchcontainer/pouchlinter/blob/master/Dockerfile
+      - image: pouchcontainer/pouchlinter:v0.1
+    working_directory: /go/src/github.com/alibaba/Dragonfly
     steps:
       - checkout
       - run:
-          name: use markdownlint v0.4.0 to lint markdown file (https://github.com/markdownlint/markdownlint)
+          name: use markdownlint v0.5.0 to lint markdown file (https://github.com/markdownlint/markdownlint)
           command: |
-            find  ./ -name  "*.md" | grep -v vendor | grep -v commandline |  grep -v .github |  grep -v swagger |  grep -v api |  xargs mdl -r ~MD002,~MD007,~MD010,~MD013,~MD024,~MD026,~MD029,~MD033,~MD036
+            find  ./ -name  "*.md" | grep -v vendor | grep -v commandline |  grep -v .github |  grep -v swagger |  grep -v api |  xargs mdl -r ~MD002,~MD007,~MD010,~MD013,~MD024,~MD026,~MD029,~MD033,~MD036,~MD046
       - run:
           name: use opensource tool client9/misspell to correct commonly misspelled English words 
           command: |
@@ -22,11 +23,26 @@ jobs:
           name: use ShellCheck (https://github.com/koalaman/shellcheck) to check the validateness of shell scripts in pouch repo
           command: |
             find ./ -name "*.sh" | grep -v vendor | xargs shellcheck
+  
+  gocode-check-via-gometalinter-swagger:
+    docker:
+      - image: pouchcontainer/pouchlinter:v0.1
+    working_directory: /go/src/github.com/alibaba/Dragonfly
+    steps:
+      - checkout
+      - run: 
+          name: validate swagger.yml
+          command: |
+            swagger validate "/go/src/github.com/alibaba/Dragonfly/apis/swagger.yml"
+      - run:
+          name: use gometalinter to check gocode of this project.
+          command: |
+            echo $GOPATH && gometalinter --disable-all --skip vendor -E gofmt -E goimports -E golint -E misspell -E vet -E deadcode -E goconst -E megacheck ./...
 
   unit-test-golang:
     docker:
-      - image: circleci/golang:1.9
-    working_directory: /go/src/github.com/{{ORG_NAME}}/{{REPO_NAME}}
+      - image: circleci/golang:1.10.4
+    working_directory: /go/src/github.com/alibaba/Dragonfly
     steps:
       - checkout
       - run:
@@ -48,3 +64,4 @@ workflows:
     jobs:
       - markdownlint-misspell-shellcheck
       - unit-test-golang
+      - gocode-check-via-gometalinter-swagger
