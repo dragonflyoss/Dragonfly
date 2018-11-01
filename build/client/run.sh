@@ -92,7 +92,7 @@ dfget() {
     dfgetDir="${BIN_DIR}/${PKG_NAME}"
     createDir "${dfgetDir}"
     cp -r "${BUILD_SOURCE_HOME}/src/getter/*" "${dfgetDir}"
-    find "${dfgetDir}" -name '*.pyc' | xargs rm -f
+    find "${dfgetDir}" -name '*.pyc' -exec rm -f {} \;
     chmod a+x "${dfgetDir}/dfget"
 }
 
@@ -110,7 +110,8 @@ unit-test() {
     go test -i ./...
 
     cmd="go list ./... | grep 'github.com/alibaba/Dragonfly/'"
-    sources=$(echo ${GO_SOURCE_DIRECTORIES[@]} | sed 's/ /|/g')
+    sources="${GO_SOURCE_DIRECTORIES[*]}"
+    sources="${sources// /|}"
     test -n "${sources}" && cmd+=" | grep -E '${sources}'"
 
     for d in $(eval "${cmd}")
