@@ -38,3 +38,8 @@ getter.log*
 
 #supernode
 
+# docs
+
+docs/.build/themes/
+docs/.build/content/
+docs/.build/static/images/

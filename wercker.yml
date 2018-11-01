@@ -24,22 +24,9 @@ build:
     - install-packages:
         packages: git
     - script:
-        name: download hugo-theme-learn
+        name: prepare for hugo-build
         cwd: docs/.build
-        code: |
-            test -d ./themes || mkdir ./themes
-            git clone https://github.com/matcornic/hugo-theme-learn.git ./themes/hugo-theme-learn && rm -rf hugo-theme-learn/.git
-    - script:
-        name: prepare contents
-        cwd: docs/.build
-        code: |
-            echo "copy contents to docs/.build/content"
-            test -d ./content || mkdir ./content
-            cp -r ../* ./content/
-            rm -rf ./content/zh
-            echo "copy images"
-            test -d ./static || mkdir ./static
-            mv ./content/images ./static/
+        code: sh ./prepare.sh
     - arjen/hugo-build:
         basedir: "docs/.build"
         version: "0.47"
