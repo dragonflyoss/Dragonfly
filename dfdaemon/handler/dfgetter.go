@@ -52,12 +52,15 @@ type DFGetter struct {
 	once sync.Once
 }
 
-var getter = new(DFGetter)
+// NewDFGetter returns the default DFGetter.
+func NewDFGetter() *DFGetter {
+	return &DFGetter{}
+}
 
 // Download is the method of DFGetter to download by dragonfly.
 func (dfGetter *DFGetter) Download(url string, header map[string][]string, name string) (string, error) {
 	startTime := time.Now().Unix()
-	cmdPath, args, dstPath := getter.parseCommand(url, header, name)
+	cmdPath, args, dstPath := dfGetter.parseCommand(url, header, name)
 	cmd := exec.Command(cmdPath, args...)
 	_, err := cmd.CombinedOutput()
 
@@ -77,20 +80,20 @@ func (dfGetter *DFGetter) parseCommand(url string, header map[string][]string, n
 	cmdPath string, args []string, dstPath string) {
 	args = make([]string, 0, 32)
 	args = append(append(args, "-u"), url)
-	args = append(append(args, "-o"), getter.dstDir+name)
-	if getter.notbs {
+	args = append(append(args, "-o"), dfGetter.dstDir+name)
+	if dfGetter.notbs {
 		args = append(args, "--notbs")
 	}
 
-	if strings.TrimSpace(getter.callSystem) != "" {
-		args = append(append(args, "--callsystem"), strings.TrimSpace(getter.callSystem))
+	if strings.TrimSpace(dfGetter.callSystem) != "" {
+		args = append(append(args, "--callsystem"), strings.TrimSpace(dfGetter.callSystem))
 	}
-	if strings.TrimSpace(getter.urlFilter) != "" {
-		args = append(append(args, "-f"), strings.TrimSpace(getter.urlFilter))
+	if strings.TrimSpace(dfGetter.urlFilter) != "" {
+		args = append(append(args, "-f"), strings.TrimSpace(dfGetter.urlFilter))
 	}
-	if strings.TrimSpace(getter.rateLimit) != "" {
-		args = append(append(args, "-s"), getter.rateLimit)
-		args = append(append(args, "--totallimit"), getter.rateLimit)
+	if strings.TrimSpace(dfGetter.rateLimit) != "" {
+		args = append(append(args, "-s"), dfGetter.rateLimit)
+		args = append(append(args, "--totallimit"), dfGetter.rateLimit)
 	}
 
 	if header != nil {
@@ -112,21 +115,8 @@ func (dfGetter *DFGetter) parseCommand(url string, header map[string][]string, n
 
 	args = append(args, "--dfdaemon")
 
-	dstPath = getter.dstDir + name
+	dstPath = dfGetter.dstDir + name
 	cmdPath = global.CommandLine.DfPath
 
 	return
-}
-
-// DownloadByGetter is to download file by DFGetter
-func DownloadByGetter(url string, header map[string][]string, name string) (string, error) {
-	log.Infof("start download url:%s to %s in repo", url, name)
-	getter.once.Do(func() {
-		getter.dstDir = global.CommandLine.DFRepo
-		getter.callSystem = global.CommandLine.CallSystem
-		getter.notbs = global.CommandLine.Notbs
-		getter.rateLimit = global.CommandLine.RateLimit
-		getter.urlFilter = global.CommandLine.URLFilter
-	})
-	return getter.Download(url, header, name)
 }

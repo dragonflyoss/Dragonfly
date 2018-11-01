@@ -27,7 +27,7 @@ import (
 )
 
 func main() {
-	options := options.New()
+	options := options.NewOption()
 	options.AddFlags(flag.CommandLine)
 	flag.Parse()
 
