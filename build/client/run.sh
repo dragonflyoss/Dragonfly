@@ -76,7 +76,7 @@ check() {
     # go vet check
     echo "CHECK: go vet, check code syntax"
     packages=$(go list ./... | grep -vE "${exclude}" | sed 's/^_//')
-    go vet "${packages}" 2>&1
+    echo "${packages}" | xargs go vet 2>&1
 }
 
 dfdaemon() {
@@ -92,7 +92,7 @@ dfget() {
     dfgetDir="${BIN_DIR}/${PKG_NAME}"
     createDir "${dfgetDir}"
     cp -r "${BUILD_SOURCE_HOME}/src/getter/*" "${dfgetDir}"
-    find "${dfgetDir}" -name '*.pyc' | xargs rm -f
+    find "${dfgetDir}" -name '*.pyc' -exec rm -f {} \;
     chmod a+x "${dfgetDir}/dfget"
 }
 
@@ -110,7 +110,8 @@ unit-test() {
     go test -i ./...
 
     cmd="go list ./... | grep 'github.com/alibaba/Dragonfly/'"
-    sources=$(echo ${GO_SOURCE_DIRECTORIES[@]} | sed 's/ /|/g')
+    sources="${GO_SOURCE_DIRECTORIES[*]}"
+    sources="${sources// /|}"
     test -n "${sources}" && cmd+=" | grep -E '${sources}'"
 
     for d in $(eval "${cmd}")
@@ -170,7 +171,6 @@ usage() {
 
 main() {
     cmd="${COMMANDS}"
-    export action=$(echo ${cmd} | grep -w "$1")
     test -z "$1" && usage
     $1
 }
