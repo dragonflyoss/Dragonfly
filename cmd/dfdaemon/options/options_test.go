@@ -8,7 +8,7 @@ import (
 
 func TestAddFlags(t *testing.T) {
 	f := flag.NewFlagSet("addflagstest", flag.ContinueOnError)
-	options := New()
+	options := NewOption()
 	options.AddFlags(f)
 
 	args := []string{

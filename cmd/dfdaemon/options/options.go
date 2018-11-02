@@ -62,8 +62,8 @@ type Options struct {
 	KeyFile string
 }
 
-// New returns the default options.
-func New() *Options {
+// NewOption returns the default options.
+func NewOption() *Options {
 	// assume the dfget binary is at the same directory as this daemon.
 	var defaultPath string
 	if path, err := exec.LookPath(os.Args[0]); err == nil {
