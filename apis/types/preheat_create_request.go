@@ -16,6 +16,9 @@ import (
 // swagger:model PreheatCreateRequest
 type PreheatCreateRequest struct {
 
+	// filter
+	Filter string `json:"filter,omitempty"`
+
 	// If there is any authentication step of the remote server, the headers should contains authenticated information.
 	// Dragonfly will sent request taking the headers to remote server.
 	//
