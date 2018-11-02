@@ -52,5 +52,3 @@ In the search results, click any link to jump to the topic, and your key words w
 ## Improving the Documentation
 
 If you see a typo, or just feel like adding your insights, don't hesitate to click the Edit this page link in the breadcrumb. Then you'll be prompted to sign in your Github account and fork the repository.
-
-For instructions on how to contribute to the documentation, see [Contributing Guide]({{< ref "contributing.md" >}}).
