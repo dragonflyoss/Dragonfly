@@ -7,6 +7,7 @@ package types
 
 import (
 	strfmt "github.com/go-openapi/strfmt"
+
 	"github.com/go-openapi/swag"
 )
 
@@ -18,6 +19,9 @@ type PreheatInfo struct {
 	// ID of preheat task.
 	//
 	ID string `json:"ID,omitempty"`
+
+	// the status of preheat task
+	Status string `json:"status,omitempty"`
 }
 
 // Validate validates this preheat info

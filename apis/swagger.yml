@@ -308,7 +308,7 @@ paths:
           schema:
             $ref: "#/definitions/PreheatCreateRequest"
       responses:
-        201:
+        200:
           description: "no error"
           schema:
             $ref: "#/definitions/PreheatCreateResponse"
@@ -539,14 +539,29 @@ definitions:
         type: "string"
         description: |
           ID of preheat task.
+      status:
+        type: "string"
+        description: "the status of preheat task"
 
   PreheatCreateRequest:
     type: "object"
     description: |
       Request option of creating a preheat task in supernode.
     properties:
-      ID:
+      type:
         type: "string"
+        description: |
+          this must be image or file
+      url:
+        type: "string"
+        description: "the image or file location"
+      headers:
+        type: "object"
+        description: |
+          If there is any authentication step of the remote server, the headers should contains authenticated information.
+          Dragonfly will sent request taking the headers to remote server.
+        additionalProperties:
+          type: "string"
 
   PreheatCreateResponse:
     type: "object"
