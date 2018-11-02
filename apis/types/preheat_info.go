@@ -8,7 +8,9 @@ package types
 import (
 	strfmt "github.com/go-openapi/strfmt"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // PreheatInfo return detailed information of a preheat task in supernode
@@ -20,12 +22,59 @@ type PreheatInfo struct {
 	//
 	ID string `json:"ID,omitempty"`
 
+	// the preheat task finish time
+	// Format: date-time
+	FinishTime strfmt.DateTime `json:"finishTime,omitempty"`
+
+	// the preheat task start time
+	// Format: date-time
+	StartTime strfmt.DateTime `json:"startTime,omitempty"`
+
 	// the status of preheat task
 	Status string `json:"status,omitempty"`
 }
 
 // Validate validates this preheat info
 func (m *PreheatInfo) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateFinishTime(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateStartTime(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *PreheatInfo) validateFinishTime(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.FinishTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("finishTime", "body", "date-time", m.FinishTime.String(), formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *PreheatInfo) validateStartTime(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.StartTime) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("startTime", "body", "date-time", m.StartTime.String(), formats); err != nil {
+		return err
+	}
+
 	return nil
 }
 
