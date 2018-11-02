@@ -542,6 +542,14 @@ definitions:
       status:
         type: "string"
         description: "the status of preheat task"
+      startTime:
+        type: "string"
+        format: "date-time"
+        description: "the preheat task start time"
+      finishTime:
+        type: "string"
+        format: "date-time"
+        description: "the preheat task finish time"
 
   PreheatCreateRequest:
     type: "object"
@@ -570,6 +578,20 @@ definitions:
     properties:
       ID:
         type: "string"
+
+  ErrorResponse:
+    type: "object"
+    description: |
+      It contains a code that identify which error occured for client processing and a detailed error message to read.
+    properties:
+      code: 
+        type: "integer"
+        description: |
+          the code of this error, it's convenient for client to process with certain error.
+      message:
+        type: "string"
+        description: "detailed error message"
+      
 
 responses:
   401ErrorResponse:
