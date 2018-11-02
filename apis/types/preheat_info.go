@@ -6,6 +6,8 @@ package types
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"encoding/json"
+
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
@@ -13,7 +15,8 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// PreheatInfo return detailed information of a preheat task in supernode
+// PreheatInfo return detailed information of a preheat task in supernode. An image preheat task may contain multiple downloading
+// task because that an image may have more than one layer.
 //
 // swagger:model PreheatInfo
 type PreheatInfo struct {
@@ -30,7 +33,14 @@ type PreheatInfo struct {
 	// Format: date-time
 	StartTime strfmt.DateTime `json:"startTime,omitempty"`
 
-	// the status of preheat task
+	// The status of preheat task.
+	//   WAITING -----> RUNNING -----> SUCCESS
+	//                            |--> FAILED
+	// The initial status of a created preheat task is WAITING.
+	// It's finished when a preheat task's status is FAILED or SUCCESS.
+	// A finished preheat task's information can be queried within 24 hours.
+	//
+	// Enum: [WAITING RUNNING FAILED SUCCESS]
 	Status string `json:"status,omitempty"`
 }
 
@@ -43,6 +53,10 @@ func (m *PreheatInfo) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validateStartTime(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateStatus(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -72,6 +86,55 @@ func (m *PreheatInfo) validateStartTime(formats strfmt.Registry) error {
 	}
 
 	if err := validate.FormatOf("startTime", "body", "date-time", m.StartTime.String(), formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+var preheatInfoTypeStatusPropEnum []interface{}
+
+func init() {
+	var res []string
+	if err := json.Unmarshal([]byte(`["WAITING","RUNNING","FAILED","SUCCESS"]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		preheatInfoTypeStatusPropEnum = append(preheatInfoTypeStatusPropEnum, v)
+	}
+}
+
+const (
+
+	// PreheatInfoStatusWAITING captures enum value "WAITING"
+	PreheatInfoStatusWAITING string = "WAITING"
+
+	// PreheatInfoStatusRUNNING captures enum value "RUNNING"
+	PreheatInfoStatusRUNNING string = "RUNNING"
+
+	// PreheatInfoStatusFAILED captures enum value "FAILED"
+	PreheatInfoStatusFAILED string = "FAILED"
+
+	// PreheatInfoStatusSUCCESS captures enum value "SUCCESS"
+	PreheatInfoStatusSUCCESS string = "SUCCESS"
+)
+
+// prop value enum
+func (m *PreheatInfo) validateStatusEnum(path, location string, value string) error {
+	if err := validate.Enum(path, location, value, preheatInfoTypeStatusPropEnum); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *PreheatInfo) validateStatus(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Status) { // not required
+		return nil
+	}
+
+	// value enum
+	if err := m.validateStatusEnum("status", "body", m.Status); err != nil {
 		return err
 	}
 

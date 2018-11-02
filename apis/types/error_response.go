@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// ErrorResponse It contains a code that identify which error occured for client processing and a detailed error message to read.
+// ErrorResponse It contains a code that identify which error occurred for client processing and a detailed error message to read.
 //
 // swagger:model ErrorResponse
 type ErrorResponse struct {

@@ -533,7 +533,8 @@ definitions:
   PreheatInfo:
     type: "object"
     description: |
-      return detailed information of a preheat task in supernode
+      return detailed information of a preheat task in supernode. An image preheat task may contain multiple downloading
+      task because that an image may have more than one layer.
     properties: 
       ID:
         type: "string"
@@ -541,7 +542,14 @@ definitions:
           ID of preheat task.
       status:
         type: "string"
-        description: "the status of preheat task"
+        description: |
+          The status of preheat task.
+            WAITING -----> RUNNING -----> SUCCESS
+                                     |--> FAILED
+          The initial status of a created preheat task is WAITING.
+          It's finished when a preheat task's status is FAILED or SUCCESS.
+          A finished preheat task's information can be queried within 24 hours.
+        enum: ["WAITING", "RUNNING", "FAILED", "SUCCESS"]
       startTime:
         type: "string"
         format: "date-time"
@@ -563,6 +571,9 @@ definitions:
       url:
         type: "string"
         description: "the image or file location"
+      filter:
+        type: "string"
+        description: ""
       headers:
         type: "object"
         description: |
@@ -582,7 +593,7 @@ definitions:
   ErrorResponse:
     type: "object"
     description: |
-      It contains a code that identify which error occured for client processing and a detailed error message to read.
+      It contains a code that identify which error occurred for client processing and a detailed error message to read.
     properties:
       code: 
         type: "integer"
