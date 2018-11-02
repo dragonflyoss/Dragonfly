@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package cli
+package options
 
 import (
 	"fmt"
@@ -26,12 +26,13 @@ import (
 	cfg "github.com/alibaba/Dragonfly/dfget/config"
 	"github.com/alibaba/Dragonfly/dfget/util"
 	"github.com/alibaba/Dragonfly/version"
+
 	"github.com/spf13/pflag"
 )
 
-var cliOut io.Writer = os.Stderr
+var CliOut io.Writer = os.Stderr
 
-func setupFlags(args []string) {
+func SetupFlags(args []string) {
 	// url & output
 	pflag.StringVarP(&cfg.Ctx.URL, "url", "u", "",
 		"will download a file from this url")
@@ -104,9 +105,9 @@ func setupFlags(args []string) {
 
 // Usage shows the usage of this program.
 func Usage() {
-	fmt.Fprintln(cliOut, "Dragonfly is a file distribution system based p2p.")
-	fmt.Fprintf(cliOut, "Usage of %s[%s]:\n", os.Args[0], version.DFGetVersion)
-	fmt.Fprintf(cliOut, "%s\n", pflag.CommandLine.FlagUsages())
+	fmt.Fprintln(CliOut, "Dragonfly is a file distribution system based p2p.")
+	fmt.Fprintf(CliOut, "Usage of %s[%s]:\n", os.Args[0], version.DFGetVersion)
+	fmt.Fprintf(CliOut, "%s\n", pflag.CommandLine.FlagUsages())
 }
 
 func transLimit(limit string) (int, error) {
