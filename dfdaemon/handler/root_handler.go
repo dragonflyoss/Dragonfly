@@ -78,7 +78,7 @@ func Process(w http.ResponseWriter, r *http.Request) {
 	// TODO: do we really need to construct this every time?
 	reverseProxy := httputil.NewSingleHostReverseProxy(targetURL)
 
-	reverseProxy.Transport = dfRoundTripper
+	reverseProxy.Transport = NewDFRoundTripper()
 
 	reverseProxy.ServeHTTP(w, r)
 }
