@@ -1,33 +1,31 @@
 ---
-title: "SuperNode Configuration"
+title: "Supernode Configuration"
 weight: 15
 ---
 
-# SuperNode Configuration
-
-This topic explains the configuration of SuperNode.
+The supernode is written in Java based on Spring Boot. You can easily set properties with command line parameters or with the configuration file.
 <!--more-->
 
-## Properties
+## Supernode Properties
 
 Property Name | Default Value | Description
-------------- | ------------- | -----------
-supernode.baseHome | /home/admin/supernode | working directory of supernode,
-supernode.systemNeedRate | 20 | the network rate reserved for system, unit is: MB/s
-supernode.totalLimit | 200 | the network rate that supernode can use, unit is: MB/s
-supernode.schedulerCorePoolSize | 10 | the core pool size of ScheduledExecutorService
+---|---|---
+supernode.baseHome | /home/admin/supernode | Working directory of the supernode
+supernode.systemNeedRate | 20 | Network rate reserved for the system (Unit: MB/s)
+supernode.totalLimit | 200 | Network rate reserved for the supernode (Unit: MB/s)
+supernode.schedulerCorePoolSize | 10 | Core pool size of ScheduledExecutorService
 
-## Usage
+## Setting Properties
 
-Currently, the SuperNode is written by Java based on spring-boot. It can easily set properties through the following methods:
+You have two options when setting properties of a supernode.
 
-* Commandline parameter:
+- Setting properties with command line parameters.
 
     ```bash
     java -D<propertyName>=<propertyValue> -jar supernode.jar
     ```
 
-* Configuration file:
+- Setting properties with the configuration file.
 
     ```bash
     java -Dspring.config.location=./config.properties,<otherConfigFilePath> -jar supernode.jar
