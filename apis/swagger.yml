@@ -308,7 +308,7 @@ paths:
           schema:
             $ref: "#/definitions/PreheatCreateRequest"
       responses:
-        201:
+        200:
           description: "no error"
           schema:
             $ref: "#/definitions/PreheatCreateResponse"
@@ -533,20 +533,54 @@ definitions:
   PreheatInfo:
     type: "object"
     description: |
-      return detailed information of a preheat task in supernode
+      return detailed information of a preheat task in supernode. An image preheat task may contain multiple downloading
+      task because that an image may have more than one layer.
     properties: 
       ID:
         type: "string"
         description: |
           ID of preheat task.
+      status:
+        type: "string"
+        description: |
+          The status of preheat task.
+            WAITING -----> RUNNING -----> SUCCESS
+                                     |--> FAILED
+          The initial status of a created preheat task is WAITING.
+          It's finished when a preheat task's status is FAILED or SUCCESS.
+          A finished preheat task's information can be queried within 24 hours.
+        enum: ["WAITING", "RUNNING", "FAILED", "SUCCESS"]
+      startTime:
+        type: "string"
+        format: "date-time"
+        description: "the preheat task start time"
+      finishTime:
+        type: "string"
+        format: "date-time"
+        description: "the preheat task finish time"
 
   PreheatCreateRequest:
     type: "object"
     description: |
       Request option of creating a preheat task in supernode.
     properties:
-      ID:
+      type:
         type: "string"
+        description: |
+          this must be image or file
+      url:
+        type: "string"
+        description: "the image or file location"
+      filter:
+        type: "string"
+        description: ""
+      headers:
+        type: "object"
+        description: |
+          If there is any authentication step of the remote server, the headers should contains authenticated information.
+          Dragonfly will sent request taking the headers to remote server.
+        additionalProperties:
+          type: "string"
 
   PreheatCreateResponse:
     type: "object"
@@ -555,6 +589,20 @@ definitions:
     properties:
       ID:
         type: "string"
+
+  ErrorResponse:
+    type: "object"
+    description: |
+      It contains a code that identify which error occurred for client processing and a detailed error message to read.
+    properties:
+      code: 
+        type: "integer"
+        description: |
+          the code of this error, it's convenient for client to process with certain error.
+      message:
+        type: "string"
+        description: "detailed error message"
+      
 
 responses:
   401ErrorResponse:

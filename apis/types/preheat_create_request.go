@@ -7,6 +7,7 @@ package types
 
 import (
 	strfmt "github.com/go-openapi/strfmt"
+
 	"github.com/go-openapi/swag"
 )
 
@@ -15,8 +16,20 @@ import (
 // swagger:model PreheatCreateRequest
 type PreheatCreateRequest struct {
 
-	// ID
-	ID string `json:"ID,omitempty"`
+	// filter
+	Filter string `json:"filter,omitempty"`
+
+	// If there is any authentication step of the remote server, the headers should contains authenticated information.
+	// Dragonfly will sent request taking the headers to remote server.
+	//
+	Headers map[string]string `json:"headers,omitempty"`
+
+	// this must be image or file
+	//
+	Type string `json:"type,omitempty"`
+
+	// the image or file location
+	URL string `json:"url,omitempty"`
 }
 
 // Validate validates this preheat create request
