@@ -164,7 +164,6 @@ func (s *FileUtilTestSuite) TestLink(c *check.C) {
 	linkStr = path.Join(s.tmpDir, "testLinkNonExistDir")
 	os.Mkdir(linkStr, 0755)
 	err = Link(pathStr, linkStr)
-	err = Link(pathStr, linkStr)
 	c.Assert(err, check.NotNil)
 }
 

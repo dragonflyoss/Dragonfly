@@ -126,11 +126,6 @@ func (s *CoreTestSuite) TestGetTaskURL(c *check.C) {
 	}
 }
 
-func (s *CoreTestSuite) TestGetTaskPath(c *check.C) {
-	c.Assert(getTaskPath("a"), check.Equals, config.PeerHTTPPathPrefix+"a")
-	c.Assert(getTaskPath(""), check.Equals, "")
-}
-
 func (s *CoreTestSuite) TestAdjustSupernodeList(c *check.C) {
 	var cases = [][]string{
 		{},
