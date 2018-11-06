@@ -318,6 +318,26 @@ paths:
             $ref: '#/definitions/Error'
         500:
           $ref: "#/responses/500ErrorResponse"
+
+    get:
+      summary: "List Preheat Tasks"
+      description: |
+        List preheat tasks in supernode of Dragonfly. This API can list all the existing preheat tasks
+        in supernode. Note, when a preheat is finished after PreheatGCThreshold, it will be GCed, then
+        this preheat will not be gotten by preheat tasks list API.
+      responses:
+        200:
+          description: "no error"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/PreheatInfo"
+        400:
+          description: "bad parameter"
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          $ref: "#/responses/500ErrorResponse"
   
   /preheats/{id}:
     get: 
@@ -617,4 +637,3 @@ responses:
     description: An unexpected server error occurred.
     schema:
       $ref: "#/definitions/Error"
-        
