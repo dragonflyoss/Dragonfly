@@ -16,13 +16,20 @@ import (
 // swagger:model PreheatCreateRequest
 type PreheatCreateRequest struct {
 
-	// filter
+	// URL may contains some changeful query parameters such as authentication parameters. Dragonfly will
+	// filter these parameter via 'filter'. The usage of it is that different URL may generate the same
+	// download taskID.
+	//
 	Filter string `json:"filter,omitempty"`
 
 	// If there is any authentication step of the remote server, the headers should contains authenticated information.
 	// Dragonfly will sent request taking the headers to remote server.
 	//
 	Headers map[string]string `json:"headers,omitempty"`
+
+	// This field is used for generating new downlading taskID to indetify different downloading task of remote URL.
+	//
+	Identifier string `json:"identifier,omitempty"`
 
 	// this must be image or file
 	//
