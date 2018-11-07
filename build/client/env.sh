@@ -23,7 +23,7 @@ export DRAGONFLY_HOME=${curDir%/build/client*}
 export BUILD_GOPATH=/tmp/dragonfly/build
 export BUILD_SOURCE_HOME="${BUILD_GOPATH}/src/github.com/alibaba/Dragonfly"
 
-export INSTALL_HOME="${HOME}/.dragonfly"
+export INSTALL_HOME="/opt/dragonfly"
 
 export CONFIGURED_VARIABLES_FILE="${BUILD_GOPATH}/configured_variables.sh"
 

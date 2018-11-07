@@ -19,7 +19,7 @@ BASE_HOME=$(cd "${curDir}"/.. && pwd)
 
 BUILD_DIR="${BASE_HOME}/build"
 
-INSTALL_PREFIX="${HOME}/.dragonfly"
+INSTALL_PREFIX="/opt/dragonfly"
 
 . "${BUILD_DIR}/log.sh"
 
@@ -32,16 +32,27 @@ printResult() {
         error "${filed}" "FAILURE"
     fi
 }
+
 buildClient() {
     field="dfdaemon&dfget"
     echo "====================================================================="
     info "${field}" "compiling dfdaemon and dfget..."
     cd "${BUILD_DIR}/client"
-    test -d "${INSTALL_PREFIX}" || mkdir -p "${INSTALL_PREFIX}"
     ./configure --prefix="${INSTALL_PREFIX}"
-    make && make install && export PATH=$PATH:${INSTALL_PREFIX}/df-client
+    make
     retCode=$?
-    make clean
+    printResult "${field}" ${retCode}
+    return ${retCode}
+}
+
+installClient() {
+    field="install client"
+    echo "====================================================================="
+    info "${field}" "install dfdaemon and dfget..."
+    cd "${BUILD_DIR}/client"
+    make install
+    retCode=$?
+    test ${retCode} -eq 0 && make clean
     printResult "${field}" ${retCode}
     return ${retCode}
 }
@@ -58,6 +69,9 @@ buildSupernode() {
 
 main() {
     case "$1" in
+        install)
+            installClient
+        ;;
         client)
             buildClient
         ;;
