@@ -59,7 +59,7 @@ func NewPiece(taskID, node, dstCid, pieceRange string, result, status int) *Piec
 	}
 }
 
-// NewPiece creates a Piece with default value.
+// NewPieceSimple creates a Piece with default value.
 func NewPieceSimple(taskID string, node string, status int) *Piece {
 	return &Piece{
 		TaskID:    taskID,
