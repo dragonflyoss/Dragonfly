@@ -19,8 +19,11 @@ package com.alibaba.dragonfly.supernode.config;
 import javax.annotation.PostConstruct;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.alibaba.dragonfly.supernode.common.Constants;
+import com.alibaba.fastjson.JSON;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +58,16 @@ public class SupernodeProperties {
      */
     private int schedulerCorePoolSize = Constants.DEFAULT_SCHEDULER_CORE_POOL_SIZE;
 
+    /**
+     * members of the Supernode cluster
+     */
+    private List<ClusterMember> cluster = new ArrayList<>();
+
+    /**
+     * the path of dfget installed locally
+     */
+    private String dfgetPath = Constants.DFGET_PATH;
+
     @PostConstruct
     public void init() {
         String cdnHome = baseHome + "/repo";
@@ -68,5 +81,6 @@ public class SupernodeProperties {
             log.error("create repo dir error", e);
             System.exit(1);
         }
+        log.info("cluster members: {}", JSON.toJSONString(cluster));
     }
 }
