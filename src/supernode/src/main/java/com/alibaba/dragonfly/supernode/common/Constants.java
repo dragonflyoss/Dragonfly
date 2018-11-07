@@ -30,6 +30,11 @@ public final class Constants {
     public static final int DEFAULT_SCHEDULER_CORE_POOL_SIZE = 10;
 
     //-------------------------------------------------------------------------
+    // dfget
+
+    public static final String DFGET_PATH = "/usr/local/bin/dfget";
+
+    //-------------------------------------------------------------------------
     // directories
 
     public static final String DEFAULT_BASE_HOME = "/home/admin/supernode";
