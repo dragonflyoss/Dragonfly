@@ -593,7 +593,14 @@ definitions:
         description: "the image or file location"
       filter:
         type: "string"
-        description: ""
+        description: |
+          URL may contains some changeful query parameters such as authentication parameters. Dragonfly will 
+          filter these parameter via 'filter'. The usage of it is that different URL may generate the same 
+          download taskID.
+      identifier:
+        type: "string"
+        description: |
+          This field is used for generating new downloading taskID to indetify different downloading task of remote URL.
       headers:
         type: "object"
         description: |
