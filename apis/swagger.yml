@@ -564,8 +564,10 @@ definitions:
         type: "string"
         description: |
           The status of preheat task.
+          <pre>
             WAITING -----> RUNNING -----> SUCCESS
                                      |--> FAILED
+          </pre>
           The initial status of a created preheat task is WAITING.
           It's finished when a preheat task's status is FAILED or SUCCESS.
           A finished preheat task's information can be queried within 24 hours.
