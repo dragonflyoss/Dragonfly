@@ -257,6 +257,28 @@ request to setup a peer-to-peer network immediately.
 |**500**|An unexpected server error occurred.|[Error](#error)|
 
 
+<a name="preheats-get"></a>
+### List Preheat Tasks
+```
+GET /preheats
+```
+
+
+#### Description
+List preheat tasks in supernode of Dragonfly. This API can list all the existing preheat tasks
+in supernode. Note, when a preheat is finished after PreheatGCThreshold, it will be GCed, then
+this preheat will not be gotten by preheat tasks list API.
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|< [PreheatInfo](#preheatinfo) > array|
+|**400**|bad parameter|[Error](#error)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
 <a name="preheats-id-get"></a>
 ### Get a preheat task
 ```
@@ -541,8 +563,9 @@ Request option of creating a preheat task in supernode.
 
 |Name|Description|Schema|
 |---|---|---|
-|**filter**  <br>*optional*||string|
+|**filter**  <br>*optional*|URL may contains some changeful query parameters such as authentication parameters. Dragonfly will <br>filter these parameter via 'filter'. The usage of it is that different URL may generate the same <br>download taskID.|string|
 |**headers**  <br>*optional*|If there is any authentication step of the remote server, the headers should contains authenticated information.<br>Dragonfly will sent request taking the headers to remote server.|< string, string > map|
+|**identifier**  <br>*optional*|This field is used for generating new downloading taskID to indetify different downloading task of remote URL.|string|
 |**type**  <br>*optional*|this must be image or file|string|
 |**url**  <br>*optional*|the image or file location|string|
 
