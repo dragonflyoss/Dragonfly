@@ -102,10 +102,3 @@ Below are the adoptors of project Dragonfly. If you are using to Dragonfly to im
 ## License
 
 Dragonfly is available under the [Apache 2.0 License](https://github.com/alibaba/Dragonfly/blob/master/LICENSE).
-
-## Commercial Support
-
-If you need commercial support of Dragonfly, please contact us for more information: [云效](https://www.aliyun.com/product/yunxiao).
-
-Dragonfly is already integrated with AliCloud Container Services. If you need commercial support of AliCloud Container Service, please contact us for more information: [Container Service
-](https://www.alibabacloud.com/product/container-service)
