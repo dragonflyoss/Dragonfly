@@ -22,7 +22,6 @@
 - [FAQ](FAQ.md)
 - [Adoptors](./docs/_index.md#who-has-adopted-dragonfly)
 - [LICENSE](LICENSE)
-- [Commercial Support](#commercial-support)
 
 ## Introduction
 
