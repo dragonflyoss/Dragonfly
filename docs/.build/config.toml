@@ -1,4 +1,4 @@
-baseURL = "https://alibaba.github.io/Dragonfly"
+baseURL = "https://d7y.io"
 languageCode = "en-US"
 defaultContentLanguage = "en"
 
@@ -29,7 +29,7 @@ languageName = "English"
 [[Languages.en.menu.shortcuts]]
 name = "<i class='fab fa-fw fa-github'></i> View on Github"
 identifier = "ds"
-url = "https://github.com/alibaba/Dragonfly"
+url = "https://d7y.io"
 weight = 1
 
 [[Languages.en.menu.shortcuts]]
