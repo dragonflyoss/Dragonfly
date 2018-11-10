@@ -87,6 +87,12 @@
 			"revisionTime": "2017-07-05T07:52:02Z"
 		},
 		{
+			"checksumSHA1": "+i76HB4vEOFz+vLYsUmThS6oeQI=",
+			"path": "github.com/gorilla/mux",
+			"revision": "24fca303ac6da784b9e8269f724ddeb0b2eea5e7",
+			"revisionTime": "2017-09-05T17:10:44Z"
+		},
+		{
 			"checksumSHA1": "5BFhwYqOy2dR2NwDe3cCauuxEYM=",
 			"path": "github.com/klauspost/compress/flate",
 			"revision": "b939724e787a27c0005cabe3f78e7ed7987ac74f",
@@ -145,6 +151,12 @@
 			"path": "github.com/sirupsen/logrus",
 			"revision": "92052687f8ec598ff0da626d2909478cfd1e3a3c",
 			"revisionTime": "2018-07-12T20:16:18Z"
+		},
+		{
+			"checksumSHA1": "Tg05rfWxVqlqtB8G6QDHGo5wjAQ=",
+			"path": "github.com/spf13/cobra",
+			"revision": "7c4570c3ebeb8129a1f7456d0908a8b676b6f9f1",
+			"revisionTime": "2018-07-22T21:56:44Z"
 		},
 		{
 			"checksumSHA1": "OJI0OgC5V8gZtfS1e0CDYMhkDNc=",
