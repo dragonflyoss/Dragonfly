@@ -1,2 +1,31 @@
-# This file lists all contributors having contributed to Dragonfly.
-# For how it is generated, see `hack/generate-contributors.sh`.
+# This file lists all contributors having contributed to this project.
+# For how it is generated, see command "git log --format='%aN <%aE>' | sort -uf".
+
+Alibaba OSS <opensource@alibaba-inc.com>
+aliwaredoc <42730518+aliwaredoc@users.noreply.github.com>
+Allen Sun <allensun.shl@alibaba-inc.com>
+Allen Sun <allensun.shl@alibaba.com>
+Allen Sun <shlallen1990@gmail.com>
+andy shi <szihai@gmail.com>
+chenchaobing <chaobing.ccb@alibaba-inc.com>
+garfield009 <1055471237@qq.com>
+Ggicci <ggicci@163.com>
+Jin Zhang <zj3142063@gmail.com>
+Joe Pettersson <joe8bit@gmail.com>
+Jordan Lowe <766226+jtlowe@users.noreply.github.com>
+leiiwang <u2takey@gmail.com>
+lowzj <zj3142063@gmail.com>
+pouchrobot <pouch-dev@list.alibaba-inc.com>
+Shawnpku <42170599+Shawnpku@users.noreply.github.com>
+silenceshell <me@ieevee.com>
+Starnop <starnop@163.com>
+sunyunpeng <sunyunpeng@meituan.com>
+The Gitter Badger <badger@gitter.im>
+WayneGao <yexing.gw@alibaba-inc.com>
+willmao <794081758@qq.com>
+wrfly <mr.wrfly@gmail.com>
+zhouhaibing089 <zhouhaibing089@gmail.com>
+zou sheng <zouyu12344444@126.com>
+zousheng <zouyu12344444@126.com>
+zuozheng.hzz <zuozheng.hzz@alibaba-inc.com>
+也行 <yexing.gw@alibaba-inc.com>
