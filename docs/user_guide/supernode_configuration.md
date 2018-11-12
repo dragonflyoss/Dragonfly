@@ -30,7 +30,7 @@ ip   | None          | The ip of the cluster member.
 registerPort | 8001  | The register port of the cluster member.
 downloadPort | 8002  | The download port of the cluster member.
 
-* Config it in `.properties` file, for example:
+- Config it in `.properties` file, for example:
 
     ```ini
     supernode.cluster[0].ip = '192.168.0.1'
@@ -38,7 +38,7 @@ downloadPort | 8002  | The download port of the cluster member.
     supernode.cluster[1].ip = '192.168.0.2'
     ```
 
-* Config it in `.yaml` file, for example:
+- Config it in `.yaml` file, for example:
 
     ```yaml
     supernode:
@@ -52,13 +52,13 @@ downloadPort | 8002  | The download port of the cluster member.
 
 You have two options when setting properties of a supernode.
 
-* Setting properties with command line parameters.
+- Setting properties with command line parameters.
 
     ```bash
     java -D<propertyName>=<propertyValue> -jar supernode.jar
     ```
 
-* Setting properties with the configuration file.
+- Setting properties with the configuration file.
 
     ```bash
     java -Dspring.config.location=./config.properties,<otherConfigFilePath> -jar supernode.jar

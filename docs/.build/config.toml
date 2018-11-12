@@ -1,4 +1,4 @@
-baseURL = "https://d7y.io"
+baseURL = "https://alibaba.github.io/Dragonfly/"
 languageCode = "en-US"
 defaultContentLanguage = "en"
 
@@ -13,8 +13,8 @@ defaultContentLanguageInSubdir= true
   description = "DragonFly Documentation"
   author = "Team Dragonfly"
   showVisitedLinks = true
-  disableBreadcrumb = true
-  disableNextPrev = true
+  disableBreadcrumb = false
+  disableNextPrev = false
   themeVariant = "dragonfly"
 
 [outputs]

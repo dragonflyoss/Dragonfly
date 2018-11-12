@@ -3,19 +3,18 @@ title: "dfget"
 weight: 5
 ---
 
-# dfget
+dfget is the client of Dragonfly. You can use the dfget command in the command line tool.
+<!--more-->
 
-This topic explains how to use the dfget command.
+## Name
 
-## NAME
+dfget - the client of Dragonfly, a non-interactive P2P downloader.
 
-dfget - the client of Dragonfly, a non-interactive P2P downloader
+## Synopsis
 
-## SYNOPSIS
+`dfget -u [URL] [options]...`
 
-dfget -u [URL] [options]...
-
-## OPTIONS
+## Options
 
 ```
   -h, --help            show this help message and exit
@@ -55,11 +54,11 @@ dfget -u [URL] [options]...
   --dfdaemon            caller is from df-daemon
 ```
 
-## FILES
+## Files
 
 ### /etc/dragonfly.conf
 
-default configuration file for dfget, it configures the address of the supernode.
+This is the default configuration file for dfget, which specifies the address of the supernode.
 
 ```ini
 [node]
@@ -68,7 +67,7 @@ address=127.0.0.1,127.0.0.2
 
 ### ${HOME}/.small-dragonfly
 
-This directory is created by dfget when you first time start it.
+This directory is created by dfget when you start it for the first time.
 
 ```text
 .small-dragonfly/
