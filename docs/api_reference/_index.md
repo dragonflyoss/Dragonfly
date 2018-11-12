@@ -65,7 +65,7 @@ An example response:
 }
 ```
 
-Other possible values of `code` in the reponse include:
+Other possible values of `code` in the response include:
 
 - `606`: The task ID already exists.
 - `607`: The URL is invalid.
@@ -119,7 +119,7 @@ An example resonse:
 }
 ```
 
-This example reponse means that the client has to wait, since no peer can serve this piece now. If there is a peer which can serve this request, the response will be something like:
+This example response means that the client has to wait, since no peer can serve this piece now. If there is a peer which can serve this request, the response will be something like:
 
 ```json
 {
