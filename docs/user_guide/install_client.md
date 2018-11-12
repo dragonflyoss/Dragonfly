@@ -51,8 +51,7 @@ You can install from the latest packages we provided.
 
 You can also install from the source code.
 
-{{% notice note %}} You must have installed Go 1.7+, and added the Go command to the `PATH` environment variable.
-{{% /notice %}}
+**Note:** You must have installed Go 1.7+, and added the Go command to the `PATH` environment variable.
 
 ### Installing in $HOME/.dragonfly
 
