@@ -71,21 +71,11 @@ dfget always finds the most suitable assigned node to register. If fails, it req
 
 ## How to check the version of Dragonfly client dfget?
 
-If you have installed the Dragonfly plugin, run this command:
+If you have installed the Dragonfly client, run this command:
 
 ```bash
-/home/staragent/plugins/dragonfly/dfget -v
+dfget -v
 ```
-
-If you have not installed the Dragonfly plugin, run this command to check the version of the StarAgent built-in dfget:
-
-```bash
-/home/staragent/bin/dfget -v
-```
-
-dfget 3.10.x+ supports Python 2.7+. dfget 3.7.x and lower versions support Python 2.4+.
-
-The Dragonfly plugin of 3.10.x+ incorporates the old dfget compatible with Python 2.4+. If `/home/tops/bin/python2.7` exists on the machine, the dfget of newer version will be used. Otherwise, the dfget of older version will be used.
 
 ## Why is the dfget process still there after the download is complete?
 
