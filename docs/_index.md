@@ -28,8 +28,7 @@ Dragonfly makes it simple and cost-effective to set up, operate, and scale any 
 
 This project is an open-source version of the Dragonfly used at Alibaba. It has the following features:
 
-{{% notice note %}}  More Alibaba-internal features will be made available to open-source users soon. Stay tuned!
-{{% /notice %}}
+**Note:** More Alibaba-internal features will be made available to open-source users soon. Stay tuned!
 
 - **P2P-based file distribution**: By using the P2P technology for file transmission, it makes the most out of the bandwidth resources of each peer to improve downloading efficiency,  and saves a lot of cross-IDC bandwidth, especially the costly cross-board bandwidth.
 - **Non-invasive support to all kinds of container technologies**: Dragonfly can seamlessly support various containers for distributing images.
@@ -86,7 +85,7 @@ Every file is divided into multiple blocks, which are transmitted between peers.
 
 ## Who has adopted Dragonfly?
 
-Below are the adoptors of project Dragonfly. If you are using to Dragonfly to improve your distribution, please contact us with.
+Here are some of the adoptors of project Dragonfly. If you are using Dragonfly to improve your distribution, please don't hesitate to reach out to us and show your support.
 
 <a href="https://www.alibabagroup.com" border="0" target="_blank"><img alt="trendmicro" src="images/adoptor_logo/AlibabaGroup.jpg" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
 <a href="https://www.alibabacloud.com/zh" border="0" target="_blank"><img alt="trendmicro" src="images/adoptor_logo/AlibabaCloud.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
@@ -98,6 +97,15 @@ Below are the adoptors of project Dragonfly. If you are using to Dragonfly to im
 <a href="https://www.meituan.com" border="0" target="_blank"><img alt="OnStar" src="images/adoptor_logo/meituan.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
 <a href="https://www.amap.com/" border="0" target="_blank"><img alt="OnStar" src="images/adoptor_logo/amap.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
 <a href="https://www.lazada.com/" border="0" target="_blank"><img alt="OnStar" src="images/adoptor_logo/lazada.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
+
+## Community
+
+You are encouraged to communicate with us via GitHub issues or pull requests.
+
+Follow us on other platforms:
+
+- Gitter Chat: [dragonfly](https://gitter.im/alibaba/Dragonfly)
+- Twitter: [@dragonfly_oss](https://twitter.com/dragonfly_oss)
 
 ## License
 

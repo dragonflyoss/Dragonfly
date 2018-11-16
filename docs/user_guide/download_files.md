@@ -12,8 +12,7 @@ Things are done differently when you download container images and download gene
 - You have installed Python 2.7+, and added the Python directory to the `PATH` environment variable.
 - The supernode service is started.
 
-    {{% notice tip %}} For more information on the installation of supernodes, see [Installing Server]({{< ref "install_server.md" >}}).
-    {{% /notice %}}
+    **Tip:** For more information on the dfget command, see [dfget](https://alibaba.github.io/Dragonfly/cli_reference/dfget/). For more information on the installation of supernodes, see [Installing Server](https://alibaba.github.io/Dragonfly/user_guide/install_server/).
 
 ## Downloading container images
 
@@ -41,8 +40,7 @@ Things are done differently when you download container images and download gene
     tailf ~/.small-dragonfly/logs/dfdaemon.log
     ```
 
-    {{% notice tip %}} To list all available parameters for dfdaemon, run `dfdeaemon -h`.
-    {{% /notice %}}
+    **Tip:** To list all available parameters for dfdaemon, run `dfdeaemon -h`.
 
 3. Configure the Daemon Mirror.
 
@@ -52,8 +50,7 @@ Things are done differently when you download container images and download gene
     vi /etc/docker/daemon.json
     ```
 
-    {{% notice tip %}} For more information on `/etc/docker/daemon.json`, see [Docker documentation](https://docs.docker.com/registry/recipes/mirror/#configure-the-cache).
-    {{% /notice %}}
+    **Tip:** For more information on `/etc/docker/daemon.json`, see [Docker documentation](https://docs.docker.com/registry/recipes/mirror/#configure-the-cache).
 
     b. Add or update the configuration item `registry-mirrors` in the configuration file.
 
@@ -73,8 +70,7 @@ Things are done differently when you download container images and download gene
     docker pull {imageName}
     ```
 
-    {{% notice note %}} Don't include the image repo URL in {imageName}, because the repo URL has been specified with the `registry` parameter when starting dfdaemon.
-    {{% /notice %}}
+    **Note:** Don't include the image repo URL in {imageName}, because the repo URL has been specified with the `registry` parameter when starting dfdaemon.
 
 ## Downloading General Files
 
@@ -97,8 +93,7 @@ Things are done differently when you download container images and download gene
         dfget -u "http://www.taobao.com" -o /tmp/test.html --node nodeIp1,nodeIp2
         ```
 
-        {{% notice note %}} When using this method, you must add the `node` parameter every time when you run the dfget command. And the parameter in the command line takes precedence over the configuration file.
-        {{% /notice %}}
+        **Note:** When using this method, you must add the `node` parameter every time when you run the dfget command. And the parameter in the command line takes precedence over the configuration file.
 
 2. Download general files with Dragonfly in one of the following ways.
 
@@ -108,8 +103,7 @@ Things are done differently when you download container images and download gene
         dfget --url "http://xxx.xx.x"
         ```
 
-        {{% notice tip %}} To list all available parameters for dfget, run `dfget -h`.
-        {{% /notice %}}
+        **Tip:** To list all available parameters for dfget, run `dfget -h`.
 
     - Download files with your specified supernodes.
 

@@ -20,6 +20,11 @@ You have started your Docker container.
     docker pull ${imageName}
     ```
 
+    **Note:** Choose one of the images we provide according to your geo-location, and replace `${imageName}` with it:
+
+    - China: `registry.cn-hangzhou.aliyuncs.com/alidragonfly/supernode:0.2.0`
+    - US: `registry.us-west-1.aliyuncs.com/alidragonfly/supernode:0.2.0`
+
 2. Start a supernode.
 
     ```bash
@@ -27,15 +32,11 @@ You have started your Docker container.
     docker run -d -p 8001:8001 -p 8002:8002 ${imageName}
     ```
 
-We provided two images in different locations:
-
-- China: `registry.cn-hangzhou.aliyuncs.com/alidragonfly/supernode:0.2.0`
-- US: `registry.us-west-1.aliyuncs.com/alidragonfly/supernode:0.2.0`
-
 For example, if you're in China, run the following commands:
 
 ```bash
 docker pull registry.cn-hangzhou.aliyuncs.com/alidragonfly/supernode:0.2.0
+
 docker run -d -p 8001:8001 -p 8002:8002 registry.cn-hangzhou.aliyuncs.com/alidragonfly/supernode:0.2.0
 ```
 
@@ -49,6 +50,20 @@ docker run -d -p 8001:8001 -p 8002:8002 registry.cn-hangzhou.aliyuncs.com/alidra
     wget ${package}
     ```
 
+    **Note:** Choose one of the packages we provide according to your geo-location, and replace `${package}` with it:
+
+    - If you're in China:
+
+        - [Linux 64-bit](http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_linux_amd64.tar.gz): `http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_linux_amd64.tar.gz`
+
+        - [MacOS 64-bit](http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_darwin_amd64.tar.gz): `http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_darwin_amd64.tar.gz`
+
+    - If you're not in China:
+
+        - [Linux 64-bit](https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz): `https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz`
+
+        - [MacOS 64-bit](https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_darwin_amd64.tar.gz): `https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_darwin_amd64.tar.gz`
+
 2. Unzip the package.
 
     ```bash
@@ -61,20 +76,6 @@ docker run -d -p 8001:8001 -p 8002:8002 registry.cn-hangzhou.aliyuncs.com/alidra
     # Execute or add this line to ~/.bashrc
     export PATH=$PATH:$HOME/df-client/
     ```
-
-We provided different packages to suit your need. Please choose one and replace the `${package}` with it.
-
-- If you're in China:
-
-    - [Linux 64-bit](http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_linux_amd64.tar.gz): `http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_linux_amd64.tar.gz`
-
-    - [MacOS 64-bit](http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_darwin_amd64.tar.gz): `http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_darwin_amd64.tar.gz`
-
-- If you're not in China:
-
-    - [Linux 64-bit](https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz): `https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz`
-
-    - [MacOS 64-bit](https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_darwin_amd64.tar.gz): `https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_darwin_amd64.tar.gz`
 
 For example, if you're in China and using Linux, run the following commands:
 
@@ -94,9 +95,7 @@ Once you have installed the Dragonfly client, you can use the `dfget` command to
 dfget -u 'https://github.com/alibaba/Dragonfly/blob/master/docs/images/logo.png' -o /tmp/logo.png
 ```
 
-{{% notice tip %}}
-For more information on the dfget command, see [dfget]({{< ref "dfget.md" >}}).
-{{% /notice %}}
+**Tip:** For more information on the dfget command, see [dfget](https://alibaba.github.io/Dragonfly/cli_reference/dfget/).
 
 ## Pulling an Image with Dragonfly
 
@@ -126,8 +125,8 @@ For more information on the dfget command, see [dfget]({{< ref "dfget.md" >}}).
 
 ## Related Topics
 
-- [Installing Server]({{< ref "install_server.md" >}})
-- [Installing Client]({{< ref "install_client.md" >}})
-- [Downloading Files]({{< ref "download_files.md" >}})
-- [supernode Configuration]({{< ref "supernode_configuration.md" >}})
-- [dfget]({{< ref "dfget.md" >}})
+- [Installing Server](https://alibaba.github.io/Dragonfly/user_guide/install_server/)
+- [Installing Client](https://alibaba.github.io/Dragonfly/user_guide/install_client/)
+- [Downloading Files](https://alibaba.github.io/Dragonfly/user_guide/download_files/)
+- [supernode Configuration](https://alibaba.github.io/Dragonfly/user_guide/supernode_configuration/)
+- [dfget](https://alibaba.github.io/Dragonfly/cli_reference/dfget/)
