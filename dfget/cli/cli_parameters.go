@@ -23,9 +23,9 @@ import (
 	"strconv"
 	"strings"
 
-	cfg "github.com/alibaba/Dragonfly/dfget/config"
-	"github.com/alibaba/Dragonfly/dfget/util"
-	"github.com/alibaba/Dragonfly/version"
+	cfg "github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/version"
 	"github.com/spf13/pflag"
 )
 

@@ -28,9 +28,9 @@ You can install from the latest packages we provided.
 
     - If you're not in China:
 
-        - [Linux 64-bit](https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz): `https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz`
+        - [Linux 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz`
 
-        - [MacOS 64-bit](https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_darwin_amd64.tar.gz): `https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_darwin_amd64.tar.gz`
+        - [MacOS 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_darwin_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_darwin_amd64.tar.gz`
 
 2. Unzip the package.
 
@@ -59,7 +59,7 @@ You can also install from the source code.
 1. Obtain the source code of Dragonfly.
 
     ```sh
-    git clone https://github.com/alibaba/Dragonfly.git
+    git clone https://github.com/dragonflyoss/Dragonfly.git
     ```
 
 2. Enter the target directory.
@@ -86,7 +86,7 @@ You can also install from the source code.
 1. Obtain the source code of Dragonfly.
 
     ```sh
-    git clone https://github.com/alibaba/Dragonfly.git
+    git clone https://github.com/dragonflyoss/Dragonfly.git
     ```
 
 2. Enter the target directory.

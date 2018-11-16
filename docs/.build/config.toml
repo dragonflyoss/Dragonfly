@@ -9,7 +9,7 @@ metaDataFormat = "yaml"
 defaultContentLanguageInSubdir= true
 
 [params]
-  editURL = "https://github.com/alibaba/Dragonfly/edit/master/docs/"
+  editURL = "https://github.com/dragonflyoss/Dragonfly/edit/master/docs/"
   description = "DragonFly Documentation"
   author = "Team Dragonfly"
   showVisitedLinks = true

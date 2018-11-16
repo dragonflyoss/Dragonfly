@@ -4,8 +4,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/alibaba/Dragonfly/supernode/config"
-	"github.com/alibaba/Dragonfly/supernode/daemon"
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
+	"github.com/dragonflyoss/Dragonfly/supernode/daemon"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"

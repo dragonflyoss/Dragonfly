@@ -1,8 +1,8 @@
 package daemon
 
 import (
-	"github.com/alibaba/Dragonfly/supernode/config"
-	"github.com/alibaba/Dragonfly/supernode/server"
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
+	"github.com/dragonflyoss/Dragonfly/supernode/server"
 	"github.com/sirupsen/logrus"
 )
 

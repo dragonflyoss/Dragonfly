@@ -40,7 +40,7 @@ Nginx|0.8+
 1. Obtain the source code of Dragonfly.
 
     ```sh
-    git clone https://github.com/alibaba/Dragonfly.git
+    git clone https://github.com/dragonflyoss/Dragonfly.git
     ```
 
 2. Enter the project directory.
@@ -73,7 +73,7 @@ Nginx|0.8+
 1. Obtain the source code of Dragonfly.
 
     ```sh
-    git clone https://github.com/alibaba/Dragonfly.git
+    git clone https://github.com/dragonflyoss/Dragonfly.git
     ```
 
 2. Enter the project directory.

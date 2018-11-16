@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alibaba/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/go-check/check"
 )
 
