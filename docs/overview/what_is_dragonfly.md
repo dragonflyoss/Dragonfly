@@ -18,8 +18,7 @@ Dragonfly makes it simple and cost-effective to set up, operate, and scale any 
 
 This project is an open-source version of the Dragonfly used at Alibaba. It has the following features:
 
-{{% notice note %}}  More Alibaba-internal features will be made available to open-source users soon. Stay tuned!
-{{% /notice %}}
+**Note:** More Alibaba-internal features will be made available to open-source users soon. Stay tuned!
 
 - **P2P-based file distribution**: By using the P2P technology for file transmission, it makes the most out of the bandwidth resources of each peer to improve downloading efficiency,  and saves a lot of cross-IDC bandwidth, especially the costly cross-board bandwidth.
 - **Non-invasive support to all kinds of container technologies**: Dragonfly can seamlessly support various containers for distributing images.
