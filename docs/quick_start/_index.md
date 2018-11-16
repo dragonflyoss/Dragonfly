@@ -11,7 +11,7 @@ Simply by starting a supernode in your Docker container, and installing the Drag
 
 You have started your Docker container.
 
-## Starting a Supernode in Your Docker Container
+## Starting a supernode in Your Docker Container
 
 1. Pull the docker image we provided.
 
@@ -67,7 +67,8 @@ docker run -d -p 8001:8001 -p 8002:8002 registry.cn-hangzhou.aliyuncs.com/alidra
 2. Unzip the package.
 
     ```bash
-    tar -zxf df-client_0.2.0_linux_amd64.tar.gz
+    # Replace ${package} with a package appropriate for your operating system and location
+    tar -zxf ${package}
     ```
 
 3. Add the directory of `df-client` to your `PATH` environment variable to make sure you can directly use `dfget` and `dfdaemon` command.
@@ -92,10 +93,10 @@ export PATH=$PATH:$HOME/df-client/
 Once you have installed the Dragonfly client, you can use the `dfget` command to download a file.
 
 ```bash
-dfget -u 'https://github.com/alibaba/Dragonfly/blob/master/docs/images/logo.png' -o /tmp/logo.png
+dfget -u 'https://github.com/dragonflyoss/Dragonfly/blob/master/docs/images/logo.png' -o /tmp/logo.png
 ```
 
-**Tip:** For more information on the dfget command, see [dfget](https://alibaba.github.io/Dragonfly/cli_reference/dfget/).
+**Tip:** For more information on the dfget command, see [dfget](https://d7y.io/cli_reference/dfget/).
 
 ## Pulling an Image with Dragonfly
 
@@ -125,8 +126,8 @@ dfget -u 'https://github.com/alibaba/Dragonfly/blob/master/docs/images/logo.png'
 
 ## Related Topics
 
-- [Installing Server](https://alibaba.github.io/Dragonfly/user_guide/install_server/)
-- [Installing Client](https://alibaba.github.io/Dragonfly/user_guide/install_client/)
-- [Downloading Files](https://alibaba.github.io/Dragonfly/user_guide/download_files/)
-- [supernode Configuration](https://alibaba.github.io/Dragonfly/user_guide/supernode_configuration/)
-- [dfget](https://alibaba.github.io/Dragonfly/cli_reference/dfget/)
+- [Installing Server](https://d7y.io/user_guide/install_server/)
+- [Installing Client](https://d7y.io/user_guide/install_client/)
+- [Downloading Files](https://d7y.io/user_guide/download_files/)
+- [Supernode Configuration](https://d7y.io/user_guide/supernode_configuration/)
+- [Dfget](https://d7y.io/cli_reference/dfget/)
