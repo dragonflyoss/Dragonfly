@@ -18,6 +18,22 @@ You can install from the latest packages we provided.
     wget ${package}
     ```
 
+2. Unzip the package.
+
+    ```bash
+    # Replace `xxx` with the installation directory.
+    # Replace ${package} with a package appropriate for your operating system and location
+    tar -zxf ${package} -C xxx
+    ```
+
+3. Add the directory of `df-client` to your `PATH` environment variable to make sure you can directly use `dfget` and `dfdaemon` command.
+
+    ```bash
+    # Replace `xxx` with the installation directory.
+    # Execute or add this line to ~/.bashrc
+    export PATH=$PATH:xxx/df-client/
+    ```
+
     Available packages:
 
     - If you're in China:
@@ -28,24 +44,9 @@ You can install from the latest packages we provided.
 
     - If you're not in China:
 
-        - [Linux 64-bit](https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz): `https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz`
+        - [Linux 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz`
 
-        - [MacOS 64-bit](https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_darwin_amd64.tar.gz): `https://github.com/alibaba/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_darwin_amd64.tar.gz`
-
-2. Unzip the package.
-
-    ```bash
-    # Replace `xxx` with the installation directory.
-    tar -zxf df-client_0.2.0_linux_amd64.tar.gz -C xxx
-    ```
-
-3. Add the directory of `df-client` to your `PATH` environment variable to make sure you can directly use `dfget` and `dfdaemon` command.
-
-    ```bash
-    # Replace `xxx` with the installation directory.
-    # Execute or add this line to ~/.bashrc
-    export PATH=$PATH:xxx/df-client/
-    ```
+        - [MacOS 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_darwin_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_darwin_amd64.tar.gz`
 
 ## Installing from the Source Code
 
@@ -58,7 +59,7 @@ You can also install from the source code.
 1. Obtain the source code of Dragonfly.
 
     ```sh
-    git clone https://github.com/alibaba/Dragonfly.git
+    git clone https://github.com/dragonflyoss/Dragonfly.git
     ```
 
 2. Enter the target directory.
@@ -85,7 +86,7 @@ You can also install from the source code.
 1. Obtain the source code of Dragonfly.
 
     ```sh
-    git clone https://github.com/alibaba/Dragonfly.git
+    git clone https://github.com/dragonflyoss/Dragonfly.git
     ```
 
 2. Enter the target directory.

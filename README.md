@@ -17,7 +17,7 @@
 - [Features](#features)
 - [Comparison](#comparison)
 - [Quick Start](./docs/quick_start/_index.md)
-- [Documents](https://alibaba.github.io/Dragonfly/)
+- [Documents](https://d7y.io/)
 - [Contributing](CONTRIBUTING.md)
 - [FAQ](FAQ.md)
 - [Adoptors](./docs/_index.md#who-has-adopted-dragonfly)
