@@ -10,7 +10,7 @@ At Alibaba, every month Dragonfly is invoked two billion times and distributes 3
 
 While container technologies makes DevOps life easier most of the time, it surely brings some challenges: for example the efficiency of image distribution, especially when you have to replicate image distribution on several hosts.
 
-Dragonfly works extremely well with both Docker and [PouchContainer](https://github.com/dragonflyoss/pouch) in this scenario. It's also compatible with containers of other formats. It delivers up to 57 times the throughput of native docker and saves up to 99.5% of the out bandwidth of registry.
+Dragonfly works extremely well with both Docker and [PouchContainer](https://github.com/alibaba/pouch) in this scenario. It's also compatible with containers of other formats. It delivers up to 57 times the throughput of native docker and saves up to 99.5% of the out bandwidth of registry.
 
 Dragonfly makes it simple and cost-effective to set up, operate, and scale any kind of file, image, or data distribution.
 
