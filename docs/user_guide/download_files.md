@@ -12,7 +12,7 @@ Things are done differently when you download container images and download gene
 - You have installed Python 2.7+, and added the Python directory to the `PATH` environment variable.
 - The supernode service is started.
 
-    **Tip:** For more information on the dfget command, see [dfget](https://alibaba.github.io/Dragonfly/cli_reference/dfget/). For more information on the installation of supernodes, see [Installing Server](https://alibaba.github.io/Dragonfly/user_guide/install_server/).
+    **Tip:** For more information on the dfget command, see [dfget](https://d7y.io/cli_reference/dfget/). For more information on the installation of supernodes, see [Installing Server](https://d7y.io/user_guide/install_server/).
 
 ## Downloading container images
 

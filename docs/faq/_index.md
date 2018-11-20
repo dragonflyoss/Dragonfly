@@ -10,11 +10,11 @@ Find the answers to the frequently asked questions.
 
 ## How can I pull images with Dragonfly?
 
-See [Pulling an Image with Dragonfly](https://alibaba.github.io/Dragonfly/quick_start/#pulling-an-image-with-dragonfly).
+See [Pulling an Image with Dragonfly](https://d7y.io/quick_start/#pulling-an-image-with-dragonfly).
 
 ## How can I download files with Dragonfly?
 
-See [Downloading a File with Dragonfly](https://alibaba.github.io/Dragonfly/quick_start/#downloading-a-file-with-dragonfly).
+See [Downloading a File with Dragonfly](https://d7y.io/quick_start/#downloading-a-file-with-dragonfly).
 
 ## What is a supernode?
 
