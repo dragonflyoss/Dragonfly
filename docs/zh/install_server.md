@@ -34,7 +34,7 @@ Dragonfly 的系统架构包含两层：超级节点（服务端）和主机（�
 1. 获取 Dragonfly 源代码。
 
   ```sh
-  git clone https://github.com/alibaba/Dragonfly.git
+  git clone https://github.com/dragonflyoss/Dragonfly.git
   ```
 
 2. 进入项目目录。
@@ -66,7 +66,7 @@ Dragonfly 的系统架构包含两层：超级节点（服务端）和主机（�
 1. 获取 Dragonfly 源代码。
 
   ```sh
-  git clone https://github.com/alibaba/Dragonfly.git
+  git clone https://github.com/dragonflyoss/Dragonfly.git
   ```
 
 2. 进入项目目录。

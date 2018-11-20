@@ -3,10 +3,10 @@ title: "Dragonfly"
 ---
 
 [![Join the chat at https://gitter.im/alibaba/Dragonfly](https://badges.gitter.im/alibaba/Dragonfly.svg)](https://gitter.im/alibaba/Dragonfly?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![License](https://img.shields.io/badge/license-Apache%202-brightgreen.svg)](https://github.com/alibaba/Dragonfly/blob/master/LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202-brightgreen.svg)](https://github.com/dragonflyoss/Dragonfly/blob/master/LICENSE)
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Falibaba%2FDragonfly.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Falibaba%2FDragonfly?ref=badge_shield)
-[![GoDoc](https://godoc.org/github.com/alibaba/Dragonfly?status.svg)](https://godoc.org/github.com/alibaba/Dragonfly)
-[![Go Report Card](https://goreportcard.com/badge/github.com/alibaba/Dragonfly)](https://goreportcard.com/report/github.com/alibaba/Dragonfly)
+[![GoDoc](https://godoc.org/github.com/dragonflyoss/Dragonfly?status.svg)](https://godoc.org/github.com/dragonflyoss/Dragonfly)
+[![Go Report Card](https://goreportcard.com/badge/github.com/dragonflyoss/Dragonfly)](https://goreportcard.com/report/github.com/dragonflyoss/Dragonfly)
 [![Build Status](https://travis-ci.org/alibaba/Dragonfly.svg?branch=master)](https://travis-ci.org/alibaba/Dragonfly)
 [![CircleCI](https://circleci.com/gh/alibaba/Dragonfly.svg?style=svg)](https://circleci.com/gh/alibaba/Dragonfly)
 [![codecov](https://codecov.io/gh/alibaba/Dragonfly/branch/master/graph/badge.svg)](https://codecov.io/gh/alibaba/Dragonfly)
@@ -20,7 +20,7 @@ At Alibaba, every month Dragonfly is invoked two billion times and distributes 3
 
 While container technologies makes DevOps life easier most of the time, it surely brings some challenges: for example the efficiency of image distribution, especially when you have to replicate image distribution on several hosts.
 
-Dragonfly works extremely well with both Docker and [PouchContainer](https://github.com/alibaba/pouch) in this scenario. It's also compatible with containers of other formats. It delivers up to 57 times the throughput of native docker and saves up to 99.5% of the out bandwidth of registry.
+Dragonfly works extremely well with both Docker and [PouchContainer](https://github.com/dragonflyoss/pouch) in this scenario. It's also compatible with containers of other formats. It delivers up to 57 times the throughput of native docker and saves up to 99.5% of the out bandwidth of registry.
 
 Dragonfly makes it simple and cost-effective to set up, operate, and scale any kind of file, image, or data distribution.
 
@@ -109,4 +109,4 @@ Follow us on other platforms:
 
 ## License
 
-Dragonfly is available under the [Apache 2.0 License](https://github.com/alibaba/Dragonfly/blob/master/LICENSE).
+Dragonfly is available under the [Apache 2.0 License](https://github.com/dragonflyoss/Dragonfly/blob/master/LICENSE).

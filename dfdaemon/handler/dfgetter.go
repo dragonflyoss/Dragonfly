@@ -24,9 +24,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/alibaba/Dragonfly/dfdaemon/constant"
-	"github.com/alibaba/Dragonfly/dfdaemon/exception"
-	"github.com/alibaba/Dragonfly/dfdaemon/global"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/exception"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/global"
 )
 
 // Downloader is an interface to download file

@@ -109,7 +109,7 @@ unit-test() {
     cd "${BUILD_SOURCE_HOME}"
     go test -i ./...
 
-    cmd="go list ./... | grep 'github.com/alibaba/Dragonfly/'"
+    cmd="go list ./... | grep 'github.com/dragonflyoss/Dragonfly/'"
     sources="${GO_SOURCE_DIRECTORIES[*]}"
     sources="${sources// /|}"
     test -n "${sources}" && cmd+=" | grep -E '${sources}'"

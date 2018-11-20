@@ -29,7 +29,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alibaba/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/go-check/check"
 	"github.com/sirupsen/logrus"
 )
@@ -150,7 +150,7 @@ func (suite *ConfigSuite) TestCheckURL(c *check.C) {
 		"127.0.0.1:8080/我?x=1": true,
 		"a.b":            true,
 		"www.taobao.com": true,
-		"https://github.com/alibaba/Dragonfly/issues?" +
+		"https://github.com/dragonflyoss/Dragonfly/issues?" +
 			"q=is%3Aissue+is%3Aclosed": true,
 	}
 

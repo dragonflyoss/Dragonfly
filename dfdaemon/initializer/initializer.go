@@ -30,13 +30,13 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/alibaba/Dragonfly/cmd/dfdaemon/options"
-	"github.com/alibaba/Dragonfly/dfdaemon/constant"
-	"github.com/alibaba/Dragonfly/dfdaemon/global"
-	g "github.com/alibaba/Dragonfly/dfdaemon/global"
-	mux "github.com/alibaba/Dragonfly/dfdaemon/muxconf"
-	"github.com/alibaba/Dragonfly/dfdaemon/util"
-	"github.com/alibaba/Dragonfly/version"
+	"github.com/dragonflyoss/Dragonfly/cmd/dfdaemon/options"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/global"
+	g "github.com/dragonflyoss/Dragonfly/dfdaemon/global"
+	mux "github.com/dragonflyoss/Dragonfly/dfdaemon/muxconf"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/util"
+	"github.com/dragonflyoss/Dragonfly/version"
 )
 
 // Init is a pre-setup based on options.

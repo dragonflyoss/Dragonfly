@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/alibaba/Dragonfly/supernode/config"
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
 
 	"github.com/sirupsen/logrus"
 )

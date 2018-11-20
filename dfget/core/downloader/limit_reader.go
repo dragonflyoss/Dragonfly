@@ -22,7 +22,7 @@ import (
 	"hash"
 	"io"
 
-	"github.com/alibaba/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/dfget/util"
 )
 
 // NewLimitReader create LimitReader
