@@ -20,12 +20,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/alibaba/Dragonfly/dfget/config"
-	"github.com/alibaba/Dragonfly/dfget/core/api"
-	"github.com/alibaba/Dragonfly/dfget/errors"
-	"github.com/alibaba/Dragonfly/dfget/types"
-	"github.com/alibaba/Dragonfly/dfget/util"
-	"github.com/alibaba/Dragonfly/version"
+	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
+	"github.com/dragonflyoss/Dragonfly/dfget/errors"
+	"github.com/dragonflyoss/Dragonfly/dfget/types"
+	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/version"
 )
 
 // SupernodeRegister encapsulates the Register steps into a struct.

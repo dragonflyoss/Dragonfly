@@ -19,7 +19,7 @@ package types
 import (
 	"encoding/json"
 
-	"github.com/alibaba/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/config"
 )
 
 // PullPieceTaskResponse is the response of PullPieceTaskRequest.

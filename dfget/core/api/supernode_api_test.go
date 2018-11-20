@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/alibaba/Dragonfly/dfget/config"
-	"github.com/alibaba/Dragonfly/dfget/types"
+	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/types"
 	"github.com/go-check/check"
 )
 

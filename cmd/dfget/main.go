@@ -17,7 +17,7 @@
 package main
 
 import (
-	"github.com/alibaba/Dragonfly/dfget/cli"
+	"github.com/dragonflyoss/Dragonfly/dfget/cli"
 )
 
 func main() {
