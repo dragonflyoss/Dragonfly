@@ -47,7 +47,7 @@ We carried out an experiment to compare the performance of Dragonfly and wget.
 
 The expeirment result is as shown in the following figure.
 
-![How it stacks up](../../images/performance.png)
+![How it stacks up](../images/performance.png)
 
 As you can see in the chart, for Dragonfly, no matter how many clients are downloading, the average downloading time is always about 12 seconds. But for wget, the downloading time keeps increasing with the number of clients. When the number of wget clients reaches 1,200, the file source crashed and therefore cannot serve any client.
 
@@ -59,16 +59,16 @@ Dragonfly works slightly differently when downloading general files and download
 
 The Cluster Manager is also called a supernode, which is responsible for CDN and scheduling every peer to transfer blocks between each other. dfget is the P2P client, which is also called "peer". It's mainly used to download and share blocks.
 
-![Downloading General Files](../../images/dfget.png)
+![Downloading General Files](../images/dfget.png)
 
 ### Downloading Container Images
 
 Registry is similar to the file server above. dfget proxy is also called dfdaemon, which intercepts HTTP requests from docker pull or docker push, and then decides which requests to process with dfget.
 
-![Downloading Container Images](../../images/dfget-combine-container.png)
+![Downloading Container Images](../images/dfget-combine-container.png)
 
 ### Downloading Blocks
 
 Every file is divided into multiple blocks, which are transmitted between peers. Each peer is a P2P client. Cluster Manager will check if the corresponding file exists in the local disk. If not, it will be downloaded into Cluster Manager from file server.
 
-![How file blocks are downloaded](../../images/distributing.png)
+![How file blocks are downloaded](../images/distributing.png)
