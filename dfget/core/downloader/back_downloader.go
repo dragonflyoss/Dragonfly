@@ -24,8 +24,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/alibaba/Dragonfly/dfget/config"
-	"github.com/alibaba/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/util"
 )
 
 // BackDownloader downloads the file from file resource.

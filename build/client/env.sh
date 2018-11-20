@@ -21,7 +21,7 @@ curDir=$(pwd)
 
 export DRAGONFLY_HOME=${curDir%/build/client*}
 export BUILD_GOPATH=/tmp/dragonfly/build
-export BUILD_SOURCE_HOME="${BUILD_GOPATH}/src/github.com/alibaba/Dragonfly"
+export BUILD_SOURCE_HOME="${BUILD_GOPATH}/src/github.com/dragonflyoss/Dragonfly"
 
 export INSTALL_HOME="/opt/dragonfly"
 

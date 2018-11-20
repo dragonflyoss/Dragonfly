@@ -18,22 +18,6 @@ You can install from the latest packages we provided.
     wget ${package}
     ```
 
-2. Unzip the package.
-
-    ```bash
-    # Replace `xxx` with the installation directory.
-    # Replace ${package} with a package appropriate for your operating system and location
-    tar -zxf ${package} -C xxx
-    ```
-
-3. Add the directory of `df-client` to your `PATH` environment variable to make sure you can directly use `dfget` and `dfdaemon` command.
-
-    ```bash
-    # Replace `xxx` with the installation directory.
-    # Execute or add this line to ~/.bashrc
-    export PATH=$PATH:xxx/df-client/
-    ```
-
     Available packages:
 
     - If you're in China:
@@ -47,6 +31,21 @@ You can install from the latest packages we provided.
         - [Linux 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz`
 
         - [MacOS 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_darwin_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_darwin_amd64.tar.gz`
+
+2. Unzip the package.
+
+    ```bash
+    # Replace `xxx` with the installation directory.
+    tar -zxf df-client_0.2.0_linux_amd64.tar.gz -C xxx
+    ```
+
+3. Add the directory of `df-client` to your `PATH` environment variable to make sure you can directly use `dfget` and `dfdaemon` command.
+
+    ```bash
+    # Replace `xxx` with the installation directory.
+    # Execute or add this line to ~/.bashrc
+    export PATH=$PATH:xxx/df-client/
+    ```
 
 ## Installing from the Source Code
 

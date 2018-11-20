@@ -22,8 +22,8 @@ import (
 	"io"
 	"path"
 
-	"github.com/alibaba/Dragonfly/dfget/config"
-	"github.com/alibaba/Dragonfly/dfget/types"
+	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/types"
 	"github.com/sirupsen/logrus"
 )
 

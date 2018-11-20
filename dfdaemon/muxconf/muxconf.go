@@ -17,7 +17,7 @@ package muxconf
 import (
 	"net/http"
 
-	"github.com/alibaba/Dragonfly/dfdaemon/handler"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/handler"
 )
 
 // InitMux initialize web router of dfdaemon

@@ -28,13 +28,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alibaba/Dragonfly/dfget/config"
-	"github.com/alibaba/Dragonfly/dfget/core/api"
-	"github.com/alibaba/Dragonfly/dfget/core/downloader"
-	"github.com/alibaba/Dragonfly/dfget/core/regist"
-	"github.com/alibaba/Dragonfly/dfget/errors"
-	"github.com/alibaba/Dragonfly/dfget/util"
-	"github.com/alibaba/Dragonfly/version"
+	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/downloader"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
+	"github.com/dragonflyoss/Dragonfly/dfget/errors"
+	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/version"
 )
 
 func init() {

@@ -25,11 +25,11 @@ import (
 	"path"
 	"time"
 
-	cfg "github.com/alibaba/Dragonfly/dfget/config"
-	"github.com/alibaba/Dragonfly/dfget/core"
-	"github.com/alibaba/Dragonfly/dfget/errors"
-	"github.com/alibaba/Dragonfly/dfget/util"
-	"github.com/alibaba/Dragonfly/version"
+	cfg "github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/core"
+	"github.com/dragonflyoss/Dragonfly/dfget/errors"
+	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/version"
 )
 
 // Run is running cli.

@@ -25,8 +25,8 @@ import (
 	"github.com/pborman/uuid"
 	"github.com/sirupsen/logrus"
 
-	"github.com/alibaba/Dragonfly/dfdaemon/exception"
-	"github.com/alibaba/Dragonfly/dfdaemon/global"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/exception"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/global"
 )
 
 var (
