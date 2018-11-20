@@ -15,7 +15,7 @@ With a rich set of navigation features, you can always locate your target resour
 To go to the homepage of the Dragonfly documentation portal, do one of the following:
 
 - In the breadcrumb of any page, click Dragonfly.
-- In the address bar of the browser, type `https://alibaba.github.io/Dragonfly/` and press Enter.
+- In the address bar of the browser, type `https://d7y.io/` and press Enter.
 
 ### Navigating to a Topic
 
