@@ -8,7 +8,7 @@ jobs:
       # this image is build from Dockerfile 
       # https://github.com/pouchcontainer/pouchlinter/blob/master/Dockerfile
       - image: pouchcontainer/pouchlinter:v0.1
-    working_directory: /go/src/github.com/alibaba/Dragonfly
+    working_directory: /go/src/github.com/dragonflyoss/Dragonfly
     steps:
       - checkout
       - run:
@@ -27,13 +27,13 @@ jobs:
   gocode-check-via-gometalinter-swagger:
     docker:
       - image: pouchcontainer/pouchlinter:v0.1
-    working_directory: /go/src/github.com/alibaba/Dragonfly
+    working_directory: /go/src/github.com/dragonflyoss/Dragonfly
     steps:
       - checkout
       - run: 
           name: validate swagger.yml
           command: |
-            swagger validate "/go/src/github.com/alibaba/Dragonfly/apis/swagger.yml"
+            swagger validate "/go/src/github.com/dragonflyoss/Dragonfly/apis/swagger.yml"
       - run:
           name: use gometalinter to check gocode of this project.
           command: |
@@ -42,7 +42,7 @@ jobs:
   unit-test-golang:
     docker:
       - image: circleci/golang:1.10.4
-    working_directory: /go/src/github.com/alibaba/Dragonfly
+    working_directory: /go/src/github.com/dragonflyoss/Dragonfly
     steps:
       - checkout
       - run:

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/http/pprof"
 
-	"github.com/alibaba/Dragonfly/apis/types"
+	"github.com/dragonflyoss/Dragonfly/apis/types"
 
 	"github.com/gorilla/mux"
 )
