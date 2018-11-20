@@ -7,7 +7,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/dragonflyoss/Dragonfly)](https://goreportcard.com/report/github.com/dragonflyoss/Dragonfly)
 [![Build Status](https://travis-ci.org/dragonflyoss/Dragonfly.svg?branch=master)](https://travis-ci.org/dragonflyoss/Dragonfly)
 [![CircleCI](https://circleci.com/gh/dragonflyoss/Dragonfly.svg?style=svg)](https://circleci.com/gh/dragonflyoss/Dragonfly)
-[![codecov](https://codecov.io/gh/dragonfly/Dragonfly/branch/master/graph/badge.svg)](https://codecov.io/gh/dragonfly/Dragonfly)
+[![codecov](https://codecov.io/gh/dragonflyoss/Dragonfly/branch/master/graph/badge.svg)](https://codecov.io/gh/dragonflyoss/Dragonfly)
 
 ![Dragonfly](docs/images/logo/dragonfly-linear.png)
 
