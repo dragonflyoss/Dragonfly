@@ -20,7 +20,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/alibaba/Dragonfly/dfdaemon/global"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/global"
 )
 
 // GetEnv returns the environments of dfdaemon

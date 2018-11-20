@@ -19,8 +19,8 @@ package downloader
 import (
 	"bytes"
 
-	"github.com/alibaba/Dragonfly/dfget/config"
-	"github.com/alibaba/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/util"
 )
 
 // Piece contains all information of a piece.

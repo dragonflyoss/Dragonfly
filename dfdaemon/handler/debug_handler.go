@@ -19,7 +19,7 @@ import (
 	"net/http/pprof"
 	"strings"
 
-	"github.com/alibaba/Dragonfly/version"
+	"github.com/dragonflyoss/Dragonfly/version"
 	"github.com/sirupsen/logrus"
 )
 

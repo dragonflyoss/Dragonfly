@@ -21,11 +21,11 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/alibaba/Dragonfly/dfget/config"
-	"github.com/alibaba/Dragonfly/dfget/core/api"
-	"github.com/alibaba/Dragonfly/dfget/core/regist"
-	"github.com/alibaba/Dragonfly/dfget/types"
-	"github.com/alibaba/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
+	"github.com/dragonflyoss/Dragonfly/dfget/types"
+	"github.com/dragonflyoss/Dragonfly/dfget/util"
 )
 
 // P2PDownloader is one implementation of Downloader that uses p2p pattern

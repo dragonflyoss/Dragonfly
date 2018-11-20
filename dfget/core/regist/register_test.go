@@ -25,8 +25,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/alibaba/Dragonfly/dfget/config"
-	. "github.com/alibaba/Dragonfly/dfget/core/helper"
+	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	. "github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/go-check/check"
 )
 
