@@ -21,8 +21,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/alibaba/Dragonfly/dfdaemon/global"
-	"github.com/alibaba/Dragonfly/dfdaemon/util"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/global"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/util"
 )
 
 // Process makes the dfdaemon as a reverse proxy to download image layers by dragonfly

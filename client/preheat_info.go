@@ -3,7 +3,7 @@ package client
 import (
 	"context"
 
-	"github.com/alibaba/Dragonfly/apis/types"
+	"github.com/dragonflyoss/Dragonfly/apis/types"
 )
 
 // PreheatInfo get detailed information of a preheat task.

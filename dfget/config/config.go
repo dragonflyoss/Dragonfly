@@ -30,7 +30,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/alibaba/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/gcfg.v1"
 	"gopkg.in/warnings.v0"
