@@ -11,6 +11,14 @@ echo "copy contents to docs/.build/content"
 test -d ./content || mkdir ./content
 cp -r ../* ./content/
 rm -rf ./content/zh
+
+if [ "$(uname)" == "Darwin" ]; then
+  find ./content -name '*.md' -exec sed -i '' 's#../images#/images#g' {} \;
+else
+  find ./content -name '*.md' -exec sed -i 's#../images#/images#g' {} \;
+fi
+
+
 echo "copy images"
 test -d ./static || mkdir ./static
 mv ./content/images ./static/
