@@ -50,7 +50,11 @@ jobs:
       - run:
           name: use gometalinter to check gocode of this project.
           command: |
-            gometalinter --disable-all --skip vendor -E gofmt -E goimports -E golint -E misspell -E vet -E deadcode -E goconst ./...
+            gometalinter --disable-all --skip vendor -E gofmt -E goimports -E golint -E misspell -E vet -E goconst ./...
+      - run:
+          name: detect deadcode without test folder
+          command: |
+            gometalinter --disable-all --skip vendor --skip test -E deadcode ./...
 
   unit-test-golang:
     docker:
@@ -70,6 +74,20 @@ jobs:
       - run:
           name: build client
           command: ./build/build.sh client
+        
+  api-integration-test:
+    docker:
+      - image: circleci/golang:1.10.4
+    working_directory: /go/src/github.com/dragonflyoss/Dragonfly
+    steps:
+      - checkout
+      - run:
+          name: start supernode daemon background & run all integration test cases in test
+          command: |
+            cd supernode
+            go build
+            ./supernode &
+            go test ../test
 
 workflows:
   version: 2
@@ -78,3 +96,4 @@ workflows:
       - markdownlint-misspell-shellcheck
       - unit-test-golang
       - gocode-check-via-gometalinter-swagger
+      - api-integration-test
