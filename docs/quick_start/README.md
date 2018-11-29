@@ -1,17 +1,12 @@
-+++
-title = "Quick Start"
-weight = 20
-pre = "<b>2. </b>"
-+++
+# Dragonfly Quick Start
 
-Simply by starting a supernode in your Docker container, and installing the Dragonfly client, you can start downloading with Dragonfly.
-<!--more-->
+In this quick start guide, you will get a feeling of Dragonfly by starting a [SuperNode](../overview/terminology.md) (the server) in your Docker container, installing the Dragonfly client (the client), and then downloading a container image and a general file, which are likely what you'll be doing frequently in your use case.
 
 ## Prerequisites
 
 You have started your Docker container.
 
-## Starting a supernode in Your Docker Container
+## Step 1: Starting a SuperNode (the Server) in Your Docker Container
 
 1. Pull the docker image we provided.
 
@@ -25,7 +20,7 @@ You have started your Docker container.
     - China: `registry.cn-hangzhou.aliyuncs.com/alidragonfly/supernode:0.2.0`
     - US: `registry.us-west-1.aliyuncs.com/alidragonfly/supernode:0.2.0`
 
-2. Start a supernode.
+2. Start a SuperNode.
 
     ```bash
     # Replace ${imageName} with the real image name
@@ -40,7 +35,11 @@ docker pull registry.cn-hangzhou.aliyuncs.com/alidragonfly/supernode:0.2.0
 docker run -d -p 8001:8001 -p 8002:8002 registry.cn-hangzhou.aliyuncs.com/alidragonfly/supernode:0.2.0
 ```
 
-## Installing Dragonfly Client
+## Step 2: Installing Dragonfly Client
+
+You have two options of installing Dragonfly client: installing from source code, or installing by pulling the image.
+
+### Option 1: Installing from Source Code
 
 1. Download a package of the client.
 
@@ -88,17 +87,57 @@ tar -zxf df-client_0.2.0_linux_amd64.tar.gz
 export PATH=$PATH:$HOME/df-client/
 ```
 
-## Downloading a File with Dragonfly
+### Option 2: Installing by Pulling the Image
+
+1. Pull the docker image we provided.
+
+    ```bash
+    docker pull dragonflyoss/dfclient:v0.3.0_dev
+    ```
+
+2. Start dfdaemon.
+
+    ```bash
+    docker run -d -p 65001:65001 dragonflyoss/dfclient:v0.3.0_dev --registry https://xxx.xx.x
+    ```
+
+3. Configure the Daemon Mirror.
+
+    a. Modify the configuration file `/etc/docker/daemon.json`.
+
+    ```sh
+    vi /etc/docker/daemon.json
+    ```
+
+    **Tip:** For more information on `/etc/docker/daemon.json`, see [Docker documentation](https://docs.docker.com/registry/recipes/mirror/#configure-the-cache).
+
+    b. Add or update the configuration item `registry-mirrors` in the configuration file.
+
+    ```sh
+    "registry-mirrors": ["http://127.0.0.1:65001"]
+    ```
+
+    c. Restart Docker daemon.
+
+    ```bash
+    systemctl restart docker
+    ```
+
+## Step 3: Downloading Images or Files
+
+Now that you have started your SuperNode, and installed Dragonfly client, you can start downloading images or general files, both of which are supported by Dragonfly, but with slightly different downloading methods.
+
+### Use Case 1: Downloading a General File with Dragonfly
 
 Once you have installed the Dragonfly client, you can use the `dfget` command to download a file.
 
 ```bash
-dfget -u 'https://raw.githubusercontent.com/dragonflyoss/Dragonfly/master/docs/images/logo/dragonfly-linear.png' -o /tmp/logo.png
+dfget -u 'https://github.com/dragonflyoss/Dragonfly/blob/master/docs/images/logo.png' -o /tmp/logo.png
 ```
 
-**Tip:** For more information on the dfget command, see [dfget](../cli_reference/dfget.md).
+**Tip:** For more information on the dfget command, see [dfget](cli_ref/dfget.md).
 
-## Pulling an Image with Dragonfly
+### Use Case 2: Pulling an Image with Dragonfly
 
 1. Start `dfdaemon` with a specified registry, such as `https://index.docker.io`.
 
