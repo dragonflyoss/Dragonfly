@@ -73,7 +73,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.alibaba.dragonfly.supernode" level="${LOG_LEVEL}"
+    <logger name="com.dragonflyoss.dragonfly.supernode" level="${LOG_LEVEL}"
             additivity="false">
         <appender-ref ref="APP"/>
     </logger>
