@@ -66,6 +66,11 @@ public class PreheatServiceImpl implements PreheatService {
     }
 
     @Override
+    public boolean delete(String id) {
+        return repository.delete(id);
+    }
+
+    @Override
     public String preheat(PreheatTask task) throws PreheatException {
         Preheater preheater = preheaterMap.get(task.getType().toLowerCase());
         if (preheater == null) {
@@ -73,6 +78,7 @@ public class PreheatServiceImpl implements PreheatService {
         }
         String id = createTaskId(task.getUrl(), task.getFilter(), task.getIdentifier());
         task.setId(id);
+        repository.add(task);
         executorService.execute(new PreheatWorker(task, preheater, this));
         return id;
     }
