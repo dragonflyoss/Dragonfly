@@ -18,6 +18,7 @@ package downloader
 
 import (
 	"bytes"
+	"encoding/json"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
@@ -25,15 +26,15 @@ import (
 
 // Piece contains all information of a piece.
 type Piece struct {
-	TaskID    string
-	SuperNode string
-	DstCid    string
-	Range     string
-	Result    int
-	Status    int
-	PieceSize int32
-	PieceNum  int
-	Content   *bytes.Buffer
+	TaskID    string        `json:"taskID"`
+	SuperNode string        `json:"superNode"`
+	DstCid    string        `json:"dstCid"`
+	Range     string        `json:"range"`
+	Result    int           `json:"result"`
+	Status    int           `json:"status"`
+	PieceSize int32         `json:"pieceSize"`
+	PieceNum  int           `json:"pieceNum"`
+	Content   *bytes.Buffer `json:"-"`
 }
 
 // RawContent return raw contents.
@@ -44,6 +45,13 @@ func (p *Piece) RawContent() *bytes.Buffer {
 		return bytes.NewBuffer(contents[4 : length-1])
 	}
 	return nil
+}
+
+func (p *Piece) String() string {
+	if b, e := json.Marshal(p); e == nil {
+		return string(b)
+	}
+	return ""
 }
 
 // NewPiece creates a Piece.

@@ -28,6 +28,11 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 )
 
+const (
+	reset = "reset"
+	last  = "last"
+)
+
 // P2PDownloader is one implementation of Downloader that uses p2p pattern
 // to download files.
 type P2PDownloader struct {
@@ -233,7 +238,39 @@ func (p2p *P2PDownloader) getItem(latestItem *Piece) (bool, *Piece) {
 
 func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 	item *Piece) {
+	var (
+		hasTask  = false
+		sucCount = 0
+	)
+	p2p.refresh(item)
 
+	data := response.ContinueData()
+	for _, pieceTask := range data {
+		pieceRange := pieceTask.Range
+		ok, v := p2p.pieceSet[pieceRange]
+		if ok && v {
+			sucCount++
+			p2p.queue.Put(NewPiece(p2p.taskID,
+				p2p.node,
+				pieceTask.Cid,
+				pieceRange,
+				config.ResultSemiSuc,
+				config.TaskStatusRunning))
+			continue
+		}
+		if !ok {
+			p2p.pieceSet[pieceRange] = false
+			p2p.pullRate(pieceTask)
+			p2p.startTask(pieceTask)
+			hasTask = true
+		}
+	}
+	if hasTask {
+		p2p.Ctx.ClientLogger.Warnf("has not available pieceTask,maybe resource lack")
+	}
+	if sucCount > 0 {
+		p2p.Ctx.ClientLogger.Warnf("already suc item count:%d after a request super", sucCount)
+	}
 }
 
 func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse) {
@@ -241,5 +278,22 @@ func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse) {
 }
 
 func (p2p *P2PDownloader) refresh(item *Piece) {
+	needReset := false
+	if p2p.pieceSizeHistory[0] != p2p.pieceSizeHistory[1] {
+		p2p.pieceSizeHistory[0] = p2p.pieceSizeHistory[1]
+		needReset = true
+	}
 
+	if needReset {
+		p2p.clientQueue.Put(reset)
+		for k := range p2p.pieceSet {
+			delete(p2p.pieceSet, k)
+			p2p.total = 0
+			// console log reset
+		}
+	}
+	if p2p.node != item.SuperNode {
+		p2p.node = item.SuperNode
+		p2p.taskID = item.TaskID
+	}
 }

@@ -14,8 +14,18 @@
  * limitations under the License.
  */
 
-package downloader
+package helper
 
-// ClientWriter x
-type ClientWriter struct {
+import (
+	"path/filepath"
+)
+
+// GetTaskFile returns file path of task file.
+func GetTaskFile(taskFileName, dataDir string) string {
+	return filepath.Join(dataDir, taskFileName)
+}
+
+// GetServiceFile returns file path of service file.
+func GetServiceFile(taskFileName, dataDir string) string {
+	return GetTaskFile(taskFileName, dataDir) + ".service"
 }
