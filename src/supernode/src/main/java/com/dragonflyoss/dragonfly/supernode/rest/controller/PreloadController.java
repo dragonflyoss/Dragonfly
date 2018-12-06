@@ -28,4 +28,9 @@ public class PreloadController {
     public String checkHealth() {
         return "success";
     }
+
+    @GetMapping(value = "/_ping")
+    public String ping() {
+        return "ok";
+    }
 }

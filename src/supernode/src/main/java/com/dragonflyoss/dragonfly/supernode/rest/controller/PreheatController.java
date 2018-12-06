@@ -35,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -110,6 +111,12 @@ public class PreheatController {
                 HttpStatus.NOT_FOUND);
         }
         PreheatQueryResponse res = new PreheatQueryResponse(task);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/preheats/{id}")
+    public ResponseEntity deletePreheatTask(@PathVariable("id") String id) {
+        boolean res = preheatService.delete(id);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 

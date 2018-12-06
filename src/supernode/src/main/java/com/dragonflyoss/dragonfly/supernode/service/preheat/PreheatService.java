@@ -25,6 +25,14 @@ public interface PreheatService {
     List<PreheatTask> getAll();
 
     /**
+     * Delete a preheat task.
+     *
+     * @param id preheat task id.
+     * @return true if success
+     */
+    boolean delete(String id);
+
+    /**
      * Preheat a task
      *
      * @param task the preheat task information
