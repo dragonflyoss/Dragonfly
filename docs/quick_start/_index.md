@@ -93,7 +93,7 @@ export PATH=$PATH:$HOME/df-client/
 Once you have installed the Dragonfly client, you can use the `dfget` command to download a file.
 
 ```bash
-dfget -u 'https://github.com/dragonflyoss/Dragonfly/blob/master/docs/images/logo.png' -o /tmp/logo.png
+dfget -u 'https://raw.githubusercontent.com/dragonflyoss/Dragonfly/master/docs/images/logo/dragonfly-linear.png' -o /tmp/logo.png
 ```
 
 **Tip:** For more information on the dfget command, see [dfget](https://d7y.io/cli_reference/dfget/).
