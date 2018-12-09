@@ -29,7 +29,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
+
 	"github.com/go-check/check"
 	"github.com/sirupsen/logrus"
 )
@@ -90,35 +92,21 @@ func (suite *ConfigSuite) TestAssertContext(c *check.C) {
 	clog.Out = buf
 
 	var cases = []struct {
-		clog     *logrus.Logger
-		slog     *logrus.Logger
-		url      string
-		output   string
-		expected string
+		clog      *logrus.Logger
+		slog      *logrus.Logger
+		url       string
+		output    string
+		checkFunc func(err error) bool
 	}{
-		{expected: "client log"},
-		{clog: clog, expected: "server log"},
-		{clog: clog, slog: clog, expected: "invalid url"},
-		{clog: clog, slog: clog, url: "http://a.b", expected: ""},
-		{clog: clog, slog: clog, url: "http://a.b", output: "/root", expected: "invalid output"},
+		{checkFunc: errors.IsNotInitialized},
+		{clog: clog, checkFunc: errors.IsNotInitialized},
+		{clog: clog, slog: clog, checkFunc: errors.IsInvalidValue},
+		{clog: clog, slog: clog, url: "http://a.b", checkFunc: errors.IsNilError},
+		{clog: clog, slog: clog, url: "http://a.b", output: "/root", checkFunc: errors.IsInvalidValue},
 	}
 
-	var f = func() (msg string) {
-		defer func() {
-			if r := recover(); r != nil {
-				switch r := r.(type) {
-				case error:
-					msg = r.Error()
-				case *logrus.Entry:
-					msg = r.Message
-					buf.Reset()
-				default:
-					msg = fmt.Sprintf("%v", r)
-				}
-			}
-		}()
-		AssertContext(Ctx)
-		return ""
+	var f = func() (err error) {
+		return AssertContext(Ctx)
 	}
 
 	for _, v := range cases {
@@ -127,8 +115,9 @@ func (suite *ConfigSuite) TestAssertContext(c *check.C) {
 		Ctx.URL = v.url
 		Ctx.Output = v.output
 		actual := f()
-		c.Assert(strings.HasPrefix(actual, v.expected), check.Equals, true,
-			check.Commentf("actual:[%s] expected:[%s]", actual, v.expected))
+		expected := v.checkFunc(actual)
+		c.Assert(expected, check.Equals, true,
+			check.Commentf("actual:[%s] expected:[%s]", actual, expected))
 	}
 }
 

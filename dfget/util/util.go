@@ -20,7 +20,6 @@ package util
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"reflect"
 )
@@ -62,20 +61,6 @@ func IsNil(value interface{}) (result bool) {
 		}
 	}
 	return
-}
-
-// PanicIfNil panic if the obj is nil.
-func PanicIfNil(obj interface{}, msg string) {
-	if IsNil(obj) {
-		panic(fmt.Errorf(msg))
-	}
-}
-
-// PanicIfError panic if an error happened.
-func PanicIfError(err error, msg string) {
-	if err != nil {
-		panic(fmt.Errorf("%s: %v", msg, err))
-	}
 }
 
 // JSONString returns json string of the v.

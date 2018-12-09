@@ -10,9 +10,10 @@ import (
 
 	cfg "github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core"
-	"github.com/dragonflyoss/Dragonfly/dfget/errors"
+	errType "github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -30,12 +31,13 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		initConfig(args)
 		cfg.Ctx.ClientLogger.Infof("cmd params:%q", args)
+
+		// start download file process.
 		err := core.Start(cfg.Ctx)
 		util.Printer.Println(resultMsg(cfg.Ctx, time.Now(), err))
 		if err != nil {
 			os.Exit(err.Code)
 		}
-		util.Printer.Println(resultMsg(cfg.Ctx, time.Now(), err))
 		os.Exit(0)
 	},
 }
@@ -52,13 +54,52 @@ func checkParameters() {
 }
 
 func initConfig(args []string) {
-	initLog()
-	initProperties()
+	// Step1: transProperties.
+	err := transProperties()
+	if err != nil {
+		util.Printer.Println(fmt.Sprintf("trans properties error: %v", err))
+		os.Exit(cfg.CodePrepareError)
+	}
+
+	// Step2: check parameters are vaild.
 	checkParameters()
-	cfg.AssertContext(cfg.Ctx)
+
+	// Step3: init the logger client/server.
+	if err := initLog(); err != nil {
+		util.Printer.Println(fmt.Sprintf("init log error: %v", err))
+		os.Exit(cfg.CodeInitLogError)
+	}
+
+	// Step4: initProperties form config files.
+	initProperties()
+
+	// Step5: assert Context.
+	if err := cfg.AssertContext(cfg.Ctx); err != nil {
+		util.Printer.Println(fmt.Sprintf("assert context error: %v", err))
+		os.Exit(cfg.CodeAssertContextError)
+	}
+
 	cfg.Ctx.ClientLogger.Infof("context:%s", cfg.Ctx)
 }
 
+func transProperties() error {
+	locallyLimit, err := transLimit(localLimit)
+	if err != nil {
+		return errors.Wrapf(errType.ErrConvertFailed, "locallimit: %v", err)
+	}
+	cfg.Ctx.LocalLimit = locallyLimit
+
+	totallyLimit, err := transLimit(totalLimit)
+	if err != nil {
+		return errors.Wrapf(errType.ErrConvertFailed, "totallimit: %v", err)
+	}
+	cfg.Ctx.TotalLimit = totallyLimit
+
+	cfg.Ctx.Filter = transFilter(filter)
+	return nil
+}
+
+// get configurations from config files.
 func initProperties() {
 	for _, v := range cfg.Ctx.ConfigFiles {
 		if err := cfg.Props.Load(v); err == nil {
@@ -84,17 +125,9 @@ func initProperties() {
 	if cfg.Ctx.ClientQueueSize == 0 {
 		cfg.Ctx.ClientQueueSize = cfg.Props.ClientQueueSize
 	}
-
-	cfg.Ctx.Filter = transFilter(filter)
-
-	var err error
-	cfg.Ctx.LocalLimit, err = transLimit(localLimit)
-	util.PanicIfError(err, "convert locallimit error")
-	cfg.Ctx.TotalLimit, err = transLimit(totalLimit)
-	util.PanicIfError(err, "convert totallimit error")
 }
 
-func initLog() {
+func initLog() error {
 	var (
 		logPath  = path.Join(cfg.Ctx.WorkHome, "logs")
 		logLevel = "info"
@@ -102,13 +135,28 @@ func initLog() {
 	if cfg.Ctx.Verbose {
 		logLevel = "debug"
 	}
-	cfg.Ctx.ClientLogger = util.CreateLogger(logPath, "dfclient.log", logLevel, cfg.Ctx.Sign)
+
+	// init client logger.
+	clientLogger, err := util.CreateLogger(logPath, "dfclient.log", logLevel, cfg.Ctx.Sign)
+	if err != nil {
+		return err
+	}
+	cfg.Ctx.ClientLogger = clientLogger
+
+	// show log on console.
 	if cfg.Ctx.Console {
 		util.AddConsoleLog(cfg.Ctx.ClientLogger)
 	}
+
+	// if the pattern equals p2p, then init the p2p server logger.
 	if cfg.Ctx.Pattern == "p2p" {
-		cfg.Ctx.ServerLogger = util.CreateLogger(logPath, "dfserver.log", logLevel, cfg.Ctx.Sign)
+		serverLogger, err := util.CreateLogger(logPath, "dfserver.log", logLevel, cfg.Ctx.Sign)
+		if err != nil {
+			return err
+		}
+		cfg.Ctx.ServerLogger = serverLogger
 	}
+	return nil
 }
 
 func initFlags() {
@@ -196,7 +244,7 @@ func transFilter(filter string) []string {
 	return strings.Split(filter, "&")
 }
 
-func resultMsg(ctx *cfg.Context, end time.Time, e *errors.DFGetError) string {
+func resultMsg(ctx *cfg.Context, end time.Time, e *errType.DFGetError) string {
 	if e != nil {
 		return fmt.Sprintf("download FAIL(%d) cost:%.3fs length:%d reason:%d error:%v",
 			e.Code, end.Sub(ctx.StartTime).Seconds(), ctx.RV.FileLength,

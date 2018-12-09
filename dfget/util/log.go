@@ -31,27 +31,29 @@ import (
 const DefaultLogTimeFormat = "2006-01-02 15:04:05.000"
 
 // CreateLogger creates a logger.
-func CreateLogger(logPath string, logName string, logLevel string, sign string) *log.Logger {
-	var (
-		logger      *log.Logger
-		logFilePath = path.Join(logPath, logName)
-		level, err  = log.ParseLevel(logLevel)
-	)
+func CreateLogger(logPath string, logName string, logLevel string, sign string) (*log.Logger, error) {
+
+	logFilePath := path.Join(logPath, logName)
+	level, err := log.ParseLevel(logLevel)
 	if err != nil {
 		level = log.InfoLevel
 	}
-	if err = os.MkdirAll(filepath.Dir(logFilePath), 0755); err == nil {
-		var logFile *os.File
-		if logFile, err = os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644); err == nil {
-			logFile.Seek(0, 2)
-			logger = log.New()
-			logger.Out = logFile
-			logger.Formatter = &DragonflyFormatter{TimestampFormat: DefaultLogTimeFormat, Sign: sign}
-			logger.Level = level
-			return logger
-		}
+	if err := os.MkdirAll(filepath.Dir(logFilePath), 0755); err != nil {
+		return nil, err
 	}
-	panic(err)
+
+	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return nil, err
+	}
+	logFile.Seek(0, 2)
+
+	logger := log.New()
+	logger.Out = logFile
+	logger.Formatter = &DragonflyFormatter{TimestampFormat: DefaultLogTimeFormat, Sign: sign}
+	logger.Level = level
+	return logger, nil
+
 }
 
 // AddConsoleLog will add a ConsoleLog into logger's hooks.

@@ -74,7 +74,7 @@ func (suite *DFGetUtilSuite) TestCreateLogger_differentLevel(c *check.C) {
 	defer os.Remove(path.Join(tmpPath, tmpFileName))
 
 	var testLevel = func(level string, expected logrus.Level) {
-		logger = CreateLogger(tmpPath, tmpFileName, level, "")
+		logger, _ = CreateLogger(tmpPath, tmpFileName, level, "")
 		c.Assert(logger.Level, check.Equals, expected)
 	}
 
@@ -125,7 +125,7 @@ func tempFileAndLogger(level string, sign string) (*logrus.Logger, *os.File, *bu
 	tmpFile, err := ioutil.TempFile(tmpPath, "dfget_test")
 	tmpFileName := strings.TrimLeft(tmpFile.Name(), "/tmp/")
 	r := bufio.NewReader(tmpFile)
-	logger := CreateLogger(tmpPath, tmpFileName, level, sign)
+	logger, _ := CreateLogger(tmpPath, tmpFileName, level, sign)
 	return logger, tmpFile, r, err
 }
 

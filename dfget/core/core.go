@@ -54,27 +54,21 @@ func Start(ctx *config.Context) *errors.DFGetError {
 		ctx.StartTime.Format(config.DefaultTimestampFormat), ctx.URL))
 
 	if err = prepare(ctx); err != nil {
-		return errors.New(1100, err.Error())
+		return errors.New(config.CodePrepareError, err.Error())
 	}
 
 	if result, err = registerToSuperNode(ctx, register); err != nil {
-		return errors.New(1200, err.Error())
+		return errors.New(config.CodeRegisterError, err.Error())
 	}
 
 	if err = downloadFile(ctx, supernodeAPI, register, result); err != nil {
-		return errors.New(1300, err.Error())
+		return errors.New(config.CodeDownloadError, err.Error())
 	}
 
 	return nil
 }
 
 func prepare(ctx *config.Context) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = r.(error)
-		}
-	}()
-
 	util.Printer.Printf("dfget version:%s", version.DFGetVersion)
 	util.Printer.Printf("workspace:%s sign:%s", ctx.WorkHome, ctx.Sign)
 	ctx.ClientLogger.Infof("target file path:%s", ctx.Output)
@@ -83,13 +77,23 @@ func prepare(ctx *config.Context) (err error) {
 
 	rv.RealTarget = ctx.Output
 	rv.TargetDir = path.Dir(rv.RealTarget)
-	panicIf(util.CreateDirectory(rv.TargetDir))
+	if err := util.CreateDirectory(rv.TargetDir); err != nil {
+		return err
+	}
 	ctx.RV.TempTarget, err = createTempTargetFile(rv.TargetDir, ctx.Sign)
-	panicIf(err)
+	if err != nil {
+		return err
+	}
 
-	panicIf(util.CreateDirectory(path.Dir(rv.MetaPath)))
-	panicIf(util.CreateDirectory(ctx.WorkHome))
-	panicIf(util.CreateDirectory(rv.SystemDataDir))
+	if err := util.CreateDirectory(path.Dir(rv.MetaPath)); err != nil {
+		return err
+	}
+	if err := util.CreateDirectory(ctx.WorkHome); err != nil {
+		return err
+	}
+	if err := util.CreateDirectory(rv.SystemDataDir); err != nil {
+		return err
+	}
 	rv.DataDir = ctx.RV.SystemDataDir
 
 	ctx.Node = adjustSupernodeList(ctx.Node)
@@ -107,21 +111,21 @@ func launchPeerServer(ctx *config.Context) error {
 }
 
 func registerToSuperNode(ctx *config.Context, register regist.SupernodeRegister) (
-	*regist.RegisterResult, error) {
+	_ *regist.RegisterResult, err error) {
 	defer func() {
-		if r := recover(); r != nil {
+		if err != nil {
 			ctx.ClientLogger.Warnf("register fail but try to download from source, "+
-				"reason:%d(%v)", ctx.BackSourceReason, r)
+				"reason:%d(%v)", ctx.BackSourceReason, err)
 		}
 	}()
 	if ctx.Pattern == config.PatternSource {
 		ctx.BackSourceReason = config.BackSourceReasonUserSpecified
-		panic("user specified")
+		return nil, fmt.Errorf("user specified")
 	}
 
 	if len(ctx.Node) == 0 {
 		ctx.BackSourceReason = config.BackSourceReasonNodeEmpty
-		panic("supernode empty")
+		return nil, fmt.Errorf("supernode empty")
 	}
 
 	if ctx.Pattern == config.PatternP2P {
@@ -136,7 +140,7 @@ func registerToSuperNode(ctx *config.Context, register regist.SupernodeRegister)
 			return nil, e
 		}
 		ctx.BackSourceReason = config.BackSourceReasonRegisterFail
-		panic(e.Error())
+		return nil, e
 	}
 	ctx.RV.FileLength = result.FileLength
 	util.Printer.Printf("client:%s connected to node:%s", ctx.RV.LocalIP, result.Node)
@@ -261,10 +265,4 @@ func calculateTimeout(fileLength int64, defaultTimeoutSecond int) time.Duration 
 		timeout = int(fileLength/(64*1024) + 10)
 	}
 	return time.Duration(timeout) * time.Second
-}
-
-func panicIf(err error) {
-	if err != nil {
-		panic(err)
-	}
 }

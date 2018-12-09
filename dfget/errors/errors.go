@@ -19,6 +19,25 @@ package errors
 
 import (
 	"fmt"
+
+	errpkg "github.com/pkg/errors"
+)
+
+var (
+	// ErrInvalidValue represents the value is invalid.
+	ErrInvalidValue = &DFGetError{codeInvalidValue, "invalid value"}
+
+	// ErrNotInitialized represents the object is not initialized.
+	ErrNotInitialized = &DFGetError{codeNotInitialized, "not initialized"}
+
+	// ErrConvertFailed represents failed to convert.
+	ErrConvertFailed = &DFGetError{codeConvertFailed, "convert failed"}
+)
+
+const (
+	codeInvalidValue = iota
+	codeNotInitialized
+	codeConvertFailed
 )
 
 // New function creates a DFGetError.
@@ -46,4 +65,36 @@ type DFGetError struct {
 
 func (e *DFGetError) Error() string {
 	return fmt.Sprintf("{\"Code\":%d,\"Msg\":\"%s\"}", e.Code, e.Msg)
+}
+
+// IsNilError check the error is nil or not.
+func IsNilError(err error) bool {
+	if err == nil {
+		return true
+	}
+	return false
+}
+
+// IsInvalidValue check the error is the value is invalid or not.
+func IsInvalidValue(err error) bool {
+	fmt.Printf("err: %v", err)
+	return checkError(err, codeInvalidValue)
+}
+
+// IsNotInitialized check the error is the object is not initialized or not.
+func IsNotInitialized(err error) bool {
+	return checkError(err, codeNotInitialized)
+}
+
+// IsConvertFailed check the error is a conversion error or not.
+func IsConvertFailed(err error) bool {
+	return checkError(err, codeConvertFailed)
+}
+
+func checkError(err error, code int) bool {
+	errCause := errpkg.Cause(err)
+	if errTemp, ok := errCause.(*DFGetError); ok && errTemp.Code == code {
+		return true
+	}
+	return false
 }

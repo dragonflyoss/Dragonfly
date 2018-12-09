@@ -30,7 +30,10 @@ import (
 	"syscall"
 	"time"
 
+	errType "github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
+
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/gcfg.v1"
 	"gopkg.in/warnings.v0"
@@ -258,32 +261,48 @@ func NewContext() *Context {
 	ctx.Sign = fmt.Sprintf("%d-%.3f",
 		os.Getpid(), float64(time.Now().UnixNano())/float64(time.Second))
 
-	if currentUser, err := user.Current(); err == nil {
-		ctx.User = currentUser.Username
-		ctx.WorkHome = path.Join(currentUser.HomeDir, ".small-dragonfly")
-		ctx.RV.MetaPath = path.Join(ctx.WorkHome, "meta", "host.meta")
-		ctx.RV.SystemDataDir = path.Join(ctx.WorkHome, "data")
-	} else {
-		panic(fmt.Errorf("get user error: %s", err))
+	// NOTE: Maybe change it to not depend on homedir of currentUser.
+	currentUser, err := user.Current()
+	if err != nil {
+		util.Printer.Println(fmt.Sprintf("get user error: %s", err))
+		os.Exit(CodeGetUserError)
 	}
+
+	ctx.User = currentUser.Username
+	ctx.WorkHome = path.Join(currentUser.HomeDir, ".small-dragonfly")
+	ctx.RV.MetaPath = path.Join(ctx.WorkHome, "meta", "host.meta")
+	ctx.RV.SystemDataDir = path.Join(ctx.WorkHome, "data")
 	ctx.ConfigFiles = []string{DefaultYamlConfigFile, DefaultIniConfigFile}
 	return ctx
 }
 
-// AssertContext checks the ctx and panic if any error happens.
-func AssertContext(ctx *Context) {
-	util.PanicIfNil(ctx, "runtime context is not initialized")
-	util.PanicIfNil(ctx.ClientLogger, "client log is not initialized")
-	util.PanicIfNil(ctx.ServerLogger, "server log is not initialized")
+// AssertContext checks the ctx.
+func AssertContext(ctx *Context) (err error) {
+
+	if util.IsNil(ctx) {
+		return errors.Wrap(errType.ErrNotInitialized, "runtime context")
+	}
+	if util.IsNil(ctx.ClientLogger) {
+		return errors.Wrap(errType.ErrNotInitialized, "client log")
+	}
+	if util.IsNil(ctx.ServerLogger) {
+		return errors.Wrap(errType.ErrNotInitialized, "server log")
+	}
 
 	defer func() {
-		if err := recover(); err != nil {
-			ctx.ClientLogger.Panic(err)
+		if err != nil {
+			ctx.ClientLogger.Errorf("assert context error: %v", err)
 		}
 	}()
 
-	util.PanicIfError(checkURL(ctx), "invalid url")
-	util.PanicIfError(checkOutput(ctx), "invalid output")
+	if err := checkURL(ctx); err != nil {
+		return errors.Wrap(errType.ErrInvalidValue, "url")
+	}
+
+	if err := checkOutput(ctx); err != nil {
+		return errors.Wrap(errType.ErrInvalidValue, "output")
+	}
+	return nil
 }
 
 func checkURL(ctx *Context) error {

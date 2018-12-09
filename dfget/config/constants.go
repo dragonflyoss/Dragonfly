@@ -101,3 +101,24 @@ const (
 	LocalHTTPPathClient = "/client/"
 	LocalHTTPPathRate   = "/rate/"
 )
+
+/* errors code */
+const (
+	// CodePrepareError represents failed to prepare.
+	CodePrepareError = 1100
+
+	// CodeInitLogError represents failed to init log.
+	CodeInitLogError = 1101
+
+	// CodeAssertContextError ssertContextFailed represents failed to assert context.
+	CodeAssertContextError = 1102
+
+	// CodeGetUserError represents failed to get current user.
+	CodeGetUserError = 1103
+
+	// CodeRegisterError represents failed to get current user.
+	CodeRegisterError = 1200
+
+	// CodeDownloadError represents failed to download file.
+	CodeDownloadError = 1300
+)
