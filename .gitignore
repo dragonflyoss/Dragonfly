@@ -4,6 +4,7 @@
 target
 .classpath
 .idea/
+.vscode/
 *.iml
 .akconfig
 .DS_Store
@@ -37,6 +38,7 @@ getter.log*
 .pydevproject
 
 #supernode
+.factorypath
 
 # docs
 

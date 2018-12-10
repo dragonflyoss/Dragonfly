@@ -36,11 +36,10 @@ import (
 func Run() {
 	initialize()
 	err := core.Start(cfg.Ctx)
+	util.Printer.Println(resultMsg(cfg.Ctx, time.Now(), err))
 	if err != nil {
-		util.Printer.Println(resultMsg(cfg.Ctx, time.Now(), err))
 		os.Exit(err.Code)
 	}
-	util.Printer.Println(resultMsg(cfg.Ctx, time.Now(), err))
 	os.Exit(0)
 }
 
