@@ -16,6 +16,7 @@
 
 package com.dragonflyoss.dragonfly.supernode.common.domain;
 
+import java.util.List;
 import java.util.Map;
 
 import com.dragonflyoss.dragonfly.supernode.common.enumeration.PreheatTaskStatus;
@@ -35,6 +36,8 @@ public class PreheatTask {
     private String identifier;
     private Map<String, String> headers;
 
+    private String parentId;
+    private List<String> children;
     private PreheatTaskStatus status;
     private long startTime;
     private long finishTime;
