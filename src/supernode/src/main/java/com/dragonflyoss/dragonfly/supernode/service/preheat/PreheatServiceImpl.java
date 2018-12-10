@@ -92,8 +92,8 @@ public class PreheatServiceImpl implements PreheatService {
         } catch (Exception e) {
             throw new PreheatException(500, e.getMessage());
         }
-        if (previous != null) {
-            throw new PreheatException(400, "preheat task already exists, id:" + task.getId());
+        if (previous != null && previous.getFinishTime() > 0) {
+            throw new PreheatException(409, "preheat task already exists, id:" + task.getId(), task.getId());
         }
         executorService.execute(preheater.newWorker(task, this));
         return id;
