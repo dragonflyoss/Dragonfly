@@ -78,11 +78,11 @@ public class PreheatController {
             res.setId(id);
             response = new ResponseEntity<>(res, HttpStatus.OK);
         } catch (PreheatException e) {
-            log.error("createPreheatTask req:{}", JSON.toJSONString(request), e);
+            log.error("createPreheatTask req:{} error:{}", JSON.toJSONString(request), e.getMessage(), e);
             response = new ResponseEntity<>(new ErrorResponse(e.getCode(), e.getMessage()),
                 HttpStatus.valueOf(e.getCode()));
         } catch (RejectedExecutionException e) {
-            log.error("createPreheatTask req:{}", JSON.toJSONString(request), e);
+            log.error("createPreheatTask req:{} error:{}", JSON.toJSONString(request), e.getMessage(), e);
             response = new ResponseEntity<>(new ErrorResponse(500, e.getMessage()),
                 HttpStatus.INTERNAL_SERVER_ERROR);
         }
