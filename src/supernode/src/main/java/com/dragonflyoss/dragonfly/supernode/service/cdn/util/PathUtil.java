@@ -21,12 +21,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.dragonflyoss.dragonfly.supernode.common.Constants;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * @author zj
+ */
 public class PathUtil {
     private static final Logger logger = LoggerFactory.getLogger(PathUtil.class);
+
 
     public static String getDownloadPathStr(String taskId) {
         return Constants.DOWNLOAD_HOME + taskId.substring(0, 3) + File.separator + taskId;
@@ -44,6 +47,16 @@ public class PathUtil {
 
     public static Path getMd5DataPath(String taskId) {
         String pathStr = Constants.DOWNLOAD_HOME + taskId.substring(0, 3) + File.separator + taskId + ".md5";
+        return Paths.get(pathStr);
+    }
+
+    public static Path getPreheatMetaPath(String preheatTaskId) {
+        String pathStr = getDownloadPathStr(preheatTaskId) + ".preheat";
+        return Paths.get(pathStr);
+    }
+
+    public static Path getPreheatIndexPath() {
+        String pathStr = Constants.PREHEAT_HOME + "preheat.index";
         return Paths.get(pathStr);
     }
 
