@@ -15,6 +15,13 @@ public class ImagePreheater extends BasePreheater {
 
     @Override
     public BaseWorker newWorker(PreheatTask task, PreheatService service) {
-        return null;
+        return new ImagePreheatWorker(task, this, service);
+    }
+
+    static class ImagePreheatWorker extends BaseWorker {
+        ImagePreheatWorker(PreheatTask task, Preheater preheater,
+                                  PreheatService service) {
+            super(task, preheater, service);
+        }
     }
 }

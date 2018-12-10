@@ -30,6 +30,12 @@ public class PreheatTaskRepository {
     public boolean update(PreheatTask task) {
         PreheatTask preTask = preheatTasks.get(task.getId());
         if (preTask != null) {
+            if (task.getParentId() != null) {
+                preTask.setParentId(task.getParentId());
+            }
+            if (task.getChildren() != null) {
+                preTask.setChildren(task.getChildren());
+            }
             if (task.getStatus() != null) {
                 preTask.setStatus(task.getStatus());
             }

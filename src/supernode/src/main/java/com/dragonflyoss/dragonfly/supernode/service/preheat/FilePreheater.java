@@ -15,6 +15,13 @@ public class FilePreheater extends BasePreheater {
 
     @Override
     public BaseWorker newWorker(PreheatTask task, PreheatService service) {
-        return null;
+        return new FilePreheatWorker(task, this, service);
+    }
+
+    static class FilePreheatWorker extends BaseWorker {
+        FilePreheatWorker(PreheatTask task, Preheater preheater,
+                                 PreheatService service) {
+            super(task, preheater, service);
+        }
     }
 }

@@ -15,17 +15,44 @@
  */
 package com.dragonflyoss.dragonfly.supernode.common.util;
 
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * @author zj
+ */
 public class UrlUtil {
     private static Logger logger = LoggerFactory.getLogger(UrlUtil.class);
 
-    /**
-     * @param url
-     * @return
-     */
+    public static String filterParam(String url, String filter) {
+        final String sep = "&";
+
+        if (StringUtils.isBlank(filter)) {
+            return url;
+        }
+        String[] rawUrls = url.split("\\?", 2);
+        if (rawUrls.length < 2 || StringUtils.isBlank(rawUrls[1])) {
+            return url;
+        }
+
+        List<String> filters = Arrays.asList(filter.split(sep));
+        List<String> params = new LinkedList<>();
+        for (String param: rawUrls[1].split(sep)) {
+            String[] kv = param.split("=");
+            if (!(kv.length >= 1 && filters.contains(kv[0]))) {
+                params.add(param);
+            }
+        }
+
+        return rawUrls[0] + "?" + Strings.join(params, sep.charAt(0));
+    }
+
     public static boolean isValidUrl(String url) {
         if (StringUtils.isBlank(url)) {
             return false;
