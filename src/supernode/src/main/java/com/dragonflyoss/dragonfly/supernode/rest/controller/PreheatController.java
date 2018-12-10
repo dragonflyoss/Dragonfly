@@ -73,7 +73,7 @@ public class PreheatController {
         task.setIdentifier(request.getIdentifier());
         task.setHeaders(request.getHeaders());
         try {
-            String id = preheatService.preheat(task);
+            String id = preheatService.createPreheatTask(task);
             PreheatCreateResponse res = new PreheatCreateResponse();
             res.setId(id);
             response = new ResponseEntity<>(res, HttpStatus.OK);

@@ -21,7 +21,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.dragonflyoss.dragonfly.supernode.config.SupernodeProperties;
-
 import com.google.common.util.concurrent.RateLimiter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +49,13 @@ public class NetConfigNotification {
         } finally {
             lock.unlock();
         }
+    }
+
+    public int getNetRate() {
+        if (rateLimiters.isEmpty()) {
+            return 100;
+        }
+        return (int)(rateLimiters.get(0).getRate() / (1024 * 1024));
     }
 
     public void freshNetRate(int rate) {

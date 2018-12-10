@@ -70,7 +70,7 @@ public class PreheatServiceImpl implements PreheatService {
     }
 
     @Override
-    public String preheat(PreheatTask task) throws PreheatException {
+    public String createPreheatTask(PreheatTask task) throws PreheatException {
         Preheater preheater = preheaterMap.get(task.getType().toLowerCase());
         if (preheater == null) {
             throw new PreheatException(400, task.getType() + " isn't supported");
