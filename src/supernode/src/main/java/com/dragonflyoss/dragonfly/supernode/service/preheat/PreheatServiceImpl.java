@@ -11,6 +11,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import com.dragonflyoss.dragonfly.supernode.common.domain.PreheatTask;
+import com.dragonflyoss.dragonfly.supernode.common.enumeration.PreheatTaskStatus;
 import com.dragonflyoss.dragonfly.supernode.common.exception.PreheatException;
 import com.dragonflyoss.dragonfly.supernode.common.util.UrlUtil;
 import com.dragonflyoss.dragonfly.supernode.repository.PreheatTaskRepository;
@@ -76,6 +77,8 @@ public class PreheatServiceImpl implements PreheatService {
         }
         String id = createTaskId(task.getUrl(), task.getFilter(), task.getIdentifier());
         task.setId(id);
+        task.setStartTime(System.currentTimeMillis());
+        task.setStatus(PreheatTaskStatus.WAITING);
         repository.add(task);
         executorService.execute(preheater.newWorker(task, this));
         return id;
