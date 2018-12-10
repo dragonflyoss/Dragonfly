@@ -80,7 +80,7 @@ public class PreheatController {
         } catch (PreheatException e) {
             log.error("createPreheatTask req:{}", JSON.toJSONString(request), e);
             response = new ResponseEntity<>(new ErrorResponse(e.getCode(), e.getMessage()),
-                HttpStatus.BAD_REQUEST);
+                HttpStatus.valueOf(e.getCode()));
         } catch (RejectedExecutionException e) {
             log.error("createPreheatTask req:{}", JSON.toJSONString(request), e);
             response = new ResponseEntity<>(new ErrorResponse(500, e.getMessage()),

@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 /**
@@ -66,6 +67,12 @@ public class PreheatServiceImpl implements PreheatService {
 
     @Override
     public boolean delete(String id) {
+        PreheatTask task = repository.get(id);
+        if (task != null && task.getChildren() != null) {
+            for (String child : task.getChildren()) {
+                repository.delete(child);
+            }
+        }
         return repository.delete(id);
     }
 
@@ -79,9 +86,30 @@ public class PreheatServiceImpl implements PreheatService {
         task.setId(id);
         task.setStartTime(System.currentTimeMillis());
         task.setStatus(PreheatTaskStatus.WAITING);
-        repository.add(task);
+        PreheatTask previous;
+        try {
+            previous = repository.add(task);
+        } catch (Exception e) {
+            throw new PreheatException(500, e.getMessage());
+        }
+        if (previous != null) {
+            throw new PreheatException(400, "preheat task already exists, id:" + task.getId());
+        }
         executorService.execute(preheater.newWorker(task, this));
         return id;
+    }
+
+    @Scheduled(initialDelay = 6000, fixedDelay = 1800000)
+    public void deleteExpiresPreheatTask() {
+        List<String> ids = repository.getAllIds();
+        int count = 0;
+        for (String id : ids) {
+            if (repository.isExpired(id)) {
+                repository.delete(id);
+                count++;
+            }
+        }
+        log.info("deleteExpiresPreheatTask, count:{}", count);
     }
 
     //-------------------------------------------------------------------------

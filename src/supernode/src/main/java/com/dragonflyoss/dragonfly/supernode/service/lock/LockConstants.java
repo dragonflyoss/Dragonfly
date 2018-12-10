@@ -15,10 +15,14 @@
  */
 package com.dragonflyoss.dragonfly.supernode.service.lock;
 
+/**
+ * @author zj
+ */
 public interface LockConstants {
-
     String CDN_TRIGGER_LOCK = "cdn_trigger_lock_";
     String FILE_META_DATA_LOCK = "file_meta_data_lock_";
     String FILE_MD5_DATA_LOCK = "file_md5_data_lock_";
     String TASK_EXPIRE_LOCK = "task_expire_lock_";
+    String PREHEAT_TASK_LOCK = "preheat_task_lock_";
+    String PREHEAT_INDEX_LOCK = "preheat_index_lock";
 }
