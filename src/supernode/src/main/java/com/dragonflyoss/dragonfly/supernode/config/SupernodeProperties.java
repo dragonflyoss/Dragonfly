@@ -73,6 +73,7 @@ public class SupernodeProperties {
         String cdnHome = baseHome + "/repo";
         Constants.DOWNLOAD_HOME = cdnHome + Constants.DOWN_SUB_PATH;
         Constants.UPLOAD_HOME = cdnHome + Constants.HTTP_SUB_PATH;
+        Constants.PREHEAT_HOME = cdnHome + Constants.PREHEAT_SUB_PATH;
 
         try {
             Files.createDirectories(Paths.get(Constants.DOWNLOAD_HOME));

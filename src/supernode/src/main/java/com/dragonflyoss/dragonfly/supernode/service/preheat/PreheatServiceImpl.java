@@ -79,7 +79,7 @@ public class PreheatServiceImpl implements PreheatService {
         String id = createTaskId(task.getUrl(), task.getFilter(), task.getIdentifier());
         task.setId(id);
         repository.add(task);
-        executorService.execute(new PreheatWorker(task, preheater, this));
+        executorService.execute(preheater.newWorker(task, this));
         return id;
     }
 

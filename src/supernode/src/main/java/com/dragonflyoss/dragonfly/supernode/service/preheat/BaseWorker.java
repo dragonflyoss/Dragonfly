@@ -9,13 +9,12 @@ import lombok.Data;
  */
 @Data
 @AllArgsConstructor
-public class PreheatWorker implements Runnable {
+public abstract class BaseWorker implements Runnable {
     private PreheatTask task;
     private Preheater preheater;
     private PreheatService service;
 
     @Override
     public void run() {
-        preheater.execute(task);
     }
 }
