@@ -14,7 +14,7 @@ public class FilePreheater extends BasePreheater {
     }
 
     @Override
-    public void execute(PreheatTask task) {
-
+    public BaseWorker newWorker(PreheatTask task, PreheatService service) {
+        return null;
     }
 }

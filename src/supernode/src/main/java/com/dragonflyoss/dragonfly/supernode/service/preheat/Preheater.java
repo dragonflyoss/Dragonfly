@@ -14,9 +14,11 @@ public interface Preheater {
     String type();
 
     /**
-     * Executing the preheat task
+     * Create a worker to preheat the task.
      *
-     * @param task the preheat task base information
+     * @param task preheat task information
+     * @param service preheat service
+     * @return BaseWorker
      */
-    void execute(PreheatTask task);
+    BaseWorker newWorker(PreheatTask task, PreheatService service);
 }

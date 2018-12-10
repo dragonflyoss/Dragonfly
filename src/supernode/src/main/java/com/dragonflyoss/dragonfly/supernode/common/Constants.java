@@ -40,9 +40,11 @@ public final class Constants {
     public static final String DEFAULT_BASE_HOME = "/home/admin/supernode";
     public static final String HTTP_SUB_PATH = "/qtdown/";
     public static final String DOWN_SUB_PATH = "/download/";
+    public static final String PREHEAT_SUB_PATH = "/preheat/";
 
     public static String DOWNLOAD_HOME = DEFAULT_BASE_HOME + "/repo" + DOWN_SUB_PATH;
     public static String UPLOAD_HOME = DEFAULT_BASE_HOME + "/repo" + HTTP_SUB_PATH;
+    public static String PREHEAT_HOME = DEFAULT_BASE_HOME + "/repo" + PREHEAT_SUB_PATH;
 
     //-------------------------------------------------------------------------
 
