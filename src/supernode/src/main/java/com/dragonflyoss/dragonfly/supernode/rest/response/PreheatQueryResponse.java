@@ -5,7 +5,6 @@ import java.util.Date;
 import com.dragonflyoss.dragonfly.supernode.common.domain.PreheatTask;
 import com.dragonflyoss.dragonfly.supernode.common.enumeration.PreheatTaskStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
@@ -13,7 +12,6 @@ import lombok.Data;
  * @author lowzj
  */
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PreheatQueryResponse {
     @JsonProperty("ID")
     private String id;
@@ -25,8 +23,12 @@ public class PreheatQueryResponse {
 
     public PreheatQueryResponse(PreheatTask task) {
         this.id = task.getId();
-        this.startTime = new Date(task.getStartTime());
-        this.finishTime = new Date(task.getFinishTime());
+        if (task.getStartTime() > 0) {
+            this.startTime = new Date(task.getStartTime());
+        }
+        if (task.getFinishTime() > 0) {
+            this.finishTime = new Date(task.getFinishTime());
+        }
         this.status = task.getStatus();
     }
 }
