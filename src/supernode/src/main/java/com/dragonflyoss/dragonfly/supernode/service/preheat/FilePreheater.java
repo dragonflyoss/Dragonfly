@@ -63,10 +63,12 @@ public class FilePreheater extends BasePreheater {
 
                     if (task.getFinishTime() > 0) {
                         cancel(task.getId());
+                        return;
                     }
                     if (process == null) {
                         // needn't to preheat because the task has been completed
                         succeed();
+                        return;
                     }
                     try {
                         int code = process.exitValue();
