@@ -21,4 +21,11 @@ public interface Preheater {
      * @return BaseWorker
      */
     BaseWorker newWorker(PreheatTask task, PreheatService service);
+
+    /**
+     * cancel the running task
+     *
+     * @param id the preheat task id
+     */
+    void cancel(String id);
 }

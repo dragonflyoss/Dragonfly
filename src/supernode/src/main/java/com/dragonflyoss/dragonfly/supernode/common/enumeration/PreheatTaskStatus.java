@@ -22,5 +22,5 @@ public enum PreheatTaskStatus {
     /**
      * the preheat task is finished and executed failed
      */
-    FAILED
+    FAILED,
 }
