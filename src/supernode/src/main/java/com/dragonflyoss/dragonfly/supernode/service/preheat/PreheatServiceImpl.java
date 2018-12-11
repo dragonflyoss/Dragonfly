@@ -5,10 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import com.dragonflyoss.dragonfly.supernode.common.domain.PreheatTask;
 import com.dragonflyoss.dragonfly.supernode.common.enumeration.PreheatTaskStatus;
@@ -18,7 +14,6 @@ import com.dragonflyoss.dragonfly.supernode.repository.PreheatTaskRepository;
 import com.dragonflyoss.dragonfly.supernode.service.TaskService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -41,7 +36,7 @@ public class PreheatServiceImpl implements PreheatService {
 
     private Map<String, Preheater> preheaterMap = new HashMap<>();
 
-    private static ExecutorService executorService = newThreadPool("preheat", 20, 100);
+    private static ExecutorService executorService = ExecutorUtils.newThreadPool("preheat", 20, 100);
 
     @PostConstruct
     public void init() {
@@ -51,6 +46,9 @@ public class PreheatServiceImpl implements PreheatService {
             }
         }
     }
+
+    //-------------------------------------------------------------------------
+    // implement interface
 
     @Override
     public PreheatTask get(String id) {
@@ -77,6 +75,11 @@ public class PreheatServiceImpl implements PreheatService {
     }
 
     @Override
+    public boolean update(String id, PreheatTask task) {
+        return repository.update(id, task);
+    }
+
+    @Override
     public String createPreheatTask(PreheatTask task) throws PreheatException {
         Preheater preheater = preheaterMap.get(task.getType().toLowerCase());
         if (preheater == null) {
@@ -99,6 +102,8 @@ public class PreheatServiceImpl implements PreheatService {
         return id;
     }
 
+    //-------------------------------------------------------------------------
+
     @Scheduled(initialDelay = 6000, fixedDelay = 1800000)
     public void deleteExpiresPreheatTask() {
         List<String> ids = repository.getAllIds();
@@ -118,18 +123,5 @@ public class PreheatServiceImpl implements PreheatService {
     private String createTaskId(String url, String filter, String identifier) {
         String taskUrl = UrlUtil.filterParam(url, filter);
         return downloadTaskService.createTaskId(taskUrl, null, identifier);
-    }
-
-    private static ExecutorService newThreadPool(String name, int corePoolSize, int maxPoolSize) {
-        return new ThreadPoolExecutor(corePoolSize, maxPoolSize,
-            60L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<Runnable>(), newThreadFactory(name));
-    }
-
-    private static ThreadFactory newThreadFactory(String name) {
-        return new BasicThreadFactory.Builder()
-            .namingPattern(name + "-%d")
-            .daemon(true)
-            .build();
     }
 }

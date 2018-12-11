@@ -68,8 +68,8 @@ public class PreheatTaskRepository {
         return preheatTasks.putIfAbsent(task.getId(), task);
     }
 
-    public boolean update(PreheatTask task) {
-        PreheatTask preTask = preheatTasks.get(task.getId());
+    public boolean update(String id, PreheatTask task) {
+        PreheatTask preTask = preheatTasks.get(id);
         if (preTask != null) {
             if (task.getParentId() != null) {
                 preTask.setParentId(task.getParentId());

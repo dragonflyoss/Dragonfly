@@ -51,7 +51,7 @@ public class HttpClientUtil {
         HttpURLConnection.setFollowRedirects(false);
     }
 
-    private static class TrustAnyTrustManager implements X509TrustManager {
+    public static class TrustAnyTrustManager implements X509TrustManager {
         @Override
         public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {}
 

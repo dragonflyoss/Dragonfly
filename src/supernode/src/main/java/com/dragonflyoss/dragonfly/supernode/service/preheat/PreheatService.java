@@ -33,6 +33,15 @@ public interface PreheatService {
     boolean delete(String id);
 
     /**
+     * update a preheat task
+     *
+     * @param id the id of preheat task
+     * @param task the preheat task
+     * @return true if updated
+     */
+    boolean update(String id, PreheatTask task);
+
+    /**
      * create a preheat task
      *
      * @param task the preheat task information

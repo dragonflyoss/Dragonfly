@@ -1,5 +1,7 @@
 package com.dragonflyoss.dragonfly.supernode.service.preheat;
 
+import java.util.concurrent.ScheduledFuture;
+
 import com.dragonflyoss.dragonfly.supernode.common.domain.PreheatTask;
 import org.springframework.stereotype.Component;
 
@@ -8,9 +10,11 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class FilePreheater extends BasePreheater {
+    private static final String TYPE = "file";
+
     @Override
     public String type() {
-        return "file";
+        return TYPE;
     }
 
     @Override
@@ -18,10 +22,31 @@ public class FilePreheater extends BasePreheater {
         return new FilePreheatWorker(task, this, service);
     }
 
-    static class FilePreheatWorker extends BaseWorker {
+    class FilePreheatWorker extends BaseWorker {
         FilePreheatWorker(PreheatTask task, Preheater preheater,
                                  PreheatService service) {
             super(task, preheater, service);
+        }
+
+        @Override
+        boolean preRun() {
+            return false;
+        }
+
+        @Override
+        ScheduledFuture query() {
+            Runnable runnable = new Runnable() {
+                @Override
+                public void run() {
+
+                }
+            };
+            return schedule(getTask().getId(), runnable);
+        }
+
+        @Override
+        void afterRun() {
+            scheduledTasks.remove(getTask().getId());
         }
     }
 }
