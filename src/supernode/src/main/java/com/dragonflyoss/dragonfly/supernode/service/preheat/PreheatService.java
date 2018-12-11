@@ -49,4 +49,14 @@ public interface PreheatService {
      * @throws PreheatException exception
      */
     String createPreheatTask(PreheatTask task) throws PreheatException;
+
+    /**
+     * execute preheat task
+     *
+     * @param task the preheat task
+     * @return a Process that executing the preheat task.
+     *          return null if there's no necessary to preheat this task
+     * @throws PreheatException any exception occurred
+     */
+    Process executePreheat(PreheatTask task) throws PreheatException;
 }
