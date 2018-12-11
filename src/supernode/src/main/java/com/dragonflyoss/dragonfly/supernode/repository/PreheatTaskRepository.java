@@ -228,7 +228,7 @@ public class PreheatTaskRepository {
             for (String tsId : timestampIds) {
                 try {
                     long timestamp = Long.parseLong(tsId.substring(0, timestampLength));
-                    if (isExpired(timestamp)) {
+                    if (!isExpired(timestamp)) {
                         String id = tsId.substring(timestampLength + 1);
                         if (StringUtils.isNotBlank(id)) {
                             ids.add(id);
