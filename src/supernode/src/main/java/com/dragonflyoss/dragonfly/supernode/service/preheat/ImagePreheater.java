@@ -84,9 +84,11 @@ public class ImagePreheater extends BasePreheater {
         @Override
         ScheduledFuture query() {
             Runnable runnable = new Runnable() {
+                private int count = 0;
                 @Override
                 public void run() {
                     PreheatTask task = getTask();
+                    log.info("query preheat task:{} count:{}", task.getId(), count++);
                     int running = task.getChildren().size();
                     for (String child : task.getChildren()) {
                         PreheatTask childTask = getService().get(child);
