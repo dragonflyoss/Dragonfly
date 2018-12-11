@@ -176,7 +176,7 @@ public class PreheatTaskRepository {
         lockService.lock(lockName);
         try {
             Path metaPath = PathUtil.getPreheatMetaPath(id);
-            Files.deleteIfExists(metaPath);
+            return Files.deleteIfExists(metaPath);
         } catch (Exception e) {
             log.error("readTask preheat task from file, id:{} error:{}", id, e.getMessage(), e);
         } finally {
