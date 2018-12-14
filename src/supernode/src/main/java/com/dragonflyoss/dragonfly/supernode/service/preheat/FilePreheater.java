@@ -1,9 +1,5 @@
 package com.dragonflyoss.dragonfly.supernode.service.preheat;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.concurrent.ScheduledFuture;
 
 import com.dragonflyoss.dragonfly.supernode.common.domain.PreheatTask;
@@ -31,7 +27,7 @@ public class FilePreheater extends BasePreheater {
     }
 
     class FilePreheatWorker extends BaseWorker {
-        private Process process;
+        private PreheatProcess process;
 
         FilePreheatWorker(PreheatTask task, Preheater preheater,
                                  PreheatService service) {
@@ -71,13 +67,13 @@ public class FilePreheater extends BasePreheater {
                         succeed();
                         return;
                     }
-                    if (!isAliveProcess()) {
+                    if (!process.isAlive()) {
                         int code = process.exitValue();
                         if (code == 0) {
                             succeed();
                             cancel(task.getId());
                         } else {
-                            failed("dfget code:" + code + " out:" + readOut(process.getErrorStream()));
+                            failed("dfget code:" + code + " out:" + process.getError());
                             cancel(task.getId());
                         }
                     }
@@ -88,35 +84,10 @@ public class FilePreheater extends BasePreheater {
 
         @Override
         void afterRun() {
-            if (isAliveProcess()) {
+            if (process != null && process.isAlive()) {
                 process.destroy();
             }
-            scheduledTasks.remove(getTask().getId());
-        }
-
-        private boolean isAliveProcess() {
-            if (process != null) {
-                try {
-                    process.exitValue();
-                    return false;
-                } catch (IllegalThreadStateException ignored) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        private String readOut(InputStream is) {
-            StringBuilder sb = new StringBuilder();
-            BufferedReader br = new BufferedReader(new InputStreamReader(is));
-            String line;
-            try {
-                while ((line = br.readLine()) != null) {
-                    sb.append(line).append("\n");
-                }
-            } catch (IOException ignored) {
-            }
-            return sb.toString();
+            super.afterRun();
         }
     }
 }
