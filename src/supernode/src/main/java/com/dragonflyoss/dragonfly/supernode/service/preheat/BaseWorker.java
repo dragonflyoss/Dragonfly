@@ -60,13 +60,13 @@ public abstract class BaseWorker implements Runnable {
      */
     abstract void afterRun();
 
-    public void succeed() {
+    void succeed() {
         task.setFinishTime(System.currentTimeMillis());
         task.setStatus(PreheatTaskStatus.SUCCESS);
         service.update(task.getId(), task);
     }
 
-    public void failed(String errMsg) {
+    void failed(String errMsg) {
         task.setStatus(PreheatTaskStatus.FAILED);
         task.setFinishTime(System.currentTimeMillis());
         task.setErrorMsg(errMsg);
