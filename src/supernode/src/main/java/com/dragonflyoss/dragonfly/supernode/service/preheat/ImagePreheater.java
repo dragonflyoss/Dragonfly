@@ -88,7 +88,8 @@ public class ImagePreheater extends BasePreheater {
                 @Override
                 public void run() {
                     PreheatTask task = getTask();
-                    log.info("query preheat task:{} count:{}", task.getId(), count++);
+                    log.info("query preheat task:{} status:{} count:{}",
+                        task.getId(), task.getStatus(), count++);
                     int running = task.getChildren().size();
                     for (String child : task.getChildren()) {
                         PreheatTask childTask = getService().get(child);
@@ -164,7 +165,7 @@ public class ImagePreheater extends BasePreheater {
                 if (res.getStatusCode().is2xxSuccessful()) {
                     return parseLayers(res.getBody(), headerMap);
                 } else {
-                    log.error("getLayers");
+                    log.error("getLayers url:{} res:{} {}", url, res.getStatusCode(), res.getBody());
                     throw new Exception(res.getStatusCode() + " " + res.getBody());
                 }
             } catch (HttpClientErrorException e) {
