@@ -59,7 +59,8 @@ public class FilePreheater extends BasePreheater {
                 @Override
                 public void run() {
                     PreheatTask task = getTask();
-                    log.info("query preheat task:{} count:{}", task.getId(), count++);
+                    log.info("query preheat task:{} status:{} count:{}",
+                        task.getId(), task.getStatus(), count++);
 
                     if (task.getFinishTime() > 0) {
                         cancel(task.getId());
@@ -70,7 +71,7 @@ public class FilePreheater extends BasePreheater {
                         succeed();
                         return;
                     }
-                    try {
+                    if (!isAliveProcess()) {
                         int code = process.exitValue();
                         if (code == 0) {
                             succeed();
@@ -79,8 +80,6 @@ public class FilePreheater extends BasePreheater {
                             failed("dfget code:" + code + " out:" + readOut(process.getErrorStream()));
                             cancel(task.getId());
                         }
-                    } catch(IllegalThreadStateException e) {
-                        // not terminated and retry again
                     }
                 }
             };
@@ -89,7 +88,22 @@ public class FilePreheater extends BasePreheater {
 
         @Override
         void afterRun() {
+            if (isAliveProcess()) {
+                process.destroy();
+            }
             scheduledTasks.remove(getTask().getId());
+        }
+
+        private boolean isAliveProcess() {
+            if (process != null) {
+                try {
+                    process.exitValue();
+                    return false;
+                } catch (IllegalThreadStateException ignored) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private String readOut(InputStream is) {

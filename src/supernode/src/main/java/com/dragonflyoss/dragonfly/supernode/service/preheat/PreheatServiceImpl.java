@@ -166,8 +166,7 @@ public class PreheatServiceImpl implements PreheatService {
         Task existTask = null;
         try {
             existTask = downloadTaskService.get(taskId);
-        } catch (DataNotFoundException e) {
-            // pass
+        } catch (DataNotFoundException ignored) {
         }
         FileMetaData fileMetaData = fileMetaDataService.readFileMetaData(taskId);
 
@@ -179,7 +178,6 @@ public class PreheatServiceImpl implements PreheatService {
     }
 
     private String[] createCommand(String url, Map<String, String> headers, String filter, String identifier, String tmpTarget) {
-        String heatCommand;
         int netRate = netConfigNotification.getNetRate();
         String rate = netRate / 2 + "M";
 
@@ -208,11 +206,6 @@ public class PreheatServiceImpl implements PreheatService {
             cmd.add("-i").add(identifier);
         }
         return cmd.toArray();
-    }
-
-    private List<String> add(List<String> cmd, String arg) {
-        cmd.add(arg);
-        return cmd;
     }
 
     class Command {
