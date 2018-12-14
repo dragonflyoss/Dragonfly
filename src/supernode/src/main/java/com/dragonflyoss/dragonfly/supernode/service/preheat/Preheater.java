@@ -28,4 +28,11 @@ public interface Preheater {
      * @param id the preheat task id
      */
     void cancel(String id);
+
+    /**
+     * remove a running preheat task
+     *
+     * @param id the preheat task id
+     */
+    void remove(String id);
 }
