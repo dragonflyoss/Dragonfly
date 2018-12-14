@@ -56,9 +56,11 @@ public abstract class BaseWorker implements Runnable {
     abstract ScheduledFuture query();
 
     /**
-     * the operation of after running
+     * the operations after running
      */
-    abstract void afterRun();
+    void afterRun() {
+        preheater.remove(task.getId());
+    }
 
     void succeed() {
         task.setFinishTime(System.currentTimeMillis());

@@ -121,7 +121,7 @@ public class PreheatServiceImpl implements PreheatService {
     }
 
     @Override
-    public Process executePreheat(PreheatTask task) throws PreheatException {
+    public PreheatProcess executePreheat(PreheatTask task) throws PreheatException {
         if (!needPreheat(task.getId())) {
             return null;
         }
@@ -133,7 +133,7 @@ public class PreheatServiceImpl implements PreheatService {
             task.getIdentifier(), tmpTarget);
         log.info("command: {}", StringUtils.join(cmd, " "));
         try {
-            return Runtime.getRuntime().exec(cmd);
+            return new PreheatProcess(tmpTarget, Runtime.getRuntime().exec(cmd));
         } catch (Exception e) {
             throw new PreheatException(500, e.getMessage());
         }

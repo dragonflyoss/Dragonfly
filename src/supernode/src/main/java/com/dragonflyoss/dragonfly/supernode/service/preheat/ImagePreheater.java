@@ -111,11 +111,6 @@ public class ImagePreheater extends BasePreheater {
             return schedule(getTask().getId(), runnable);
         }
 
-        @Override
-        void afterRun() {
-            scheduledTasks.remove(getTask().getId());
-        }
-
         void preheatLayers() throws Exception {
             PreheatTask task = getTask();
             List<Layer> layers = getLayers(task.getUrl(), task.getHeaders(), true);
