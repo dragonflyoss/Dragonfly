@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 public abstract class BasePreheater implements Preheater {
     private ScheduledExecutorService scheduler;
 
-    ConcurrentHashMap<String, ScheduledFuture> scheduledTasks;
+    private ConcurrentHashMap<String, ScheduledFuture> scheduledTasks;
 
     public BasePreheater() {
         scheduler = ExecutorUtils.newScheduler(BasePreheater.this.type(), 30);
@@ -30,5 +30,11 @@ public abstract class BasePreheater implements Preheater {
         if (future != null && !future.isDone()) {
             future.cancel(true);
         }
+    }
+
+    @Override
+    public void remove(String id) {
+        cancel(id);
+        scheduledTasks.remove(id);
     }
 }

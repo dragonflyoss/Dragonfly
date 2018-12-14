@@ -54,9 +54,9 @@ public interface PreheatService {
      * execute preheat task
      *
      * @param task the preheat task
-     * @return a Process that executing the preheat task.
+     * @return a PreheatProcess that executing the preheat task.
      *          return null if there's no necessary to preheat this task
      * @throws PreheatException any exception occurred
      */
-    Process executePreheat(PreheatTask task) throws PreheatException;
+    PreheatProcess executePreheat(PreheatTask task) throws PreheatException;
 }
