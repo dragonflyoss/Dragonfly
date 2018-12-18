@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2018 Alibaba Group.
+ * Copyright The Dragonfly Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use rl file except in compliance with the License.
