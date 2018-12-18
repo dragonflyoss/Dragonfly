@@ -134,7 +134,7 @@ func moveFile(src string, dst string, expectMd5 string, log *logrus.Logger) erro
 	}
 	err := util.MoveFile(src, dst)
 
-	log.Infof("move src:%s to dst:%s result:%s cost:%.3f",
+	log.Infof("move src:%s to dst:%s result:%t cost:%.3f",
 		src, dst, err == nil, time.Since(start).Seconds())
 	return err
 }
