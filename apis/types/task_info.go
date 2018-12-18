@@ -6,21 +6,171 @@ package types
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	strfmt "github.com/go-openapi/strfmt"
+	"encoding/json"
 
+	"github.com/go-openapi/errors"
+	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // TaskInfo detailed information about task in supernode.
 // swagger:model TaskInfo
 type TaskInfo struct {
 
+	// The status of the created task related to CDN functionality.
+	//
+	// Enum: [WAITING RUNNING FAILED SUCCESS SOURCE_ERROR]
+	CdnStatus string `json:"CdnStatus,omitempty"`
+
+	// The length of the file dfget requests to download in bytes.
+	//
+	FileLength int64 `json:"FileLength,omitempty"`
+
 	// ID of the task.
 	ID string `json:"ID,omitempty"`
+
+	// The size of pieces which is calculated as per the following strategy
+	// 1. If file's total size is less than 200MB, then the piece size is 4MB by default.
+	// 2. Otherwise, it equals to the smaller value between totalSize/100MB + 2 MB and 15MB.
+	//
+	PieceSize int32 `json:"PieceSize,omitempty"`
+
+	// piece total
+	PieceTotal int32 `json:"PieceTotal,omitempty"`
+
+	// This field is for debugging. When caller of dfget is using it to files, he can pass callSystem
+	// name to dfget. When this field is passing to supernode, supernode has ability to filter them via
+	// some black/white list to guarantee security, or some other purposes.
+	//
+	// Min Length: 1
+	CallSystem string `json:"callSystem,omitempty"`
+
+	// tells whether it is a call from dfdaemon. dfdaemon is a long running
+	// process which works for container engines. It translates the image
+	// pulling request into raw requests into those dfget recganises.
+	//
+	Dfdaemon bool `json:"dfdaemon,omitempty"`
+
+	// extra HTTP headers sent to the rawURL.
+	// This field is carried with the request to supernode.
+	// Supernode will extract these HTTP headers, and set them in HTTP downloading requests
+	// from source server as user's wish.
+	//
+	Headers map[string]string `json:"headers,omitempty"`
+
+	// special attribute of remote source file. This field is used with taskURL to generate new taskID to
+	// indetify different downloading task of remote source file. For example, if user A and user B uses
+	// the same taskURL and taskID to download file, A and B will share the same peer network to distribute files.
+	// If user A additionally adds an indentifier with taskURL, while user B still carries only taskURL, then A's
+	// generated taskID is different from B, and the result is that two users use different peer networks.
+	//
+	Identifier string `json:"identifier,omitempty"`
+
+	// md5 checksum for the resource to distribute. dfget catches this parameter from dfget's CLI
+	// and passes it to supernode. When supernode finishes downloading file/image from the source location,
+	// it will validate the source file with this md5 value to check whether this is a valid file.
+	//
+	Md5 string `json:"md5,omitempty"`
+
+	// path is used in one peer A for uploading functionality. When peer B hopes
+	// to get piece C from peer A, B must provide a URL for piece C.
+	// Then when creating a task in supernode, peer A must provide this URL in request.
+	//
+	Path string `json:"path,omitempty"`
+
+	// The is the resource's URL which user uses dfget to download. The location of URL can be anywhere, LAN or WAN.
+	// For image distribution, this is image layer's URL in image registry.
+	// The resource url is provided by command line parameter.
+	//
+	RawURL string `json:"rawURL,omitempty"`
+
+	// taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via
+	// --filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.
+	//
+	TaskURL string `json:"taskURL,omitempty"`
 }
 
 // Validate validates this task info
 func (m *TaskInfo) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateCdnStatus(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateCallSystem(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+var taskInfoTypeCdnStatusPropEnum []interface{}
+
+func init() {
+	var res []string
+	if err := json.Unmarshal([]byte(`["WAITING","RUNNING","FAILED","SUCCESS","SOURCE_ERROR"]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		taskInfoTypeCdnStatusPropEnum = append(taskInfoTypeCdnStatusPropEnum, v)
+	}
+}
+
+const (
+
+	// TaskInfoCdnStatusWAITING captures enum value "WAITING"
+	TaskInfoCdnStatusWAITING string = "WAITING"
+
+	// TaskInfoCdnStatusRUNNING captures enum value "RUNNING"
+	TaskInfoCdnStatusRUNNING string = "RUNNING"
+
+	// TaskInfoCdnStatusFAILED captures enum value "FAILED"
+	TaskInfoCdnStatusFAILED string = "FAILED"
+
+	// TaskInfoCdnStatusSUCCESS captures enum value "SUCCESS"
+	TaskInfoCdnStatusSUCCESS string = "SUCCESS"
+
+	// TaskInfoCdnStatusSOURCEERROR captures enum value "SOURCE_ERROR"
+	TaskInfoCdnStatusSOURCEERROR string = "SOURCE_ERROR"
+)
+
+// prop value enum
+func (m *TaskInfo) validateCdnStatusEnum(path, location string, value string) error {
+	if err := validate.Enum(path, location, value, taskInfoTypeCdnStatusPropEnum); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *TaskInfo) validateCdnStatus(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.CdnStatus) { // not required
+		return nil
+	}
+
+	// value enum
+	if err := m.validateCdnStatusEnum("CdnStatus", "body", m.CdnStatus); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *TaskInfo) validateCallSystem(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.CallSystem) { // not required
+		return nil
+	}
+
+	if err := validate.MinLength("callSystem", "body", string(m.CallSystem), 1); err != nil {
+		return err
+	}
+
 	return nil
 }
 
