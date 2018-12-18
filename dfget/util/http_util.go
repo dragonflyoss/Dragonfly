@@ -37,6 +37,9 @@ const (
 	// RequestTag is the tag name for parsing structure to query parameters.
 	// see function ParseQuery.
 	RequestTag = "request"
+
+	// DefaultTimeout is the default timeout to check connect.
+	DefaultTimeout = 500
 )
 
 // DefaultHTTPClient is the default implementation of SimpleHTTPClient.
@@ -147,7 +150,7 @@ func ParseQuery(query interface{}) string {
 // returns localIP
 func CheckConnect(ip string, port int, timeout int) (localIP string, e error) {
 	if timeout <= 0 {
-		timeout = 500
+		timeout = DefaultTimeout
 	}
 
 	var conn net.Conn
