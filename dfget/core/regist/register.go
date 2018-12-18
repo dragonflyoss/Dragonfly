@@ -73,7 +73,7 @@ func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errors.DFG
 		if resp.Code == config.TaskCodeWaitAuth && retryTimes < 3 {
 			i--
 			retryTimes++
-			s.ctx.ClientLogger.Infof("sleep 2.5s to wait auth(%d/3)...", retryTimes, 3)
+			s.ctx.ClientLogger.Infof("sleep 2.5s to wait auth(%d/3)...", retryTimes)
 			time.Sleep(2500 * time.Millisecond)
 		}
 	}
