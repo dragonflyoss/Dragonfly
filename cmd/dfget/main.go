@@ -17,13 +17,9 @@
 package main
 
 import (
-	"github.com/dragonflyoss/Dragonfly/dfget/cli"
+	"github.com/dragonflyoss/Dragonfly/cmd/dfget/app"
 )
 
 func main() {
-	// TODO: refactor 'dfget' with GoLang
-	// the current dfget is written by python in 'src/getter'
-	// This main function is just the entry of dfget, the other operations
-	// must be controlled in package CLI.
-	cli.Run()
+	app.Execute()
 }
