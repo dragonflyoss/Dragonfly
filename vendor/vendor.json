@@ -99,6 +99,12 @@
 			"revisionTime": "2017-09-05T17:10:44Z"
 		},
 		{
+			"checksumSHA1": "40vJyUB4ezQSn/NSadsKEOrudMc=",
+			"path": "github.com/inconshreveable/mousetrap",
+			"revision": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75",
+			"revisionTime": "2014-10-17T20:07:13Z"
+		},
+		{
 			"checksumSHA1": "5BFhwYqOy2dR2NwDe3cCauuxEYM=",
 			"path": "github.com/klauspost/compress/flate",
 			"revision": "b939724e787a27c0005cabe3f78e7ed7987ac74f",
@@ -165,10 +171,10 @@
 			"revisionTime": "2018-07-12T20:16:18Z"
 		},
 		{
-			"checksumSHA1": "Tg05rfWxVqlqtB8G6QDHGo5wjAQ=",
+			"checksumSHA1": "ldDS4SHM8qhDCHYfqloFWZ3GXvk=",
 			"path": "github.com/spf13/cobra",
-			"revision": "7c4570c3ebeb8129a1f7456d0908a8b676b6f9f1",
-			"revisionTime": "2018-07-22T21:56:44Z"
+			"revision": "fe5e611709b0c57fa4a89136deaa8e1d4004d053",
+			"revisionTime": "2018-10-21T14:11:14Z"
 		},
 		{
 			"checksumSHA1": "OJI0OgC5V8gZtfS1e0CDYMhkDNc=",
@@ -181,6 +187,18 @@
 			"path": "github.com/stretchr/testify/assert",
 			"revision": "8019298d9fa5a04fc2ad10ae03349df3483096a6",
 			"revisionTime": "2018-10-28T12:27:15Z"
+		},
+		{
+			"checksumSHA1": "3DvkGtpbJW8oXepRr3wYSs72LmQ=",
+			"path": "github.com/stretchr/testify/require",
+			"revision": "199de5f3a493a9bf2dcc7fa5bf841d7759c13d7d",
+			"revisionTime": "2018-08-16T13:39:50Z"
+		},
+		{
+			"checksumSHA1": "uefllr2OtKBGo/kQSAPbW3w6p0A=",
+			"path": "github.com/stretchr/testify/suite",
+			"revision": "199de5f3a493a9bf2dcc7fa5bf841d7759c13d7d",
+			"revisionTime": "2018-08-16T13:39:50Z"
 		},
 		{
 			"checksumSHA1": "LTOa3BADhwvT0wFCknPueQALm8I=",
