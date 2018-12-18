@@ -19,10 +19,12 @@ package downloader
 import (
 	"bytes"
 	"math/rand"
+	"os"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
@@ -51,6 +53,9 @@ type P2PDownloader struct {
 	clientQueue      util.Queue
 	writerDone       chan struct{}
 
+	clientFilePath  string
+	serviceFilePath string
+
 	// pieceSet range -> bool
 	// true: if the range is processed successfully
 	// false: if the range is in processing
@@ -74,6 +79,9 @@ func (p2p *P2PDownloader) init() {
 	p2p.clientQueue = util.NewQueue(config.DefaultClientQueueSize)
 	p2p.writerDone = make(chan struct{})
 
+	p2p.clientFilePath = helper.GetTaskFile(p2p.taskFileName, p2p.Ctx.RV.DataDir)
+	p2p.serviceFilePath = helper.GetServiceFile(p2p.taskFileName, p2p.Ctx.RV.DataDir)
+
 	p2p.pieceSet = make(map[string]bool)
 }
 
@@ -83,6 +91,15 @@ func (p2p *P2PDownloader) Run() error {
 		lastItem *Piece
 		goNext   bool
 	)
+
+	// start ClientWriter
+	clientWriter, err := NewClientWriter(p2p.taskFileName, p2p.Ctx.RV.Cid, p2p.clientFilePath, p2p.serviceFilePath, p2p.clientQueue, p2p.Ctx)
+	if err != nil {
+		return err
+	}
+	go func() {
+		clientWriter.Run()
+	}()
 
 	for {
 		goNext, lastItem = p2p.getItem(lastItem)
@@ -101,7 +118,7 @@ func (p2p *P2PDownloader) Run() error {
 			if code == config.TaskCodeContinue {
 				p2p.processPiece(response, &curItem)
 			} else if code == config.TaskCodeFinish {
-				p2p.finishTask(response)
+				p2p.finishTask(response, clientWriter)
 				return nil
 			} else {
 				p2p.Ctx.ClientLogger.Warnf("request piece result:%v", response)
@@ -181,6 +198,15 @@ func (p2p *P2PDownloader) pullRate(data *types.PullPieceTaskResponseContinueData
 }
 
 func (p2p *P2PDownloader) startTask(data *types.PullPieceTaskResponseContinueData) {
+	powerClient := &PowerClient{
+		taskID:      p2p.taskID,
+		node:        p2p.node,
+		pieceTask:   data,
+		ctx:         p2p.Ctx,
+		queue:       p2p.queue,
+		clientQueue: p2p.clientQueue,
+	}
+	powerClient.Run()
 }
 
 func (p2p *P2PDownloader) getItem(latestItem *Piece) (bool, *Piece) {
@@ -198,9 +224,9 @@ func (p2p *P2PDownloader) getItem(latestItem *Piece) (bool, *Piece) {
 			item.TaskID = p2p.taskID
 		}
 		if item.Range != "" {
-			ok, v := p2p.pieceSet[item.Range]
+			v, ok := p2p.pieceSet[item.Range]
 			if !ok {
-				p2p.Ctx.ClientLogger.Warnf("pieceRange:%s is neither running nor success")
+				p2p.Ctx.ClientLogger.Warnf("pieceRange:%s is neither running nor success", item.Range)
 				return false, latestItem
 			}
 			if !v && (item.Result == config.ResultSemiSuc ||
@@ -247,7 +273,7 @@ func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 	data := response.ContinueData()
 	for _, pieceTask := range data {
 		pieceRange := pieceTask.Range
-		ok, v := p2p.pieceSet[pieceRange]
+		v, ok := p2p.pieceSet[pieceRange]
 		if ok && v {
 			sucCount++
 			p2p.queue.Put(NewPiece(p2p.taskID,
@@ -261,11 +287,11 @@ func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 		if !ok {
 			p2p.pieceSet[pieceRange] = false
 			p2p.pullRate(pieceTask)
-			p2p.startTask(pieceTask)
+			go p2p.startTask(pieceTask)
 			hasTask = true
 		}
 	}
-	if hasTask {
+	if !hasTask {
 		p2p.Ctx.ClientLogger.Warnf("has not available pieceTask,maybe resource lack")
 	}
 	if sucCount > 0 {
@@ -273,8 +299,36 @@ func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 	}
 }
 
-func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse) {
+func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, clientWriter *ClientWriter) {
+	p2p.Ctx.ClientLogger.Infof("remaining writed piece count:%d", p2p.clientQueue.Len())
+	p2p.clientQueue.Put(last)
+	waitStart := time.Now().Unix()
+	clientWriter.Wait()
 
+	p2p.Ctx.ClientLogger.Infof("wait client writer finish cost %d,main qu size:%d,client qu size:%d", time.Now().Unix()-waitStart, p2p.queue.Len(), p2p.clientQueue.Len())
+
+	if p2p.Ctx.BackSourceReason > 0 {
+		return
+	}
+
+	var src string
+	if clientWriter.acrossWrite {
+		src = p2p.Ctx.RV.TempTarget
+	} else {
+		if _, err := os.Stat(p2p.clientFilePath); err != nil {
+			p2p.Ctx.ClientLogger.Infof("client file path:%s not found", p2p.clientFilePath)
+			if e := util.Link(p2p.serviceFilePath, p2p.clientFilePath); e != nil {
+				p2p.Ctx.ClientLogger.Warnln("link failed, instead of use copy")
+				// TODO copy file
+			}
+		}
+		src = p2p.clientFilePath
+	}
+
+	if err := moveFile(src, p2p.targetFile, p2p.Ctx.Md5, p2p.Ctx.ClientLogger); err != nil {
+		return
+	}
+	p2p.Ctx.ClientLogger.Infof("download successfully from dragonfly")
 }
 
 func (p2p *P2PDownloader) refresh(item *Piece) {
