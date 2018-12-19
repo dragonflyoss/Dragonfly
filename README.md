@@ -16,11 +16,11 @@
 - [Introduction](#introduction)
 - [Features](#features)
 - [Comparison](#comparison)
-- [Quick Start](./docs/quick_start/_index.md)
-- [Documents](https://d7y.io/)
+- [Quick Start](./docs/quick_start/README.md)
+- [Documents](https://d7y.io/en-us/docs/overview/what_is_dragonfly.html)
 - [Contributing](CONTRIBUTING.md)
 - [FAQ](FAQ.md)
-- [Adoptors](./docs/_index.md#who-has-adopted-dragonfly)
+- [Adoptors](./docs/README.md#who-has-adopted-dragonfly)
 - [LICENSE](LICENSE)
 
 ## Introduction
