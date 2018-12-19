@@ -96,7 +96,7 @@ Once you have installed the Dragonfly client, you can use the `dfget` command to
 dfget -u 'https://raw.githubusercontent.com/dragonflyoss/Dragonfly/master/docs/images/logo/dragonfly-linear.png' -o /tmp/logo.png
 ```
 
-**Tip:** For more information on the dfget command, see [dfget](https://d7y.io/cli_reference/dfget/).
+**Tip:** For more information on the dfget command, see [dfget](../cli_reference/dfget.md).
 
 ## Pulling an Image with Dragonfly
 
@@ -126,8 +126,8 @@ dfget -u 'https://raw.githubusercontent.com/dragonflyoss/Dragonfly/master/docs/i
 
 ## Related Topics
 
-- [Installing Server](https://d7y.io/user_guide/install_server/)
-- [Installing Client](https://d7y.io/user_guide/install_client/)
-- [Downloading Files](https://d7y.io/user_guide/download_files/)
-- [Supernode Configuration](https://d7y.io/user_guide/supernode_configuration/)
-- [Dfget](https://d7y.io/cli_reference/dfget/)
+- [Installing Server](../user_guide/install_server.md)
+- [Installing Client](../user_guide/install_client.md)
+- [Downloading Files](../user_guide/download_files.md)
+- [Supernode Configuration](../user_guide/supernode_configuration.md)
+- [Dfget](../cli_reference/dfget.md)
