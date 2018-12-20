@@ -7,7 +7,6 @@ package types
 
 import (
 	strfmt "github.com/go-openapi/strfmt"
-
 	"github.com/go-openapi/swag"
 )
 
@@ -15,8 +14,8 @@ import (
 // swagger:model TaskUpdateRequest
 type TaskUpdateRequest struct {
 
-	// ID of the created task.
-	ID string `json:"ID,omitempty"`
+	// ID of the peer which has finished to download the whole task.
+	PeerID string `json:"PeerID,omitempty"`
 }
 
 // Validate validates this task update request
