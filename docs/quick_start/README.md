@@ -1,17 +1,12 @@
-+++
-title = "Quick Start"
-weight = 20
-pre = "<b>2. </b>"
-+++
+# Dragonfly Quick Start
 
-In this quick start guide, you will get a feeling of Dragonfly by starting a [supernode](https://d7y.io/overview/terminology/#supernode) (the server) in your Docker container, installing the Dragonfly client (the client), and then downloading a container image and a general file, which are likely what you'll be doing frequently in your use case.
-<!--more-->
+In this quick start guide, you will get a feeling of Dragonfly by starting a [SuperNode](../overview/terminology.md) (the server) in your Docker container, installing the Dragonfly client (the client), and then downloading a container image and a general file, which are likely what you'll be doing frequently in your use case.
 
 ## Prerequisites
 
 You have started your Docker container.
 
-## Step 1: Starting a Supernode (the Server) in Your Docker Container
+## Step 1: Starting a SuperNode (the Server) in Your Docker Container
 
 1. Pull the docker image we provided.
 
@@ -25,7 +20,7 @@ You have started your Docker container.
     - China: `registry.cn-hangzhou.aliyuncs.com/alidragonfly/supernode:0.2.0`
     - US: `registry.us-west-1.aliyuncs.com/alidragonfly/supernode:0.2.0`
 
-2. Start a supernode.
+2. Start a SuperNode.
 
     ```bash
     # Replace ${imageName} with the real image name
@@ -130,19 +125,19 @@ export PATH=$PATH:$HOME/df-client/
 
 ## Step 3: Downloading Images or Files
 
-Now that you have started your supernode, and installed Dragonfly client, you can start downloading images or general files, both of which are supported by Dragonfly, but with slightly different downloading methods.
+Now that you have started your SuperNode, and installed Dragonfly client, you can start downloading images or general files, both of which are supported by Dragonfly, but with slightly different downloading methods.
 
 ### Use Case 1: Downloading a General File with Dragonfly
 
 Once you have installed the Dragonfly client, you can use the `dfget` command to download a file.
 
 ```bash
-dfget -u 'https://raw.githubusercontent.com/dragonflyoss/Dragonfly/master/docs/images/logo/dragonfly-linear.png' -o /tmp/logo.png
+dfget -u 'https://github.com/dragonflyoss/Dragonfly/blob/master/docs/images/logo.png' -o /tmp/logo.png
 ```
 
-**Tip:** For more information on the dfget command, see [dfget](../cli_reference/dfget.md).
+**Tip:** For more information on the dfget command, see [dfget](cli_ref/dfget.md).
 
-## Use Case 2: Pulling an Image with Dragonfly
+### Use Case 2: Pulling an Image with Dragonfly
 
 1. Start `dfdaemon` with a specified registry, such as `https://index.docker.io`.
 
