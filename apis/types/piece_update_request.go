@@ -7,16 +7,16 @@ package types
 
 import (
 	strfmt "github.com/go-openapi/strfmt"
-
 	"github.com/go-openapi/swag"
 )
 
-// PieceUpdateRequest piece update request
+// PieceUpdateRequest request peer uses to update its status of downloading piece in supernode.
 // swagger:model PieceUpdateRequest
 type PieceUpdateRequest struct {
 
-	// ID
-	ID string `json:"ID,omitempty"`
+	// contains the peer ID.
+	//
+	PeerID string `json:"PeerID,omitempty"`
 }
 
 // Validate validates this piece update request

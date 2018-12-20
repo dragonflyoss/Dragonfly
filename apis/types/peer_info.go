@@ -6,9 +6,8 @@ package types
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	strfmt "github.com/go-openapi/strfmt"
-
 	"github.com/go-openapi/errors"
+	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
@@ -24,33 +23,18 @@ type PeerInfo struct {
 	// Format: ipv4
 	IP strfmt.IPv4 `json:"IP,omitempty"`
 
-	// This field is for debugging. When caller of dfget is using it to files, he can pass callSystem
-	// name to dfget. When this field is passing to supernode, supernode has ability to filter them via
-	// some black/white list to guarantee security, or some other purposes.
-	//
-	// Min Length: 1
-	CallSystem string `json:"callSystem,omitempty"`
-
-	// tells whether it is a call from dfdaemon.
-	Dfdaemon bool `json:"dfdaemon,omitempty"`
-
 	// host name of peer client node, as a valid RFC 1123 hostname.
 	// Min Length: 1
 	// Format: hostname
 	HostName strfmt.Hostname `json:"hostName,omitempty"`
 
-	// This is actually an HTTP URLPATH of dfget.
-	// Other peers can access the source file via this PATH.
-	//
-	Path string `json:"path,omitempty"`
-
 	// when registering, dfget will setup one uploader process.
 	// This one acts as a server for peer pulling tasks.
 	// This port is which this server listens on.
 	//
-	// Maximum: 65535
-	// Minimum: 30000
-	Port int64 `json:"port,omitempty"`
+	// Maximum: 65000
+	// Minimum: 15000
+	Port int32 `json:"port,omitempty"`
 
 	// version number of dfget binary
 	Version string `json:"version,omitempty"`
@@ -61,10 +45,6 @@ func (m *PeerInfo) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateIP(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateCallSystem(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -95,19 +75,6 @@ func (m *PeerInfo) validateIP(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *PeerInfo) validateCallSystem(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.CallSystem) { // not required
-		return nil
-	}
-
-	if err := validate.MinLength("callSystem", "body", string(m.CallSystem), 1); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (m *PeerInfo) validateHostName(formats strfmt.Registry) error {
 
 	if swag.IsZero(m.HostName) { // not required
@@ -131,11 +98,11 @@ func (m *PeerInfo) validatePort(formats strfmt.Registry) error {
 		return nil
 	}
 
-	if err := validate.MinimumInt("port", "body", int64(m.Port), 30000, false); err != nil {
+	if err := validate.MinimumInt("port", "body", int64(m.Port), 15000, false); err != nil {
 		return err
 	}
 
-	if err := validate.MaximumInt("port", "body", int64(m.Port), 65535, false); err != nil {
+	if err := validate.MaximumInt("port", "body", int64(m.Port), 65000, false); err != nil {
 		return err
 	}
 
