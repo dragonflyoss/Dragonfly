@@ -32,7 +32,7 @@ type TaskCreateRequest struct {
 
 	// tells whether it is a call from dfdaemon. dfdaemon is a long running
 	// process which works for container engines. It translates the image
-	// pulling request into raw requests into those dfget recganises.
+	// pulling request into raw requests into those dfget recognizes.
 	//
 	Dfdaemon bool `json:"dfdaemon,omitempty"`
 

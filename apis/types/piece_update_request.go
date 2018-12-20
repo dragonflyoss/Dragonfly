@@ -18,7 +18,7 @@ import (
 // swagger:model PieceUpdateRequest
 type PieceUpdateRequest struct {
 
-	// the uploader cid
+	// the uploader clientID
 	//
 	DstCid string `json:"dstCid,omitempty"`
 
@@ -28,7 +28,7 @@ type PieceUpdateRequest struct {
 	// Enum: [FAILED SUCCESS INVALID SEMISUC]
 	Result string `json:"result,omitempty"`
 
-	// the downloader cid
+	// the downloader clientID
 	//
 	SrcCid string `json:"srcCid,omitempty"`
 

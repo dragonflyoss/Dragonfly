@@ -66,27 +66,45 @@ paths:
             $ref: '#/definitions/Error'
         500:
           $ref: "#/responses/500ErrorResponse"
+    
     get:
       summary: "get all peers"
       description: "dfget sends request to register in Supernode as a peer node"
       parameters:
-        - name: "body"
-          in: "body"
-          description: "request body which contains peer registrar information."
-          schema:
-            $ref: "#/definitions/PeerCreateRequest"
+        - name: pageNum
+          in: query
+          type: integer
+          default: 0
+        - name: pageSize
+          in: query
+          required: true
+          type: integer
+        - name: sortKey
+          in: query
+          description: |
+            "The keyword used to sort. You can provide multiple keys, if two peers have the same first key, sort by the second key, and so on"
+          type: "array"
+          items:
+            type: "string"  
+        - name: sortDirect
+          in: query
+          description: "Determine the direction of sorting rules"
+          type: string
+          default: "ASC"
+          enum: ["ASC", "DESC"]
       responses:
         201:
           description: "no error"
           schema:
-            $ref: "#/definitions/PeerCreateResponse"
+            type: "array"
+            items:
+              $ref: "#/definitions/PeerInfo"
         400:
           description: "bad parameter"
           schema:
             $ref: '#/definitions/Error'
         500:
           $ref: "#/responses/500ErrorResponse"
-
 
   /peers/{id}:
     get: 
@@ -114,7 +132,7 @@ paths:
       summary: "delete a peer in supernode"
       description: |
         dfget stops playing a role as a peer in peer network constructed by supernode.
-        when dfget lasts in five minutes without downloading or uploading task, uploader of dfget
+        When dfget lasts in five minutes without downloading or uploading task, the uploader of dfget
         automatically sends a DELETE /peers/{id} request to supernode.
       parameters:
         - name: id
@@ -255,7 +273,7 @@ paths:
           description: |
             Request number of pieces of task. If request number is larger than the total pieces in supernode,
             supernode returns the total pieces of task. If not set, supernode will set 4 by default.
-        - name: cid
+        - name: clientID
           in: query
           type: "string"
           required: true
@@ -517,7 +535,7 @@ definitions:
         description: |
           tells whether it is a call from dfdaemon. dfdaemon is a long running
           process which works for container engines. It translates the image
-          pulling request into raw requests into those dfget recganises.
+          pulling request into raw requests into those dfget recognizes.
       callSystem:
         type: "string"
         description: |
@@ -638,7 +656,6 @@ definitions:
           some black/white list to guarantee security, or some other purposes.
         minLength: 1
       
-
   TaskUpdateRequest:
     type: "object"
     description: "request used to update task attributes."
@@ -692,11 +709,11 @@ definitions:
       srcCid:
         type: "string"
         description: |
-          the downloader cid
+          the downloader clientID
       dstCid: 
         type: "string"
         description: |
-          the uploader cid
+          the uploader clientID
       status:
         type: "string"
         description: |
@@ -776,6 +793,39 @@ definitions:
       ID:
         type: "string"
 
+  DfGetTask:
+    type: "object"
+    description: |
+      A download process initiated by dfget or other clients.
+    properties:
+      taskId:
+        type: "string"
+      pieceSize:
+        type: "integer"
+        description: |
+          The size of pieces which is calculated as per the following strategy
+          1. If file's total size is less than 200MB, then the piece size is 4MB by default.
+          2. Otherwise, it equals to the smaller value between totalSize/100MB + 2 MB and 15MB.
+        format: int32
+      cID:
+        type: "string"
+        description: |
+          CID means the client ID. It maps to the specific dfget process. 
+          When user wishes to download an image/file, user would start a dfget process to do this. 
+          This dfget is treated a client and carries a client ID. 
+          Thus, multiple dfget processes on the same peer have different CIDs.
+      path:
+        type: "string"
+        description: |
+          path is used in one peer A for uploading functionality. When peer B hopes
+          to get piece C from peer A, B must provide a URL for piece C.
+          Then when creating a task in supernode, peer A must provide this URL in request.
+      status:  
+        type: "string"
+        description: |
+            The status of Dfget download process.
+        enum: ["WAITING", "RUNNING", "FAILED", "SUCCESS",]
+ 
   ErrorResponse:
     type: "object"
     description: |
