@@ -199,7 +199,7 @@ func initParam(options *options.Options) {
 		log.Errorf("dfpath:%s not found", options.DfPath)
 		os.Exit(constant.CodeExitDfgetNotFound)
 	}
-	cmd := exec.Command(options.DfPath, "-v")
+	cmd := exec.Command(options.DfPath, "version")
 	version, _ := cmd.CombinedOutput()
 
 	log.Infof("dfget version:%s", string(version))
