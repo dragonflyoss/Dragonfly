@@ -25,6 +25,8 @@ You have started your Docker container.
     ```bash
     # Replace ${imageName} with the real image name
     docker run -d -p 8001:8001 -p 8002:8002 ${imageName}
+    # if you run docker in macOS, please use this command:
+    docker run -d -p 8001:8001 -p 8002:8002 ${imageName} -Dsupernode.advertiseIp=127.0.0.1
     ```
 
 For example, if you're in China, run the following commands:
