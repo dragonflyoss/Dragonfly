@@ -2,4 +2,4 @@
 
 nginx
 
-java -Djava.security.egd=file:/dev/./urandom -jar supernode.jar
+java -Djava.security.egd=file:/dev/./urandom "$@" -jar supernode.jar
