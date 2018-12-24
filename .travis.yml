@@ -5,7 +5,9 @@ language: java
 jdk:
   - oraclejdk8
 script:
-  - export LOG_HOME=/tmp/supernode && ./build/build.sh supernode
+  - ./hack/check-supernode.sh
+  - ./hack/compile-supernode.sh
+  - ./hack/build-supernode-image.sh
   # - (cd ./build/client && ./configure && make unit-test) && export LOG_HOME=/tmp/supernode && ./build/build.sh
 
 # after_success:
