@@ -55,7 +55,6 @@ jobs:
           name: detect deadcode without test folder
           command: |
             gometalinter --disable-all --skip vendor --skip test -E deadcode ./...
-
   unit-test-golang:
     docker:
       - image: circleci/golang:1.10.4
@@ -63,18 +62,22 @@ jobs:
     steps:
       - checkout
       - run:
+          name: build client
+          command: |
+            cd cmd
+            cd dfget && go build
+            cd ..
+            cd dfdaemon && go build
+      - run:
           name: unit test
-          command: (cd ./build/client && ./configure && make unit-test)
+          command: make unit-test
       - run:
           name: upload code coverage report
           command: bash <(curl -s https://codecov.io/bash)
       - run:
           name: rm coverage.txt
           command: rm coverage.txt
-      - run:
-          name: build client
-          command: ./build/build.sh client
-        
+
   api-integration-test:
     docker:
       - image: circleci/golang:1.10.4
