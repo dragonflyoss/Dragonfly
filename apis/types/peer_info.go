@@ -13,13 +13,17 @@ import (
 )
 
 // PeerInfo The detailed information of a peer in supernode.
+//
 // swagger:model PeerInfo
 type PeerInfo struct {
 
 	// ID of peer
 	ID string `json:"ID,omitempty"`
 
-	// IP address which peer client carries
+	// IP address which peer client carries.
+	// (TODO) make IP field contain more information, for example
+	// WAN/LAN IP address for supernode to recoganize.
+	//
 	// Format: ipv4
 	IP strfmt.IPv4 `json:"IP,omitempty"`
 

@@ -16,6 +16,13 @@ import (
 // swagger:model TaskCreateRequest
 type TaskCreateRequest struct {
 
+	// CID means the client ID. It maps to the specific dfget process.
+	// When user wishes to download an image/file, user would start a dfget process to do this.
+	// This dfget is treated a client and carries a client ID.
+	// Thus, multiple dfget processes on the same peer have different CIDs.
+	//
+	CID string `json:"cID,omitempty"`
+
 	// This field is for debugging. When caller of dfget is using it to files, he can pass callSystem
 	// name to dfget. When this field is passing to supernode, supernode has ability to filter them via
 	// some black/white list to guarantee security, or some other purposes.
@@ -28,6 +35,14 @@ type TaskCreateRequest struct {
 	// pulling request into raw requests into those dfget recganises.
 	//
 	Dfdaemon bool `json:"dfdaemon,omitempty"`
+
+	// filter is used to filter request queries in URL.
+	// For example, when a user wants to start to download a task which has a remote URL of
+	// http://a.b.com/fileA?user=xxx&auth=yyy, user can add a filter parameter ["user", "auth"]
+	// to filter the url to http://a.b.com/fileA. Then this parameter can potentially avoid repeatable
+	// downloads, if there is already a task http://a.b.com/fileA.
+	//
+	Filter []string `json:"filter"`
 
 	// extra HTTP headers sent to the rawURL.
 	// This field is carried with the request to supernode.
@@ -61,11 +76,6 @@ type TaskCreateRequest struct {
 	// The resource url is provided by command line parameter.
 	//
 	RawURL string `json:"rawURL,omitempty"`
-
-	// taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via
-	// --filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.
-	//
-	TaskURL string `json:"taskURL,omitempty"`
 }
 
 // Validate validates this task create request
