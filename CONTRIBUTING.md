@@ -61,6 +61,7 @@ Since you are ready to improve Dragonfly with a PR, we suggest you could take a 
 * [Branch Definition](#branch-definition)
 * [Commit Rules](#commit-rules)
 * [PR Description](#pr-description)
+* [Developing Environment](#developing-environment)
 
 ### Workspace Preparation
 
@@ -138,6 +139,20 @@ No matter commit message, or commit content, we do take more emphasis on code re
 ### PR Description
 
 PR is the only way to make change to Dragonfly project files. To help reviewers better get your purpose, PR description could not be too detailed. We encourage contributors to follow the [PR template](./.github/PULL_REQUEST_TEMPLATE.md) to finish the pull request.
+
+### Developing Environment
+
+As a contributor, if you want to make any contribution to Dragonfly project, we should reach an agreement on the version of tools used in the development environment.
+Here are some dependents with specific version:
+
+* golang : v1.10.4
+* swagger : 0.17.1
+* markdownlint : v0.5.0
+* misspell : latest
+* shellCheck : latest
+* docker: latest
+
+When you develop the Dragonfly project at the local environment, you should use subcommands of Makefile to help yourself to check and build the latest version of Dragonfly. For the convenience of developers， we use the docker to build Dragonfly. It can reduce problems of the developing environment.
 
 ## Engage to help anything
 

@@ -11,6 +11,9 @@ target
 **/.DS_Store
 *.swo
 *.swp
+.cache/
+.go/
+release/
 
 #df-daemon
 
