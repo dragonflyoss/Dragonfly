@@ -50,7 +50,7 @@ Nginx|0.8+
 3. Build the Docker image.
 
     ```sh
-    ./build/build.sh supernode
+    make build-supernode
     ```
 
 4. Obtain the latest Docker image ID of the supernode.
@@ -108,7 +108,7 @@ Nginx|0.8+
 
     server {
     listen 8002;
-    location /peer {
+    location / {
       proxy_pass http://127.0.0.1:8080;
      }
     }
