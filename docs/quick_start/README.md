@@ -135,7 +135,7 @@ Once you have installed the Dragonfly client, you can use the `dfget` command to
 dfget -u 'https://github.com/dragonflyoss/Dragonfly/blob/master/docs/images/logo.png' -o /tmp/logo.png
 ```
 
-**Tip:** For more information on the dfget command, see [dfget](cli_ref/dfget.md).
+**Tip:** For more information on the dfget command, see [dfget](../cli_reference/dfget.md).
 
 ### Use Case 2: Pulling an Image with Dragonfly
 
