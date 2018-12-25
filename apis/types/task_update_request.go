@@ -15,7 +15,7 @@ import (
 type TaskUpdateRequest struct {
 
 	// ID of the peer which has finished to download the whole task.
-	PeerID string `json:"PeerID,omitempty"`
+	PeerID string `json:"peerID,omitempty"`
 }
 
 // Validate validates this task update request

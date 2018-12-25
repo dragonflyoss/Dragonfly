@@ -19,9 +19,6 @@ import (
 // swagger:model PeerCreateRequest
 type PeerCreateRequest struct {
 
-	// Peer ID of dfget client. Every peer has a unique ID among peer network.
-	ID string `json:"ID,omitempty"`
-
 	// IP address which peer client carries
 	// Format: ipv4
 	IP strfmt.IPv4 `json:"IP,omitempty"`
