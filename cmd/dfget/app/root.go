@@ -35,7 +35,6 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			os.Exit(err.Code)
 		}
-		util.Printer.Println(resultMsg(cfg.Ctx, time.Now(), err))
 		os.Exit(0)
 	},
 }

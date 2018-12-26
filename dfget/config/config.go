@@ -263,6 +263,7 @@ func NewContext() *Context {
 		ctx.WorkHome = path.Join(currentUser.HomeDir, ".small-dragonfly")
 		ctx.RV.MetaPath = path.Join(ctx.WorkHome, "meta", "host.meta")
 		ctx.RV.SystemDataDir = path.Join(ctx.WorkHome, "data")
+		ctx.RV.FileLength = -1
 	} else {
 		panic(fmt.Errorf("get user error: %s", err))
 	}
@@ -274,7 +275,9 @@ func NewContext() *Context {
 func AssertContext(ctx *Context) {
 	util.PanicIfNil(ctx, "runtime context is not initialized")
 	util.PanicIfNil(ctx.ClientLogger, "client log is not initialized")
-	util.PanicIfNil(ctx.ServerLogger, "server log is not initialized")
+	if ctx.Pattern == "p2p" {
+		util.PanicIfNil(ctx.ServerLogger, "server log is not initialized")
+	}
 
 	defer func() {
 		if err := recover(); err != nil {
