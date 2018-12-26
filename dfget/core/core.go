@@ -159,6 +159,10 @@ func downloadFile(ctx *config.Context, supernodeAPI api.SupernodeAPI,
 	if err != nil {
 		ctx.ClientLogger.Error(err)
 		success = "FAIL"
+	} else if ctx.RV.FileLength < 0 && util.IsRegularFile(ctx.RV.RealTarget) {
+		if info, err := os.Stat(ctx.RV.RealTarget); err == nil {
+			ctx.RV.FileLength = info.Size()
+		}
 	}
 	os.Remove(ctx.RV.TempTarget)
 	ctx.ClientLogger.Infof("download %s cost:%.3fs length:%d reason:%d",
