@@ -51,7 +51,7 @@ You can install from the latest packages we provided.
 
 You can also install from the source code.
 
-**Note:** You must have installed Go 1.7+, and added the Go command to the `PATH` environment variable.
+**Note:** You must have started Docker.
 
 ### Installing in $HOME/.dragonfly
 
@@ -67,45 +67,16 @@ You can also install from the source code.
     cd Dragonfly
     ```
 
-3. Install `dfdaemon` and `dfget` in `$HOME/.dragonfly/df-client`.
+3. Build `dfdaemon` and `dfget`.
 
     ```sh
-    ./build/build.sh client
+    make build-client
     ```
 
-4. Add the directory of `df-client` to your `PATH` environment variable to make sure you can directly use `dfget` and `dfdaemon` command.
+4. Install `dfdaemon` and `dfget` in `/opt/dragonfly/df-client` and create soft-link in `/usr/local/bin`.
 
     ```sh
-    # Execute or add this line to ~/.bashrc
-    export PATH=$HOME/.dragonfly/df-client:$PATH
-    ```
-
-### Installing in Another Directory
-
-1. Obtain the source code of Dragonfly.
-
-    ```sh
-    git clone https://github.com/dragonflyoss/Dragonfly.git
-    ```
-
-2. Enter the target directory.
-
-    ```sh
-    cd Dragonfly/build/client
-    ```
-
-3. Install the client.
-
-    ```sh
-    ./configure --prefix=${your_installation_directory}
-    make && make install
-    ```
-
-4. Add the directory of `df-client` to your `PATH` environment variable to make sure you can directly use `dfget` and `dfdaemon` command.
-
-    ```sh
-    # Execute or add this line to ~/.bashrc
-    export PATH=${your_install_directory}/df-client:$PATH
+    sudo make install
     ```
 
 ## After this Task
