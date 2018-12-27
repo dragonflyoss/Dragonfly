@@ -14,7 +14,10 @@ import (
 // swagger:model PeerCreateResponse
 type PeerCreateResponse struct {
 
-	// ID of created peer.
+	// Peer ID of the node which dfget locates on.
+	// Every peer has a unique ID among peer network.
+	// It is generated via host's hostname and IP address.
+	//
 	ID string `json:"ID,omitempty"`
 }
 
