@@ -319,7 +319,7 @@ func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, clie
 			p2p.Ctx.ClientLogger.Infof("client file path:%s not found", p2p.clientFilePath)
 			if e := util.Link(p2p.serviceFilePath, p2p.clientFilePath); e != nil {
 				p2p.Ctx.ClientLogger.Warnln("link failed, instead of use copy")
-				// TODO copy file
+				util.CopyFile(p2p.serviceFilePath, p2p.clientFilePath)
 			}
 		}
 		src = p2p.clientFilePath
