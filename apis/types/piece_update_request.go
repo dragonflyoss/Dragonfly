@@ -6,21 +6,148 @@ package types
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"encoding/json"
+
+	"github.com/go-openapi/errors"
 	strfmt "github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
-// PieceUpdateRequest request peer uses to update its status of downloading piece in supernode.
+// PieceUpdateRequest request used to update piece attributes.
 // swagger:model PieceUpdateRequest
 type PieceUpdateRequest struct {
 
-	// contains the peer ID.
+	// the uploader cid
 	//
-	PeerID string `json:"PeerID,omitempty"`
+	DstCid string `json:"dstCid,omitempty"`
+
+	// result It indicates whether the peer task successfully download the piece.
+	// It's only useful when `status` is `RUNNING`.
+	//
+	// Enum: [FAILED SUCCESS INVALID SEMISUC]
+	Result string `json:"result,omitempty"`
+
+	// the downloader cid
+	//
+	SrcCid string `json:"srcCid,omitempty"`
+
+	// status indicates whether the peer task is running.
+	//
+	// Enum: [STARTED RUNNING FINISHED]
+	Status string `json:"status,omitempty"`
 }
 
 // Validate validates this piece update request
 func (m *PieceUpdateRequest) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateResult(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateStatus(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+var pieceUpdateRequestTypeResultPropEnum []interface{}
+
+func init() {
+	var res []string
+	if err := json.Unmarshal([]byte(`["FAILED","SUCCESS","INVALID","SEMISUC"]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		pieceUpdateRequestTypeResultPropEnum = append(pieceUpdateRequestTypeResultPropEnum, v)
+	}
+}
+
+const (
+
+	// PieceUpdateRequestResultFAILED captures enum value "FAILED"
+	PieceUpdateRequestResultFAILED string = "FAILED"
+
+	// PieceUpdateRequestResultSUCCESS captures enum value "SUCCESS"
+	PieceUpdateRequestResultSUCCESS string = "SUCCESS"
+
+	// PieceUpdateRequestResultINVALID captures enum value "INVALID"
+	PieceUpdateRequestResultINVALID string = "INVALID"
+
+	// PieceUpdateRequestResultSEMISUC captures enum value "SEMISUC"
+	PieceUpdateRequestResultSEMISUC string = "SEMISUC"
+)
+
+// prop value enum
+func (m *PieceUpdateRequest) validateResultEnum(path, location string, value string) error {
+	if err := validate.Enum(path, location, value, pieceUpdateRequestTypeResultPropEnum); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *PieceUpdateRequest) validateResult(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Result) { // not required
+		return nil
+	}
+
+	// value enum
+	if err := m.validateResultEnum("result", "body", m.Result); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+var pieceUpdateRequestTypeStatusPropEnum []interface{}
+
+func init() {
+	var res []string
+	if err := json.Unmarshal([]byte(`["STARTED","RUNNING","FINISHED"]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		pieceUpdateRequestTypeStatusPropEnum = append(pieceUpdateRequestTypeStatusPropEnum, v)
+	}
+}
+
+const (
+
+	// PieceUpdateRequestStatusSTARTED captures enum value "STARTED"
+	PieceUpdateRequestStatusSTARTED string = "STARTED"
+
+	// PieceUpdateRequestStatusRUNNING captures enum value "RUNNING"
+	PieceUpdateRequestStatusRUNNING string = "RUNNING"
+
+	// PieceUpdateRequestStatusFINISHED captures enum value "FINISHED"
+	PieceUpdateRequestStatusFINISHED string = "FINISHED"
+)
+
+// prop value enum
+func (m *PieceUpdateRequest) validateStatusEnum(path, location string, value string) error {
+	if err := validate.Enum(path, location, value, pieceUpdateRequestTypeStatusPropEnum); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *PieceUpdateRequest) validateStatus(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Status) { // not required
+		return nil
+	}
+
+	// value enum
+	if err := m.validateStatusEnum("status", "body", m.Status); err != nil {
+		return err
+	}
+
 	return nil
 }
 

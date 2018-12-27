@@ -18,26 +18,8 @@ import (
 // swagger:model TaskInfo
 type TaskInfo struct {
 
-	// The status of the created task related to CDN functionality.
-	//
-	// Enum: [WAITING RUNNING FAILED SUCCESS SOURCE_ERROR]
-	CdnStatus string `json:"CdnStatus,omitempty"`
-
-	// The length of the file dfget requests to download in bytes.
-	//
-	FileLength int64 `json:"FileLength,omitempty"`
-
 	// ID of the task.
 	ID string `json:"ID,omitempty"`
-
-	// The size of pieces which is calculated as per the following strategy
-	// 1. If file's total size is less than 200MB, then the piece size is 4MB by default.
-	// 2. Otherwise, it equals to the smaller value between totalSize/100MB + 2 MB and 15MB.
-	//
-	PieceSize int32 `json:"PieceSize,omitempty"`
-
-	// piece total
-	PieceTotal int32 `json:"PieceTotal,omitempty"`
 
 	// This field is for debugging. When caller of dfget is using it to files, he can pass callSystem
 	// name to dfget. When this field is passing to supernode, supernode has ability to filter them via
@@ -46,11 +28,20 @@ type TaskInfo struct {
 	// Min Length: 1
 	CallSystem string `json:"callSystem,omitempty"`
 
+	// The status of the created task related to CDN functionality.
+	//
+	// Enum: [WAITING RUNNING FAILED SUCCESS SOURCE_ERROR]
+	CdnStatus string `json:"cdnStatus,omitempty"`
+
 	// tells whether it is a call from dfdaemon. dfdaemon is a long running
 	// process which works for container engines. It translates the image
 	// pulling request into raw requests into those dfget recganises.
 	//
 	Dfdaemon bool `json:"dfdaemon,omitempty"`
+
+	// The length of the file dfget requests to download in bytes.
+	//
+	FileLength int64 `json:"fileLength,omitempty"`
 
 	// extra HTTP headers sent to the rawURL.
 	// This field is carried with the request to supernode.
@@ -79,6 +70,15 @@ type TaskInfo struct {
 	//
 	Path string `json:"path,omitempty"`
 
+	// The size of pieces which is calculated as per the following strategy
+	// 1. If file's total size is less than 200MB, then the piece size is 4MB by default.
+	// 2. Otherwise, it equals to the smaller value between totalSize/100MB + 2 MB and 15MB.
+	//
+	PieceSize int32 `json:"pieceSize,omitempty"`
+
+	// piece total
+	PieceTotal int32 `json:"pieceTotal,omitempty"`
+
 	// The is the resource's URL which user uses dfget to download. The location of URL can be anywhere, LAN or WAN.
 	// For image distribution, this is image layer's URL in image registry.
 	// The resource url is provided by command line parameter.
@@ -95,17 +95,30 @@ type TaskInfo struct {
 func (m *TaskInfo) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateCdnStatus(formats); err != nil {
+	if err := m.validateCallSystem(formats); err != nil {
 		res = append(res, err)
 	}
 
-	if err := m.validateCallSystem(formats); err != nil {
+	if err := m.validateCdnStatus(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *TaskInfo) validateCallSystem(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.CallSystem) { // not required
+		return nil
+	}
+
+	if err := validate.MinLength("callSystem", "body", string(m.CallSystem), 1); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -154,20 +167,7 @@ func (m *TaskInfo) validateCdnStatus(formats strfmt.Registry) error {
 	}
 
 	// value enum
-	if err := m.validateCdnStatusEnum("CdnStatus", "body", m.CdnStatus); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *TaskInfo) validateCallSystem(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.CallSystem) { // not required
-		return nil
-	}
-
-	if err := validate.MinLength("callSystem", "body", string(m.CallSystem), 1); err != nil {
+	if err := m.validateCdnStatusEnum("cdnStatus", "body", m.CdnStatus); err != nil {
 		return err
 	}
 

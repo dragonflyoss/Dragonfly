@@ -66,6 +66,27 @@ paths:
             $ref: '#/definitions/Error'
         500:
           $ref: "#/responses/500ErrorResponse"
+    get:
+      summary: "get all peers"
+      description: "dfget sends request to register in Supernode as a peer node"
+      parameters:
+        - name: "body"
+          in: "body"
+          description: "request body which contains peer registrar information."
+          schema:
+            $ref: "#/definitions/PeerCreateRequest"
+      responses:
+        201:
+          description: "no error"
+          schema:
+            $ref: "#/definitions/PeerCreateResponse"
+        400:
+          description: "bad parameter"
+          schema:
+            $ref: '#/definitions/Error'
+        500:
+          $ref: "#/responses/500ErrorResponse"
+
 
   /peers/{id}:
     get: 
@@ -93,8 +114,8 @@ paths:
       summary: "delete a peer in supernode"
       description: |
         dfget stops playing a role as a peer in peer network constructed by supernode.
-        when dfget lasts in five minutes without downloading or uploading task, dfget
-        automatically sends a DELETE /peers/{id} request.
+        when dfget lasts in five minutes without downloading or uploading task, uploader of dfget
+        automatically sends a DELETE /peers/{id} request to supernode.
       parameters:
         - name: id
           in: path
@@ -160,8 +181,10 @@ paths:
     put:
       summary: "update a task"
       description: |
-        update information of a task. When a peer finishes to download all pieces of a task,
-        it must update peer downloading status of this task in supernode. 
+        Update information of a task.
+        This endpoint is mainly for operation usage. When the peer network or peer
+        meet some load issues, operation team can update a task directly, such as pause
+        a downloading task to ease the situation.
       consumes:
           - "application/json"
       produces:
@@ -186,6 +209,29 @@ paths:
         500:
             $ref: "#/responses/500ErrorResponse"
 
+    delete:
+      summary: "delete a task"
+      description: |
+        delete a peer-to-peer task in supernode.
+        This endpoint is mainly for operation usage. When the peer network or peer
+        meet some load issues, operation team can delete a task directly to ease
+        the situation.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: "ID of task"
+          type: string
+      responses:
+        204:
+          description: "no error"
+        404:
+          description: "no such task"
+          schema:
+            $ref: '#/responses/404ErrorResponse'
+        500:
+          $ref: "#/responses/500ErrorResponse"
+
   /tasks/{id}/pieces:
     get:
       summary: "Get pieces in task"
@@ -209,33 +255,12 @@ paths:
           description: |
             Request number of pieces of task. If request number is larger than the total pieces in supernode,
             supernode returns the total pieces of task. If not set, supernode will set 4 by default.
-      responses:
-        200:
-          description: "no error"
-          schema:
-            type: "array"
-            items:
-              $ref: "#/definitions/PieceInfo"
-        404:
-          description: "no such task"
-          schema:
-            $ref: "#/responses/404ErrorResponse"
-        500:
-          $ref: "#/responses/500ErrorResponse"  
-
-  /pieces/{id}:
-    get:
-      summary: "Get a piece"
-      description: |
-        Get detailed information of a piece in supernode.
-      produces:
-        - "application/json"
-      parameters:
-        - name: id
-          in: path
+        - name: cid
+          in: query
+          type: "string"
           required: true
-          description: "ID of piece"
-          type: string
+          description:
+            When dfget needs to get pieces of specific task, it must mark which peer it plays role of.
       responses:
         200:
           description: "no error"
@@ -248,8 +273,9 @@ paths:
           schema:
             $ref: "#/responses/404ErrorResponse"
         500:
-          $ref: "#/responses/500ErrorResponse" 
-    
+          $ref: "#/responses/500ErrorResponse"
+ 
+  /tasks/{id}/pieces/{pieceRange}:
     put:
       summary: "Update a piece"
       description: |
@@ -266,11 +292,18 @@ paths:
         - name: id
           in: path
           required: true
-          description: "ID of piece"
+          description: "ID of task"
+          type: string
+        - name: pieceRange
+          in: path
+          required: true
+          description: |
+            the range of specific piece in the task, example "0-45565".
           type: string
         - name: "PieceUpdateRequest"
           in: "body"
-          description: "request body which contains task update information"
+          description: |
+            request body which contains task update information.
           schema:
             $ref: "#/definitions/PieceUpdateRequest"
       responses:
@@ -367,9 +400,6 @@ definitions:
       Usually, when dfget is going to register in supernode as a peer,
       it will send PeerCreateRequest to supernode.
     properties:
-      ID:
-        type: "string"
-        description: "Peer ID of dfget client. Every peer has a unique ID among peer network."
       IP:
         type: "string"
         description: "IP address which peer client carries"
@@ -398,18 +428,25 @@ definitions:
     properties:
       ID: 
         type: "string"
-        description: ID of created peer.
+        description: |
+          Peer ID of the node which dfget locates on. 
+          Every peer has a unique ID among peer network.
+          It is generated via host's hostname and IP address.
   
   PeerInfo:
     type: "object"
-    description: "The detailed information of a peer in supernode."
+    description: |
+      The detailed information of a peer in supernode.
     properties:
       ID:
         type: "string"
         description: "ID of peer"
       IP:
         type: "string"
-        description: "IP address which peer client carries"
+        description: |
+          IP address which peer client carries.
+          (TODO) make IP field contain more information, for example
+          WAN/LAN IP address for supernode to recoganize.
         format: "ipv4"
       hostName:
         type: "string"
@@ -433,17 +470,19 @@ definitions:
     type: "object"
     description: ""
     properties:
+      cID:
+        type: "string"
+        description: |
+          CID means the client ID. It maps to the specific dfget process. 
+          When user wishes to download an image/file, user would start a dfget process to do this. 
+          This dfget is treated a client and carries a client ID. 
+          Thus, multiple dfget processes on the same peer have different CIDs.
       rawURL:
         type: "string"
         description: |
           The is the resource's URL which user uses dfget to download. The location of URL can be anywhere, LAN or WAN.
           For image distribution, this is image layer's URL in image registry.
           The resource url is provided by command line parameter.
-      taskURL:
-        type: "string"
-        description: |
-          taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via
-          --filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.
       md5:
         type: "string"
         description: |
@@ -486,6 +525,16 @@ definitions:
           name to dfget. When this field is passing to supernode, supernode has ability to filter them via 
           some black/white list to guarantee security, or some other purposes.
         minLength: 1
+      filter:
+        type: "array"
+        description: |
+          filter is used to filter request queries in URL.
+          For example, when a user wants to start to download a task which has a remote URL of 
+          http://a.b.com/fileA?user=xxx&auth=yyy, user can add a filter parameter ["user", "auth"]
+          to filter the url to http://a.b.com/fileA. Then this parameter can potentially avoid repeatable
+          downloads, if there is already a task http://a.b.com/fileA.
+        items:
+          type: "string"
 
   TaskCreateResponse:
     type: "object"
@@ -494,12 +543,12 @@ definitions:
       ID:
         type: "string"
         description: "ID of the created task."
-      FileLength:
+      fileLength:
         type: "integer"
         description: |
           The length of the file dfget requests to download in bytes.
         format: int64
-      PieceSize:
+      pieceSize:
         type: "integer"
         description: |
           The size of pieces which is calculated as per the following strategy
@@ -514,23 +563,23 @@ definitions:
       ID:
         type: "string"
         description: "ID of the task."
-      FileLength:
+      fileLength:
         type: "integer"
         description: |
           The length of the file dfget requests to download in bytes.
         format: "int64"
-      PieceSize:
+      pieceSize:
         type: "integer"
         description: |
           The size of pieces which is calculated as per the following strategy
           1. If file's total size is less than 200MB, then the piece size is 4MB by default.
           2. Otherwise, it equals to the smaller value between totalSize/100MB + 2 MB and 15MB.
         format: "int32"
-      PieceTotal:
+      pieceTotal:
         type: "integer"
         description: ""
         format: "int32"
-      CdnStatus:
+      cdnStatus:
         type: "string"
         description: |
           The status of the created task related to CDN functionality.
@@ -594,7 +643,7 @@ definitions:
     type: "object"
     description: "request used to update task attributes."
     properties:
-      PeerID:
+      peerID:
         type: "string"
         description: "ID of the peer which has finished to download the whole task."
 
@@ -602,18 +651,63 @@ definitions:
     type: "object"
     description: "Peer's detailed information in supernode."
     properties:
-      ID:
+      cID:
         type: "string"
-        description: "ID of the peer"
-  
-  PieceUpdateRequest:
-    type: "object"
-    description: "request peer uses to update its status of downloading piece in supernode."
-    properties:
-      PeerID:
+        description: "ID of the downloading task from dfget"
+      pieceRange:
         type: "string"
         description: |
-          contains the peer ID.
+          the range of specific piece in the task, example "0-45565".
+      pieceSize:
+        type: "integer"
+        description: |
+          The size of pieces which is calculated as per the following strategy
+          1. If file's total size is less than 200MB, then the piece size is 4MB by default.
+          2. Otherwise, it equals to the smaller value between totalSize/100MB + 2 MB and 15MB.
+        format: int32
+      pieceMD5:
+        type: "string"
+        description: |
+          the MD5 information of piece which is generated by supernode when doing CDN cache.
+          This value will be returned to dfget in order to validate the piece's completeness.
+      peerIP:
+        type: string
+        description: |
+          When dfget needs to download a piece from another peer. Supernode will return a PieceInfo
+          that contains a peerIP. This peerIP represents the IP of this dfget's target peer. 
+      peerPort:
+        type: "integer"
+        description: |
+          When dfget needs to download a piece from another peer. Supernode will return a PieceInfo
+          that contains a peerPort. This peerPort represents the port of this dfget's target peer's uploader.
+      path:
+        type: "string"
+        description: |
+          The URL path to download the specific piece from the target peer's uploader.
+
+  PieceUpdateRequest:
+    type: "object"
+    description: "request used to update piece attributes."
+    properties:
+      srcCid:
+        type: "string"
+        description: |
+          the downloader cid
+      dstCid: 
+        type: "string"
+        description: |
+          the uploader cid
+      status:
+        type: "string"
+        description: |
+          status indicates whether the peer task is running.
+        enum: ["STARTED", "RUNNING", "FINISHED"]
+      result:
+        type: "string"
+        description: |
+          result It indicates whether the peer task successfully download the piece. 
+          It's only useful when `status` is `RUNNING`.
+        enum: ["FAILED", "SUCCESS", "INVALID", "SEMISUC"]
 
   PreheatInfo:
     type: "object"
