@@ -44,7 +44,7 @@ var (
 
 // peerServer offer file-block to other clients
 type peerServer struct {
-	ctx *config.Context
+	cfg *config.Config
 
 	// server related fields
 	host   string
@@ -69,30 +69,30 @@ type uploadParam struct {
 }
 
 // LaunchPeerServer launch a server to send piece data
-func LaunchPeerServer(ctx *config.Context) (int, error) {
-	taskFileName := ctx.RV.TaskFileName
+func LaunchPeerServer(cfg *config.Config) (int, error) {
+	taskFileName := cfg.RV.TaskFileName
 
-	// retrieve peer port from meta file: config.Ctx.RV.MetaPath
-	if sevicePort, err := getPort(ctx.RV.MetaPath); err == nil {
-		// check the peer port(config.Ctx.RV.PeerPort) whether is available
-		url := fmt.Sprintf("http://%s:%d%s%s", ctx.RV.LocalIP, sevicePort, config.LocalHTTPPathCheck, taskFileName)
-		result, err := checkPort(url, ctx.RV.TargetDir, util.DefaultTimeout)
+	// retrieve peer port from meta file: config.cfg.RV.MetaPath
+	if sevicePort, err := getPort(cfg.RV.MetaPath); err == nil {
+		// check the peer port(config.cfg.RV.PeerPort) whether is available
+		url := fmt.Sprintf("http://%s:%d%s%s", cfg.RV.LocalIP, sevicePort, config.LocalHTTPPathCheck, taskFileName)
+		result, err := checkPort(url, cfg.RV.TargetDir, util.DefaultTimeout)
 		if err == nil {
-			ctx.ServerLogger.Infof("local http result:%s for path:%s", result, config.LocalHTTPPathCheck)
+			cfg.ServerLogger.Infof("local http result:%s for path:%s", result, config.LocalHTTPPathCheck)
 
 			// reuse exist service port
 			if result == taskFileName {
-				ctx.ServerLogger.Infof("reuse exist service with port:%d", sevicePort)
+				cfg.ServerLogger.Infof("reuse exist service with port:%d", sevicePort)
 				return sevicePort, nil
 			}
-			ctx.ServerLogger.Warnf("not found process on port:%d, version:%s", sevicePort, version.DFGetVersion)
+			cfg.ServerLogger.Warnf("not found process on port:%d, version:%s", sevicePort, version.DFGetVersion)
 		}
-		ctx.ServerLogger.Warnf("request local http path:%s, error:%v", config.LocalHTTPPathCheck, err)
+		cfg.ServerLogger.Warnf("request local http path:%s, error:%v", config.LocalHTTPPathCheck, err)
 	}
 	// TODO: start a goroutine to check alive and sever gc.
 
 	sevicePort := generatePort()
-	p2pServer, err := newPeerServer(ctx, sevicePort)
+	p2pServer, err := newPeerServer(cfg, sevicePort)
 	if err != nil {
 		return 0, err
 	}
@@ -101,19 +101,19 @@ func LaunchPeerServer(ctx *config.Context) (int, error) {
 
 	// persist the new peer port into meta file
 	// NOTE: we should truncates the meta file before service down.
-	err = ioutil.WriteFile(ctx.RV.MetaPath, []byte(strconv.Itoa(sevicePort)), 0666)
+	err = ioutil.WriteFile(cfg.RV.MetaPath, []byte(strconv.Itoa(sevicePort)), 0666)
 	if err != nil {
 		return 0, err
 	}
-	ctx.ServerLogger.Infof("server on host: %s, port: %d", p2pServer.host, p2pServer.port)
+	cfg.ServerLogger.Infof("server on host: %s, port: %d", p2pServer.host, p2pServer.port)
 
 	return sevicePort, nil
 }
 
 // newPeerServer return a new P2PServer.
-func newPeerServer(ctx *config.Context, port int) (*peerServer, error) {
+func newPeerServer(cfg *config.Config, port int) (*peerServer, error) {
 	s := &peerServer{
-		host: ctx.RV.LocalIP,
+		host: cfg.RV.LocalIP,
 		port: port,
 	}
 
@@ -141,7 +141,7 @@ func (ps *peerServer) uploadHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, err.Error())
-		ps.ctx.ServerLogger.Errorf("failed to parse param from request %v, %v", r, err)
+		ps.cfg.ServerLogger.Errorf("failed to parse param from request %v, %v", r, err)
 	}
 
 	// Step2: get task file
@@ -149,7 +149,7 @@ func (ps *peerServer) uploadHandler(w http.ResponseWriter, r *http.Request) {
 	if f == nil {
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprint(w, err.Error())
-		ps.ctx.ServerLogger.Errorf("failed to open TaskFile %s, %v", taskFileName, err)
+		ps.cfg.ServerLogger.Errorf("failed to open TaskFile %s, %v", taskFileName, err)
 	}
 	defer f.Close()
 
@@ -159,7 +159,7 @@ func (ps *peerServer) uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Step4: tans task file
 	if err := transFile(f, w, params.start, params.readLen); err != nil {
-		ps.ctx.ServerLogger.Errorf("send range:%s error: %v", rangeStr, err)
+		ps.cfg.ServerLogger.Errorf("send range:%s error: %v", rangeStr, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "read task file failed: %v", err)
 	}

@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	opt = &options.Options{}
+	opt = options.NewOption()
 )
 
 var rootCmd = &cobra.Command{

@@ -35,14 +35,14 @@ type SupernodeRegister interface {
 
 type supernodeRegister struct {
 	api api.SupernodeAPI
-	ctx *config.Context
+	cfg *config.Config
 }
 
 // NewSupernodeRegister creates an instance of supernodeRegister.
-func NewSupernodeRegister(ctx *config.Context, api api.SupernodeAPI) SupernodeRegister {
+func NewSupernodeRegister(cfg *config.Config, api api.SupernodeAPI) SupernodeRegister {
 	return &supernodeRegister{
 		api: api,
-		ctx: ctx,
+		cfg: cfg,
 	}
 }
 
@@ -56,15 +56,15 @@ func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errors.DFG
 		start      = time.Now()
 	)
 
-	s.ctx.ClientLogger.Infof("do register to one of %v", s.ctx.Node)
-	nodes, nLen := s.ctx.Node, len(s.ctx.Node)
+	s.cfg.ClientLogger.Infof("do register to one of %v", s.cfg.Node)
+	nodes, nLen := s.cfg.Node, len(s.cfg.Node)
 	req := s.constructRegisterRequest(peerPort)
 	for i = 0; i < nLen; i++ {
 		req.SupernodeIP = nodes[i]
 		resp, e = s.api.Register(nodes[i], req)
-		s.ctx.ClientLogger.Infof("do register to %s, res:%s error:%v", nodes[i], resp, e)
+		s.cfg.ClientLogger.Infof("do register to %s, res:%s error:%v", nodes[i], resp, e)
 		if e != nil {
-			s.ctx.ClientLogger.Errorf("register to node:%s error:%v", nodes[i], e)
+			s.cfg.ClientLogger.Errorf("register to node:%s error:%v", nodes[i], e)
 			continue
 		}
 		if resp.Code == config.Success || resp.Code == config.TaskCodeNeedAuth {
@@ -73,20 +73,20 @@ func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errors.DFG
 		if resp.Code == config.TaskCodeWaitAuth && retryTimes < 3 {
 			i--
 			retryTimes++
-			s.ctx.ClientLogger.Infof("sleep 2.5s to wait auth(%d/3)...", retryTimes)
+			s.cfg.ClientLogger.Infof("sleep 2.5s to wait auth(%d/3)...", retryTimes)
 			time.Sleep(2500 * time.Millisecond)
 		}
 	}
 	s.setRemainderNodes(i)
 	if err := s.checkResponse(resp, e); err != nil {
-		s.ctx.ClientLogger.Errorf("register fail:%v", err)
+		s.cfg.ClientLogger.Errorf("register fail:%v", err)
 		return nil, err
 	}
 
-	result := NewRegisterResult(nodes[i], s.ctx.Node, s.ctx.URL,
+	result := NewRegisterResult(nodes[i], s.cfg.Node, s.cfg.URL,
 		resp.Data.TaskID, resp.Data.FileLength, resp.Data.PieceSize)
 
-	s.ctx.ClientLogger.Infof("do register result:%s and cost:%.3fs", resp,
+	s.cfg.ClientLogger.Infof("do register result:%s and cost:%.3fs", resp,
 		time.Since(start).Seconds())
 	return result, nil
 }
@@ -105,37 +105,37 @@ func (s *supernodeRegister) checkResponse(resp *types.RegisterResponse, e error)
 }
 
 func (s *supernodeRegister) setRemainderNodes(idx int) {
-	nLen := len(s.ctx.Node)
+	nLen := len(s.cfg.Node)
 	if nLen <= 0 {
 		return
 	}
 	if idx < nLen {
-		s.ctx.Node = s.ctx.Node[idx+1:]
+		s.cfg.Node = s.cfg.Node[idx+1:]
 	} else {
-		s.ctx.Node = []string{}
+		s.cfg.Node = []string{}
 	}
 }
 
 func (s *supernodeRegister) constructRegisterRequest(port int) *types.RegisterRequest {
-	ctx := s.ctx
+	cfg := s.cfg
 	hostname, _ := os.Hostname()
 	req := &types.RegisterRequest{
-		RawURL:     ctx.URL,
-		TaskURL:    ctx.RV.TaskURL,
-		Cid:        ctx.RV.Cid,
-		IP:         ctx.RV.LocalIP,
+		RawURL:     cfg.URL,
+		TaskURL:    cfg.RV.TaskURL,
+		Cid:        cfg.RV.Cid,
+		IP:         cfg.RV.LocalIP,
 		HostName:   hostname,
 		Port:       port,
-		Path:       getTaskPath(ctx.RV.TaskFileName),
+		Path:       getTaskPath(cfg.RV.TaskFileName),
 		Version:    version.DFGetVersion,
-		CallSystem: ctx.CallSystem,
-		Headers:    ctx.Header,
-		Dfdaemon:   ctx.DFDaemon,
+		CallSystem: cfg.CallSystem,
+		Headers:    cfg.Header,
+		Dfdaemon:   cfg.DFDaemon,
 	}
-	if ctx.Md5 != "" {
-		req.Md5 = ctx.Md5
-	} else if ctx.Identifier != "" {
-		req.Identifier = ctx.Identifier
+	if cfg.Md5 != "" {
+		req.Md5 = cfg.Md5
+	} else if cfg.Identifier != "" {
+		req.Identifier = cfg.Identifier
 	}
 	return req
 }

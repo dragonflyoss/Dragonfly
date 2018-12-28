@@ -30,7 +30,7 @@ import (
 
 // BackDownloader downloads the file from file resource.
 type BackDownloader struct {
-	Ctx     *config.Context
+	Cfg     *config.Config
 	URL     string
 	Target  string
 	Md5     string
@@ -50,11 +50,11 @@ func (bd *BackDownloader) Run() error {
 		err  error
 		f    *os.File
 	)
-	log := bd.Ctx.ClientLogger
+	log := bd.Cfg.ClientLogger
 
-	if bd.Ctx.Notbs || bd.Ctx.BackSourceReason == config.BackSourceReasonNoSpace {
-		bd.Ctx.BackSourceReason += config.ForceNotBackSourceAddition
-		err = fmt.Errorf("download fail and not back source: %d", bd.Ctx.BackSourceReason)
+	if bd.Cfg.Notbs || bd.Cfg.BackSourceReason == config.BackSourceReasonNoSpace {
+		bd.Cfg.BackSourceReason += config.ForceNotBackSourceAddition
+		err = fmt.Errorf("download fail and not back source: %d", bd.Cfg.BackSourceReason)
 		return err
 	}
 
@@ -63,27 +63,27 @@ func (bd *BackDownloader) Run() error {
 
 	defer bd.Cleanup()
 
-	prefix := "backsource." + bd.Ctx.Sign + "."
+	prefix := "backsource." + bd.Cfg.Sign + "."
 	if f, err = ioutil.TempFile(path.Dir(bd.Target), prefix); err != nil {
 		return err
 	}
 	bd.tempFileName = f.Name()
 	defer f.Close()
 
-	if resp, err = httpGetWithHeaders(bd.URL, convertHeaders(bd.Ctx.Header)); err != nil {
+	if resp, err = httpGetWithHeaders(bd.URL, convertHeaders(bd.Cfg.Header)); err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
 	buf := make([]byte, 512*1024)
-	reader := NewLimitReader(resp.Body, bd.Ctx.LocalLimit, bd.Md5 != "")
+	reader := NewLimitReader(resp.Body, bd.Cfg.LocalLimit, bd.Md5 != "")
 	if bd.Total, err = io.CopyBuffer(f, reader, buf); err != nil {
 		return err
 	}
 
 	realMd5 := reader.Md5()
 	if bd.Md5 == "" || bd.Md5 == realMd5 {
-		err = moveFile(bd.tempFileName, bd.Target, "", bd.Ctx.ClientLogger)
+		err = moveFile(bd.tempFileName, bd.Target, "", bd.Cfg.ClientLogger)
 	} else {
 		err = fmt.Errorf("md5 not match, expected:%s real:%s", bd.Md5, realMd5)
 	}
