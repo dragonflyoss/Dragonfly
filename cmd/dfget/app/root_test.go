@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	cfg "github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 
@@ -24,21 +24,21 @@ type dfgetSuit struct {
 }
 
 func (suit *dfgetSuit) Test_initFlagsNoArguments() {
-	suit.Nil(cfg.Ctx.Node)
-	suit.Equal(cfg.Ctx.LocalLimit, 0)
-	suit.Equal(cfg.Ctx.TotalLimit, 0)
-	suit.Equal(cfg.Ctx.Notbs, false)
-	suit.Equal(cfg.Ctx.DFDaemon, false)
-	suit.Equal(cfg.Ctx.Version, false)
-	suit.Equal(cfg.Ctx.ShowBar, false)
-	suit.Equal(cfg.Ctx.Console, false)
-	suit.Equal(cfg.Ctx.Verbose, false)
-	suit.Equal(cfg.Ctx.Help, false)
-	suit.Equal(cfg.Ctx.URL, "")
+	suit.Nil(cfg.Node)
+	suit.Equal(cfg.LocalLimit, 0)
+	suit.Equal(cfg.TotalLimit, 0)
+	suit.Equal(cfg.Notbs, false)
+	suit.Equal(cfg.DFDaemon, false)
+	suit.Equal(cfg.Version, false)
+	suit.Equal(cfg.ShowBar, false)
+	suit.Equal(cfg.Console, false)
+	suit.Equal(cfg.Verbose, false)
+	suit.Equal(cfg.Help, false)
+	suit.Equal(cfg.URL, "")
 }
 
 func (suit *dfgetSuit) Test_initProperties() {
-	cfg.Ctx.ConfigFiles = nil
+	cfg.ConfigFiles = nil
 	dirName, _ := ioutil.TempDir("/tmp", "dfget-TestInitProperties-")
 	defer os.RemoveAll(dirName)
 
@@ -54,10 +54,10 @@ func (suit *dfgetSuit) Test_initProperties() {
 
 	var cases = []struct {
 		configs  []string
-		expected *cfg.Properties
+		expected *config.Properties
 	}{
 		{configs: nil,
-			expected: cfg.NewProperties()},
+			expected: config.NewProperties()},
 		{configs: []string{iniFile, yamlFile},
 			expected: newProp(0, 0, 0, "1.1.1.1")},
 		{configs: []string{yamlFile, iniFile},
@@ -67,20 +67,20 @@ func (suit *dfgetSuit) Test_initProperties() {
 	}
 
 	for _, v := range cases {
-		cfg.Reset()
+		cfg = config.NewConfig()
 		buf.Reset()
-		cfg.Ctx.ClientLogger = logrus.StandardLogger()
-		cfg.Ctx.ConfigFiles = v.configs
+		cfg.ClientLogger = logrus.StandardLogger()
+		cfg.ConfigFiles = v.configs
 		localLimitStr := strconv.FormatInt(int64(v.expected.LocalLimit/1024), 10)
 		totalLimitStr := strconv.FormatInt(int64(v.expected.TotalLimit/1024), 10)
 		rootCmd.Flags().Parse([]string{
 			"--locallimit", fmt.Sprintf("%sk", localLimitStr),
 			"--totallimit", fmt.Sprintf("%sk", totalLimitStr)})
 		initProperties()
-		suit.EqualValues(cfg.Ctx.Node, v.expected.Nodes)
-		suit.Equal(cfg.Ctx.LocalLimit, v.expected.LocalLimit)
-		suit.Equal(cfg.Ctx.TotalLimit, v.expected.TotalLimit)
-		suit.Equal(cfg.Ctx.ClientQueueSize, v.expected.ClientQueueSize)
+		suit.EqualValues(cfg.Node, v.expected.Nodes)
+		suit.Equal(cfg.LocalLimit, v.expected.LocalLimit)
+		suit.Equal(cfg.TotalLimit, v.expected.TotalLimit)
+		suit.Equal(cfg.ClientQueueSize, v.expected.ClientQueueSize)
 	}
 }
 
@@ -136,14 +136,14 @@ func (suit *dfgetSuit) Test_transFilter() {
 }
 
 func (suit *dfgetSuit) TestResultMsg() {
-	ctx := cfg.NewContext()
-	end := ctx.StartTime.Add(100 * time.Millisecond)
+	cfg := config.NewConfig()
+	end := cfg.StartTime.Add(100 * time.Millisecond)
 
-	msg := resultMsg(ctx, end, nil)
+	msg := resultMsg(cfg, end, nil)
 	suit.Equal(msg, "download SUCCESS(0) cost:0.100s length:0 reason:0")
 
-	ctx.BackSourceReason = cfg.BackSourceReasonRegisterFail
-	msg = resultMsg(ctx, end, errors.New(1, "TestFail"))
+	cfg.BackSourceReason = config.BackSourceReasonRegisterFail
+	msg = resultMsg(cfg, end, errors.New(1, "TestFail"))
 	suit.Equal(msg, "download FAIL(1) cost:0.100s length:0 reason:1 error:"+
 		`{"Code":1,"Msg":"TestFail"}`)
 }
@@ -152,8 +152,8 @@ func TestSuite(t *testing.T) {
 	suite.Run(t, new(dfgetSuit))
 }
 
-func newProp(local int, total int, size int, nodes ...string) *cfg.Properties {
-	p := cfg.NewProperties()
+func newProp(local int, total int, size int, nodes ...string) *config.Properties {
+	p := config.NewProperties()
 	if nodes != nil {
 		p.Nodes = nodes
 	}

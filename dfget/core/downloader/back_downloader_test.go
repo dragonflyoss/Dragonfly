@@ -61,22 +61,22 @@ func (s *BackDownloaderTestSuite) TestBackDownloader_Run(c *check.C) {
 	testFileMd5 := createTestFile(path.Join(s.workHome, "download.test"))
 	dst := path.Join(s.workHome, "back.test")
 
-	ctx := helper.CreateContext(nil, s.workHome)
+	cfg := helper.CreateConfig(nil, s.workHome)
 	bd := &BackDownloader{
-		Ctx:    ctx,
+		Cfg:    cfg,
 		URL:    "http://" + s.host + "/download.test",
 		Target: dst,
 	}
 
-	ctx.Notbs = true
+	cfg.Notbs = true
 	c.Assert(bd.Run(), check.NotNil)
 
-	ctx.Notbs = false
+	cfg.Notbs = false
 	bd.cleaned = false
-	ctx.BackSourceReason = config.BackSourceReasonNoSpace
+	cfg.BackSourceReason = config.BackSourceReasonNoSpace
 	c.Assert(bd.Run(), check.NotNil)
 
-	ctx.BackSourceReason = 0
+	cfg.BackSourceReason = 0
 	bd.cleaned = false
 	c.Assert(bd.Run(), check.IsNil)
 

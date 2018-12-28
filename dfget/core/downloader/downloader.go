@@ -41,7 +41,7 @@ type Downloader interface {
 }
 
 // NewBackDownloader create BackDownloader
-func NewBackDownloader(ctx *config.Context, result *regist.RegisterResult) Downloader {
+func NewBackDownloader(cfg *config.Config, result *regist.RegisterResult) Downloader {
 	var (
 		taskID string
 		node   string
@@ -51,10 +51,10 @@ func NewBackDownloader(ctx *config.Context, result *regist.RegisterResult) Downl
 		node = result.Node
 	}
 	return &BackDownloader{
-		Ctx:     ctx,
-		URL:     ctx.URL,
-		Target:  ctx.RV.RealTarget,
-		Md5:     ctx.Md5,
+		Cfg:     cfg,
+		URL:     cfg.URL,
+		Target:  cfg.RV.RealTarget,
+		Md5:     cfg.Md5,
 		TaskID:  taskID,
 		Node:    node,
 		Total:   0,
@@ -63,12 +63,12 @@ func NewBackDownloader(ctx *config.Context, result *regist.RegisterResult) Downl
 }
 
 // NewP2PDownloader create P2PDownloader
-func NewP2PDownloader(ctx *config.Context,
+func NewP2PDownloader(cfg *config.Config,
 	api api.SupernodeAPI,
 	register regist.SupernodeRegister,
 	result *regist.RegisterResult) Downloader {
 	p2p := &P2PDownloader{
-		Ctx:            ctx,
+		Cfg:            cfg,
 		API:            api,
 		Register:       register,
 		RegisterResult: result,

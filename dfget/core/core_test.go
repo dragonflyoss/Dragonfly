@@ -62,24 +62,24 @@ func (s *CoreTestSuite) TearDownSuite(c *check.C) {
 
 func (s *CoreTestSuite) TestPrepare(c *check.C) {
 	buf := &bytes.Buffer{}
-	ctx := s.createContext(buf)
-	ctx.Output = path.Join(s.workHome, "test.output")
+	cfg := s.createConfig(buf)
+	cfg.Output = path.Join(s.workHome, "test.output")
 
-	err := prepare(ctx)
+	err := prepare(cfg)
 	fmt.Printf("%s\nerror:%v", buf.String(), err)
 }
 
 func (s *CoreTestSuite) TestRegisterToSupernode(c *check.C) {
-	ctx := s.createContext(&bytes.Buffer{})
+	cfg := s.createConfig(&bytes.Buffer{})
 	m := new(MockSupernodeAPI)
 	m.RegisterFunc = CreateRegisterFunc()
-	register := regist.NewSupernodeRegister(ctx, m)
+	register := regist.NewSupernodeRegister(cfg, m)
 
 	var f = func(bc int, errIsNil bool, data *regist.RegisterResult) {
-		res, e := registerToSuperNode(ctx, register)
+		res, e := registerToSuperNode(cfg, register)
 		c.Assert(res == nil, check.Equals, data == nil)
 		c.Assert(e == nil, check.Equals, errIsNil)
-		c.Assert(ctx.BackSourceReason, check.Equals, bc)
+		c.Assert(cfg.BackSourceReason, check.Equals, bc)
 		if data != nil {
 			c.Assert(res, check.DeepEquals, data)
 		}
@@ -87,24 +87,24 @@ func (s *CoreTestSuite) TestRegisterToSupernode(c *check.C) {
 
 	f(config.BackSourceReasonNodeEmpty, true, nil)
 
-	ctx.Pattern = config.PatternSource
+	cfg.Pattern = config.PatternSource
 	f(config.BackSourceReasonUserSpecified, true, nil)
 
-	ctx.Pattern = config.PatternP2P
+	cfg.Pattern = config.PatternP2P
 
-	ctx.Node = []string{"x"}
-	ctx.URL = "http://x.com"
+	cfg.Node = []string{"x"}
+	cfg.URL = "http://x.com"
 	f(config.BackSourceReasonRegisterFail, true, nil)
 
-	ctx.Node = []string{"x"}
-	ctx.URL = "http://taobao.com"
-	ctx.BackSourceReason = config.BackSourceReasonNone
+	cfg.Node = []string{"x"}
+	cfg.URL = "http://taobao.com"
+	cfg.BackSourceReason = config.BackSourceReasonNone
 	f(config.BackSourceReasonNone, false, nil)
 
-	ctx.Node = []string{"x"}
-	ctx.URL = "http://lowzj.com"
+	cfg.Node = []string{"x"}
+	cfg.URL = "http://lowzj.com"
 	f(config.BackSourceReasonNone, true, &regist.RegisterResult{
-		Node: "x", RemainderNodes: []string{}, URL: ctx.URL, TaskID: "a",
+		Node: "x", RemainderNodes: []string{}, URL: cfg.URL, TaskID: "a",
 		FileLength: 100, PieceSize: 10})
 }
 
@@ -150,14 +150,14 @@ func (s *CoreTestSuite) TestCheckConnectSupernode(c *check.C) {
 	go fasthttp.Serve(ln, func(ctx *fasthttp.RequestCtx) {})
 
 	buf := &bytes.Buffer{}
-	config.Ctx = s.createContext(buf)
+	cfg := s.createConfig(buf)
 
 	nodes := []string{host}
-	ip := checkConnectSupernode(nodes)
+	ip := checkConnectSupernode(nodes, cfg.ClientLogger)
 	c.Assert(ip, check.Equals, "127.0.0.1")
 
 	buf.Reset()
-	ip = checkConnectSupernode([]string{"127.0.0.2"})
+	ip = checkConnectSupernode([]string{"127.0.0.2"}, cfg.ClientLogger)
 	c.Assert(strings.Index(buf.String(), "connect") > 0, check.Equals, true)
 	c.Assert(ip, check.Equals, "")
 }
@@ -165,6 +165,6 @@ func (s *CoreTestSuite) TestCheckConnectSupernode(c *check.C) {
 // ----------------------------------------------------------------------------
 // helper functions
 
-func (s *CoreTestSuite) createContext(writer io.Writer) *config.Context {
-	return CreateContext(writer, s.workHome)
+func (s *CoreTestSuite) createConfig(writer io.Writer) *config.Config {
+	return CreateConfig(writer, s.workHome)
 }

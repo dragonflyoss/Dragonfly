@@ -70,11 +70,11 @@ func (s *RegistTestSuite) TestNewRegisterResult(c *check.C) {
 
 func (s *RegistTestSuite) TestSupernodeRegister_Register(c *check.C) {
 	buf := &bytes.Buffer{}
-	ctx := s.createContext(buf)
+	cfg := s.createConfig(buf)
 	m := new(MockSupernodeAPI)
 	m.RegisterFunc = CreateRegisterFunc()
 
-	register := NewSupernodeRegister(ctx, m)
+	register := NewSupernodeRegister(cfg, m)
 
 	var f = func(ec int, msg string, data *RegisterResult) {
 		resp, e := register.Register(0)
@@ -89,24 +89,24 @@ func (s *RegistTestSuite) TestSupernodeRegister_Register(c *check.C) {
 		}
 	}
 
-	ctx.Node = []string{""}
+	cfg.Node = []string{""}
 	f(config.HTTPError, "connection refused", nil)
 
-	ctx.Node = []string{"x"}
+	cfg.Node = []string{"x"}
 	f(501, "invalid source url", nil)
 
-	ctx.Node = []string{"x"}
-	ctx.URL = "http://taobao.com"
+	cfg.Node = []string{"x"}
+	cfg.URL = "http://taobao.com"
 	f(config.TaskCodeNeedAuth, "need auth", nil)
 
-	ctx.Node = []string{"x"}
-	ctx.URL = "http://github.com"
+	cfg.Node = []string{"x"}
+	cfg.URL = "http://github.com"
 	f(config.TaskCodeWaitAuth, "wait auth", nil)
 
-	ctx.Node = []string{"x"}
-	ctx.URL = "http://lowzj.com"
+	cfg.Node = []string{"x"}
+	cfg.URL = "http://lowzj.com"
 	f(config.Success, "", &RegisterResult{
-		Node: "x", RemainderNodes: []string{}, URL: ctx.URL, TaskID: "a",
+		Node: "x", RemainderNodes: []string{}, URL: cfg.URL, TaskID: "a",
 		FileLength: 100, PieceSize: 10})
 
 	f(config.HTTPError, "empty response, unknown error", nil)
@@ -114,23 +114,23 @@ func (s *RegistTestSuite) TestSupernodeRegister_Register(c *check.C) {
 
 func (s *RegistTestSuite) TestSupernodeRegister_constructRegisterRequest(c *check.C) {
 	buf := &bytes.Buffer{}
-	ctx := s.createContext(buf)
-	register := &supernodeRegister{nil, ctx}
+	cfg := s.createConfig(buf)
+	register := &supernodeRegister{nil, cfg}
 
-	ctx.Identifier = "id"
+	cfg.Identifier = "id"
 	req := register.constructRegisterRequest(0)
-	c.Assert(req.Identifier, check.Equals, ctx.Identifier)
+	c.Assert(req.Identifier, check.Equals, cfg.Identifier)
 	c.Assert(req.Md5, check.Equals, "")
 
-	ctx.Md5 = "md5"
+	cfg.Md5 = "md5"
 	req = register.constructRegisterRequest(0)
 	c.Assert(req.Identifier, check.Equals, "")
-	c.Assert(req.Md5, check.Equals, ctx.Md5)
+	c.Assert(req.Md5, check.Equals, cfg.Md5)
 }
 
 // ----------------------------------------------------------------------------
 // helper functions
 
-func (s *RegistTestSuite) createContext(writer io.Writer) *config.Context {
-	return CreateContext(writer, s.workHome)
+func (s *RegistTestSuite) createConfig(writer io.Writer) *config.Config {
+	return CreateConfig(writer, s.workHome)
 }
