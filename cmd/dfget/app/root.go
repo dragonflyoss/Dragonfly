@@ -105,7 +105,7 @@ func initLog() {
 	if cfg.Ctx.Console {
 		util.AddConsoleLog(cfg.Ctx.ClientLogger)
 	}
-	if cfg.Ctx.Pattern == "p2p" {
+	if cfg.Ctx.Pattern == cfg.PatternP2P {
 		cfg.Ctx.ServerLogger = util.CreateLogger(logPath, "dfserver.log", logLevel, cfg.Ctx.Sign)
 	}
 }
