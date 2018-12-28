@@ -300,17 +300,18 @@ func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 }
 
 func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, clientWriter *ClientWriter) {
+	// wait client writer finished
 	p2p.Ctx.ClientLogger.Infof("remaining writed piece count:%d", p2p.clientQueue.Len())
 	p2p.clientQueue.Put(last)
 	waitStart := time.Now().Unix()
 	clientWriter.Wait()
-
 	p2p.Ctx.ClientLogger.Infof("wait client writer finish cost %d,main qu size:%d,client qu size:%d", time.Now().Unix()-waitStart, p2p.queue.Len(), p2p.clientQueue.Len())
 
 	if p2p.Ctx.BackSourceReason > 0 {
 		return
 	}
 
+	// get the temp path where the downloaded file exists.
 	var src string
 	if clientWriter.acrossWrite {
 		src = p2p.Ctx.RV.TempTarget
@@ -325,6 +326,7 @@ func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, clie
 		src = p2p.clientFilePath
 	}
 
+	// move file to the target file path.
 	if err := moveFile(src, p2p.targetFile, p2p.Ctx.Md5, p2p.Ctx.ClientLogger); err != nil {
 		return
 	}
