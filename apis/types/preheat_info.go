@@ -66,30 +66,21 @@ func (m *PreheatInfo) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *PreheatInfo) validateFinishTime(formats strfmt.Registry) error {
+func (m *PreheatInfo) validateFinishTime(formats strfmt.Registry) (err error) {
 
 	if swag.IsZero(m.FinishTime) { // not required
-		return nil
+		return
 	}
 
-	if err := validate.FormatOf("finishTime", "body", "date-time", m.FinishTime.String(), formats); err != nil {
-		return err
-	}
-
-	return nil
+	return validate.FormatOf("finishTime", "body", "date-time", m.FinishTime.String(), formats)
 }
 
-func (m *PreheatInfo) validateStartTime(formats strfmt.Registry) error {
+func (m *PreheatInfo) validateStartTime(formats strfmt.Registry) (err error) {
 
 	if swag.IsZero(m.StartTime) { // not required
-		return nil
+		return
 	}
-
-	if err := validate.FormatOf("startTime", "body", "date-time", m.StartTime.String(), formats); err != nil {
-		return err
-	}
-
-	return nil
+	return validate.FormatOf("startTime", "body", "date-time", m.StartTime.String(), formats)
 }
 
 var preheatInfoTypeStatusPropEnum []interface{}
@@ -121,40 +112,33 @@ const (
 
 // prop value enum
 func (m *PreheatInfo) validateStatusEnum(path, location string, value string) error {
-	if err := validate.Enum(path, location, value, preheatInfoTypeStatusPropEnum); err != nil {
-		return err
-	}
-	return nil
+	return validate.Enum(path, location, value, preheatInfoTypeStatusPropEnum)
 }
 
-func (m *PreheatInfo) validateStatus(formats strfmt.Registry) error {
+func (m *PreheatInfo) validateStatus(formats strfmt.Registry) (err error) {
 
 	if swag.IsZero(m.Status) { // not required
-		return nil
+		return
 	}
 
 	// value enum
-	if err := m.validateStatusEnum("status", "body", m.Status); err != nil {
-		return err
-	}
-
-	return nil
+	return m.validateStatusEnum("status", "body", m.Status)
 }
 
 // MarshalBinary interface implementation
-func (m *PreheatInfo) MarshalBinary() ([]byte, error) {
+func (m *PreheatInfo) MarshalBinary() (b []byte, err error) {
 	if m == nil {
-		return nil, nil
+		return
 	}
 	return swag.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
-func (m *PreheatInfo) UnmarshalBinary(b []byte) error {
+func (m *PreheatInfo) UnmarshalBinary(b []byte) (err error) {
 	var res PreheatInfo
-	if err := swag.ReadJSON(b, &res); err != nil {
-		return err
+	if err = swag.ReadJSON(b, &res); err != nil {
+		return
 	}
 	*m = res
-	return nil
+	return
 }

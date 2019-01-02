@@ -40,24 +40,24 @@ type PreheatCreateRequest struct {
 }
 
 // Validate validates this preheat create request
-func (m *PreheatCreateRequest) Validate(formats strfmt.Registry) error {
-	return nil
+func (m *PreheatCreateRequest) Validate(formats strfmt.Registry) (err error) {
+	return err
 }
 
 // MarshalBinary interface implementation
-func (m *PreheatCreateRequest) MarshalBinary() ([]byte, error) {
+func (m *PreheatCreateRequest) MarshalBinary() (b []byte, err error) {
 	if m == nil {
-		return nil, nil
+		return
 	}
 	return swag.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
-func (m *PreheatCreateRequest) UnmarshalBinary(b []byte) error {
+func (m *PreheatCreateRequest) UnmarshalBinary(b []byte) (err error) {
 	var res PreheatCreateRequest
-	if err := swag.ReadJSON(b, &res); err != nil {
-		return err
+	if err = swag.ReadJSON(b, &res); err != nil {
+		return
 	}
 	*m = res
-	return nil
+	return
 }

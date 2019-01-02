@@ -20,24 +20,24 @@ type PieceUpdateRequest struct {
 }
 
 // Validate validates this piece update request
-func (m *PieceUpdateRequest) Validate(formats strfmt.Registry) error {
-	return nil
+func (m *PieceUpdateRequest) Validate(formats strfmt.Registry) (err error) {
+	return err
 }
 
 // MarshalBinary interface implementation
-func (m *PieceUpdateRequest) MarshalBinary() ([]byte, error) {
+func (m *PieceUpdateRequest) MarshalBinary() (b []byte, err error) {
 	if m == nil {
-		return nil, nil
+		return
 	}
 	return swag.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
-func (m *PieceUpdateRequest) UnmarshalBinary(b []byte) error {
+func (m *PieceUpdateRequest) UnmarshalBinary(b []byte) (err error) {
 	var res PieceUpdateRequest
-	if err := swag.ReadJSON(b, &res); err != nil {
-		return err
+	if err = swag.ReadJSON(b, &res); err != nil {
+		return
 	}
 	*m = res
-	return nil
+	return
 }

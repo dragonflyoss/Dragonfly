@@ -20,24 +20,24 @@ type PeerCreateResponse struct {
 }
 
 // Validate validates this peer create response
-func (m *PeerCreateResponse) Validate(formats strfmt.Registry) error {
-	return nil
+func (m *PeerCreateResponse) Validate(formats strfmt.Registry) (err error) {
+	return err
 }
 
 // MarshalBinary interface implementation
-func (m *PeerCreateResponse) MarshalBinary() ([]byte, error) {
+func (m *PeerCreateResponse) MarshalBinary() (b []byte, err error) {
 	if m == nil {
-		return nil, nil
+		return
 	}
 	return swag.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
-func (m *PeerCreateResponse) UnmarshalBinary(b []byte) error {
+func (m *PeerCreateResponse) UnmarshalBinary(b []byte) (err error) {
 	var res PeerCreateResponse
-	if err := swag.ReadJSON(b, &res); err != nil {
-		return err
+	if err = swag.ReadJSON(b, &res); err != nil {
+		return
 	}
 	*m = res
-	return nil
+	return
 }

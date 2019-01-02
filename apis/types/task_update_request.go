@@ -20,24 +20,24 @@ type TaskUpdateRequest struct {
 }
 
 // Validate validates this task update request
-func (m *TaskUpdateRequest) Validate(formats strfmt.Registry) error {
-	return nil
+func (m *TaskUpdateRequest) Validate(formats strfmt.Registry) (err error) {
+	return err
 }
 
 // MarshalBinary interface implementation
-func (m *TaskUpdateRequest) MarshalBinary() ([]byte, error) {
+func (m *TaskUpdateRequest) MarshalBinary() (b []byte, err error) {
 	if m == nil {
-		return nil, nil
+		return
 	}
 	return swag.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
-func (m *TaskUpdateRequest) UnmarshalBinary(b []byte) error {
+func (m *TaskUpdateRequest) UnmarshalBinary(b []byte) (err error) {
 	var res TaskUpdateRequest
-	if err := swag.ReadJSON(b, &res); err != nil {
-		return err
+	if err = swag.ReadJSON(b, &res); err != nil {
+		return
 	}
 	*m = res
-	return nil
+	return
 }

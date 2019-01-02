@@ -20,24 +20,24 @@ type PieceInfo struct {
 }
 
 // Validate validates this piece info
-func (m *PieceInfo) Validate(formats strfmt.Registry) error {
-	return nil
+func (m *PieceInfo) Validate(formats strfmt.Registry) (err error) {
+	return err
 }
 
 // MarshalBinary interface implementation
-func (m *PieceInfo) MarshalBinary() ([]byte, error) {
+func (m *PieceInfo) MarshalBinary() (b []byte, err error) {
 	if m == nil {
-		return nil, nil
+		return
 	}
 	return swag.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
-func (m *PieceInfo) UnmarshalBinary(b []byte) error {
+func (m *PieceInfo) UnmarshalBinary(b []byte) (err error) {
 	var res PieceInfo
-	if err := swag.ReadJSON(b, &res); err != nil {
-		return err
+	if err = swag.ReadJSON(b, &res); err != nil {
+		return
 	}
 	*m = res
-	return nil
+	return
 }

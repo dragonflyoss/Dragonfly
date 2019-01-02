@@ -25,24 +25,24 @@ type ErrorResponse struct {
 }
 
 // Validate validates this error response
-func (m *ErrorResponse) Validate(formats strfmt.Registry) error {
-	return nil
+func (m *ErrorResponse) Validate(formats strfmt.Registry) (err error) {
+	return err
 }
 
 // MarshalBinary interface implementation
-func (m *ErrorResponse) MarshalBinary() ([]byte, error) {
+func (m *ErrorResponse) MarshalBinary() (b []byte, err error) {
 	if m == nil {
-		return nil, nil
+		return
 	}
 	return swag.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
-func (m *ErrorResponse) UnmarshalBinary(b []byte) error {
+func (m *ErrorResponse) UnmarshalBinary(b []byte) (err error) {
 	var res ErrorResponse
-	if err := swag.ReadJSON(b, &res); err != nil {
-		return err
+	if err = swag.ReadJSON(b, &res); err != nil {
+		return
 	}
 	*m = res
-	return nil
+	return
 }

@@ -20,24 +20,24 @@ type TaskInfo struct {
 }
 
 // Validate validates this task info
-func (m *TaskInfo) Validate(formats strfmt.Registry) error {
-	return nil
+func (m *TaskInfo) Validate(formats strfmt.Registry) (err error) {
+	return err
 }
 
 // MarshalBinary interface implementation
-func (m *TaskInfo) MarshalBinary() ([]byte, error) {
+func (m *TaskInfo) MarshalBinary() (b []byte, err error) {
 	if m == nil {
-		return nil, nil
+		return
 	}
 	return swag.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
-func (m *TaskInfo) UnmarshalBinary(b []byte) error {
+func (m *TaskInfo) UnmarshalBinary(b []byte) (err error) {
 	var res TaskInfo
-	if err := swag.ReadJSON(b, &res); err != nil {
-		return err
+	if err = swag.ReadJSON(b, &res); err != nil {
+		return
 	}
 	*m = res
-	return nil
+	return
 }

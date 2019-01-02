@@ -20,24 +20,24 @@ type TaskCreateResponse struct {
 }
 
 // Validate validates this task create response
-func (m *TaskCreateResponse) Validate(formats strfmt.Registry) error {
-	return nil
+func (m *TaskCreateResponse) Validate(formats strfmt.Registry) (err error) {
+	return err
 }
 
 // MarshalBinary interface implementation
-func (m *TaskCreateResponse) MarshalBinary() ([]byte, error) {
+func (m *TaskCreateResponse) MarshalBinary() (b []byte, err error) {
 	if m == nil {
-		return nil, nil
+		return
 	}
 	return swag.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
-func (m *TaskCreateResponse) UnmarshalBinary(b []byte) error {
+func (m *TaskCreateResponse) UnmarshalBinary(b []byte) (err error) {
 	var res TaskCreateResponse
-	if err := swag.ReadJSON(b, &res); err != nil {
-		return err
+	if err = swag.ReadJSON(b, &res); err != nil {
+		return
 	}
 	*m = res
-	return nil
+	return
 }
