@@ -15,7 +15,6 @@
 package initializer
 
 import (
-	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -30,7 +29,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/dragonflyoss/Dragonfly/cmd/dfdaemon/options"
+	"github.com/dragonflyoss/Dragonfly/cmd/dfdaemon/app/options"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/global"
 	g "github.com/dragonflyoss/Dragonfly/dfdaemon/global"
@@ -156,10 +155,6 @@ func initLogger() {
 func initParam(options *options.Options) {
 	if options.Version {
 		fmt.Println(version.DFDaemonVersion)
-		os.Exit(0)
-	}
-	if options.Help {
-		flag.Usage()
 		os.Exit(0)
 	}
 
