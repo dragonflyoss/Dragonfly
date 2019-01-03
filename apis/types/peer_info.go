@@ -66,51 +66,36 @@ func (m *PeerInfo) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *PeerInfo) validateIP(formats strfmt.Registry) error {
+func (m *PeerInfo) validateIP(formats strfmt.Registry) (err error) {
 
 	if swag.IsZero(m.IP) { // not required
-		return nil
+		return
 	}
-
-	if err := validate.FormatOf("IP", "body", "ipv4", m.IP.String(), formats); err != nil {
-		return err
-	}
-
-	return nil
+	return validate.FormatOf("IP", "body", "ipv4", m.IP.String(), formats)
 }
 
-func (m *PeerInfo) validateHostName(formats strfmt.Registry) error {
+func (m *PeerInfo) validateHostName(formats strfmt.Registry) (err error) {
 
 	if swag.IsZero(m.HostName) { // not required
-		return nil
+		return
+	}
+	if err = validate.MinLength("hostName", "body", string(m.HostName), 1); err != nil {
+		return
 	}
 
-	if err := validate.MinLength("hostName", "body", string(m.HostName), 1); err != nil {
-		return err
-	}
-
-	if err := validate.FormatOf("hostName", "body", "hostname", m.HostName.String(), formats); err != nil {
-		return err
-	}
-
-	return nil
+	return validate.FormatOf("hostName", "body", "hostname", m.HostName.String(), formats)
 }
 
-func (m *PeerInfo) validatePort(formats strfmt.Registry) error {
+func (m *PeerInfo) validatePort(formats strfmt.Registry) (err error) {
 
 	if swag.IsZero(m.Port) { // not required
-		return nil
+		return
+	}
+	if err = validate.MinimumInt("port", "body", int64(m.Port), 15000, false); err != nil {
+		return
 	}
 
-	if err := validate.MinimumInt("port", "body", int64(m.Port), 15000, false); err != nil {
-		return err
-	}
-
-	if err := validate.MaximumInt("port", "body", int64(m.Port), 65000, false); err != nil {
-		return err
-	}
-
-	return nil
+	return validate.MaximumInt("port", "body", int64(m.Port), 65000, false)
 }
 
 // MarshalBinary interface implementation

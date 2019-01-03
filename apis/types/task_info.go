@@ -109,17 +109,13 @@ func (m *TaskInfo) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *TaskInfo) validateCallSystem(formats strfmt.Registry) error {
+func (m *TaskInfo) validateCallSystem(formats strfmt.Registry) (err error) {
 
 	if swag.IsZero(m.CallSystem) { // not required
-		return nil
+		return
 	}
 
-	if err := validate.MinLength("callSystem", "body", string(m.CallSystem), 1); err != nil {
-		return err
-	}
-
-	return nil
+	return validate.MinLength("callSystem", "body", string(m.CallSystem), 1)
 }
 
 var taskInfoTypeCdnStatusPropEnum []interface{}
@@ -154,24 +150,17 @@ const (
 
 // prop value enum
 func (m *TaskInfo) validateCdnStatusEnum(path, location string, value string) error {
-	if err := validate.Enum(path, location, value, taskInfoTypeCdnStatusPropEnum); err != nil {
-		return err
-	}
-	return nil
+	return validate.Enum(path, location, value, taskInfoTypeCdnStatusPropEnum)
 }
 
-func (m *TaskInfo) validateCdnStatus(formats strfmt.Registry) error {
+func (m *TaskInfo) validateCdnStatus(formats strfmt.Registry) (err error) {
 
 	if swag.IsZero(m.CdnStatus) { // not required
-		return nil
+		return
 	}
 
 	// value enum
-	if err := m.validateCdnStatusEnum("cdnStatus", "body", m.CdnStatus); err != nil {
-		return err
-	}
-
-	return nil
+	return m.validateCdnStatusEnum("cdnStatus", "body", m.CdnStatus)
 }
 
 // MarshalBinary interface implementation

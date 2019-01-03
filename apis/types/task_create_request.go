@@ -7,7 +7,7 @@ package types
 
 import (
 	"github.com/go-openapi/errors"
-	strfmt "github.com/go-openapi/strfmt"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
@@ -92,17 +92,13 @@ func (m *TaskCreateRequest) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *TaskCreateRequest) validateCallSystem(formats strfmt.Registry) error {
+func (m *TaskCreateRequest) validateCallSystem(formats strfmt.Registry) (err error) {
 
 	if swag.IsZero(m.CallSystem) { // not required
-		return nil
+		return
 	}
 
-	if err := validate.MinLength("callSystem", "body", string(m.CallSystem), 1); err != nil {
-		return err
-	}
-
-	return nil
+	return validate.MinLength("callSystem", "body", string(m.CallSystem), 1)
 }
 
 // MarshalBinary interface implementation

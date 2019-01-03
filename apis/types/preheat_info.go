@@ -120,24 +120,17 @@ const (
 
 // prop value enum
 func (m *PreheatInfo) validateStatusEnum(path, location string, value string) error {
-	if err := validate.Enum(path, location, value, preheatInfoTypeStatusPropEnum); err != nil {
-		return err
-	}
-	return nil
+	return validate.Enum(path, location, value, preheatInfoTypeStatusPropEnum)
 }
 
-func (m *PreheatInfo) validateStatus(formats strfmt.Registry) error {
+func (m *PreheatInfo) validateStatus(formats strfmt.Registry) (err error) {
 
 	if swag.IsZero(m.Status) { // not required
-		return nil
+		return
 	}
 
 	// value enum
-	if err := m.validateStatusEnum("status", "body", m.Status); err != nil {
-		return err
-	}
-
-	return nil
+	return m.validateStatusEnum("status", "body", m.Status)
 }
 
 // MarshalBinary interface implementation

@@ -131,24 +131,17 @@ const (
 
 // prop value enum
 func (m *PieceUpdateRequest) validateStatusEnum(path, location string, value string) error {
-	if err := validate.Enum(path, location, value, pieceUpdateRequestTypeStatusPropEnum); err != nil {
-		return err
-	}
-	return nil
+	return validate.Enum(path, location, value, pieceUpdateRequestTypeStatusPropEnum)
 }
 
-func (m *PieceUpdateRequest) validateStatus(formats strfmt.Registry) error {
+func (m *PieceUpdateRequest) validateStatus(formats strfmt.Registry) (err error) {
 
 	if swag.IsZero(m.Status) { // not required
-		return nil
+		return
 	}
 
 	// value enum
-	if err := m.validateStatusEnum("status", "body", m.Status); err != nil {
-		return err
-	}
-
-	return nil
+	return m.validateStatusEnum("status", "body", m.Status)
 }
 
 // MarshalBinary interface implementation
