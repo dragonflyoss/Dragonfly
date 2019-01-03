@@ -15,44 +15,9 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-	"net/http"
-	"runtime"
-
-	"github.com/sirupsen/logrus"
-
-	"github.com/dragonflyoss/Dragonfly/cmd/dfdaemon/options"
-	"github.com/dragonflyoss/Dragonfly/dfdaemon/initializer"
+	"github.com/dragonflyoss/Dragonfly/cmd/dfdaemon/app"
 )
 
 func main() {
-	options := options.NewOption()
-	options.AddFlags(flag.CommandLine)
-	flag.Parse()
-
-	initializer.Init(options)
-
-	// if CommandLine.MaxProcs <= 0, programs run with GOMAXPROCS set to the number of cores available
-	if options.MaxProcs > 0 {
-		runtime.GOMAXPROCS(options.MaxProcs)
-	}
-
-	logrus.Infof("start dfdaemon param:%+v", options)
-
-	fmt.Printf("\nlaunch dfdaemon on port:%d\n", options.Port)
-
-	var err error
-
-	if options.CertFile != "" && options.KeyFile != "" {
-		err = http.ListenAndServeTLS(fmt.Sprintf(":%d", options.Port),
-			options.CertFile, options.KeyFile, nil)
-	} else {
-		err = http.ListenAndServe(fmt.Sprintf(":%d", options.Port), nil)
-	}
-
-	if err != nil {
-		fmt.Printf("%v", err)
-		logrus.Fatal(err)
-	}
+	app.Execute()
 }
