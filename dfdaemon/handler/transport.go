@@ -25,6 +25,8 @@ import (
 	"github.com/pborman/uuid"
 	"github.com/sirupsen/logrus"
 
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/downloader"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/downloader/dfget"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/exception"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/global"
 )
@@ -40,6 +42,8 @@ var (
 type DFRoundTripper struct {
 	Round  *http.Transport
 	Round2 http.RoundTripper
+
+	Downloader downloader.Interface
 }
 
 // NewDFRoundTripper return the default DFRoundTripper.
@@ -57,6 +61,14 @@ func NewDFRoundTripper() *DFRoundTripper {
 			TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
 		},
 		Round2: http.NewFileTransport(http.Dir("/")),
+
+		Downloader: dfget.NewDFGetter(
+			global.CommandLine.DFRepo,
+			global.CommandLine.CallSystem,
+			global.CommandLine.Notbs,
+			global.CommandLine.RateLimit,
+			global.CommandLine.URLFilter,
+		),
 	}
 }
 
@@ -101,16 +113,8 @@ func (roundTripper *DFRoundTripper) download(req *http.Request, urlString string
 
 // downloadByGetter is to download file by DFGetter
 func (roundTripper *DFRoundTripper) downloadByGetter(url string, header map[string][]string, name string) (string, error) {
-	var getter = NewDFGetter()
 	logrus.Infof("start download url:%s to %s in repo", url, name)
-	getter.once.Do(func() {
-		getter.dstDir = global.CommandLine.DFRepo
-		getter.callSystem = global.CommandLine.CallSystem
-		getter.notbs = global.CommandLine.Notbs
-		getter.rateLimit = global.CommandLine.RateLimit
-		getter.urlFilter = global.CommandLine.URLFilter
-	})
-	return getter.Download(url, header, name)
+	return roundTripper.Downloader.Download(url, header, name)
 }
 
 // needUseGetter whether to download by DFGetter

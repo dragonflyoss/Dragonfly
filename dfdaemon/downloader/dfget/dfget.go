@@ -1,4 +1,4 @@
-// Copyright 1999-2017 Alibaba Group.
+// Copyright The Dragonfly Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package handler
+package dfget
 
 import (
 	"fmt"
 	"os/exec"
 	"strings"
-	"sync"
 	"syscall"
 	"time"
 
@@ -28,13 +27,6 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/exception"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/global"
 )
-
-// Downloader is an interface to download file
-type Downloader interface {
-	// Download download url file to file name
-	// return dst path and download error
-	Download(url string, header map[string][]string, name string) (string, error)
-}
 
 // DFGetter implements Downloader to download file by dragonfly
 type DFGetter struct {
@@ -48,13 +40,17 @@ type DFGetter struct {
 	callSystem string
 	// the notbs param of dfget
 	notbs bool
-
-	once sync.Once
 }
 
 // NewDFGetter returns the default DFGetter.
-func NewDFGetter() *DFGetter {
-	return &DFGetter{}
+func NewDFGetter(dstDir, callSystem string, notbs bool, rateLimit, urlFilter string) *DFGetter {
+	return &DFGetter{
+		dstDir:     dstDir,
+		callSystem: callSystem,
+		notbs:      notbs,
+		rateLimit:  rateLimit,
+		urlFilter:  urlFilter,
+	}
 }
 
 // Download is the method of DFGetter to download by dragonfly.
