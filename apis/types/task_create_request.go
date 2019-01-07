@@ -38,9 +38,9 @@ type TaskCreateRequest struct {
 
 	// filter is used to filter request queries in URL.
 	// For example, when a user wants to start to download a task which has a remote URL of
-	// http://a.b.com/fileA?user=xxx&auth=yyy, user can add a filter parameter ["user", "auth"]
-	// to filter the url to http://a.b.com/fileA. Then this parameter can potentially avoid repeatable
-	// downloads, if there is already a task http://a.b.com/fileA.
+	// a.b.com/fileA?user=xxx&auth=yyy, user can add a filter parameter ["user", "auth"]
+	// to filter the url to a.b.com/fileA. Then this parameter can potentially avoid repeatable
+	// downloads, if there is already a task a.b.com/fileA.
 	//
 	Filter []string `json:"filter"`
 
