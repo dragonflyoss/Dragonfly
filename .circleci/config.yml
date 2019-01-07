@@ -14,7 +14,7 @@ jobs:
       - run:
           name: use markdownlint v0.5.0 to lint markdown file (https://github.com/markdownlint/markdownlint)
           command: |
-            find  ./ -name  "*.md" | grep -v vendor | grep -v commandline |  grep -v .github |  grep -v swagger |  grep -v api |  xargs mdl -r ~MD002,~MD007,~MD010,~MD013,~MD024,~MD026,~MD029,~MD033,~MD036,~MD046
+            find  ./ -name  "*.md" | grep -v vendor | grep -v commandline |  grep -v .github |  grep -v swagger |  grep -v api |  xargs mdl -r ~MD002,~MD007,~MD010,~MD013,~MD024,~MD026,~MD029,~MD033,~MD034,~MD036,~MD046
       - run:
           name: use markdown-link-check(https://github.com/tcort/markdown-link-check) to check links in markdown files
           command: |
