@@ -2,7 +2,7 @@
 
 本文介绍了如何安装 Dragonfly 服务端。
 
-**提示：**对一个机房或集群而言，建议至少准备 2 台 8 核、16G 内存、千兆网络的机器，用于部署超级节点。
+**提示：** 对一个机房或集群而言，建议至少准备 2 台 8 核、16G 内存、千兆网络的机器，用于部署超级节点。
 
 ## 背景信息
 
@@ -90,7 +90,7 @@ Dragonfly 的系统架构包含两层：超级节点（服务端）和主机（�
 
 5. 在 Nginx 配置文件中添加以下配置。
 
-  **提示：**Nginx 配置文件路径例如 _src/supernode/src/main/docker/sources/nginx.conf_。
+  **提示：** Nginx 配置文件路径例如 _src/supernode/src/main/docker/sources/nginx.conf_。
 
   ```
   server {
