@@ -11,6 +11,8 @@
 
 ![Dragonfly](docs/images/logo/dragonfly-linear.png)
 
+> Note: The `master` branch may be in an unstable or even broken state during development. Please use [releases](https://github.com/dragonflyoss/Dragonfly/releases) instead of the `master` branch in order to get stable binaries.
+
 ## Contents
 
 - [Introduction](#introduction)
@@ -25,18 +27,20 @@
 
 ## Introduction
 
-Dragonfly is an intelligent P2P based image and file distribution system. It aims to resolve issues related to low-efficiency, low-success rate and waste of network bandwidth in file transferring process. Especially in large-scale file distribution scenarios such as application distribution, cache distribution, log distribution, image distribution, etc.
-In Alibaba, Dragonfly is invoked 2 Billion times and the data distributed is 3.4PB every month. Dragonfly has become one of the most important pieces of infrastructure at Alibaba. The reliability is up to 99.9999% (*1).
+Dragonfly is an open source intelligent P2P based image and file distribution system. Its goal is to tackle all distribution problems in cloud native scenarios. Currently Dragonfly focuses on being:
 
-While container technologies makes devops life easier most of the time, it sure brings a some challenges: the efficiency of image distribution, especially when you have to replicate image distribution on several hosts. Dragonfly works extremely well with both Docker and [PouchContainer](https://github.com/alibaba/pouch) for this scenario. It also is compatible with any other container formats.
+- **Simple**: well-defined user-facing API (HTTP), non-invasive to all container engines;
+- **Efficient**: CDN support, P2P based file distribution to save enterprise bandwidth;
+- **Intelligent**: host level speed limit, intelligent flow control due to host dection;
+- **Secure**: block transmission encrytion, HTTPS connection support.
 
-It delivers up to 57 times the throughput of native docker and saves up to 99.5% the out bandwidth of registry(*2).
+Dragonfly is now hosted by the [Cloud Native Computing Foundation](https://cncf.io) (CNCF) as a Sandbox Level Project. Originally it is born to solve all kinds of distribution at very large scales, such as application distribution, cache distribution, log distribution, image distribution and so on.
 
-Dragonfly makes it simple and cost-effective to set up, operate, and scale any kind of files/images/data distribution.
+Dragonfly is written in Java with the previous versions(< 0.3.0), and now is being refactored with Go.
 
 ## Features
 
-*The project is an open source version of the dragonfly and more internal features will be gradually opened*.
+In details, Dragonfly has the following features:
 
 - **P2P based file distribution**: Using P2P technology for file transmission, which can make full use of the bandwidth resources of each peer to improve download efficiency,  saves a lot of cross-IDC bandwidth, especially costly cross-board bandwidth
 - **Non-invasive support all kinds of container technologies**: Dragonfly can seamlessly support various containers for distributing images.
@@ -53,18 +57,20 @@ Dragonfly makes it simple and cost-effective to set up, operate, and scale any 
 
 ## Comparison
 
-|Test Environment ||
+For Dragonfly, no matter how many clients start the file downloading, the average downloading time is almost stable without increasement (12s in experiment, which means it only takes 12s in total for all client to finish downloading file/image).
+
+And for wget, the downloading time keeps increasing when you have more clients. As the amount of wget clients reaches 1200 (in following experiment), the file source will crash, then it can not serve any client.
+
+The following table shows the testing environment and the graph shows the comprison result.
+
+|Test Environment |Statistics|
 |--------------------|-------------------|
 |Dragonfly server|2 * (24core 64GB 2000Mb/s)|
 |File Source server|2 * (24core 64GB 2000Mb/s)|
 |Client|4core 8GB 200Mb/s|
 |Target file size|200MB|
-|Executed Date|2016-04-20|
 
 ![Performance](docs/images/performance.png)
-
-For Dragonfly, no matter how many clients issue the file downloading, the average downloading time is always around 12 seconds.
-And for wget, the downloading time keeps increasing when you have more clients, and as the amount of wget clients reaches 1200, the file source will crash, then it can not serve any client.
 
 ## Roadmap
 
@@ -78,6 +84,11 @@ Other active channels:
 
 - Gitter Chat: [dragonfly](https://gitter.im/alibaba/Dragonfly)
 - Twitter: [@dragonfly_oss](https://twitter.com/dragonfly_oss)
+- Dingtalk Group(钉钉群)
+
+<p align="center">
+<img src=https://user-images.githubusercontent.com/9465626/50591975-2ac2ba00-0ecd-11e9-9e53-4c4d6a7dfc7d.jpg width="250">
+</p>
 
 ## Contributing
 
