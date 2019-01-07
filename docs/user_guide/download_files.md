@@ -64,6 +64,24 @@ Things are done differently when you download container images and download gene
     systemctl restart docker
     ```
 
+    d. Add authentication info for the private docker registry in `~/.docker/config.json` if the registry is configured with auth.
+
+    ```json
+    {
+          "auths": {
+                  "https://index.docker.io/v1/": {
+                          "auth": "${auth_value}"
+                  }
+          }
+    }
+    ```
+
+    The ${auth_value} is `base64("${usename}:${password}")`.
+
+    ```bash
+    echo "${usename}:${password}" | base64
+    ```
+
 4. Download an image with Dragonfly.
 
     ```bash
