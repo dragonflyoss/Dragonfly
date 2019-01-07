@@ -86,9 +86,7 @@ less ~/.small-dragonfly/logs/dfclient.log
 
 > **注意**：镜像名称不要包含镜像仓库地址，因为仓库域名已经由`df-daemon`的启动参数`--registry`指定。
 
-> 配置私有镜像仓库的认证信息
-
-若私有镜像仓库配置了认证，则需要修改`~/.docker/config.json`，增加认证信息。
+若私有镜像仓库配置了认证，则需要修改`~/.docker/config.json`，增加docker认证信息。
 
 ```json
 {
