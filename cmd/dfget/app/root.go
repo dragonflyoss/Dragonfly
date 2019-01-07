@@ -26,9 +26,10 @@ var (
 var cfg = config.NewConfig()
 
 var rootCmd = &cobra.Command{
-	Use:   "dfget",
-	Short: "The dfget is the client of Dragonfly.",
-	Long:  "The dfget is the client of Dragonfly, a non-interactive P2P downloader.",
+	Use:               "dfget",
+	Short:             "The dfget is the client of Dragonfly.",
+	Long:              "The dfget is the client of Dragonfly, a non-interactive P2P downloader.",
+	DisableAutoGenTag: true, // disable displaying auto generation tag in cli docs
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runDfget(args)
 	},
