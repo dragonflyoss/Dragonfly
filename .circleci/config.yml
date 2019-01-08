@@ -50,7 +50,7 @@ jobs:
       - run:
           name: use gometalinter to check gocode of this project.
           command: |
-            gometalinter --disable-all --skip vendor -E gofmt -E goimports -E golint -E misspell -E vet -E goconst ./...
+            gometalinter --disable-all --cyclo-over=20 --skip vendor -E gofmt -E goimports -E golint -E misspell -E vet -E goconst -E gocyclo ./...
       - run:
           name: detect deadcode without test folder
           command: |
