@@ -73,7 +73,7 @@ func (suit *dfgetSuit) Test_initProperties() {
 		cfg.Ctx.ConfigFiles = v.configs
 		localLimitStr := strconv.FormatInt(int64(v.expected.LocalLimit/1024), 10)
 		totalLimitStr := strconv.FormatInt(int64(v.expected.TotalLimit/1024), 10)
-		rootCmd.PersistentFlags().Parse([]string{
+		rootCmd.Flags().Parse([]string{
 			"--locallimit", fmt.Sprintf("%sk", localLimitStr),
 			"--totallimit", fmt.Sprintf("%sk", totalLimitStr)})
 		initProperties()
