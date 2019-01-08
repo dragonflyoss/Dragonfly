@@ -1,10 +1,11 @@
 package options
 
 import (
-	"flag"
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	flag "github.com/spf13/pflag"
 )
 
 // Options is the configuration
@@ -37,9 +38,6 @@ type Options struct {
 	// Verbose indicates whether to be verbose.
 	// If set true, log level will be 'debug'.
 	Verbose bool
-
-	// Help show help information.
-	Help bool
 
 	// HostIP dfdaemon host ip, default: 127.0.0.1.
 	HostIP string
@@ -74,37 +72,32 @@ func NewOption() *Options {
 	}
 
 	o := &Options{
-		DFRepo:     filepath.Join(os.Getenv("HOME"), ".small-dragonfly/dfdaemon/data/"),
-		DfPath:     defaultPath,
-		CallSystem: "com_ops_dragonfly",
-		URLFilter:  "Signature&Expires&OSSAccessKeyId",
-		Notbs:      true,
-		Version:    false,
-		Verbose:    false,
-		Help:       false,
-		HostIP:     "127.0.0.1",
-		Port:       65001,
-		MaxProcs:   4,
+		DFRepo: filepath.Join(os.Getenv("HOME"), ".small-dragonfly/dfdaemon/data/"),
+		DfPath: defaultPath,
 	}
 	return o
 }
 
 // AddFlags add flags to the specified FlagSet.
 func (o *Options) AddFlags(fs *flag.FlagSet) {
+	fs.BoolVarP(&o.Version, "version", "v", false, "version")
+	fs.BoolVar(&o.Verbose, "verbose", false, "verbose")
+	fs.IntVar(&o.MaxProcs, "maxprocs", 4, "the maximum number of CPUs that the dfdaemon can use")
+
+	// http server config
+	fs.StringVar(&o.HostIP, "hostIp", "127.0.0.1", "dfdaemon host ip, default: 127.0.0.1")
+	fs.UintVar(&o.Port, "port", 65001, "dfdaemon will listen the port")
+	fs.StringVar(&o.CertFile, "certpem", "", "cert.pem file path")
+	fs.StringVar(&o.KeyFile, "keypem", "", "key.pem file path")
+
+	// dfget download config
 	fs.StringVar(&o.DFRepo, "localrepo", o.DFRepo, "temp output dir of dfdaemon")
+	fs.StringVar(&o.CallSystem, "callsystem", "com_ops_dragonfly", "caller name")
 	fs.StringVar(&o.DfPath, "dfpath", o.DfPath, "dfget path")
-	fs.StringVar(&o.RateLimit, "ratelimit", o.RateLimit, "net speed limit,format:xxxM/K")
-	fs.StringVar(&o.CallSystem, "callsystem", o.CallSystem, "caller name")
-	fs.StringVar(&o.URLFilter, "urlfilter", o.URLFilter, "filter specified url fields")
-	fs.BoolVar(&o.Notbs, "notbs", o.Notbs, "not try back source to download if throw exception")
-	fs.BoolVar(&o.Version, "v", o.Version, "version")
-	fs.BoolVar(&o.Verbose, "verbose", o.Verbose, "verbose")
-	fs.BoolVar(&o.Help, "h", o.Help, "help")
-	fs.StringVar(&o.HostIP, "hostIp", o.HostIP, "dfdaemon host ip, default: 127.0.0.1")
-	fs.UintVar(&o.Port, "port", o.Port, "dfdaemon will listen the port")
-	fs.StringVar(&o.Registry, "registry", o.Registry, "registry addr(https://abc.xx.x or http://abc.xx.x) and must exist if dfdaemon is used to mirror mode")
-	fs.StringVar(&o.DownRule, "rule", o.DownRule, "download the url by P2P if url matches the specified pattern,format:reg1,reg2,reg3")
-	fs.StringVar(&o.CertFile, "certpem", o.CertFile, "cert.pem file path")
-	fs.StringVar(&o.KeyFile, "keypem", o.KeyFile, "key.pem file path")
-	fs.IntVar(&o.MaxProcs, "maxprocs", o.MaxProcs, "the maximum number of CPUs that the dfdaemon can use")
+	fs.StringVar(&o.RateLimit, "ratelimit", "", "net speed limit,format:xxxM/K")
+	fs.StringVar(&o.URLFilter, "urlfilter", "Signature&Expires&OSSAccessKeyId", "filter specified url fields")
+	fs.StringVar(&o.Registry, "registry", "https://index.docker.io", "registry addr(https://abc.xx.x or http://abc.xx.x) and must exist if dfdaemon is used to mirror mode")
+	fs.StringVar(&o.DownRule, "rule", "", "download the url by P2P if url matches the specified pattern,format:reg1,reg2,reg3")
+	fs.BoolVar(&o.Notbs, "notbs", true, "not try back source to download if throw exception")
+
 }
