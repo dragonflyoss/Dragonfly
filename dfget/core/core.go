@@ -35,6 +35,8 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/dragonflyoss/Dragonfly/version"
+
+	"github.com/sirupsen/logrus"
 )
 
 func init() {
@@ -42,33 +44,33 @@ func init() {
 }
 
 // Start function creates a new task and starts it to download file.
-func Start(ctx *config.Context) *errors.DFGetError {
+func Start(cfg *config.Config) *errors.DFGetError {
 	var (
 		supernodeAPI = api.NewSupernodeAPI()
-		register     = regist.NewSupernodeRegister(ctx, supernodeAPI)
+		register     = regist.NewSupernodeRegister(cfg, supernodeAPI)
 		err          error
 		result       *regist.RegisterResult
 	)
 
 	util.Printer.Println(fmt.Sprintf("--%s--  %s",
-		ctx.StartTime.Format(config.DefaultTimestampFormat), ctx.URL))
+		cfg.StartTime.Format(config.DefaultTimestampFormat), cfg.URL))
 
-	if err = prepare(ctx); err != nil {
+	if err = prepare(cfg); err != nil {
 		return errors.New(1100, err.Error())
 	}
 
-	if result, err = registerToSuperNode(ctx, register); err != nil {
+	if result, err = registerToSuperNode(cfg, register); err != nil {
 		return errors.New(1200, err.Error())
 	}
 
-	if err = downloadFile(ctx, supernodeAPI, register, result); err != nil {
+	if err = downloadFile(cfg, supernodeAPI, register, result); err != nil {
 		return errors.New(1300, err.Error())
 	}
 
 	return nil
 }
 
-func prepare(ctx *config.Context) (err error) {
+func prepare(cfg *config.Config) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = r.(error)
@@ -76,97 +78,97 @@ func prepare(ctx *config.Context) (err error) {
 	}()
 
 	util.Printer.Printf("dfget version:%s", version.DFGetVersion)
-	util.Printer.Printf("workspace:%s sign:%s", ctx.WorkHome, ctx.Sign)
-	ctx.ClientLogger.Infof("target file path:%s", ctx.Output)
+	util.Printer.Printf("workspace:%s sign:%s", cfg.WorkHome, cfg.Sign)
+	cfg.ClientLogger.Infof("target file path:%s", cfg.Output)
 
-	rv := &ctx.RV
+	rv := &cfg.RV
 
-	rv.RealTarget = ctx.Output
+	rv.RealTarget = cfg.Output
 	rv.TargetDir = path.Dir(rv.RealTarget)
 	panicIf(util.CreateDirectory(rv.TargetDir))
-	ctx.RV.TempTarget, err = createTempTargetFile(rv.TargetDir, ctx.Sign)
+	cfg.RV.TempTarget, err = createTempTargetFile(rv.TargetDir, cfg.Sign)
 	panicIf(err)
 
 	panicIf(util.CreateDirectory(path.Dir(rv.MetaPath)))
-	panicIf(util.CreateDirectory(ctx.WorkHome))
+	panicIf(util.CreateDirectory(cfg.WorkHome))
 	panicIf(util.CreateDirectory(rv.SystemDataDir))
-	rv.DataDir = ctx.RV.SystemDataDir
+	rv.DataDir = cfg.RV.SystemDataDir
 
-	ctx.Node = adjustSupernodeList(ctx.Node)
-	rv.LocalIP = checkConnectSupernode(ctx.Node)
-	rv.Cid = getCid(rv.LocalIP, ctx.Sign)
-	rv.TaskFileName = getTaskFileName(rv.RealTarget, ctx.Sign)
-	rv.TaskURL = getTaskURL(ctx.URL, ctx.Filter)
-	ctx.ClientLogger.Info("runtimeVariable: " + ctx.RV.String())
+	cfg.Node = adjustSupernodeList(cfg.Node)
+	rv.LocalIP = checkConnectSupernode(cfg.Node, cfg.ClientLogger)
+	rv.Cid = getCid(rv.LocalIP, cfg.Sign)
+	rv.TaskFileName = getTaskFileName(rv.RealTarget, cfg.Sign)
+	rv.TaskURL = getTaskURL(cfg.URL, cfg.Filter)
+	cfg.ClientLogger.Info("runtimeVariable: " + cfg.RV.String())
 
 	return nil
 }
 
-func launchPeerServer(ctx *config.Context) error {
+func launchPeerServer(cfg *config.Config) error {
 	return fmt.Errorf("not implemented")
 }
 
-func registerToSuperNode(ctx *config.Context, register regist.SupernodeRegister) (
+func registerToSuperNode(cfg *config.Config, register regist.SupernodeRegister) (
 	*regist.RegisterResult, error) {
 	defer func() {
 		if r := recover(); r != nil {
-			ctx.ClientLogger.Warnf("register fail but try to download from source, "+
-				"reason:%d(%v)", ctx.BackSourceReason, r)
+			cfg.ClientLogger.Warnf("register fail but try to download from source, "+
+				"reason:%d(%v)", cfg.BackSourceReason, r)
 		}
 	}()
-	if ctx.Pattern == config.PatternSource {
-		ctx.BackSourceReason = config.BackSourceReasonUserSpecified
+	if cfg.Pattern == config.PatternSource {
+		cfg.BackSourceReason = config.BackSourceReasonUserSpecified
 		panic("user specified")
 	}
 
-	if len(ctx.Node) == 0 {
-		ctx.BackSourceReason = config.BackSourceReasonNodeEmpty
+	if len(cfg.Node) == 0 {
+		cfg.BackSourceReason = config.BackSourceReasonNodeEmpty
 		panic("supernode empty")
 	}
 
-	if ctx.Pattern == config.PatternP2P {
-		if e := launchPeerServer(ctx); e != nil {
-			ctx.ClientLogger.Warnf("start peer server error:%v, change to CDN pattern", e)
+	if cfg.Pattern == config.PatternP2P {
+		if e := launchPeerServer(cfg); e != nil {
+			cfg.ClientLogger.Warnf("start peer server error:%v, change to CDN pattern", e)
 		}
 	}
 
-	result, e := register.Register(ctx.RV.PeerPort)
+	result, e := register.Register(cfg.RV.PeerPort)
 	if e != nil {
 		if e.Code == config.TaskCodeNeedAuth {
 			return nil, e
 		}
-		ctx.BackSourceReason = config.BackSourceReasonRegisterFail
+		cfg.BackSourceReason = config.BackSourceReasonRegisterFail
 		panic(e.Error())
 	}
-	ctx.RV.FileLength = result.FileLength
-	util.Printer.Printf("client:%s connected to node:%s", ctx.RV.LocalIP, result.Node)
+	cfg.RV.FileLength = result.FileLength
+	util.Printer.Printf("client:%s connected to node:%s", cfg.RV.LocalIP, result.Node)
 	return result, nil
 }
 
-func downloadFile(ctx *config.Context, supernodeAPI api.SupernodeAPI,
+func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 	register regist.SupernodeRegister, result *regist.RegisterResult) error {
 	var getter downloader.Downloader
-	if ctx.BackSourceReason > 0 {
-		getter = downloader.NewBackDownloader(ctx, result)
+	if cfg.BackSourceReason > 0 {
+		getter = downloader.NewBackDownloader(cfg, result)
 	} else {
 		util.Printer.Printf("start download by dragonfly")
-		getter = downloader.NewP2PDownloader(ctx, supernodeAPI, register, result)
+		getter = downloader.NewP2PDownloader(cfg, supernodeAPI, register, result)
 	}
 
-	timeout := calculateTimeout(ctx.RV.FileLength, ctx.Timeout)
+	timeout := calculateTimeout(cfg.RV.FileLength, cfg.Timeout)
 	err := downloader.DoDownloadTimeout(getter, timeout)
 	success := "SUCCESS"
 	if err != nil {
-		ctx.ClientLogger.Error(err)
+		cfg.ClientLogger.Error(err)
 		success = "FAIL"
-	} else if ctx.RV.FileLength < 0 && util.IsRegularFile(ctx.RV.RealTarget) {
-		if info, err := os.Stat(ctx.RV.RealTarget); err == nil {
-			ctx.RV.FileLength = info.Size()
+	} else if cfg.RV.FileLength < 0 && util.IsRegularFile(cfg.RV.RealTarget) {
+		if info, err := os.Stat(cfg.RV.RealTarget); err == nil {
+			cfg.RV.FileLength = info.Size()
 		}
 	}
-	os.Remove(ctx.RV.TempTarget)
-	ctx.ClientLogger.Infof("download %s cost:%.3fs length:%d reason:%d",
-		success, time.Since(ctx.StartTime).Seconds(), ctx.RV.FileLength, ctx.BackSourceReason)
+	os.Remove(cfg.RV.TempTarget)
+	cfg.ClientLogger.Infof("download %s cost:%.3fs length:%d reason:%d",
+		success, time.Since(cfg.StartTime).Seconds(), cfg.RV.FileLength, cfg.BackSourceReason)
 	return err
 }
 
@@ -236,7 +238,7 @@ func adjustSupernodeList(nodes []string) []string {
 	}
 }
 
-func checkConnectSupernode(nodes []string) (localIP string) {
+func checkConnectSupernode(nodes []string, clientLogger *logrus.Logger) (localIP string) {
 	var (
 		e    error
 		port = 8002
@@ -249,8 +251,8 @@ func checkConnectSupernode(nodes []string) (localIP string) {
 		if localIP, e = util.CheckConnect(nodeFields[0], port, 1000); e == nil {
 			return localIP
 		}
-		if config.Ctx.ClientLogger != nil {
-			config.Ctx.ClientLogger.Errorf("connect to node:%s error: %v", n, e)
+		if clientLogger != nil {
+			clientLogger.Errorf("Connect to node:%s error: %v", n, e)
 		}
 	}
 	return ""

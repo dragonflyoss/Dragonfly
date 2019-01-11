@@ -39,7 +39,7 @@ type PowerClient struct {
 	taskID      string
 	node        string
 	pieceTask   *types.PullPieceTaskResponseContinueData
-	ctx         *config.Context
+	cfg         *config.Config
 	queue       util.Queue
 	clientQueue util.Queue
 }
@@ -53,7 +53,7 @@ func (pc *PowerClient) Run() (err error) {
 
 	defer func() {
 		if err != nil {
-			pc.ctx.ClientLogger.Errorf("read piece cont error:%s from dst:%s", err, dstIP)
+			pc.cfg.ClientLogger.Errorf("read piece cont error:%s from dst:%s", err, dstIP)
 			// TODO handle dst_ip == self.node
 		}
 	}()
@@ -75,9 +75,9 @@ func (pc *PowerClient) Run() (err error) {
 
 		buf := make([]byte, 256*1024)
 		pieceCont := bytes.NewBuffer(buf)
-		reader := NewLimitReader(resp.Body, pc.ctx.LocalLimit, pieceMD5 != "")
+		reader := NewLimitReader(resp.Body, pc.cfg.LocalLimit, pieceMD5 != "")
 		total, err := pieceCont.ReadFrom(reader)
-		pc.ctx.ClientLogger.Infof("get pieceCont total: %d", total)
+		pc.cfg.ClientLogger.Infof("get pieceCont total: %d", total)
 		if err != nil {
 			return err
 		}
@@ -86,7 +86,7 @@ func (pc *PowerClient) Run() (err error) {
 		readFinish := time.Now().Unix()
 		realMd5 := reader.Md5()
 		if realMd5 != pieceMD5 {
-			pc.ctx.ClientLogger.Errorf("piece range:%s error,realMd5:%s,expectedMd5:%s,dstIp:%s,total:%d", pc.pieceTask.Range, realMd5, pieceMD5, dstIP, total)
+			pc.cfg.ClientLogger.Errorf("piece range:%s error,realMd5:%s,expectedMd5:%s,dstIp:%s,total:%d", pc.pieceTask.Range, realMd5, pieceMD5, dstIP, total)
 			return fmt.Errorf("md5 not match, expected:%s real:%s", pieceMD5, realMd5)
 		}
 		piece := NewPieceContent(pc.taskID, pc.node, pc.pieceTask.Cid, pc.pieceTask.Range, config.ResultSemiSuc, config.TaskStatusRunning, pieceCont)
@@ -99,7 +99,7 @@ func (pc *PowerClient) Run() (err error) {
 		endTime := time.Now().Unix()
 		timeDuring := endTime - startTime
 		if timeDuring > 2.0 {
-			pc.ctx.ClientLogger.Warnf("client range:%s cost:%.3f from peer:%s,its readCost:%.3f,cont length:%d", pc.pieceTask.Range, timeDuring, dstIP, readFinish-startTime, total)
+			pc.cfg.ClientLogger.Warnf("client range:%s cost:%.3f from peer:%s,its readCost:%.3f,cont length:%d", pc.pieceTask.Range, timeDuring, dstIP, readFinish-startTime, total)
 		}
 		return nil
 	}
@@ -113,12 +113,12 @@ func (pc *PowerClient) Run() (err error) {
 // ClientWriter
 
 // NewClientWriter creates and initialize a ClientWriter instance.
-func NewClientWriter(taskFileName, cid, clientFilePath, serviceFilePath string, clientQueue util.Queue, ctx *config.Context) (*ClientWriter, error) {
+func NewClientWriter(taskFileName, cid, clientFilePath, serviceFilePath string, clientQueue util.Queue, Cfg *config.Config) (*ClientWriter, error) {
 	clientWriter := &ClientWriter{
 		taskFileName:    taskFileName,
 		cid:             cid,
 		clintQueue:      clientQueue,
-		ctx:             ctx,
+		Cfg:             Cfg,
 		clientFilePath:  clientFilePath,
 		serviceFilePath: serviceFilePath,
 	}
@@ -149,12 +149,12 @@ type ClientWriter struct {
 	targetQueue  util.Queue
 	targetWriter *TargetWriter
 
-	ctx *config.Context
+	Cfg *config.Config
 }
 
 func (cw *ClientWriter) init() (err error) {
-	if e := util.Link(cw.ctx.RV.TempTarget, cw.clientFilePath); e != nil {
-		cw.ctx.ClientLogger.Warn(e)
+	if e := util.Link(cw.Cfg.RV.TempTarget, cw.clientFilePath); e != nil {
+		cw.Cfg.ClientLogger.Warn(e)
 		cw.acrossWrite = true
 	}
 
@@ -164,7 +164,7 @@ func (cw *ClientWriter) init() (err error) {
 
 	cw.result = true
 	cw.targetQueue = util.NewQueue(0)
-	cw.targetWriter, err = NewTargetWriter(cw.ctx.RV.TempTarget, cw.targetQueue, cw.ctx)
+	cw.targetWriter, err = NewTargetWriter(cw.Cfg.RV.TempTarget, cw.targetQueue, cw.Cfg)
 	if err != nil {
 		return
 	}
@@ -203,8 +203,8 @@ func (cw *ClientWriter) Run() {
 			continue
 		}
 		if err := cw.write(piece, time.Now()); err != nil {
-			cw.ctx.ClientLogger.Errorf("write item:%s error:%v", piece, err)
-			cw.ctx.BackSourceReason = config.BackSourceReasonWriteError
+			cw.Cfg.ClientLogger.Errorf("write item:%s error:%v", piece, err)
+			cw.Cfg.BackSourceReason = config.BackSourceReasonWriteError
 			cw.result = false
 		}
 	}
@@ -237,11 +237,11 @@ func (cw *ClientWriter) write(piece *Piece, startTime time.Time) error {
 // TargetWriter
 
 // NewTargetWriter creates and initialize a TargetWriter instance.
-func NewTargetWriter(dst string, queue util.Queue, ctx *config.Context) (*TargetWriter, error) {
+func NewTargetWriter(dst string, queue util.Queue, Cfg *config.Config) (*TargetWriter, error) {
 	targetWriter := &TargetWriter{
 		dst:        dst,
 		pieceQueue: queue,
-		ctx:        ctx,
+		Cfg:        Cfg,
 	}
 	if err := targetWriter.init(); err != nil {
 		return nil, err
@@ -258,7 +258,7 @@ type TargetWriter struct {
 	pieceIndex int
 	result     bool
 	syncQueue  util.Queue
-	ctx        *config.Context
+	Cfg        *config.Config
 }
 
 func (tw *TargetWriter) init() error {
@@ -297,8 +297,8 @@ func (tw *TargetWriter) Run() {
 			continue
 		}
 		if err := tw.write(piece); err != nil {
-			tw.ctx.ClientLogger.Errorf("write item:%s error:%v", piece, err)
-			tw.ctx.BackSourceReason = config.BackSourceReasonWriteError
+			tw.Cfg.ClientLogger.Errorf("write item:%s error:%v", piece, err)
+			tw.Cfg.BackSourceReason = config.BackSourceReasonWriteError
 			tw.result = false
 		}
 	}

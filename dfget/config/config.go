@@ -37,24 +37,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var (
-	// Props is loaded from config file.
-	Props *Properties
-
-	// Ctx holds all the runtime Context information.
-	Ctx *Context
-)
-
-func init() {
-	Reset()
-}
-
-// Reset configuration and Context.
-func Reset() {
-	Props = NewProperties()
-	Ctx = NewContext()
-}
-
 // ----------------------------------------------------------------------------
 // Properties
 
@@ -146,10 +128,10 @@ func (p *Properties) fileType(path string) string {
 }
 
 // ----------------------------------------------------------------------------
-// Context
+// Config
 
-// Context holds all the runtime context information.
-type Context struct {
+// Config holds all the runtime config information.
+type Config struct {
 	// URL download URL.
 	URL string `json:"url"`
 
@@ -246,90 +228,90 @@ type Context struct {
 	ServerLogger *logrus.Logger `json:"-"`
 }
 
-func (ctx *Context) String() string {
-	js, _ := json.Marshal(ctx)
+func (cfg *Config) String() string {
+	js, _ := json.Marshal(cfg)
 	return string(js)
 }
 
-// NewContext creates and initialize a Context.
-func NewContext() *Context {
-	ctx := new(Context)
-	ctx.StartTime = time.Now()
-	ctx.Sign = fmt.Sprintf("%d-%.3f",
+// NewConfig creates and initializes a Config.
+func NewConfig() *Config {
+	cfg := new(Config)
+	cfg.StartTime = time.Now()
+	cfg.Sign = fmt.Sprintf("%d-%.3f",
 		os.Getpid(), float64(time.Now().UnixNano())/float64(time.Second))
 
 	if currentUser, err := user.Current(); err == nil {
-		ctx.User = currentUser.Username
-		ctx.WorkHome = path.Join(currentUser.HomeDir, ".small-dragonfly")
-		ctx.RV.MetaPath = path.Join(ctx.WorkHome, "meta", "host.meta")
-		ctx.RV.SystemDataDir = path.Join(ctx.WorkHome, "data")
-		ctx.RV.FileLength = -1
+		cfg.User = currentUser.Username
+		cfg.WorkHome = path.Join(currentUser.HomeDir, ".small-dragonfly")
+		cfg.RV.MetaPath = path.Join(cfg.WorkHome, "meta", "host.meta")
+		cfg.RV.SystemDataDir = path.Join(cfg.WorkHome, "data")
+		cfg.RV.FileLength = -1
 	} else {
 		panic(fmt.Errorf("get user error: %s", err))
 	}
-	ctx.ConfigFiles = []string{DefaultYamlConfigFile, DefaultIniConfigFile}
-	return ctx
+	cfg.ConfigFiles = []string{DefaultYamlConfigFile, DefaultIniConfigFile}
+	return cfg
 }
 
-// AssertContext checks the ctx and panic if any error happens.
-func AssertContext(ctx *Context) {
-	util.PanicIfNil(ctx, "runtime context is not initialized")
-	util.PanicIfNil(ctx.ClientLogger, "client log is not initialized")
-	if ctx.Pattern == "p2p" {
-		util.PanicIfNil(ctx.ServerLogger, "server log is not initialized")
+// AssertConfig checks the config and panic if any error happens.
+func AssertConfig(cfg *Config) {
+	util.PanicIfNil(cfg, "runtime config is not initialized")
+	util.PanicIfNil(cfg.ClientLogger, "client log is not initialized")
+	if cfg.Pattern == "p2p" {
+		util.PanicIfNil(cfg.ServerLogger, "server log is not initialized")
 	}
 
 	defer func() {
 		if err := recover(); err != nil {
-			ctx.ClientLogger.Panic(err)
+			cfg.ClientLogger.Panic(err)
 		}
 	}()
 
-	util.PanicIfError(checkURL(ctx), "invalid url")
-	util.PanicIfError(checkOutput(ctx), "invalid output")
+	util.PanicIfError(checkURL(cfg), "invalid url")
+	util.PanicIfError(checkOutput(cfg), "invalid output")
 }
 
-func checkURL(ctx *Context) error {
+func checkURL(cfg *Config) error {
 	// shorter than the shortest case 'http://a.b'
-	if len(ctx.URL) < 10 {
-		return fmt.Errorf(ctx.URL)
+	if len(cfg.URL) < 10 {
+		return fmt.Errorf(cfg.URL)
 	}
 	reg := regexp.MustCompile(`(https?|HTTPS?)://([\w_]+:[\w_]+@)?([\w-]+\.)+[\w-]+(/[\w- ./?%&=]*)?`)
-	if url := reg.FindString(ctx.URL); util.IsEmptyStr(url) {
-		return fmt.Errorf(ctx.URL)
+	if url := reg.FindString(cfg.URL); util.IsEmptyStr(url) {
+		return fmt.Errorf(cfg.URL)
 	}
 	return nil
 }
 
 // This function must be called after checkURL
-func checkOutput(ctx *Context) error {
-	if util.IsEmptyStr(ctx.Output) {
-		url := strings.TrimRight(ctx.URL, "/")
+func checkOutput(cfg *Config) error {
+	if util.IsEmptyStr(cfg.Output) {
+		url := strings.TrimRight(cfg.URL, "/")
 		idx := strings.LastIndexByte(url, '/')
 		if idx < 0 {
-			return fmt.Errorf("get output from url[%s] error", ctx.URL)
+			return fmt.Errorf("get output from url[%s] error", cfg.URL)
 		}
-		ctx.Output = url[idx+1:]
+		cfg.Output = url[idx+1:]
 	}
 
-	if !filepath.IsAbs(ctx.Output) {
-		absPath, err := filepath.Abs(ctx.Output)
+	if !filepath.IsAbs(cfg.Output) {
+		absPath, err := filepath.Abs(cfg.Output)
 		if err != nil {
-			return fmt.Errorf("get absolute path[%s] error: %v", ctx.Output, err)
+			return fmt.Errorf("get absolute path[%s] error: %v", cfg.Output, err)
 		}
-		ctx.Output = absPath
+		cfg.Output = absPath
 	}
 
-	if f, err := os.Stat(ctx.Output); err == nil && f.IsDir() {
-		return fmt.Errorf("path[%s] is directory but requires file path", ctx.Output)
+	if f, err := os.Stat(cfg.Output); err == nil && f.IsDir() {
+		return fmt.Errorf("path[%s] is directory but requires file path", cfg.Output)
 	}
 
 	// check permission
-	for dir := ctx.Output; !util.IsEmptyStr(dir); dir = filepath.Dir(dir) {
+	for dir := cfg.Output; !util.IsEmptyStr(dir); dir = filepath.Dir(dir) {
 		if err := syscall.Access(dir, syscall.O_RDWR); err == nil {
 			break
 		} else if os.IsPermission(err) {
-			return fmt.Errorf("user[%s] path[%s] %v", ctx.User, ctx.Output, err)
+			return fmt.Errorf("user[%s] path[%s] %v", cfg.User, cfg.Output, err)
 		}
 	}
 	return nil
