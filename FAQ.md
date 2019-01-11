@@ -25,40 +25,57 @@ Dragonfly makes it simple and cost-effective to set up, operate, and scale any 
 
 No, Dragonfly can be used to distribute all kinds of files, not only container images. For downloading files by Dragonfly, please refer to [Download a File](https://github.com/dragonflyoss/Dragonfly/blob/master/docs/quick_start/README.md#downloading-a-file-with-dragonfly). For pulling images by Dragonfly, please refer to [Pull an Image](https://github.com/dragonflyoss/Dragonfly/blob/master/docs/quick_start/README.md#pulling-an-image-with-dragonfly).
 
-## What is SuperNode
+## What is the sequence of P2P distribution
 
-SuperNode is a long-time process with two primary responsibilities:
+Supernode will maintain a bitmap which records the correspondence between peers and pieces. When dfget starts to download, supernode will return several pieces info (4 in default）according to the scheduler.
 
-- It's the tracker and scheduler in the P2P network that choose appropriate downloading net-path for each peer.
-- It's also a CDN server that caches downloaded data from source to avoid downloading same files repeatedly.
+**NOTE**: The scheduler will decide whether to download from the supernode or other peers. As for the details of the scheduler, please refer to [scheduler algorithm](#what-is-the-peer-scheduling-algorithm-in-default)
 
-## What is dfget
+## How do supernode and peers manage file cache which is ready for other peer's pulling
 
-Dfget is the client of Dragonfly used for downloading files. It's similar to using wget.
+Supernode will download files and cache them via CDN. For more information, please refer to [The sequence of supernode's CDN functionality](#what-is-the-sequence-of-supernode's-cdn-functionality).
 
-At the same time, it also plays the role of peer, which can transfer data between each other in p2p network.
+After finishing distributing file from other peers, `dfget` should do two kinds of thing:
 
-## What is dfdaemon
+- first, construct all the pieces into unioned file(s);
+- second, backup the unioned file(s) in configured directory, by default "$HOME/.small-dragonfly/data" with a suffix of ".server";
+- third, move the original unioned file(s) to the destination path.
 
-Dfdaemon is a local long-running process which is used for translating images pulling request from container engine. It establishes a proxy between container engine and registry.
+**NOTE**: The supernode cannot manage the cached file which is already distributed to peer node at all. For that what will happen if the cached file on a peer is deleted, please refer to [What if you kill the dfget server process or delete the source files](#what-if-you-kill-the-dfget-server-process-or-delete-the-source-files)
 
-Dfdaemon filters out layer fetching requests from all requests send by dockerd/pouchd when pulling images, then it uses dfget to downloading these layers.
+## What is the sequence of supernode's CDN functionality
 
-## What is the sequence of supernode's CDN functionality and P2P distribution
+When dfget register a task to supernode, supernode will check whether the file to be downloaded has a cache locally.
 
-When dfget starts to pull an image which has not been cached in supernode yet, supernode will do as the following sequence:
+If the file to be downloaded which has not been cached in supernode yet, supernode will do as the following sequence:
 
-- First Step: supernode triggers the downloading task:
+- First Step: supernode triggers the downloading task asynchronously:
   - fetch the file/image length;
   - divide the length into pieces;
-  - start to download the file piece by piece;
+  - start to download the file piece by piece and store it locally;
 - Second Step:
   - supernode finishes to download one piece
   - supernode starts the P2P distribution work for the downloaded one piece among peers;
 
-In a word, supernode does not have to wait for all the piece downloadings finished, it can concurrently start piece downloading once one piece downloaded.
+If the requested file which has already been cached in supernode, supernode will send an HTTP GET request, which contains both HTTP headers `If-None-Match:<eTag>` and `If-Modified-Since:<lastModified>`, to source file network address to determine whether the remote file has been updated.
 
-## What is the peer scheduling algorithm of supernpde when many peers start to pull the same file
+In addition, supernode does not have to wait for all the piece downloadings finished, so it can concurrently start piece downloading once one piece downloaded.
+
+## What if you kill the dfget server process or delete the source files
+
+If a file on the peer is deleted manually or by GC, the supernode won't know that. And in the subsequent scheduling, if multiple download tasks fail from this peer, the scheduler will add it to blacklist. So do with that if the server process be killed or other abnormal conditions.
+
+## What is the peer scheduling algorithm in default
+
+- Distribute the number of pieces evenly. Select the piece with the smallest number in the entire P2P network so that the distribution of each piece in the P2P network is balanced to avoid "Nervous resources".
+
+- Nearest distance priority. For a peer, the piece closest to the piece currently being downloaded is preferentially selected, so that the peer can achieve the effect of sequential read and write approximately which will improve the I/O efficiency of file.
+
+- Local blacklist and global blacklist. An example is easier to understand: When peer A fails to download from peer B, B will become the local blacklist of A, and then the download tasks of A will filter B out; When the number of failed downloads from B reaches a certain threshold, B will become the global blacklist, and all the download tasks will filter B out.
+
+- Self-isolation. PeerA will only download files from the supernode after it fails to download multiple times from other peers, and will also be added to the global blacklist. So the peer A will no longer interact with peers other than the supernode.
+
+- Peer load balancing. This mechanism will control the number of upload pieces and download pieces that each peer can provide simultaneously and the priority as the target peer.
 
 ## What is the size of block(piece) when distribution
 
@@ -90,6 +107,8 @@ For peer node itself, Dragonfly can set network bandwidth limit for two parts:
 - the whole network bandwidth consumed by P2P distribution on the peer node. This can be configured via parameter `totallimit` within `dfget`. If user has set `--totallimit=40M`, then both TX and RX limit are 40 MB/s.
 
 For supernode, Dragonfly allows user to limit both the input and output network bandwidth.
+
+You can also config it with config files, refer to [link](./docs/cli_reference/dfget.md#etcdragonflyconf)
 
 ## Why does dfget still keep running after file/image distribution finished
 
@@ -143,6 +162,14 @@ When started for the first time, the Dragonfly client will access the managing n
 dfget always finds the most suitable assigned node to register. If fails, it requests other supernodes in order. If all fail, then it requests the managing node once again, updates the meta information, and repeats the above steps. If still fails, then the job fails.
 
 > Note: If the dfclient.log suggests that the supernode registration fails all the time, try delete all files from the meta directory and try again.
+
+## What is temp directory of dfget and dfdaemon
+
+The default temp data directory of `dfget` is `$HOME/.small-dragonfly/data` which cannot be configured at present.
+
+The default temp data directory of `dfdaemon` is `$HOME/.small-dragonfly/dfdaemon/data` which can be configured by flag `--localrepo`.
+
+When `dfdaemon` downloads images by `dfget`, it will set the target file path of `dfget` which  is `the temp data directory of dfdaemon`. So `dfget` will download the file to `$HOME/.small-dragonfly/data` and move to `$HOME/.small-dragonfly/dfdaemon/data` after downloaded totally.
 
 ## How to clean up the data directory of Dragonfly
 
