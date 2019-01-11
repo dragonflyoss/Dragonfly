@@ -121,58 +121,60 @@ func initLog() {
 }
 
 func initFlags() {
+	flagSet := rootCmd.Flags()
+
 	// url & output
-	rootCmd.PersistentFlags().StringVarP(&cfg.URL, "url", "u", "",
+	flagSet.StringVarP(&cfg.URL, "url", "u", "",
 		"will download a file from this url")
-	rootCmd.PersistentFlags().StringVarP(&cfg.Output, "output", "o", "",
+	flagSet.StringVarP(&cfg.Output, "output", "o", "",
 		"output path that not only contains the dir part but also name part")
 
 	// localLimit & totalLimit & timeout
-	rootCmd.PersistentFlags().StringVarP(&localLimit, "locallimit", "s", "",
+	flagSet.StringVarP(&localLimit, "locallimit", "s", "",
 		"rate limit about a single download task, its format is 20M/m/K/k")
-	rootCmd.PersistentFlags().StringVarP(&totalLimit, "totallimit", "", "",
+	flagSet.StringVarP(&totalLimit, "totallimit", "", "",
 		"rate limit about the whole host, its format is 20M/m/K/k")
-	rootCmd.PersistentFlags().IntVarP(&cfg.Timeout, "timeout", "e", 0,
+	flagSet.IntVarP(&cfg.Timeout, "timeout", "e", 0,
 		"download timeout(second)")
 
 	// md5 & identifier
-	rootCmd.PersistentFlags().StringVarP(&cfg.Md5, "md5", "m", "",
+	flagSet.StringVarP(&cfg.Md5, "md5", "m", "",
 		"expected file md5")
-	rootCmd.PersistentFlags().StringVarP(&cfg.Identifier, "identifier", "i", "",
+	flagSet.StringVarP(&cfg.Identifier, "identifier", "i", "",
 		"identify download task, it is available merely when md5 param not exist")
 
-	rootCmd.PersistentFlags().StringVar(&cfg.CallSystem, "callsystem", "",
+	flagSet.StringVar(&cfg.CallSystem, "callsystem", "",
 		"system name that executes dfget")
 
-	rootCmd.PersistentFlags().StringVarP(&cfg.Pattern, "pattern", "p", "p2p",
+	flagSet.StringVarP(&cfg.Pattern, "pattern", "p", "p2p",
 		"download pattern, must be 'p2p' or 'cdn' or 'source'"+
 			"\ncdn/source pattern not support 'totallimit' flag")
 
-	rootCmd.PersistentFlags().StringVarP(&filter, "filter", "f", "",
+	flagSet.StringVarP(&filter, "filter", "f", "",
 		"filter some query params of url, use char '&' to separate different params"+
 			"\neg: -f 'key&sign' will filter 'key' and 'sign' query param"+
 			"\nin this way, different urls correspond one same download task that can use p2p mode")
 
-	rootCmd.PersistentFlags().StringSliceVar(&cfg.Header, "header", nil,
+	flagSet.StringSliceVar(&cfg.Header, "header", nil,
 		"http header, eg: --header='Accept: *' --header='Host: abc'")
 
-	rootCmd.PersistentFlags().StringSliceVarP(&cfg.Node, "node", "n", nil,
+	flagSet.StringSliceVarP(&cfg.Node, "node", "n", nil,
 		"specify supnernodes")
 
-	rootCmd.PersistentFlags().BoolVar(&cfg.Notbs, "notbs", false,
+	flagSet.BoolVar(&cfg.Notbs, "notbs", false,
 		"not back source when p2p fail")
-	rootCmd.PersistentFlags().BoolVar(&cfg.DFDaemon, "dfdaemon", false,
+	flagSet.BoolVar(&cfg.DFDaemon, "dfdaemon", false,
 		"caller is from dfdaemon")
 
 	// others
-	rootCmd.PersistentFlags().BoolVarP(&cfg.ShowBar, "showbar", "b", false,
+	flagSet.BoolVarP(&cfg.ShowBar, "showbar", "b", false,
 		"show progress bar, it's conflict with '--console'")
-	rootCmd.PersistentFlags().BoolVar(&cfg.Console, "console", false,
+	flagSet.BoolVar(&cfg.Console, "console", false,
 		"show log on console, it's conflict with '--showbar'")
-	rootCmd.PersistentFlags().BoolVar(&cfg.Verbose, "verbose", false,
+	flagSet.BoolVar(&cfg.Verbose, "verbose", false,
 		"be verbose")
 
-	rootCmd.PersistentFlags().MarkDeprecated("exceed", "please use '--timeout' or '-e' instead")
+	flagSet.MarkDeprecated("exceed", "please use '--timeout' or '-e' instead")
 }
 
 // Helper functions.
