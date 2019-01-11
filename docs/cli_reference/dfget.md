@@ -58,11 +58,24 @@ dfget - the client of Dragonfly, a non-interactive P2P downloader.
 
 ### /etc/dragonfly.conf
 
-This is the default configuration file for dfget, which specifies the address of the supernode.
+This is the default configuration file for dfget.
+
+Before 0.2.0, only support INI config and only have one property(node) which specifies the address of the supernode:
 
 ```ini
 [node]
-address=127.0.0.1,127.0.0.2
+address=127.0.0.1,10.10.10.1
+```
+
+Since 0.2.0, the INI config is just to be compatible with previous versions. We support INI(or conf) and YAML(since 0.2.0) both. The YAML config will have more properties:
+
+```yaml
+nodes:
+    - 127.0.0.1
+    - 10.10.10.1
+localLimit: 20971520
+totalLimit: 20971520
+clientQueueSize: 6
 ```
 
 ### ${HOME}/.small-dragonfly
