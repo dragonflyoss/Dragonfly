@@ -34,6 +34,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+var Cfg = NewConfig()
+
 func Test(t *testing.T) {
 	check.TestingT(t)
 }
@@ -45,44 +47,44 @@ func init() {
 }
 
 func (suite *ConfigSuite) SetUpTest(c *check.C) {
-	Reset()
+
 }
 
-func (suite *ConfigSuite) TestContext_String(c *check.C) {
+func (suite *ConfigSuite) TestConfig_String(c *check.C) {
 	expected := "{\"url\":\"\",\"output\":\"\""
-	c.Assert(strings.Contains(Ctx.String(), expected), check.Equals, true)
-	Ctx.LocalLimit = 20971520
-	Ctx.Pattern = "p2p"
-	Ctx.Version = true
+	c.Assert(strings.Contains(Cfg.String(), expected), check.Equals, true)
+	Cfg.LocalLimit = 20971520
+	Cfg.Pattern = "p2p"
+	Cfg.Version = true
 	expected = "\"url\":\"\",\"output\":\"\",\"localLimit\":20971520," +
 		"\"pattern\":\"p2p\",\"version\":true"
-	c.Assert(strings.Contains(Ctx.String(), expected), check.Equals, true)
+	c.Assert(strings.Contains(Cfg.String(), expected), check.Equals, true)
 }
 
-func (suite *ConfigSuite) TestNewContext(c *check.C) {
+func (suite *ConfigSuite) TestNewConfig(c *check.C) {
 	before := time.Now()
 	time.Sleep(time.Millisecond)
-	Ctx = NewContext()
+	Cfg = NewConfig()
 	time.Sleep(time.Millisecond)
 	after := time.Now()
 
-	c.Assert(Ctx.StartTime.After(before), check.Equals, true)
-	c.Assert(Ctx.StartTime.Before(after), check.Equals, true)
+	c.Assert(Cfg.StartTime.After(before), check.Equals, true)
+	c.Assert(Cfg.StartTime.Before(after), check.Equals, true)
 
 	beforeSign := fmt.Sprintf("%d-%.3f",
 		os.Getpid(), float64(before.UnixNano())/float64(time.Second))
 	afterSign := fmt.Sprintf("%d-%.3f",
 		os.Getpid(), float64(after.UnixNano())/float64(time.Second))
-	c.Assert(beforeSign < Ctx.Sign, check.Equals, true)
-	c.Assert(afterSign > Ctx.Sign, check.Equals, true)
+	c.Assert(beforeSign < Cfg.Sign, check.Equals, true)
+	c.Assert(afterSign > Cfg.Sign, check.Equals, true)
 
 	if curUser, err := user.Current(); err != nil {
-		c.Assert(Ctx.User, check.Equals, curUser.Username)
-		c.Assert(Ctx.WorkHome, check.Equals, path.Join(curUser.HomeDir, ".small-dragonfly"))
+		c.Assert(Cfg.User, check.Equals, curUser.Username)
+		c.Assert(Cfg.WorkHome, check.Equals, path.Join(curUser.HomeDir, ".small-dragonfly"))
 	}
 }
 
-func (suite *ConfigSuite) TestAssertContext(c *check.C) {
+func (suite *ConfigSuite) TestAssertConfig(c *check.C) {
 	var (
 		clog = logrus.StandardLogger()
 		buf  = &bytes.Buffer{}
@@ -117,15 +119,15 @@ func (suite *ConfigSuite) TestAssertContext(c *check.C) {
 				}
 			}
 		}()
-		AssertContext(Ctx)
+		AssertConfig(Cfg)
 		return ""
 	}
 
 	for _, v := range cases {
-		Ctx.ClientLogger = v.clog
-		Ctx.ServerLogger = v.slog
-		Ctx.URL = v.url
-		Ctx.Output = v.output
+		Cfg.ClientLogger = v.clog
+		Cfg.ServerLogger = v.slog
+		Cfg.URL = v.url
+		Cfg.Output = v.output
 		actual := f()
 		c.Assert(strings.HasPrefix(actual, v.expected), check.Equals, true,
 			check.Commentf("actual:[%s] expected:[%s]", actual, v.expected))
@@ -154,11 +156,11 @@ func (suite *ConfigSuite) TestCheckURL(c *check.C) {
 			"q=is%3Aissue+is%3Aclosed": true,
 	}
 
-	c.Assert(checkURL(Ctx), check.NotNil)
+	c.Assert(checkURL(Cfg), check.NotNil)
 	for k, v := range cases {
 		for _, scheme := range []string{"http", "https", "HTTP", "HTTPS"} {
-			Ctx.URL = fmt.Sprintf("%s://%s", scheme, k)
-			actual := fmt.Sprintf("%s:%v", k, checkURL(Ctx))
+			Cfg.URL = fmt.Sprintf("%s://%s", scheme, k)
+			actual := fmt.Sprintf("%s:%v", k, checkURL(Cfg))
 			expected := fmt.Sprintf("%s:%s://%s", k, scheme, k)
 			if v {
 				expected = fmt.Sprintf("%s:<nil>", k)
@@ -188,17 +190,17 @@ func (suite *ConfigSuite) TestCheckOutput(c *check.C) {
 		{"", "/tmp/a/b/c/d/e/zj.test", "/tmp/a/b/c/d/e/zj.test"},
 	}
 
-	if Ctx.User != "root" {
+	if Cfg.User != "root" {
 		cases = append(cases, tester{url: "", output: "/root/zj.test", expected: ""})
 	}
 	for _, v := range cases {
-		Ctx.URL = v.url
-		Ctx.Output = v.output
+		Cfg.URL = v.url
+		Cfg.Output = v.output
 		if util.IsEmptyStr(v.expected) {
-			c.Assert(checkOutput(Ctx), check.NotNil, check.Commentf("%v", v))
+			c.Assert(checkOutput(Cfg), check.NotNil, check.Commentf("%v", v))
 		} else {
-			c.Assert(checkOutput(Ctx), check.IsNil, check.Commentf("%v", v))
-			c.Assert(Ctx.Output, check.Equals, v.expected, check.Commentf("%v", v))
+			c.Assert(checkOutput(Cfg), check.IsNil, check.Commentf("%v", v))
+			c.Assert(Cfg.Output, check.Equals, v.expected, check.Commentf("%v", v))
 		}
 	}
 }

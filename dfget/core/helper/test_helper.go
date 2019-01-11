@@ -27,20 +27,20 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// CreateContext create a temporary context
-func CreateContext(writer io.Writer, workHome string) *config.Context {
+// CreateConfig create a temporary config
+func CreateConfig(writer io.Writer, workHome string) *config.Config {
 	if writer == nil {
 		writer = &bytes.Buffer{}
 	}
-	ctx := config.NewContext()
-	ctx.WorkHome = workHome
-	ctx.RV.MetaPath = path.Join(ctx.WorkHome, "meta", "host.meta")
-	ctx.RV.SystemDataDir = path.Join(ctx.WorkHome, "data")
+	cfg := config.NewConfig()
+	cfg.WorkHome = workHome
+	cfg.RV.MetaPath = path.Join(cfg.WorkHome, "meta", "host.meta")
+	cfg.RV.SystemDataDir = path.Join(cfg.WorkHome, "data")
 
 	logrus.StandardLogger().Out = writer
-	ctx.ClientLogger = logrus.StandardLogger()
-	ctx.ServerLogger = logrus.StandardLogger()
-	return ctx
+	cfg.ClientLogger = logrus.StandardLogger()
+	cfg.ServerLogger = logrus.StandardLogger()
+	return cfg
 }
 
 // ----------------------------------------------------------------------------

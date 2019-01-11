@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	cfg "github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core"
 	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
@@ -23,24 +23,41 @@ var (
 	filter     string
 )
 
+var cfg = config.NewConfig()
+
 var rootCmd = &cobra.Command{
 	Use:   "dfget",
 	Short: "The dfget is the client of Dragonfly.",
 	Long:  "The dfget is the client of Dragonfly, a non-interactive P2P downloader.",
-	Run: func(cmd *cobra.Command, args []string) {
-		initConfig(args)
-		cfg.Ctx.ClientLogger.Infof("cmd params:%q", args)
-		err := core.Start(cfg.Ctx)
-		util.Printer.Println(resultMsg(cfg.Ctx, time.Now(), err))
-		if err != nil {
-			os.Exit(err.Code)
-		}
-		os.Exit(0)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runDfget(args)
 	},
 }
 
 func init() {
 	initFlags()
+}
+
+// runDfget do some init operations and start to download.
+func runDfget(args []string) error {
+	// initialize logger and get properties
+	initLog()
+	initProperties()
+
+	// check the legitimacy of parameters
+	checkParameters()
+	cfg.ClientLogger.Infof("get cmd params:%q", args)
+
+	config.AssertConfig(cfg)
+	cfg.ClientLogger.Infof("get init config:%v", cfg)
+
+	// enter the core process
+	err := core.Start(cfg)
+	util.Printer.Println(resultMsg(cfg, time.Now(), err))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func checkParameters() {
@@ -50,71 +67,64 @@ func checkParameters() {
 	}
 }
 
-func initConfig(args []string) {
-	initLog()
-	initProperties()
-	checkParameters()
-	cfg.AssertContext(cfg.Ctx)
-	cfg.Ctx.ClientLogger.Infof("context:%s", cfg.Ctx)
-}
-
 func initProperties() {
-	for _, v := range cfg.Ctx.ConfigFiles {
-		if err := cfg.Props.Load(v); err == nil {
-			cfg.Ctx.ClientLogger.Debugf("initProperties[%s] success: %v", v, cfg.Props)
+	properties := config.NewProperties()
+	for _, v := range cfg.ConfigFiles {
+		if err := properties.Load(v); err == nil {
+			cfg.ClientLogger.Debugf("initProperties[%s] success: %v", v, properties)
 			break
 		} else {
-			cfg.Ctx.ClientLogger.Debugf("initProperties[%s] fail: %v", v, err)
+			cfg.ClientLogger.Warnf("initProperties[%s] fail: %v", v, err)
 		}
 	}
 
-	if cfg.Ctx.Node == nil {
-		cfg.Ctx.Node = cfg.Props.Nodes
+	if cfg.Node == nil {
+		cfg.Node = properties.Nodes
 	}
 
-	if cfg.Ctx.LocalLimit == 0 {
-		cfg.Ctx.LocalLimit = cfg.Props.LocalLimit
+	if cfg.LocalLimit == 0 {
+		cfg.LocalLimit = properties.LocalLimit
 	}
 
-	if cfg.Ctx.TotalLimit == 0 {
-		cfg.Ctx.TotalLimit = cfg.Props.TotalLimit
+	if cfg.TotalLimit == 0 {
+		cfg.TotalLimit = properties.TotalLimit
 	}
 
-	if cfg.Ctx.ClientQueueSize == 0 {
-		cfg.Ctx.ClientQueueSize = cfg.Props.ClientQueueSize
+	if cfg.ClientQueueSize == 0 {
+		cfg.ClientQueueSize = properties.ClientQueueSize
 	}
 
-	cfg.Ctx.Filter = transFilter(filter)
+	cfg.Filter = transFilter(filter)
 
 	var err error
-	cfg.Ctx.LocalLimit, err = transLimit(localLimit)
+	cfg.LocalLimit, err = transLimit(localLimit)
 	util.PanicIfError(err, "convert locallimit error")
-	cfg.Ctx.TotalLimit, err = transLimit(totalLimit)
+	cfg.TotalLimit, err = transLimit(totalLimit)
 	util.PanicIfError(err, "convert totallimit error")
 }
 
 func initLog() {
 	var (
-		logPath  = path.Join(cfg.Ctx.WorkHome, "logs")
+		logPath  = path.Join(cfg.WorkHome, "logs")
 		logLevel = "info"
 	)
-	if cfg.Ctx.Verbose {
+	if cfg.Verbose {
 		logLevel = "debug"
 	}
-	cfg.Ctx.ClientLogger = util.CreateLogger(logPath, "dfclient.log", logLevel, cfg.Ctx.Sign)
-	if cfg.Ctx.Console {
-		util.AddConsoleLog(cfg.Ctx.ClientLogger)
+	cfg.ClientLogger = util.CreateLogger(logPath, "dfclient.log", logLevel, cfg.Sign)
+	if cfg.Console {
+		util.AddConsoleLog(cfg.ClientLogger)
 	}
-	if cfg.Ctx.Pattern == cfg.PatternP2P {
-		cfg.Ctx.ServerLogger = util.CreateLogger(logPath, "dfserver.log", logLevel, cfg.Ctx.Sign)
+	if cfg.Pattern == config.PatternP2P {
+		cfg.ServerLogger = util.CreateLogger(logPath, "dfserver.log", logLevel, cfg.Sign)
 	}
 }
 
 func initFlags() {
 	// url & output
-	rootCmd.PersistentFlags().StringVarP(&cfg.Ctx.URL, "url", "u", "",
+	rootCmd.PersistentFlags().StringVarP(&cfg.URL, "url", "u", "",
 		"will download a file from this url")
-	rootCmd.PersistentFlags().StringVarP(&cfg.Ctx.Output, "output", "o", "",
+	rootCmd.PersistentFlags().StringVarP(&cfg.Output, "output", "o", "",
 		"output path that not only contains the dir part but also name part")
 
 	// localLimit & totalLimit & timeout
@@ -122,19 +132,19 @@ func initFlags() {
 		"rate limit about a single download task, its format is 20M/m/K/k")
 	rootCmd.PersistentFlags().StringVarP(&totalLimit, "totallimit", "", "",
 		"rate limit about the whole host, its format is 20M/m/K/k")
-	rootCmd.PersistentFlags().IntVarP(&cfg.Ctx.Timeout, "timeout", "e", 0,
+	rootCmd.PersistentFlags().IntVarP(&cfg.Timeout, "timeout", "e", 0,
 		"download timeout(second)")
 
 	// md5 & identifier
-	rootCmd.PersistentFlags().StringVarP(&cfg.Ctx.Md5, "md5", "m", "",
+	rootCmd.PersistentFlags().StringVarP(&cfg.Md5, "md5", "m", "",
 		"expected file md5")
-	rootCmd.PersistentFlags().StringVarP(&cfg.Ctx.Identifier, "identifier", "i", "",
+	rootCmd.PersistentFlags().StringVarP(&cfg.Identifier, "identifier", "i", "",
 		"identify download task, it is available merely when md5 param not exist")
 
-	rootCmd.PersistentFlags().StringVar(&cfg.Ctx.CallSystem, "callsystem", "",
+	rootCmd.PersistentFlags().StringVar(&cfg.CallSystem, "callsystem", "",
 		"system name that executes dfget")
 
-	rootCmd.PersistentFlags().StringVarP(&cfg.Ctx.Pattern, "pattern", "p", "p2p",
+	rootCmd.PersistentFlags().StringVarP(&cfg.Pattern, "pattern", "p", "p2p",
 		"download pattern, must be 'p2p' or 'cdn' or 'source'"+
 			"\ncdn/source pattern not support 'totallimit' flag")
 
@@ -143,23 +153,23 @@ func initFlags() {
 			"\neg: -f 'key&sign' will filter 'key' and 'sign' query param"+
 			"\nin this way, different urls correspond one same download task that can use p2p mode")
 
-	rootCmd.PersistentFlags().StringSliceVar(&cfg.Ctx.Header, "header", nil,
+	rootCmd.PersistentFlags().StringSliceVar(&cfg.Header, "header", nil,
 		"http header, eg: --header='Accept: *' --header='Host: abc'")
 
-	rootCmd.PersistentFlags().StringSliceVarP(&cfg.Ctx.Node, "node", "n", nil,
+	rootCmd.PersistentFlags().StringSliceVarP(&cfg.Node, "node", "n", nil,
 		"specify supnernodes")
 
-	rootCmd.PersistentFlags().BoolVar(&cfg.Ctx.Notbs, "notbs", false,
+	rootCmd.PersistentFlags().BoolVar(&cfg.Notbs, "notbs", false,
 		"not back source when p2p fail")
-	rootCmd.PersistentFlags().BoolVar(&cfg.Ctx.DFDaemon, "dfdaemon", false,
+	rootCmd.PersistentFlags().BoolVar(&cfg.DFDaemon, "dfdaemon", false,
 		"caller is from dfdaemon")
 
 	// others
-	rootCmd.PersistentFlags().BoolVarP(&cfg.Ctx.ShowBar, "showbar", "b", false,
+	rootCmd.PersistentFlags().BoolVarP(&cfg.ShowBar, "showbar", "b", false,
 		"show progress bar, it's conflict with '--console'")
-	rootCmd.PersistentFlags().BoolVar(&cfg.Ctx.Console, "console", false,
+	rootCmd.PersistentFlags().BoolVar(&cfg.Console, "console", false,
 		"show log on console, it's conflict with '--showbar'")
-	rootCmd.PersistentFlags().BoolVar(&cfg.Ctx.Verbose, "verbose", false,
+	rootCmd.PersistentFlags().BoolVar(&cfg.Verbose, "verbose", false,
 		"be verbose")
 
 	rootCmd.PersistentFlags().MarkDeprecated("exceed", "please use '--timeout' or '-e' instead")
@@ -195,14 +205,14 @@ func transFilter(filter string) []string {
 	return strings.Split(filter, "&")
 }
 
-func resultMsg(ctx *cfg.Context, end time.Time, e *errors.DFGetError) string {
+func resultMsg(cfg *config.Config, end time.Time, e *errors.DFGetError) string {
 	if e != nil {
 		return fmt.Sprintf("download FAIL(%d) cost:%.3fs length:%d reason:%d error:%v",
-			e.Code, end.Sub(ctx.StartTime).Seconds(), ctx.RV.FileLength,
-			ctx.BackSourceReason, e)
+			e.Code, end.Sub(cfg.StartTime).Seconds(), cfg.RV.FileLength,
+			cfg.BackSourceReason, e)
 	}
 	return fmt.Sprintf("download SUCCESS(0) cost:%.3fs length:%d reason:%d",
-		end.Sub(ctx.StartTime).Seconds(), ctx.RV.FileLength, ctx.BackSourceReason)
+		end.Sub(cfg.StartTime).Seconds(), cfg.RV.FileLength, cfg.BackSourceReason)
 }
 
 // Execute will process dfget.
