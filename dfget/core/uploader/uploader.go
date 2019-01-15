@@ -20,18 +20,23 @@
 package uploader
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
+	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/gorilla/mux"
@@ -45,6 +50,7 @@ var (
 	p2p *peerServer
 
 	syncTaskMap sync.Map
+	aliveQueue  = util.NewQueue(0)
 )
 
 // StartPeerServerProcess starts an independent peer server process for uploading downloaded files
@@ -58,7 +64,9 @@ func StartPeerServerProcess(cfg *config.Config) (port int, err error) {
 	cmd := exec.Command(os.Args[0], "server",
 		"--ip", cfg.RV.LocalIP,
 		"--meta", cfg.RV.MetaPath,
-		"--data", cfg.RV.SystemDataDir)
+		"--data", cfg.RV.SystemDataDir,
+		"--expiretime", cfg.RV.DataExpireTime.String(),
+		"--alivetime", cfg.RV.ServerAliveTime.String())
 
 	var stdout io.ReadCloser
 	if stdout, err = cmd.StdoutPipe(); err != nil {
@@ -127,6 +135,13 @@ func checkPeerServerExist(cfg *config.Config, port int) int {
 // ----------------------------------------------------------------------------
 // dfget server functions
 
+// WaitForShutdown wait for peer server shutdown
+func WaitForShutdown() {
+	if p2p != nil {
+		<-p2p.finished
+	}
+}
+
 // LaunchPeerServer launch a server to send piece data
 func LaunchPeerServer(cfg *config.Config) (int, error) {
 	var (
@@ -175,6 +190,7 @@ func LaunchPeerServer(cfg *config.Config) (int, error) {
 		updateServicePortInMeta(cfg, servicePort)
 		cfg.ServerLogger.Infof("start peer server success, host:%s, port:%d",
 			cfg.RV.LocalIP, servicePort)
+		go monitorAlive(cfg, 15*time.Second)
 		return servicePort, nil
 	}
 	cfg.ServerLogger.Errorf("start peer server error:%v, exit directly", err)
@@ -199,10 +215,76 @@ func updateServicePortInMeta(cfg *config.Config, port int) {
 	}
 }
 
-// WaitForShutdown wait for peer server shutdown
-func WaitForShutdown() {
-	if p2p != nil {
-		<-p2p.finished
+func serverGC(cfg *config.Config, interval time.Duration) {
+	cfg.ServerLogger.Info("start server gc, expireTime:%s", cfg.RV.DataExpireTime)
+
+	supernode := api.NewSupernodeAPI()
+	var walkFn filepath.WalkFunc = func(path string, info os.FileInfo, err error) error {
+		if path == cfg.RV.SystemDataDir || info == nil || err != nil {
+			return nil
+		}
+		if info.IsDir() {
+			os.RemoveAll(path)
+			return filepath.SkipDir
+		}
+		if deleteExpiredFile(supernode, path, info, cfg.RV.DataExpireTime) {
+			cfg.ServerLogger.Info("server gc, delete file:", path)
+		}
+		return nil
+	}
+
+	for {
+		if err := filepath.Walk(cfg.RV.SystemDataDir, walkFn); err != nil {
+			cfg.ServerLogger.Warnf("server gc error:%v", err)
+		}
+		time.Sleep(interval)
+	}
+}
+
+func deleteExpiredFile(api api.SupernodeAPI, path string, info os.FileInfo,
+	expireTime time.Duration) bool {
+	taskName := helper.GetTaskName(info.Name())
+	if v, ok := syncTaskMap.Load(taskName); ok {
+		task, ok := v.(*taskConfig)
+		if ok && !task.finished {
+			return false
+		}
+		if time.Now().Sub(info.ModTime()) > expireTime {
+			if ok {
+				api.ServiceDown(task.superNode, task.taskID, task.cid)
+			}
+			os.Remove(path)
+			syncTaskMap.Delete(taskName)
+			return true
+		}
+	} else {
+		os.Remove(path)
+		return true
+	}
+	return false
+}
+
+func monitorAlive(cfg *config.Config, interval time.Duration) {
+	cfg.ServerLogger.Info("monitor peer server whether is alive, aliveTime:%s",
+		cfg.RV.ServerAliveTime)
+	go serverGC(cfg, interval)
+
+	for {
+		if _, ok := aliveQueue.PollTimeout(cfg.RV.ServerAliveTime); !ok {
+			if aliveQueue.Len() > 0 {
+				continue
+			}
+			cfg.ServerLogger.Info("no more task, peer server will stop...")
+			if p2p != nil {
+				c, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Minute))
+				p2p.Shutdown(c)
+				cancel()
+				close(p2p.finished)
+				updateServicePortInMeta(cfg, 0)
+			}
+			cfg.ServerLogger.Info("peer server is shutdown.")
+			return
+		}
 	}
 }
 
@@ -263,6 +345,7 @@ type uploadParam struct {
 
 // uploadHandler use to upload a task file when other peers download from it.
 func (ps *peerServer) uploadHandler(w http.ResponseWriter, r *http.Request) {
+	aliveQueue.Put(true)
 	// Step1: parse param
 	taskFileName := mux.Vars(r)["taskFileName"]
 	rangeStr := r.Header.Get("range")
@@ -296,11 +379,13 @@ func (ps *peerServer) uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 // TODO: implement it.
 func (ps *peerServer) parseRateHandler(w http.ResponseWriter, r *http.Request) {
+	aliveQueue.Put(true)
 	fmt.Fprintf(w, "not implemented yet")
 }
 
 // checkHandler use to check the server status.
 func (ps *peerServer) checkHandler(w http.ResponseWriter, r *http.Request) {
+	aliveQueue.Put(true)
 	sendSuccess(w)
 
 	// get parameters

@@ -18,6 +18,7 @@ package helper
 
 import (
 	"path/filepath"
+	"strings"
 )
 
 // GetTaskFile returns file path of task file.
@@ -28,4 +29,12 @@ func GetTaskFile(taskFileName, dataDir string) string {
 // GetServiceFile returns file path of service file.
 func GetServiceFile(taskFileName, dataDir string) string {
 	return GetTaskFile(taskFileName, dataDir) + ".service"
+}
+
+// GetTaskName extracts and returns task name from serviceFile.
+func GetTaskName(serviceFile string) string {
+	if idx := strings.LastIndex(serviceFile, ".service"); idx != -1 {
+		return serviceFile[:idx]
+	}
+	return serviceFile
 }

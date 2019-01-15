@@ -168,9 +168,9 @@ func initFlags() {
 		"caller is from dfdaemon")
 
 	// pass to server
-	rootCmd.PersistentFlags().DurationVar(&cfg.Ctx.RV.DataExpireTime, "expiretime", cfg.DataExpireTime,
+	rootCmd.PersistentFlags().DurationVar(&cfg.RV.DataExpireTime, "expiretime", config.DataExpireTime,
 		"server will delete cached files if these files doesn't be modification with this duration")
-	rootCmd.PersistentFlags().DurationVar(&cfg.Ctx.RV.ServerAliveTime, "alivetime", cfg.ServerAliveTime,
+	rootCmd.PersistentFlags().DurationVar(&cfg.RV.ServerAliveTime, "alivetime", config.ServerAliveTime,
 		"server will stop if there is no uploading task with this duration")
 
 	// others
