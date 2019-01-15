@@ -100,4 +100,5 @@ const (
 	LocalHTTPPathCheck  = "/check/"
 	LocalHTTPPathClient = "/client/"
 	LocalHTTPPathRate   = "/rate/"
+	LocalHTTPPing       = "/server/ping"
 )

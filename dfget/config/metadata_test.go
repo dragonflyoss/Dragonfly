@@ -43,7 +43,7 @@ func (suite *ConfigSuite) TestMetaData(c *check.C) {
 		if v.e != nil {
 			c.Assert(err, check.IsNil)
 			meta.Load()
-			v.e.metaPath = v.path
+			v.e.MetaPath = v.path
 			c.Assert(v.e, check.DeepEquals, meta)
 		} else {
 			c.Assert(err, check.NotNil)

@@ -32,6 +32,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/downloader"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
 	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/dragonflyoss/Dragonfly/version"
@@ -104,8 +105,13 @@ func prepare(cfg *config.Config) (err error) {
 	return nil
 }
 
-func launchPeerServer(cfg *config.Config) error {
-	return fmt.Errorf("not implemented")
+func launchPeerServer(cfg *config.Config) (err error) {
+	var port = 0
+	port, err = uploader.StartPeerServerProcess(cfg)
+	if err == nil && port > 0 {
+		cfg.RV.PeerPort = port
+	}
+	return
 }
 
 func registerToSuperNode(cfg *config.Config, register regist.SupernodeRegister) (

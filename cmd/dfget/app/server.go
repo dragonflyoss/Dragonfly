@@ -18,17 +18,26 @@ package app
 
 import (
 	"fmt"
+	"path/filepath"
 
-	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
+	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/spf13/cobra"
 )
 
 var serverCmd = &cobra.Command{
-	Use:           "server",
-	Short:         "Launch a peer server to upload files.",
+	Use:   "server",
+	Short: "Launch a peer server for uploading files.",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("Server: %v\n", config.Ctx)
-		fmt.Printf("Server: %v\n", config.Ctx.RV.String())
+		logPath := filepath.Join(cfg.WorkHome, "logs")
+		cfg.ServerLogger = util.CreateLogger(logPath,
+			"dfserver.log", "INFO", cfg.Sign)
+		if port, err := uploader.LaunchPeerServer(cfg); err == nil {
+			fmt.Println(port)
+			uploader.WaitForShutdown()
+		} else {
+			fmt.Println(err.Error())
+		}
 	},
 }
 
@@ -37,15 +46,15 @@ func init() {
 	rootCmd.AddCommand(serverCmd)
 }
 
-func initServerFlags() ()  {
-	serverCmd.PersistentFlags().StringVar(&config.Ctx.RV.SystemDataDir, "data", config.Ctx.RV.SystemDataDir,
+func initServerFlags() {
+	serverCmd.PersistentFlags().StringVar(&cfg.RV.SystemDataDir, "data", cfg.RV.SystemDataDir,
 		"the directory which stores temporary files for p2p uploading")
-	serverCmd.PersistentFlags().StringVar(&config.Ctx.WorkHome, "home", config.Ctx.WorkHome,
+	serverCmd.PersistentFlags().StringVar(&cfg.WorkHome, "home", cfg.WorkHome,
 		"the work home of dfget server")
-	serverCmd.PersistentFlags().StringVar(&config.Ctx.RV.LocalIP, "ip", "",
+	serverCmd.PersistentFlags().StringVar(&cfg.RV.LocalIP, "ip", "",
 		"the ip that server will listen on")
-	serverCmd.PersistentFlags().IntVar(&config.Ctx.RV.PeerPort, "port", 0,
+	serverCmd.PersistentFlags().IntVar(&cfg.RV.PeerPort, "port", 0,
 		"the port that server will listen on")
-	serverCmd.PersistentFlags().StringVar(&config.Ctx.RV.MetaPath, "meta", config.Ctx.RV.MetaPath,
+	serverCmd.PersistentFlags().StringVar(&cfg.RV.MetaPath, "meta", cfg.RV.MetaPath,
 		"meta file path")
 }

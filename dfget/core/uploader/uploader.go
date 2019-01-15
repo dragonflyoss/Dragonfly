@@ -21,14 +21,17 @@ package uploader
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
+	"os"
+	"os/exec"
 	"strconv"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/gorilla/mux"
@@ -39,17 +42,205 @@ const (
 )
 
 var (
+	p2p *peerServer
+
 	syncTaskMap sync.Map
 )
 
+// StartPeerServerProcess starts an independent peer server process for uploading downloaded files
+// if it doesn't exist.
+// This function is invoked when dfget starts to download files in p2p pattern.
+func StartPeerServerProcess(cfg *config.Config) (port int, err error) {
+	if port = checkPeerServerExist(cfg, 0); port > 0 {
+		return port, nil
+	}
+
+	cmd := exec.Command(os.Args[0], "server",
+		"--ip", cfg.RV.LocalIP,
+		"--meta", cfg.RV.MetaPath,
+		"--data", cfg.RV.SystemDataDir)
+
+	var stdout io.ReadCloser
+	if stdout, err = cmd.StdoutPipe(); err != nil {
+		return 0, err
+	}
+	if err = cmd.Start(); err == nil {
+		port, err = readPort(stdout)
+	}
+	if err == nil && checkPeerServerExist(cfg, port) <= 0 {
+		err = fmt.Errorf("invalid server on port:%d", port)
+		port = 0
+	}
+
+	return
+}
+
+func readPort(r io.Reader) (port int, err error) {
+	done := make(chan struct{})
+	go func() {
+		buf := make([]byte, 256)
+		_, err = r.Read(buf)
+		if err == nil {
+			if port, err = strconv.Atoi(string(buf)); err != nil {
+				err = fmt.Errorf("%s", buf)
+			}
+		}
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		return
+	case <-time.After(time.Second):
+		err = fmt.Errorf("get peer server's port timeout")
+		close(done)
+	}
+
+	return
+}
+
+// checkPeerServerExist checks the peer server on port whether is available.
+// if the parameter port <= 0, it will get port from meta file and checks.
+func checkPeerServerExist(cfg *config.Config, port int) int {
+	taskFileName := cfg.RV.TaskFileName
+	if port <= 0 {
+		port = getPortFromMeta(cfg.RV.MetaPath)
+	}
+
+	// check the peer server whether is available
+	result, err := checkServer(cfg.RV.LocalIP, port, cfg.RV.TargetDir, taskFileName, 0)
+	cfg.ServerLogger.Infof("local http result:%s err:%v, port:%d path:%s",
+		result, err, port, config.LocalHTTPPathCheck)
+
+	if err == nil {
+		if result == taskFileName {
+			cfg.ServerLogger.Infof("use peer server on port:%d", port)
+			return port
+		}
+		cfg.ServerLogger.Warnf("not found process on port:%d, version:%s", port, version.DFGetVersion)
+	}
+	return 0
+}
+
+// ----------------------------------------------------------------------------
+// dfget server functions
+
+// LaunchPeerServer launch a server to send piece data
+func LaunchPeerServer(cfg *config.Config) (int, error) {
+	var (
+		servicePort = 0
+		retryCount  = 10
+		c           = make(chan error)
+	)
+
+	if cfg.RV.PeerPort > 0 {
+		servicePort = cfg.RV.PeerPort
+		retryCount = 1
+	}
+
+	cfg.ServerLogger.Infof("********************")
+	cfg.ServerLogger.Infof("start peer server...")
+	go func() {
+		var err error
+		shouldGeneratePort := servicePort <= 0
+		for i := 0; i < retryCount; i++ {
+			if shouldGeneratePort {
+				servicePort = generatePort(i)
+			}
+			p2p = newPeerServer(cfg, servicePort)
+			if err = p2p.ListenAndServe(); err != nil {
+				if strings.Index(err.Error(), "address already in use") < 0 {
+					// start failed
+					c <- err
+					return
+				} else if pingServer(p2p.host, p2p.port) {
+					// a peer server is already existing
+					c <- nil
+					close(p2p.finished)
+					cfg.ServerLogger.Infof("reuse exist service with port:%d", servicePort)
+					return
+				}
+				cfg.ServerLogger.Warnf("start error:%v, remain retry times:%d",
+					err, retryCount-i)
+			}
+		}
+		// send last error
+		c <- err
+	}()
+
+	var err error
+	if err = waitTimeout(c, 100*time.Millisecond); err == nil {
+		updateServicePortInMeta(cfg, servicePort)
+		cfg.ServerLogger.Infof("start peer server success, host:%s, port:%d",
+			cfg.RV.LocalIP, servicePort)
+		return servicePort, nil
+	}
+	cfg.ServerLogger.Errorf("start peer server error:%v, exit directly", err)
+	return 0, err
+}
+
+func waitTimeout(c chan error, timeout time.Duration) error {
+	select {
+	case err := <-c:
+		return err
+	case <-time.After(timeout):
+		return nil
+	}
+}
+
+func updateServicePortInMeta(cfg *config.Config, port int) {
+	meta := config.NewMetaData(cfg.RV.MetaPath)
+	meta.Load()
+	if meta.ServicePort != port {
+		meta.ServicePort = port
+		meta.Persist()
+	}
+}
+
+// WaitForShutdown wait for peer server shutdown
+func WaitForShutdown() {
+	if p2p != nil {
+		<-p2p.finished
+	}
+}
+
+// ----------------------------------------------------------------------------
+// peerServer structure
+
+// newPeerServer return a new P2PServer.
+
+func newPeerServer(cfg *config.Config, port int) *peerServer {
+	s := &peerServer{
+		finished: make(chan struct{}),
+		host:     cfg.RV.LocalIP,
+		port:     port,
+	}
+
+	// init router
+	r := mux.NewRouter()
+	r.HandleFunc(config.PeerHTTPPathPrefix+"{taskFileName:.*}", s.uploadHandler).Methods("GET")
+	r.HandleFunc(config.LocalHTTPPathRate+"{taskFileName:.*}", s.parseRateHandler).Methods("GET")
+	r.HandleFunc(config.LocalHTTPPathCheck+"{taskFileName:.*}", s.checkHandler).Methods("GET")
+	r.HandleFunc(config.LocalHTTPPathClient+"finish", s.oneFinishHandler).Methods("GET")
+	r.HandleFunc(config.LocalHTTPPing, s.pingHandler).Methods("GET")
+
+	s.Server = &http.Server{
+		Addr:    net.JoinHostPort(s.host, strconv.Itoa(port)),
+		Handler: r,
+	}
+
+	return s
+}
+
 // peerServer offer file-block to other clients
 type peerServer struct {
-	cfg *config.Config
+	cfg      *config.Config
+	finished chan struct{}
 
 	// server related fields
-	host   string
-	port   int
-	server *http.Server
+	host string
+	port int
+	*http.Server
 }
 
 // taskConfig refers to some info about peer task.
@@ -66,70 +257,6 @@ type uploadParam struct {
 	pieceLen int64
 	start    int64
 	readLen  int64
-}
-
-// LaunchPeerServer launch a server to send piece data
-func LaunchPeerServer(cfg *config.Config) (int, error) {
-	taskFileName := cfg.RV.TaskFileName
-
-	// retrieve peer port from meta file: config.cfg.RV.MetaPath
-	if sevicePort, err := getPort(cfg.RV.MetaPath); err == nil {
-		// check the peer port(config.cfg.RV.PeerPort) whether is available
-		url := fmt.Sprintf("http://%s:%d%s%s", cfg.RV.LocalIP, sevicePort, config.LocalHTTPPathCheck, taskFileName)
-		result, err := checkPort(url, cfg.RV.TargetDir, util.DefaultTimeout)
-		if err == nil {
-			cfg.ServerLogger.Infof("local http result:%s for path:%s", result, config.LocalHTTPPathCheck)
-
-			// reuse exist service port
-			if result == taskFileName {
-				cfg.ServerLogger.Infof("reuse exist service with port:%d", sevicePort)
-				return sevicePort, nil
-			}
-			cfg.ServerLogger.Warnf("not found process on port:%d, version:%s", sevicePort, version.DFGetVersion)
-		}
-		cfg.ServerLogger.Warnf("request local http path:%s, error:%v", config.LocalHTTPPathCheck, err)
-	}
-	// TODO: start a goroutine to check alive and sever gc.
-
-	sevicePort := generatePort()
-	p2pServer, err := newPeerServer(cfg, sevicePort)
-	if err != nil {
-		return 0, err
-	}
-
-	// TODO: start a new server and roolback if any errors happened.
-
-	// persist the new peer port into meta file
-	// NOTE: we should truncates the meta file before service down.
-	err = ioutil.WriteFile(cfg.RV.MetaPath, []byte(strconv.Itoa(sevicePort)), 0666)
-	if err != nil {
-		return 0, err
-	}
-	cfg.ServerLogger.Infof("server on host: %s, port: %d", p2pServer.host, p2pServer.port)
-
-	return sevicePort, nil
-}
-
-// newPeerServer return a new P2PServer.
-func newPeerServer(cfg *config.Config, port int) (*peerServer, error) {
-	s := &peerServer{
-		host: cfg.RV.LocalIP,
-		port: port,
-	}
-
-	// init router
-	r := mux.NewRouter()
-	r.HandleFunc(config.PeerHTTPPathPrefix+"{taskFileName:.*}", s.uploadHandler).Methods("GET")
-	r.HandleFunc(config.LocalHTTPPathRate+"{taskFileName:.*}", s.parseRateHandler).Methods("GET")
-	r.HandleFunc(config.LocalHTTPPathCheck+"{taskFileName:.*}", s.checkHandler).Methods("GET")
-	r.HandleFunc(config.LocalHTTPPathClient+"finish", s.oneFinishHandler).Methods("GET")
-
-	s.server = &http.Server{
-		Addr:    net.JoinHostPort(s.host, strconv.Itoa(port)),
-		Handler: r,
-	}
-
-	return s, nil
 }
 
 // uploadHandler use to upload a task file when other peers download from it.
@@ -198,6 +325,14 @@ func (ps *peerServer) oneFinishHandler(w http.ResponseWriter, r *http.Request) {
 	syncTaskMap.LoadOrStore(taskFileName, param)
 	fmt.Fprintf(w, "success")
 }
+
+func (ps *peerServer) pingHandler(w http.ResponseWriter, r *http.Request) {
+	sendSuccess(w)
+	fmt.Fprintf(w, "success")
+}
+
+// ----------------------------------------------------------------------------
+// helper functions
 
 func sendSuccess(w http.ResponseWriter) {
 	w.Header().Set("Content-type", ctype)

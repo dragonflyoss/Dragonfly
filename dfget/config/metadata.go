@@ -24,7 +24,7 @@ import (
 // NewMetaData create a MetaData instance.
 func NewMetaData(metaPath string) *MetaData {
 	return &MetaData{
-		metaPath: metaPath,
+		MetaPath: metaPath,
 	}
 }
 
@@ -32,23 +32,23 @@ func NewMetaData(metaPath string) *MetaData {
 type MetaData struct {
 	ServicePort int `json:"servicePort"`
 
-	metaPath string `json:"-"`
+	MetaPath string `json:"-"`
 }
 
 // Persist writes meta information into storage.
 func (md *MetaData) Persist() error {
-	if content, err := json.Marshal(md); err == nil {
-		return ioutil.WriteFile(md.metaPath, content, 0755)
-	} else {
-		return err
+	content, err := json.Marshal(md)
+	if err == nil {
+		return ioutil.WriteFile(md.MetaPath, content, 0755)
 	}
+	return err
 }
 
 // Load loads meta information from storage.
 func (md *MetaData) Load() error {
-	if content, err := ioutil.ReadFile(md.metaPath); err == nil {
+	content, err := ioutil.ReadFile(md.MetaPath)
+	if err == nil {
 		return json.Unmarshal(content, md)
-	} else {
-		return err
 	}
+	return err
 }
