@@ -78,11 +78,13 @@ func StartPeerServerProcess(cfg *config.Config) (port int, err error) {
 func readPort(r io.Reader) (port int, err error) {
 	done := make(chan struct{})
 	go func() {
+		var n = 0
 		buf := make([]byte, 256)
-		_, err = r.Read(buf)
+		n, err = r.Read(buf)
 		if err == nil {
-			if port, err = strconv.Atoi(string(buf)); err != nil {
-				err = fmt.Errorf("%s", buf)
+			content := strings.TrimSpace(string(buf[:n]))
+			if port, err = strconv.Atoi(content); err != nil {
+				err = fmt.Errorf("%s", content)
 			}
 		}
 		close(done)
