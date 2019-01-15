@@ -122,6 +122,18 @@ func transFile(f *os.File, w http.ResponseWriter, start, readLen int64) error {
 
 // LaunchPeerServer helper
 
+// FinishTask report a finished task to peer server.
+func FinishTask(ip string, port int, taskFileName, cid, taskID, node string) error {
+	url := fmt.Sprintf("http://%s:%d%sfinish?taskFileName=%s&cid=%s&taskId=%s&node=%s",
+		ip, port, config.LocalHTTPPathClient,
+		taskFileName, taskID, cid, node)
+	code, _, err := util.Get(url, util.DefaultTimeout)
+	if code == http.StatusOK {
+		return nil
+	}
+	return err
+}
+
 // checkServer check if the server is available。
 func checkServer(ip string, port int, dataDir string, taskFileName string,
 	timeout time.Duration) (string, error) {

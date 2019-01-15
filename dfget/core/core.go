@@ -172,10 +172,24 @@ func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 			cfg.RV.FileLength = info.Size()
 		}
 	}
+
+	reportFinishedTask(cfg, getter)
+
 	os.Remove(cfg.RV.TempTarget)
 	cfg.ClientLogger.Infof("download %s cost:%.3fs length:%d reason:%d",
 		success, time.Since(cfg.StartTime).Seconds(), cfg.RV.FileLength, cfg.BackSourceReason)
 	return err
+}
+
+func reportFinishedTask(cfg *config.Config, getter downloader.Downloader) {
+	if cfg.RV.PeerPort <= 0 {
+		return
+	}
+	if getter, ok := getter.(*downloader.P2PDownloader); ok {
+		uploader.FinishTask(cfg.RV.LocalIP, cfg.RV.PeerPort,
+			cfg.RV.TaskFileName, cfg.RV.Cid,
+			getter.GetTaskID(), getter.GetNode())
+	}
 }
 
 func createTempTargetFile(targetDir string, sign string) (name string, e error) {

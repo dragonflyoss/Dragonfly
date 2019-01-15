@@ -144,6 +144,16 @@ func (p2p *P2PDownloader) Run() error {
 func (p2p *P2PDownloader) Cleanup() {
 }
 
+// GetNode returns supernode ip.
+func (p2p *P2PDownloader) GetNode() string {
+	return p2p.node
+}
+
+// GetTaskID returns downloading taskID.
+func (p2p *P2PDownloader) GetTaskID() string {
+	return p2p.taskID
+}
+
 func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 	*types.PullPieceTaskResponse, error) {
 	var (

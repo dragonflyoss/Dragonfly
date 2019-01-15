@@ -216,7 +216,7 @@ func updateServicePortInMeta(cfg *config.Config, port int) {
 }
 
 func serverGC(cfg *config.Config, interval time.Duration) {
-	cfg.ServerLogger.Info("start server gc, expireTime:%s", cfg.RV.DataExpireTime)
+	cfg.ServerLogger.Info("start server gc, expireTime:", cfg.RV.DataExpireTime)
 
 	supernode := api.NewSupernodeAPI()
 	var walkFn filepath.WalkFunc = func(path string, info os.FileInfo, err error) error {
@@ -265,7 +265,7 @@ func deleteExpiredFile(api api.SupernodeAPI, path string, info os.FileInfo,
 }
 
 func monitorAlive(cfg *config.Config, interval time.Duration) {
-	cfg.ServerLogger.Info("monitor peer server whether is alive, aliveTime:%s",
+	cfg.ServerLogger.Info("monitor peer server whether is alive, aliveTime:",
 		cfg.RV.ServerAliveTime)
 	go serverGC(cfg, interval)
 
@@ -295,6 +295,7 @@ func monitorAlive(cfg *config.Config, interval time.Duration) {
 
 func newPeerServer(cfg *config.Config, port int) *peerServer {
 	s := &peerServer{
+		cfg:      cfg,
 		finished: make(chan struct{}),
 		host:     cfg.RV.LocalIP,
 		port:     port,
@@ -402,14 +403,24 @@ func (ps *peerServer) checkHandler(w http.ResponseWriter, r *http.Request) {
 
 // oneFinishHandler use to update the status of peer task.
 func (ps *peerServer) oneFinishHandler(w http.ResponseWriter, r *http.Request) {
-	taskFileName := mux.Vars(r)["taskFileName"]
-	param := &taskConfig{
-		taskID:    mux.Vars(r)["taskId"],
-		cid:       mux.Vars(r)["cid"],
-		superNode: mux.Vars(r)["superNode"],
-		finished:  true,
+	if err := r.ParseForm(); err != nil {
+		sendHeader(w, http.StatusBadRequest)
+		fmt.Fprintf(w, err.Error())
+		return
 	}
-	syncTaskMap.LoadOrStore(taskFileName, param)
+
+	taskFileName := r.FormValue("taskFileName")
+	taskID := r.FormValue("taskId")
+	cid := r.FormValue("cid")
+	superNode := r.FormValue("superNode")
+	if v, ok := syncTaskMap.Load(taskFileName); ok {
+		task := v.(*taskConfig)
+		task.taskID = taskID
+		task.cid = cid
+		task.superNode = superNode
+		task.finished = true
+	}
+	sendSuccess(w)
 	fmt.Fprintf(w, "success")
 }
 
@@ -422,6 +433,10 @@ func (ps *peerServer) pingHandler(w http.ResponseWriter, r *http.Request) {
 // helper functions
 
 func sendSuccess(w http.ResponseWriter) {
+	sendHeader(w, http.StatusOK)
+}
+
+func sendHeader(w http.ResponseWriter, code int) {
 	w.Header().Set("Content-type", ctype)
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(code)
 }
