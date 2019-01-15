@@ -274,15 +274,15 @@ func monitorAlive(cfg *config.Config, interval time.Duration) {
 			if aliveQueue.Len() > 0 {
 				continue
 			}
-			cfg.ServerLogger.Info("no more task, peer server will stop...")
 			if p2p != nil {
+				cfg.ServerLogger.Info("no more task, peer server will stop...")
 				c, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Minute))
 				p2p.Shutdown(c)
 				cancel()
-				close(p2p.finished)
 				updateServicePortInMeta(cfg, 0)
+				cfg.ServerLogger.Info("peer server is shutdown.")
+				close(p2p.finished)
 			}
-			cfg.ServerLogger.Info("peer server is shutdown.")
 			return
 		}
 	}
