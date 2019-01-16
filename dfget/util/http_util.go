@@ -39,7 +39,7 @@ const (
 	RequestTag = "request"
 
 	// DefaultTimeout is the default timeout to check connect.
-	DefaultTimeout = 500
+	DefaultTimeout = 500 * time.Millisecond
 )
 
 // DefaultHTTPClient is the default implementation of SimpleHTTPClient.
@@ -149,12 +149,12 @@ func ParseQuery(query interface{}) string {
 // param timeout: its unit is milliseconds, reset to 500 ms if <= 0
 // returns localIP
 func CheckConnect(ip string, port int, timeout int) (localIP string, e error) {
+	t := time.Duration(timeout) * time.Millisecond
 	if timeout <= 0 {
-		timeout = DefaultTimeout
+		t = DefaultTimeout
 	}
 
 	var conn net.Conn
-	t := time.Duration(timeout) * time.Millisecond
 	addr := fmt.Sprintf("%s:%d", ip, port)
 	if conn, e = net.DialTimeout("tcp", addr, t); e == nil {
 		localIP = conn.LocalAddr().String()

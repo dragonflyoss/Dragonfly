@@ -19,7 +19,6 @@ package uploader
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -123,26 +122,41 @@ func transFile(f *os.File, w http.ResponseWriter, start, readLen int64) error {
 
 // LaunchPeerServer helper
 
-// checkPort check if the server is available。
-func checkPort(url, dataDir string, timeout int) (string, error) {
+// FinishTask report a finished task to peer server.
+func FinishTask(ip string, port int, taskFileName, cid, taskID, node string) error {
+	url := fmt.Sprintf("http://%s:%d%sfinish?taskFileName=%s&cid=%s&taskId=%s&node=%s",
+		ip, port, config.LocalHTTPPathClient,
+		taskFileName, taskID, cid, node)
+	code, _, err := util.Get(url, util.DefaultTimeout)
+	if code == http.StatusOK {
+		return nil
+	}
+	return err
+}
+
+// checkServer check if the server is available。
+func checkServer(ip string, port int, dataDir string, taskFileName string,
+	timeout time.Duration) (string, error) {
+	url := fmt.Sprintf("http://%s:%d%s%s", ip, port, config.LocalHTTPPathCheck, taskFileName)
+	if timeout <= 0 {
+		timeout = util.DefaultTimeout
+	}
+
 	// construct request
 	req := fasthttp.AcquireRequest()
 	req.SetRequestURI(url)
 	req.Header.Add("dataDir", dataDir)
 	resp := fasthttp.AcquireResponse()
-	if timeout <= 0 {
-		timeout = util.DefaultTimeout
-	}
 
 	// send request
-	if err := fasthttp.DoTimeout(req, resp, time.Duration(timeout)*time.Millisecond); err != nil {
+	if err := fasthttp.DoTimeout(req, resp, timeout); err != nil {
 		return "", err
 	}
 
 	// get resp result
 	statusCode := resp.StatusCode()
 	if statusCode != config.Success {
-		return "", fmt.Errorf("Unexpected status code: %d", statusCode)
+		return "", fmt.Errorf("unexpected status code: %d", statusCode)
 	}
 
 	bodyBytes := resp.Body()
@@ -156,19 +170,22 @@ func checkPort(url, dataDir string, timeout int) (string, error) {
 	return "", nil
 }
 
-// generatePort generate a port
-// TODO: ensure the port is available.
-func generatePort() int {
-	lowerLimit := config.ServerPortLowerLimit
-	upperLimit := config.ServerPortUpperLimit
-	return int(time.Now().Unix()/300)%(upperLimit-lowerLimit) + lowerLimit
+func pingServer(ip string, port int) bool {
+	url := fmt.Sprintf("http://%s:%d/%s", ip, port, config.LocalHTTPPing)
+	code, _, _ := fasthttp.GetTimeout(nil, url, util.DefaultTimeout)
+	return code == http.StatusOK
 }
 
-// get port from meta file.
-func getPort(metaPath string) (int, error) {
-	portByte, err := ioutil.ReadFile(metaPath)
-	if err != nil {
-		return 0, err
+func generatePort(inc int) int {
+	lowerLimit := config.ServerPortLowerLimit
+	upperLimit := config.ServerPortUpperLimit
+	return int(time.Now().Unix()/300)%(upperLimit-lowerLimit) + lowerLimit + inc
+}
+
+func getPortFromMeta(metaPath string) int {
+	meta := config.NewMetaData(metaPath)
+	if err := meta.Load(); err != nil {
+		return 0
 	}
-	return strconv.Atoi(string(portByte))
+	return meta.ServicePort
 }

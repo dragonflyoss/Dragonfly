@@ -332,6 +332,9 @@ type RuntimeVariable struct {
 	LocalIP       string
 	PeerPort      int
 	FileLength    int64
+
+	DataExpireTime  time.Duration
+	ServerAliveTime time.Duration
 }
 
 func (rv *RuntimeVariable) String() string {
