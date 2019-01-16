@@ -173,8 +173,8 @@ func LaunchPeerServer(cfg *config.Config) (int, error) {
 				} else if pingServer(p2p.host, p2p.port) {
 					// a peer server is already existing
 					c <- nil
-					close(p2p.finished)
 					cfg.ServerLogger.Infof("reuse exist service with port:%d", servicePort)
+					close(p2p.finished)
 					return
 				}
 				cfg.ServerLogger.Warnf("start error:%v, remain retry times:%d",
