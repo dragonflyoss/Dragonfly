@@ -1,6 +1,6 @@
 # Dragonfly Quick Start
 
-In this quick start guide, you will get a feeling of Dragonfly by starting a [SuperNode](../overview/terminology.md) (the server) in your Docker container, installing the Dragonfly client (the client), and then downloading a container image and a general file, which are likely what you'll be doing frequently in your use case.
+In this quick start guide, you will get a feeling of Dragonfly by starting a supernode server in your Docker container, installing the Dragonfly client (the client), and then downloading a container image and a general file, which are likely what you'll be doing frequently in your use case.
 
 ## Prerequisites
 

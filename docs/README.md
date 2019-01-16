@@ -1,112 +1,69 @@
----
-title: "Dragonfly"
----
+# Dragonfly Document
 
-[![Join the chat at https://gitter.im/alibaba/Dragonfly](https://badges.gitter.im/alibaba/Dragonfly.svg)](https://gitter.im/alibaba/Dragonfly?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![License](https://img.shields.io/badge/license-Apache%202-brightgreen.svg)](https://github.com/dragonflyoss/Dragonfly/blob/master/LICENSE)
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fdragonflyoss%2FDragonfly.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fdragonflyoss%2FDragonfly?ref=badge_shield)
-[![GoDoc](https://godoc.org/github.com/dragonflyoss/Dragonfly?status.svg)](https://godoc.org/github.com/dragonflyoss/Dragonfly)
-[![Go Report Card](https://goreportcard.com/badge/github.com/dragonflyoss/Dragonfly)](https://goreportcard.com/report/github.com/dragonflyoss/Dragonfly)
-[![Build Status](https://travis-ci.org/dragonflyoss/Dragonfly.svg?branch=master)](https://travis-ci.org/dragonflyoss/Dragonfly)
-[![CircleCI](https://circleci.com/gh/dragonflyoss/Dragonfly.svg?style=svg)](https://circleci.com/gh/dragonflyoss/Dragonfly)
-[![codecov](https://codecov.io/gh/dragonflyoss/Dragonfly/branch/master/graph/badge.svg)](https://codecov.io/gh/dragonflyoss/Dragonfly)
+Dragonfly Document is written, drawn, memorialized representation of all things about Dragonfly. For those who are generally interested in Dragonfly, README.md of this repo is sufficient. While for end users, all details contained in `/docs` is the best guide all should have. And for developers, contents in Developer Guide part is that all need.
 
-![Dragonfly](images/logo.png)
+Organization of document is as following:
 
-Dragonfly is an intelligent P2P-based image and file distribution tool. It aims to improve the efficiency and success rate of file transferring, and maximize the usage of network bandwidth, especially for the distribution of larget amounts of data, such as application distribution, cache distribution, log distribution, and image distribution.
-<!--more-->
+* [Quick Start](#Quick-Start)
+* [User Guide](#User-Guide)
+* [CLI Reference](#CLI-Reference)
+    * [dfget](./cli_reference/dfget.md)
+    * [dfdaemon](./cli_reference/dfdaemon.md)
+    * [supernode]()
+* [API Reference](#API-Reference)
+* [Ecosystem](#Ecosystem)
+    * [Kubernetes Integration](./ecosystem/Kubernetes-with-Dragonfly.md)
+    * [Harbor Integration](./ecosystem/Harbor-with-Dragonfly.md)
+* [Developer Guide](#Developer-Guide)
+    * [Design Doc](#Design-Doc)
+    * [Test Guide](#Test-Guide)
 
-At Alibaba, every month Dragonfly is invoked two billion times and distributes 3.4PB of data. Dragonfly has become one of the most important pieces of infrastructure at Alibaba.
+## Quick Start
 
-While container technologies makes DevOps life easier most of the time, it surely brings some challenges: for example the efficiency of image distribution, especially when you have to replicate image distribution on several hosts.
+[Quick Started](./quick_start) is exactly what you need if you would give Dragonfly a try. This document includes what are the prerequisites, how to install Dragonfly and how to experience Dragonfly's usage.
 
-Dragonfly works extremely well with both Docker and [PouchContainer](https://github.com/alibaba/pouch) in this scenario. It's also compatible with containers of other formats. It delivers up to 57 times the throughput of native docker and saves up to 99.5% of the out bandwidth of registry.
+## User Guide
 
-Dragonfly makes it simple and cost-effective to set up, operate, and scale any kind of file, image, or data distribution.
+[User Guide](./user_guide) helps all kinds of guidance end users need to experience Dragonfly. Not only the very brief [Quick Start](./quick_start), but the detailed binary installation and configure illustration. In addition, any concept and function which help users understand Dragonfly better would be included as well.
 
-## Why Dragonfly?
+## CLI Reference
 
-This project is an open-source version of the Dragonfly used at Alibaba. It has the following features:
+For almost all users, commandline is the first reference you may need. Document in directory [CLI Reference](./cli_reference) is about command detailed usage of Dragonfly CLI including `dfget`, `dfdaemon` and `supernode`. You can get introductions, synopsis, examples, options about command. Last but not least, Dragonfly can guarantee commandline docs is strongly consistent with Dragonfly CLI's source code. What's more, all commandline docs are auto generated via source code.
 
-**Note:** More Alibaba-internal features will be made available to open-source users soon. Stay tuned!
+## API Reference
 
-- **P2P-based file distribution**: By using the P2P technology for file transmission, it makes the most out of the bandwidth resources of each peer to improve downloading efficiency,  and saves a lot of cross-IDC bandwidth, especially the costly cross-board bandwidth.
-- **Non-invasive support to all kinds of container technologies**: Dragonfly can seamlessly support various containers for distributing images.
-- **Host level speed limit**: In addition to rate limit for the current download task like many other downloading tools (for example wget and curl), Dragonfly also provides rate limit for the entire host.
-- **Passive CDN**: The CDN mechanism can avoid repetitive remote downloads.
-- **Strong consistency**: Dragonfly can make sure that all downloaded files are consistent even if users do not provide any check code (MD5).
-- **Disk protection and highly efficient IO**: Prechecking disk space, delaying synchronization, writing file blocks in the best order, isolating net-read/disk-write, and so on.
-- **High performance**: Cluster Manager is completely closed-loop, which means that it doesn't rely on any database or distributed cache, processing requests with extremely high performance.
-- **Auto-isolation of Exception**: Dragonfly will automatically isolate exception nodes (peer or Cluster Manager) to improve download stability.
-- **No pressure on file source**: Generally, only a few Cluster Managers will download files from the source.
-- **Support standard HTTP header**: Support submitting authentication information through HTTP header.
-- **Effective concurrency control of Registry Auth**: Reduce the pressure on the Registry Auth Service.
-- **Simple and easy to use**: Very few configurations are needed.
+Commandline is the easiest way to experience Dragonfly's ability. And API extension will bring more furthure experience of Dragonfly. Commandline is just one kind of combination usage of API, if you wish to hack or take more advantages of Dragonfly, please see [API Reference](./api_reference). Like command line document, all API docs are auto generated via source code.
 
-## How Does It Stack Up Against Traditional Solution?
+## Ecosystem
 
-We carried out an experiment to compare the performance of Dragonfly and wget.
+Ecosystem documents show connections between Dragonfly and popular tool or system in cloud native ecosystem. They guide end users how to experience cloud native systems with Dragonfly, such as other CNCF project Kubernetes and Harbor.
 
-|Test Environment ||
-|---|---|
-|Dragonfly Server|2 * (24-Core 64GB-RAM 2000Mb/s)|
-|File Source Server|2 * (24-Core 64GB-RAM 2000Mb/s)|
-|Client|4-Core 8GB-RAM 200Mb/s|
-|Target File Size|200MB|
-|Experiment Date|April 20, 2016|
+## Developer Guide
 
-The expeirment result is as shown in the following figure.
+Develop Guide helps (potential) developers/contributors to understand the thoery inside Dragonfly rather than the interface it exposes. With better understanding of how Dragonfly is designed, developer could learn source code of Dragonfly much easier and know how to debug, test and hack.
 
-![How it stacks up](images/performance.png)
+### Design Doc
 
-As you can see in the chart, for Dragonfly, no matter how many clients are downloading, the average downloading time is always about 12 seconds. But for wget, the downloading time keeps increasing with the number of clients. When the number of wget clients reaches 1,200, the file source crashed and therefore cannot serve any client.
+[Design Doc](./design) is content all about deisgn of Dragonfly. It includes all things taken into consideration at the very beginning, the architecture designed for all components in Dragonfly, the interactive workflow between components, all APIs in Dragonfly and some technical things else.
 
-## How Does It Work?
+### Test Guide
 
-Dragonfly works slightly differently when downloading general files and downloading container images.
+[Test Guide](./test_guide) is the best reference helping contributors get aware of how to setup testing environment and do it. Currently we can divide test of Dragonfly into four dimensions:
 
-### Downloading General Files
+* unit test;
+* API integration test;
+* CLI integration test;
+* node e2e test.
 
-The Cluster Manager is also called a supernode, which is responsible for CDN and scheduling every peer to transfer blocks between each other. dfget is the P2P client, which is also called "peer". It's mainly used to download and share blocks.
+For more details, please refer to [test](./test_guide).
 
-![Downloading General Files](images/dfget.png)
+## Conclusion
 
-### Downloading Container Images
+The folder `/docs` does not contain all the document about Dragonfly. There are still other really helpful documents in other path of this repo, like:
 
-Registry is similar to the file server above. dfget proxy is also called dfdaemon, which intercepts HTTP requests from docker pull or docker push, and then decides which requests to process with dfget.
+* [FAQ.md](../FAQ.md)
+* [CHANGELOG.md](../CHANGELOG.md)
+* [ROADMAP.md](../ROADMAP.md)
+* others.
 
-![Downloading Container Images](images/dfget-combine-container.png)
-
-### Downloading Blocks
-
-Every file is divided into multiple blocks, which are transmitted between peers. Each peer is a P2P client. Cluster Manager will check if the corresponding file exists in the local disk. If not, it will be downloaded into Cluster Manager from file server.
-
-![How file blocks are downloaded](images/distributing.png)
-
-## Who has adopted Dragonfly?
-
-Here are some of the adoptors of project Dragonfly. If you are using Dragonfly to improve your distribution, please don't hesitate to reach out to us and show your support.
-
-<a href="https://www.alibabagroup.com" border="0" target="_blank"><img alt="trendmicro" src="images/adoptor_logo/AlibabaGroup.jpg" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
-<a href="https://www.alibabacloud.com/zh" border="0" target="_blank"><img alt="trendmicro" src="images/adoptor_logo/AlibabaCloud.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
-<a href="http://www.10086.cn/" border="0" target="_blank"><img alt="OnStar" src="images/adoptor_logo/ChinaMobile.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
-<a href="https://www.antfin.com/" border="0" target="_blank"><img alt="OnStar" src="images/adoptor_logo/AntFinancial.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
-<a href="https://www.cainiao.com/" border="0" target="_blank"><img alt="OnStar" src="images/adoptor_logo/CaiNiao.gif" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
-<a href="http://www.iflytek.com/" border="0" target="_blank"><img alt="OnStar" src="images/adoptor_logo/iFLYTEK.jpeg" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
-<a href="https://www.didiglobal.com" border="0" target="_blank"><img alt="OnStar" src="images/adoptor_logo/didi.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
-<a href="https://www.meituan.com" border="0" target="_blank"><img alt="OnStar" src="images/adoptor_logo/meituan.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
-<a href="https://www.amap.com/" border="0" target="_blank"><img alt="OnStar" src="images/adoptor_logo/amap.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
-<a href="https://www.lazada.com/" border="0" target="_blank"><img alt="OnStar" src="images/adoptor_logo/lazada.png" height="50"></a>&nbsp; &nbsp; &nbsp; &nbsp;
-
-## Community
-
-You are encouraged to communicate with us via GitHub issues or pull requests.
-
-Follow us on other platforms:
-
-- Gitter Chat: [dragonfly](https://gitter.im/alibaba/Dragonfly)
-- Twitter: [@dragonfly_oss](https://twitter.com/dragonfly_oss)
-
-## License
-
-Dragonfly is available under the [Apache 2.0 License](https://github.com/dragonflyoss/Dragonfly/blob/master/LICENSE).
+If you are searching some document and find no one, please do not hesitate to [file an ISSUE](https://github.com/dragonflyoss/Dragonfly/issues/new/choose) for help. In addition, if you found that there are some incorrect places or typos in document, please help submit a pull request to correct that.
