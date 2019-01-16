@@ -20,9 +20,10 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "dfdaemon",
-	Short: "The dfdaemon is a proxy that intercepts image download requests.",
-	Long:  "The dfdaemon is a proxy between container engine and registry used for pulling images.",
+	Use:               "dfdaemon",
+	Short:             "The dfdaemon is a proxy that intercepts image download requests.",
+	Long:              "The dfdaemon is a proxy between container engine and registry used for pulling images.",
+	DisableAutoGenTag: true, // disable displaying auto generation tag in cli docs
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runDaemon()
 	},
