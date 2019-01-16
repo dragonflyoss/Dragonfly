@@ -167,6 +167,12 @@ func initFlags() {
 	flagSet.BoolVar(&cfg.DFDaemon, "dfdaemon", false,
 		"caller is from dfdaemon")
 
+	// pass to server
+	rootCmd.PersistentFlags().DurationVar(&cfg.RV.DataExpireTime, "expiretime", config.DataExpireTime,
+		"server will delete cached files if these files doesn't be modification within this duration")
+	rootCmd.PersistentFlags().DurationVar(&cfg.RV.ServerAliveTime, "alivetime", config.ServerAliveTime,
+		"server will stop if there is no uploading task within this duration")
+
 	// others
 	flagSet.BoolVarP(&cfg.ShowBar, "showbar", "b", false,
 		"show progress bar, it's conflict with '--console'")

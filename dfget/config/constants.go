@@ -16,6 +16,10 @@
 
 package config
 
+import (
+	"time"
+)
+
 /* the response code from supernode */
 const (
 	// HTTPError represents that there is an error between client and server.
@@ -100,4 +104,8 @@ const (
 	LocalHTTPPathCheck  = "/check/"
 	LocalHTTPPathClient = "/client/"
 	LocalHTTPPathRate   = "/rate/"
+	LocalHTTPPing       = "/server/ping"
+
+	DataExpireTime  = 3 * time.Minute
+	ServerAliveTime = 5 * time.Minute
 )

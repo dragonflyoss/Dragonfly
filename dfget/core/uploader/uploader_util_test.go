@@ -48,6 +48,8 @@ type UploadUtilTestSuite struct {
 	dataDir     string
 	servicePath string
 	host        string
+	ip          string
+	port        int
 	ln          net.Listener
 }
 
@@ -64,7 +66,10 @@ func (s *UploadUtilTestSuite) SetUpSuite(c *check.C) {
 	syncTaskMap.Store(taskFileName, tc)
 
 	// run a server
-	s.host = fmt.Sprintf("127.0.0.1:%d", rand.Intn(1000)+63000)
+	s.ip = "127.0.0.1"
+	s.port = rand.Intn(1000) + 63000
+
+	s.host = fmt.Sprintf("%s:%d", s.ip, s.port)
 	s.ln, _ = net.Listen("tcp", s.host)
 	checkHandler := func(w http.ResponseWriter, r *http.Request) {
 		fileName := mux.Vars(r)["taskFileName"]
@@ -132,20 +137,17 @@ func (s *UploadUtilTestSuite) TestTransFile(c *check.C) {
 
 func (s *UploadUtilTestSuite) TestCheckPort(c *check.C) {
 	// normal test
-	url := fmt.Sprintf("http://%s%s%s", s.host, config.LocalHTTPPathCheck, taskFileName)
-	result, err := checkPort(url, s.dataDir, 10)
+	result, err := checkServer(s.ip, s.port, s.dataDir, taskFileName, 10)
 	c.Check(err, check.IsNil)
 	c.Check(result, check.Equals, taskFileName)
 
 	// timeout equals zero test
-	url = fmt.Sprintf("http://%s%s%s", s.host, config.LocalHTTPPathCheck, taskFileName)
-	result, err = checkPort(url, s.dataDir, 0)
+	result, err = checkServer(s.ip, s.port, s.dataDir, taskFileName, 0)
 	c.Check(err, check.IsNil)
 	c.Check(result, check.Equals, taskFileName)
 
 	// error url test
-	url = fmt.Sprintf("http://%s%s%s", s.host+"error", config.LocalHTTPPathCheck, taskFileName)
-	result, err = checkPort(url, s.dataDir, 0)
+	result, err = checkServer(s.ip+"1", s.port, s.dataDir, taskFileName, 0)
 	c.Check(err, check.NotNil)
 	c.Check(result, check.Equals, "")
 }
@@ -213,8 +215,7 @@ func (s *UploadUtilTestSuite) TestGetPort(c *check.C) {
 	metaPath := path.Join(s.dataDir, "meta")
 	servicePort := 8080
 	ioutil.WriteFile(metaPath, []byte(strconv.Itoa(servicePort)), 0666)
-	port, err := getPort(metaPath)
-	c.Check(err, check.IsNil)
+	port := getPortFromMeta(metaPath)
 	c.Check(port, check.Equals, servicePort)
 }
 

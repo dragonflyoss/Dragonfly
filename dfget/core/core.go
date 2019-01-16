@@ -32,6 +32,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/downloader"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
 	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/dragonflyoss/Dragonfly/version"
@@ -104,8 +105,13 @@ func prepare(cfg *config.Config) (err error) {
 	return nil
 }
 
-func launchPeerServer(cfg *config.Config) error {
-	return fmt.Errorf("not implemented")
+func launchPeerServer(cfg *config.Config) (err error) {
+	var port = 0
+	port, err = uploader.StartPeerServerProcess(cfg)
+	if err == nil && port > 0 {
+		cfg.RV.PeerPort = port
+	}
+	return
 }
 
 func registerToSuperNode(cfg *config.Config, register regist.SupernodeRegister) (
@@ -166,10 +172,24 @@ func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 			cfg.RV.FileLength = info.Size()
 		}
 	}
+
+	reportFinishedTask(cfg, getter)
+
 	os.Remove(cfg.RV.TempTarget)
 	cfg.ClientLogger.Infof("download %s cost:%.3fs length:%d reason:%d",
 		success, time.Since(cfg.StartTime).Seconds(), cfg.RV.FileLength, cfg.BackSourceReason)
 	return err
+}
+
+func reportFinishedTask(cfg *config.Config, getter downloader.Downloader) {
+	if cfg.RV.PeerPort <= 0 {
+		return
+	}
+	if getter, ok := getter.(*downloader.P2PDownloader); ok {
+		uploader.FinishTask(cfg.RV.LocalIP, cfg.RV.PeerPort,
+			cfg.RV.TaskFileName, cfg.RV.Cid,
+			getter.GetTaskID(), getter.GetNode())
+	}
 }
 
 func createTempTargetFile(targetDir string, sign string) (name string, e error) {
