@@ -193,4 +193,20 @@ We are planning to support this feature in Dragonfly 0.5.0.
 
 ## Does Dragonfly support pulling an private image which needs username/password authentication
 
-We are planning to support this feature in Dragonfly 0.5.0.
+Yes, Dragonfly supports users to pull private image which needs username/password authentication. For example, when user wishes to pull private images from docker registries(such as Docker Hub https://index.docker.io/v1/ ), add authentication info of the user for the private images in `/root/.docker/config.json`. The format of `config.json` after adding authentication will be like the following way:
+
+```json
+{
+      "auths": {
+              "https://index.docker.io/v1/": {
+                      "auth": "${auth_value}"
+              }
+      }
+}
+```
+
+In the above content the `auth_value` base64("${usename}:${password}"). Since users definitely have their own username/password for private images, then use the following command to generate `$auth_value` and fill the generated result in `config.json`:
+
+```shell
+echo "${usename}:${password}" | base64
+```
