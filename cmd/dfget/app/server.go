@@ -18,6 +18,7 @@ package app
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
@@ -29,15 +30,15 @@ var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Launch a peer server for uploading files.",
 	Run: func(cmd *cobra.Command, args []string) {
-		logPath := filepath.Join(cfg.WorkHome, "logs")
-		cfg.ServerLogger = util.CreateLogger(logPath,
+		cfg.ServerLogger = util.CreateLogger(filepath.Join(cfg.WorkHome, "logs"),
 			"dfserver.log", "INFO", cfg.Sign)
-		if port, err := uploader.LaunchPeerServer(cfg); err == nil {
-			fmt.Println(port)
-			uploader.WaitForShutdown()
-		} else {
+		port, err := uploader.LaunchPeerServer(cfg)
+		if err != nil {
 			fmt.Println(err.Error())
+			os.Exit(11)
 		}
+		fmt.Println(port)
+		uploader.WaitForShutdown()
 	},
 }
 
