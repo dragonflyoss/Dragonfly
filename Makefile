@@ -104,4 +104,11 @@ uninstall:
 build-client: check-client build-dfget build-dfdaemon
 .PHONY: build-client
 
+# Create for the tool of generate docs of the client.
+build-client-local: build-dirs
+	./hack/build-client-local.sh
+.PHONY: build-client-local
+
+# Use the technology of the container to build binary files, so that developers
+# don't need to worry about the inconsistency between the CI and the local environment.
 build: check-client build-dfget build-dfdaemon check-supernode build-supernode
