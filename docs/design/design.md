@@ -107,7 +107,7 @@ Register to a Supernode
 - In `Dragonfly`, a file is uniquely identified by taskID and a download task is also scheduled according to taskID. So when Dfget needs to tell the Supernode the information about the file to be downloaded to get the taskID before actually starting to download the file.
   - Supernode will generate a specific taskID based on the information passed by `Dfget`, and check if the file corresponding to taskID exists locally which is managered by CDNMgr.
   - If in the previous check, the corresponding file is not found locally, it will trigger CDN to download the file asynchronously.
-  - A download process corresponds to a`DfgetTask` object in the Supernode, so create a new object to track the progress of the download process.
+  - A download process corresponds to a`DfgetTask` object in the Supernode, so create a new object to track the progress of the download process.
   - Update the bitmap information for the P2P network.
 
 Download from the p2p network in pieces with a loop
