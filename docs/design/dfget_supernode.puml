@@ -1,0 +1,58 @@
+@startuml
+== Register to a supernode==
+activate DfgetAsPeer #FFBBBB
+DfgetAsPeer -> DfgetAsPeer: Launch a http server as a peer
+
+activate DfgetAsPeer #DarkSalmon
+DfgetAsPeer -> SupernodeAsPeer: /peers: POST (Register a peer to P2P network)
+activate SupernodeAsPeer #DarkSalmon
+SupernodeAsPeer --> DfgetAsPeer: PeerCreateResponse
+deactivate SupernodeAsPeer
+
+DfgetAsPeer -> SupernodeAsPeer: /tasks: POST (Register a task)
+activate SupernodeAsPeer #DarkSalmon
+SupernodeAsPeer -> DfgetAsPeer: TaskCreateResponse
+deactivate SupernodeAsPeer
+deactivate DfgetAsPeer
+
+== Download from the p2p network in pieces with a loop ==
+loop Until Finish/Fail Download
+    
+    DfgetAsPeer -> SupernodeAsPeer:  /tasks/{id}/pieces: GET (Get scheduler result)
+    activate DfgetAsPeer #DarkSalmon
+    activate SupernodeAsPeer #DarkSalmon
+    SupernodeAsPeer --> DfgetAsPeer: arrays: PieceInfo
+    deactivate SupernodeAsPeer
+    
+    alt Download from supernode
+	DfgetAsPeer -> SupernodeAsPeer: URLPath (Download from supernode)
+        activate SupernodeAsPeer #DarkSalmon
+	SupernodeAsPeer --> DfgetAsPeer: TaskPieceFile
+        deactivate SupernodeAsPeer
+    else Download from other peers in P2P network
+	DfgetAsPeer -> OtherPeers: URLPath (Download from other peers in P2P network)
+	activate OtherPeers
+	OtherPeers --> DfgetAsPeer: TaskPieceFile
+	deactivate OtherPeers
+	destroy OtherPeers
+    end
+    
+    DfgetAsPeer -> SupernodeAsPeer:  /tasks/{id}/pieces/{pieceRange}: PUT (Update piece status)
+    activate SupernodeAsPeer #DarkSalmon
+    SupernodeAsPeer --> DfgetAsPeer: HTTP Response
+    deactivate DfgetAsPeer
+    deactivate SupernodeAsPeer
+end
+
+== Notify the supernode to exit P2P network ==
+opt No Request >= 5 Min
+    DfgetAsPeer -> SupernodeAsPeer:  /peers/{id}: Delete (Notice the supernode that this peer is going offline)
+    activate DfgetAsPeer #DarkSalmon
+    activate SupernodeAsPeer #DarkSalmon
+    SupernodeAsPeer --> DfgetAsPeer: HTTP Response
+    deactivate SupernodeAsPeer
+    deactivate DfgetAsPeer
+end
+
+deactivate DfgetAsPeer
+@enduml
