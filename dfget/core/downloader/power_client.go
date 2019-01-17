@@ -229,6 +229,9 @@ func (cw *ClientWriter) write(piece *Piece, startTime time.Time) error {
 	buf := bufio.NewWriterSize(cw.serviceFile, 4*1024*1024)
 	_, err := io.Copy(buf, piece.RawContent())
 	buf.Flush()
+	if cw.acrossWrite {
+		cw.targetQueue.Put(piece)
+	}
 
 	return err
 }
