@@ -57,27 +57,22 @@ func Start(cfg *config.Config) *errors.DFGetError {
 		cfg.StartTime.Format(config.DefaultTimestampFormat), cfg.URL))
 
 	if err = prepare(cfg); err != nil {
-		return errors.New(1100, err.Error())
+		return errors.New(config.CodePrepareError, err.Error())
 	}
 
 	if result, err = registerToSuperNode(cfg, register); err != nil {
-		return errors.New(1200, err.Error())
+		return errors.New(config.CodeRegisterError, err.Error())
 	}
 
 	if err = downloadFile(cfg, supernodeAPI, register, result); err != nil {
-		return errors.New(1300, err.Error())
+		return errors.New(config.CodeDownloadError, err.Error())
 	}
 
 	return nil
 }
 
+// prepare the RV-related information and create the corresponding files.
 func prepare(cfg *config.Config) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = r.(error)
-		}
-	}()
-
 	util.Printer.Printf("dfget version:%s", version.DFGetVersion)
 	util.Printer.Printf("workspace:%s sign:%s", cfg.WorkHome, cfg.Sign)
 	cfg.ClientLogger.Infof("target file path:%s", cfg.Output)
@@ -86,13 +81,23 @@ func prepare(cfg *config.Config) (err error) {
 
 	rv.RealTarget = cfg.Output
 	rv.TargetDir = path.Dir(rv.RealTarget)
-	panicIf(util.CreateDirectory(rv.TargetDir))
-	cfg.RV.TempTarget, err = createTempTargetFile(rv.TargetDir, cfg.Sign)
-	panicIf(err)
+	if err = util.CreateDirectory(rv.TargetDir); err != nil {
+		return err
+	}
 
-	panicIf(util.CreateDirectory(path.Dir(rv.MetaPath)))
-	panicIf(util.CreateDirectory(cfg.WorkHome))
-	panicIf(util.CreateDirectory(rv.SystemDataDir))
+	if cfg.RV.TempTarget, err = createTempTargetFile(rv.TargetDir, cfg.Sign); err != nil {
+		return err
+	}
+
+	if err = util.CreateDirectory(path.Dir(rv.MetaPath)); err != nil {
+		return err
+	}
+	if err = util.CreateDirectory(cfg.WorkHome); err != nil {
+		return err
+	}
+	if err = util.CreateDirectory(rv.SystemDataDir); err != nil {
+		return err
+	}
 	rv.DataDir = cfg.RV.SystemDataDir
 
 	cfg.Node = adjustSupernodeList(cfg.Node)
@@ -287,10 +292,4 @@ func calculateTimeout(fileLength int64, defaultTimeoutSecond int) time.Duration 
 		timeout = int(fileLength/(64*1024) + 10)
 	}
 	return time.Duration(timeout) * time.Second
-}
-
-func panicIf(err error) {
-	if err != nil {
-		panic(err)
-	}
 }

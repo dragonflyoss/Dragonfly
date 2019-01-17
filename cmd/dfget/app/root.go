@@ -13,6 +13,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 
+	errHandler "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -41,22 +42,34 @@ func init() {
 
 // runDfget do some init operations and start to download.
 func runDfget() error {
-	// initialize logger and get properties
-	initLog()
+	// initialize logger
+	if err := initClientLog(); err != nil {
+		util.Printer.Println(fmt.Sprintf("init log error: %v", err))
+		return err
+	}
+
+	// get config from property files
 	initProperties()
 
-	// check the legitimacy of parameters
+	if err := transParams(); err != nil {
+		util.Printer.Println(err.Error())
+		return err
+	}
+
 	checkParameters()
 	cfg.ClientLogger.Infof("get cmd params:%q", os.Args)
 
-	config.AssertConfig(cfg)
+	if err := config.AssertConfig(cfg); err != nil {
+		util.Printer.Println(fmt.Sprintf("assert context error: %v", err))
+		return err
+	}
 	cfg.ClientLogger.Infof("get init config:%v", cfg)
 
 	// enter the core process
 	err := core.Start(cfg)
 	util.Printer.Println(resultMsg(cfg, time.Now(), err))
 	if err != nil {
-		return err
+		os.Exit(err.Code)
 	}
 	return nil
 }
@@ -68,6 +81,7 @@ func checkParameters() {
 	}
 }
 
+// load config from property files.
 func initProperties() {
 	properties := config.NewProperties()
 	for _, v := range cfg.ConfigFiles {
@@ -94,17 +108,27 @@ func initProperties() {
 	if cfg.ClientQueueSize == 0 {
 		cfg.ClientQueueSize = properties.ClientQueueSize
 	}
+}
 
+// transParams trans the user-friendly parameter formats
+// to the format corresponding to the `Config` struct.
+func transParams() error {
 	cfg.Filter = transFilter(filter)
 
 	var err error
-	cfg.LocalLimit, err = transLimit(localLimit)
-	util.PanicIfError(err, "convert locallimit error")
-	cfg.TotalLimit, err = transLimit(totalLimit)
-	util.PanicIfError(err, "convert totallimit error")
+	if cfg.LocalLimit, err = transLimit(localLimit); err != nil {
+		return errHandler.Wrapf(errors.ErrConvertFailed, "locallimit: %v", err)
+	}
+
+	if cfg.TotalLimit, err = transLimit(totalLimit); err != nil {
+		return errHandler.Wrapf(errors.ErrConvertFailed, "totallimit: %v", err)
+	}
+
+	return nil
 }
 
-func initLog() {
+// initClientLog init client logger.
+func initClientLog() error {
 	var (
 		logPath  = path.Join(cfg.WorkHome, "logs")
 		logLevel = "info"
@@ -112,16 +136,27 @@ func initLog() {
 	if cfg.Verbose {
 		logLevel = "debug"
 	}
-	cfg.ClientLogger = util.CreateLogger(logPath, "dfclient.log", logLevel, cfg.Sign)
+
+	var err error
+	if cfg.ClientLogger, err = util.CreateLogger(logPath, "dfclient.log", logLevel, cfg.Sign); err != nil {
+		return err
+	}
+
 	if cfg.Console {
 		util.AddConsoleLog(cfg.ClientLogger)
 	}
-	if cfg.Pattern == config.PatternP2P {
-		cfg.ServerLogger = util.CreateLogger(logPath, "dfserver.log", logLevel, cfg.Sign)
-	}
+	return nil
 }
 
 func initFlags() {
+	persistFlagSet := rootCmd.PersistentFlags()
+
+	// pass to server
+	persistFlagSet.DurationVar(&cfg.RV.DataExpireTime, "expiretime", config.DataExpireTime,
+		"server will delete cached files if these files doesn't be modification within this duration")
+	persistFlagSet.DurationVar(&cfg.RV.ServerAliveTime, "alivetime", config.ServerAliveTime,
+		"server will stop if there is no uploading task within this duration")
+
 	flagSet := rootCmd.Flags()
 
 	// url & output
@@ -133,7 +168,7 @@ func initFlags() {
 	// localLimit & totalLimit & timeout
 	flagSet.StringVarP(&localLimit, "locallimit", "s", "",
 		"rate limit about a single download task, its format is 20M/m/K/k")
-	flagSet.StringVarP(&totalLimit, "totallimit", "", "",
+	flagSet.StringVar(&totalLimit, "totallimit", "",
 		"rate limit about the whole host, its format is 20M/m/K/k")
 	flagSet.IntVarP(&cfg.Timeout, "timeout", "e", 0,
 		"download timeout(second)")
@@ -166,13 +201,6 @@ func initFlags() {
 		"not back source when p2p fail")
 	flagSet.BoolVar(&cfg.DFDaemon, "dfdaemon", false,
 		"caller is from dfdaemon")
-
-	// pass to server
-	rootCmd.PersistentFlags().DurationVar(&cfg.RV.DataExpireTime, "expiretime", config.DataExpireTime,
-		"server will delete cached files if these files doesn't be modification within this duration")
-	rootCmd.PersistentFlags().DurationVar(&cfg.RV.ServerAliveTime, "alivetime", config.ServerAliveTime,
-		"server will stop if there is no uploading task within this duration")
-
 	// others
 	flagSet.BoolVarP(&cfg.ShowBar, "showbar", "b", false,
 		"show progress bar, it's conflict with '--console'")

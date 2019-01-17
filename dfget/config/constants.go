@@ -109,3 +109,21 @@ const (
 	DataExpireTime  = 3 * time.Minute
 	ServerAliveTime = 5 * time.Minute
 )
+
+/* errors code */
+const (
+	// CodeLaunchServerError represents failed to launch a peer server.
+	CodeLaunchServerError = 1100 + iota
+
+	// CodePrepareError represents failed to prepare before downloading.
+	CodePrepareError
+
+	// CodeGetUserError represents failed to get current user.
+	CodeGetUserError
+
+	// CodeRegisterError represents failed to register to supernode.
+	CodeRegisterError
+
+	// CodeDownloadError represents failed to download file.
+	CodeDownloadError
+)

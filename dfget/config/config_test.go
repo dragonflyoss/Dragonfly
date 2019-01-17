@@ -29,12 +29,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
+
 	"github.com/go-check/check"
 	"github.com/sirupsen/logrus"
 )
 
-var Cfg = NewConfig()
+var cfg = NewConfig()
 
 func Test(t *testing.T) {
 	check.TestingT(t)
@@ -52,35 +54,35 @@ func (suite *ConfigSuite) SetUpTest(c *check.C) {
 
 func (suite *ConfigSuite) TestConfig_String(c *check.C) {
 	expected := "{\"url\":\"\",\"output\":\"\""
-	c.Assert(strings.Contains(Cfg.String(), expected), check.Equals, true)
-	Cfg.LocalLimit = 20971520
-	Cfg.Pattern = "p2p"
-	Cfg.Version = true
+	c.Assert(strings.Contains(cfg.String(), expected), check.Equals, true)
+	cfg.LocalLimit = 20971520
+	cfg.Pattern = "p2p"
+	cfg.Version = true
 	expected = "\"url\":\"\",\"output\":\"\",\"localLimit\":20971520," +
 		"\"pattern\":\"p2p\",\"version\":true"
-	c.Assert(strings.Contains(Cfg.String(), expected), check.Equals, true)
+	c.Assert(strings.Contains(cfg.String(), expected), check.Equals, true)
 }
 
 func (suite *ConfigSuite) TestNewConfig(c *check.C) {
 	before := time.Now()
 	time.Sleep(time.Millisecond)
-	Cfg = NewConfig()
+	cfg := NewConfig()
 	time.Sleep(time.Millisecond)
 	after := time.Now()
 
-	c.Assert(Cfg.StartTime.After(before), check.Equals, true)
-	c.Assert(Cfg.StartTime.Before(after), check.Equals, true)
+	c.Assert(cfg.StartTime.After(before), check.Equals, true)
+	c.Assert(cfg.StartTime.Before(after), check.Equals, true)
 
 	beforeSign := fmt.Sprintf("%d-%.3f",
 		os.Getpid(), float64(before.UnixNano())/float64(time.Second))
 	afterSign := fmt.Sprintf("%d-%.3f",
 		os.Getpid(), float64(after.UnixNano())/float64(time.Second))
-	c.Assert(beforeSign < Cfg.Sign, check.Equals, true)
-	c.Assert(afterSign > Cfg.Sign, check.Equals, true)
+	c.Assert(beforeSign < cfg.Sign, check.Equals, true)
+	c.Assert(afterSign > cfg.Sign, check.Equals, true)
 
 	if curUser, err := user.Current(); err != nil {
-		c.Assert(Cfg.User, check.Equals, curUser.Username)
-		c.Assert(Cfg.WorkHome, check.Equals, path.Join(curUser.HomeDir, ".small-dragonfly"))
+		c.Assert(cfg.User, check.Equals, curUser.Username)
+		c.Assert(cfg.WorkHome, check.Equals, path.Join(curUser.HomeDir, ".small-dragonfly"))
 	}
 }
 
@@ -92,45 +94,32 @@ func (suite *ConfigSuite) TestAssertConfig(c *check.C) {
 	clog.Out = buf
 
 	var cases = []struct {
-		clog     *logrus.Logger
-		slog     *logrus.Logger
-		url      string
-		output   string
-		expected string
+		clog      *logrus.Logger
+		slog      *logrus.Logger
+		url       string
+		output    string
+		checkFunc func(err error) bool
 	}{
-		{expected: "client log"},
-		{clog: clog, expected: "server log"},
-		{clog: clog, slog: clog, expected: "invalid url"},
-		{clog: clog, slog: clog, url: "http://a.b", expected: ""},
-		{clog: clog, slog: clog, url: "http://a.b", output: "/root", expected: "invalid output"},
+		{checkFunc: errors.IsNotInitialized},
+		{clog: clog, checkFunc: errors.IsNotInitialized},
+		{clog: clog, slog: clog, checkFunc: errors.IsInvalidValue},
+		{clog: clog, slog: clog, url: "http://a.b", checkFunc: errors.IsNilError},
+		{clog: clog, slog: clog, url: "http://a.b", output: "/root", checkFunc: errors.IsInvalidValue},
 	}
 
-	var f = func() (msg string) {
-		defer func() {
-			if r := recover(); r != nil {
-				switch r := r.(type) {
-				case error:
-					msg = r.Error()
-				case *logrus.Entry:
-					msg = r.Message
-					buf.Reset()
-				default:
-					msg = fmt.Sprintf("%v", r)
-				}
-			}
-		}()
-		AssertConfig(Cfg)
-		return ""
+	var f = func() (err error) {
+		return AssertConfig(cfg)
 	}
 
 	for _, v := range cases {
-		Cfg.ClientLogger = v.clog
-		Cfg.ServerLogger = v.slog
-		Cfg.URL = v.url
-		Cfg.Output = v.output
+		cfg.ClientLogger = v.clog
+		cfg.ServerLogger = v.slog
+		cfg.URL = v.url
+		cfg.Output = v.output
 		actual := f()
-		c.Assert(strings.HasPrefix(actual, v.expected), check.Equals, true,
-			check.Commentf("actual:[%s] expected:[%s]", actual, v.expected))
+		expected := v.checkFunc(actual)
+		c.Assert(expected, check.Equals, true,
+			check.Commentf("actual:[%s] expected:[%s]", actual, expected))
 	}
 }
 
@@ -156,11 +145,11 @@ func (suite *ConfigSuite) TestCheckURL(c *check.C) {
 			"q=is%3Aissue+is%3Aclosed": true,
 	}
 
-	c.Assert(checkURL(Cfg), check.NotNil)
+	c.Assert(checkURL(cfg), check.NotNil)
 	for k, v := range cases {
 		for _, scheme := range []string{"http", "https", "HTTP", "HTTPS"} {
-			Cfg.URL = fmt.Sprintf("%s://%s", scheme, k)
-			actual := fmt.Sprintf("%s:%v", k, checkURL(Cfg))
+			cfg.URL = fmt.Sprintf("%s://%s", scheme, k)
+			actual := fmt.Sprintf("%s:%v", k, checkURL(cfg))
 			expected := fmt.Sprintf("%s:%s://%s", k, scheme, k)
 			if v {
 				expected = fmt.Sprintf("%s:<nil>", k)
@@ -190,17 +179,17 @@ func (suite *ConfigSuite) TestCheckOutput(c *check.C) {
 		{"", "/tmp/a/b/c/d/e/zj.test", "/tmp/a/b/c/d/e/zj.test"},
 	}
 
-	if Cfg.User != "root" {
+	if cfg.User != "root" {
 		cases = append(cases, tester{url: "", output: "/root/zj.test", expected: ""})
 	}
 	for _, v := range cases {
-		Cfg.URL = v.url
-		Cfg.Output = v.output
+		cfg.URL = v.url
+		cfg.Output = v.output
 		if util.IsEmptyStr(v.expected) {
-			c.Assert(checkOutput(Cfg), check.NotNil, check.Commentf("%v", v))
+			c.Assert(checkOutput(cfg), check.NotNil, check.Commentf("%v", v))
 		} else {
-			c.Assert(checkOutput(Cfg), check.IsNil, check.Commentf("%v", v))
-			c.Assert(Cfg.Output, check.Equals, v.expected, check.Commentf("%v", v))
+			c.Assert(checkOutput(cfg), check.IsNil, check.Commentf("%v", v))
+			c.Assert(cfg.Output, check.Equals, v.expected, check.Commentf("%v", v))
 		}
 	}
 }

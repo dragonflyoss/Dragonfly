@@ -85,16 +85,16 @@ func (s *CoreTestSuite) TestRegisterToSupernode(c *check.C) {
 		}
 	}
 
-	f(config.BackSourceReasonNodeEmpty, true, nil)
+	f(config.BackSourceReasonNodeEmpty, false, nil)
 
 	cfg.Pattern = config.PatternSource
-	f(config.BackSourceReasonUserSpecified, true, nil)
+	f(config.BackSourceReasonUserSpecified, false, nil)
 
 	cfg.Pattern = config.PatternP2P
 
 	cfg.Node = []string{"x"}
 	cfg.URL = "http://x.com"
-	f(config.BackSourceReasonRegisterFail, true, nil)
+	f(config.BackSourceReasonRegisterFail, false, nil)
 
 	cfg.Node = []string{"x"}
 	cfg.URL = "http://taobao.com"
