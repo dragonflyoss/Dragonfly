@@ -85,30 +85,32 @@ func StartPeerServerProcess(cfg *config.Config) (port int, err error) {
 	return
 }
 
-func readPort(r io.Reader) (port int, err error) {
-	done := make(chan struct{})
+func readPort(r io.Reader) (int, error) {
+	done := make(chan error)
+	var port int
+
 	go func() {
 		var n = 0
+		var err error
 		buf := make([]byte, 256)
+
 		n, err = r.Read(buf)
-		if err == nil {
-			content := strings.TrimSpace(string(buf[:n]))
-			if port, err = strconv.Atoi(content); err != nil {
-				err = fmt.Errorf("%s", content)
-			}
+		if err != nil {
+			done <- err
 		}
+
+		content := strings.TrimSpace(string(buf[:n]))
+		port, err = strconv.Atoi(content)
+		done <- err
 		close(done)
 	}()
 
 	select {
-	case <-done:
-		return
+	case err := <-done:
+		return port, err
 	case <-time.After(time.Second):
-		err = fmt.Errorf("get peer server's port timeout")
-		close(done)
+		return 0, fmt.Errorf("get peer server's port timeout")
 	}
-
-	return
 }
 
 // checkPeerServerExist checks the peer server on port whether is available.
