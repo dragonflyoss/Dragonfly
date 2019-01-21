@@ -8,8 +8,11 @@ check() {
     # gofmt
     echo "CHECK: gofmt, check code formats"
     result=$(find . -name '*.go' | grep -vE "${exclude}" | xargs gofmt -s -l -d 2>/dev/null)
-    [ ${#result} -gt 0 ] && (echo "${result}" \
-        && echo "CHECK: please format Go code with 'gofmt -s -w .'" && false)
+    if [[ ${#result} -gt 0 ]]; then
+        echo "${result}"
+        echo "CHECK: please format Go code with 'gofmt -s -w .'"
+        return 1
+    fi
 
     # golint
     which golint > /dev/null || (echo "CHECK: install golint" \
@@ -17,7 +20,10 @@ check() {
 
     echo "CHECK: golint, check code style"
     result=$(go list ./... | grep -vE "${exclude}" | sed 's/^_//' | xargs golint)
-    [ ${#result} -gt 0 ] && (echo "${result}" && false)
+    if [[ ${#result} -gt 0 ]]; then
+        echo "${result}"
+        return 1
+    fi
 
     # go vet check
     echo "CHECK: go vet, check code syntax"
@@ -25,4 +31,4 @@ check() {
     echo "${packages}" | xargs go vet 2>&1
 }
 
-check "$@"
+check
