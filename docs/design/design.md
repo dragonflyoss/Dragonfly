@@ -38,7 +38,7 @@ For a program, a well-designed API is very important, we design the APIs with pr
 
 API definition: [swagger.yml](https://github.com/dragonflyoss/Dragonfly/blob/master/apis/swagger.yml)
 
-API document: [apis.md](https://github.com/dragonflyoss/Dragonfly/blob/master/docs/apis.md)
+API document: [apis.md](https://github.com/dragonflyoss/Dragonfly/blob/master/docs/api_reference/apis.md)
 
 ## Architecture
 
