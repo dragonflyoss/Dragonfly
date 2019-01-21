@@ -53,6 +53,8 @@ var (
 	aliveQueue  = util.NewQueue(0)
 )
 
+// TODO: Move this part out of the uploader
+
 // StartPeerServerProcess starts an independent peer server process for uploading downloaded files
 // if it doesn't exist.
 // This function is invoked when dfget starts to download files in p2p pattern.
@@ -119,15 +121,15 @@ func checkPeerServerExist(cfg *config.Config, port int) int {
 
 	// check the peer server whether is available
 	result, err := checkServer(cfg.RV.LocalIP, port, cfg.RV.TargetDir, taskFileName, 0)
-	cfg.ServerLogger.Infof("local http result:%s err:%v, port:%d path:%s",
+	cfg.ClientLogger.Infof("local http result:%s err:%v, port:%d path:%s",
 		result, err, port, config.LocalHTTPPathCheck)
 
 	if err == nil {
 		if result == taskFileName {
-			cfg.ServerLogger.Infof("use peer server on port:%d", port)
+			cfg.ClientLogger.Infof("use peer server on port:%d", port)
 			return port
 		}
-		cfg.ServerLogger.Warnf("not found process on port:%d, version:%s", port, version.DFGetVersion)
+		cfg.ClientLogger.Warnf("not found process on port:%d, version:%s", port, version.DFGetVersion)
 	}
 	return 0
 }

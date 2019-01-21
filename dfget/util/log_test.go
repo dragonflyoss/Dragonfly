@@ -34,6 +34,8 @@ func (suite *DFGetUtilSuite) TestCreateLogger(c *check.C) {
 	logger, tmpFile, r, err := tempFileAndLogger("debug", "x")
 	defer cleanTempFile(tmpFile, err)
 
+	c.Assert(err, check.IsNil)
+
 	var checkLogs = func(level logrus.Level, msg string) {
 		line, _, _ := r.ReadLine()
 		tmpStr := strings.Split(strings.Trim(string(line), "\n"), " ")
@@ -43,38 +45,24 @@ func (suite *DFGetUtilSuite) TestCreateLogger(c *check.C) {
 		c.Assert(strings.Join(tmpStr[5:], " "), check.Equals, msg)
 	}
 
-	var testPanic = func() {
-		msg := "panic test"
-		defer func() {
-			if e := recover(); e != nil {
-				s := e.(*logrus.Entry)
-				c.Assert(s.Level, check.Equals, logrus.PanicLevel)
-				c.Assert(s.Message, check.Equals, msg)
-			}
-		}()
-		logger.Panic(msg)
-	}
-
 	logger.Debug("test")
 	checkLogs(logrus.DebugLevel, "test")
 	logger.Info([]int{1, 2, 3})
 	checkLogs(logrus.InfoLevel, "[1 2 3]")
 	logger.Warn("test")
 	checkLogs(logrus.WarnLevel, "test")
-
-	testPanic()
 }
 
 func (suite *DFGetUtilSuite) TestCreateLogger_differentLevel(c *check.C) {
 	var (
 		tmpPath     = "/tmp"
 		tmpFileName = fmt.Sprintf("dfget_test_%d.log", rand.Int63())
-		logger      *logrus.Logger
 	)
 	defer os.Remove(path.Join(tmpPath, tmpFileName))
 
 	var testLevel = func(level string, expected logrus.Level) {
-		logger = CreateLogger(tmpPath, tmpFileName, level, "")
+		logger, err := CreateLogger(tmpPath, tmpFileName, level, "")
+		c.Assert(err, check.IsNil)
 		c.Assert(logger.Level, check.Equals, expected)
 	}
 
@@ -91,6 +79,8 @@ func (suite *DFGetUtilSuite) TestCreateLogger_differentLevel(c *check.C) {
 func (suite *DFGetUtilSuite) TestAddConsoleLog(c *check.C) {
 	logger, tmpFile, r, err := tempFileAndLogger("debug", "")
 	defer cleanTempFile(tmpFile, err)
+
+	c.Assert(err, check.IsNil)
 
 	// remove timestamp from logs to avoid testing failure
 	logger.Formatter = &logrus.TextFormatter{DisableTimestamp: true}
@@ -123,9 +113,13 @@ func (suite *DFGetUtilSuite) TestAddConsoleLog(c *check.C) {
 func tempFileAndLogger(level string, sign string) (*logrus.Logger, *os.File, *bufio.Reader, error) {
 	tmpPath := "/tmp"
 	tmpFile, err := ioutil.TempFile(tmpPath, "dfget_test")
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
 	tmpFileName := strings.TrimLeft(tmpFile.Name(), "/tmp/")
 	r := bufio.NewReader(tmpFile)
-	logger := CreateLogger(tmpPath, tmpFileName, level, sign)
+	logger, err := CreateLogger(tmpPath, tmpFileName, level, sign)
 	return logger, tmpFile, r, err
 }
 

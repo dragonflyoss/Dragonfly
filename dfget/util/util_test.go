@@ -17,7 +17,6 @@
 package util
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -64,39 +63,6 @@ func (suite *DFGetUtilSuite) TestIsNil(c *check.C) {
 
 	var temp *DFGetUtilSuite
 	c.Assert(IsNil(temp), check.Equals, true)
-}
-
-func (suite *DFGetUtilSuite) TestPanicIfNil(c *check.C) {
-	var f = func(v interface{}, msg string) (retMsg string) {
-		defer func() {
-			if r := recover(); r != nil {
-				retMsg = r.(error).Error()
-			}
-		}()
-
-		PanicIfNil(v, msg)
-		return ""
-	}
-
-	c.Assert(f(1, "int"), check.Equals, "")
-	c.Assert(f("", "string"), check.Equals, "")
-	c.Assert(f(nil, "nil"), check.Equals, "nil")
-	c.Assert(f(suite, "*DFGetUtilSuite"), check.Equals, "")
-}
-
-func (suite *DFGetUtilSuite) TestPanicIfError(c *check.C) {
-	var f = func(v error, msg string) (retMsg string) {
-		defer func() {
-			if r := recover(); r != nil {
-				retMsg = r.(error).Error()
-			}
-		}()
-
-		PanicIfError(v, msg)
-		return ""
-	}
-	c.Assert(f(nil, ""), check.Equals, "")
-	c.Assert(f(fmt.Errorf("test"), "error"), check.Equals, "error: test")
 }
 
 func (suite *DFGetUtilSuite) TestJsonString(c *check.C) {
