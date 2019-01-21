@@ -30,7 +30,10 @@ import (
 	"syscall"
 	"time"
 
+	errType "github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
+
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/gcfg.v1"
 	"gopkg.in/warnings.v0"
@@ -240,35 +243,46 @@ func NewConfig() *Config {
 	cfg.Sign = fmt.Sprintf("%d-%.3f",
 		os.Getpid(), float64(time.Now().UnixNano())/float64(time.Second))
 
-	if currentUser, err := user.Current(); err == nil {
-		cfg.User = currentUser.Username
-		cfg.WorkHome = path.Join(currentUser.HomeDir, ".small-dragonfly")
-		cfg.RV.MetaPath = path.Join(cfg.WorkHome, "meta", "host.meta")
-		cfg.RV.SystemDataDir = path.Join(cfg.WorkHome, "data")
-		cfg.RV.FileLength = -1
-	} else {
-		panic(fmt.Errorf("get user error: %s", err))
+	// TODO: Use parameters instead of currentUser.HomeDir.
+	currentUser, err := user.Current()
+	if err != nil {
+		util.Printer.Println(fmt.Sprintf("get user error: %s", err))
+		os.Exit(CodeGetUserError)
 	}
+
+	cfg.User = currentUser.Username
+	cfg.WorkHome = path.Join(currentUser.HomeDir, ".small-dragonfly")
+	cfg.RV.MetaPath = path.Join(cfg.WorkHome, "meta", "host.meta")
+	cfg.RV.SystemDataDir = path.Join(cfg.WorkHome, "data")
+	cfg.RV.FileLength = -1
 	cfg.ConfigFiles = []string{DefaultYamlConfigFile, DefaultIniConfigFile}
 	return cfg
 }
 
-// AssertConfig checks the config and panic if any error happens.
-func AssertConfig(cfg *Config) {
-	util.PanicIfNil(cfg, "runtime config is not initialized")
-	util.PanicIfNil(cfg.ClientLogger, "client log is not initialized")
-	if cfg.Pattern == "p2p" {
-		util.PanicIfNil(cfg.ServerLogger, "server log is not initialized")
-	}
-
+// AssertConfig checks the config and return errors.
+func AssertConfig(cfg *Config) (err error) {
 	defer func() {
-		if err := recover(); err != nil {
-			cfg.ClientLogger.Panic(err)
+		if err != nil {
+			cfg.ClientLogger.Errorf("assert context error: %v", err)
 		}
 	}()
 
-	util.PanicIfError(checkURL(cfg), "invalid url")
-	util.PanicIfError(checkOutput(cfg), "invalid output")
+	if util.IsNil(cfg) {
+		return errors.Wrap(errType.ErrNotInitialized, "runtime config")
+	}
+
+	if util.IsNil(cfg.ClientLogger) {
+		return errors.Wrap(errType.ErrNotInitialized, "client log")
+	}
+
+	if err := checkURL(cfg); err != nil {
+		return errors.Wrapf(errType.ErrInvalidValue, "url: %v", err)
+	}
+
+	if err := checkOutput(cfg); err != nil {
+		return err
+	}
+	return nil
 }
 
 func checkURL(cfg *Config) error {

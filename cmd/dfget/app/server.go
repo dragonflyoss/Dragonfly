@@ -21,8 +21,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
+
 	"github.com/spf13/cobra"
 )
 
@@ -30,12 +32,19 @@ var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Launch a peer server for uploading files.",
 	Run: func(cmd *cobra.Command, args []string) {
-		cfg.ServerLogger = util.CreateLogger(filepath.Join(cfg.WorkHome, "logs"),
-			"dfserver.log", "INFO", cfg.Sign)
+		// init server logger.
+		serverLogger, err := util.CreateLogger(filepath.Join(cfg.WorkHome, "logs"), "dfserver.log", "INFO", cfg.Sign)
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(config.CodeLaunchServerError)
+		}
+		cfg.ServerLogger = serverLogger
+
+		// launch a peer server as a uploader server
 		port, err := uploader.LaunchPeerServer(cfg)
 		if err != nil {
 			fmt.Println(err.Error())
-			os.Exit(11)
+			os.Exit(config.CodeLaunchServerError)
 		}
 		fmt.Println(port)
 		uploader.WaitForShutdown()
@@ -48,14 +57,16 @@ func init() {
 }
 
 func initServerFlags() {
-	serverCmd.PersistentFlags().StringVar(&cfg.RV.SystemDataDir, "data", cfg.RV.SystemDataDir,
+	flagSet := serverCmd.Flags()
+
+	flagSet.StringVar(&cfg.RV.SystemDataDir, "data", cfg.RV.SystemDataDir,
 		"the directory which stores temporary files for p2p uploading")
-	serverCmd.PersistentFlags().StringVar(&cfg.WorkHome, "home", cfg.WorkHome,
+	flagSet.StringVar(&cfg.WorkHome, "home", cfg.WorkHome,
 		"the work home of dfget server")
-	serverCmd.PersistentFlags().StringVar(&cfg.RV.LocalIP, "ip", "",
+	flagSet.StringVar(&cfg.RV.LocalIP, "ip", "",
 		"the ip that server will listen on")
-	serverCmd.PersistentFlags().IntVar(&cfg.RV.PeerPort, "port", 0,
+	flagSet.IntVar(&cfg.RV.PeerPort, "port", 0,
 		"the port that server will listen on")
-	serverCmd.PersistentFlags().StringVar(&cfg.RV.MetaPath, "meta", cfg.RV.MetaPath,
+	flagSet.StringVar(&cfg.RV.MetaPath, "meta", cfg.RV.MetaPath,
 		"meta file path")
 }
