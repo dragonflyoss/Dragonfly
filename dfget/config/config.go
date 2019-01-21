@@ -261,12 +261,6 @@ func NewConfig() *Config {
 
 // AssertConfig checks the config and return errors.
 func AssertConfig(cfg *Config) (err error) {
-	defer func() {
-		if err != nil {
-			cfg.ClientLogger.Errorf("assert context error: %v", err)
-		}
-	}()
-
 	if util.IsNil(cfg) {
 		return errors.Wrap(errType.ErrNotInitialized, "runtime config")
 	}
@@ -280,7 +274,7 @@ func AssertConfig(cfg *Config) (err error) {
 	}
 
 	if err := checkOutput(cfg); err != nil {
-		return err
+		return errors.Wrapf(errType.ErrInvalidValue, "output: %v", err)
 	}
 	return nil
 }
