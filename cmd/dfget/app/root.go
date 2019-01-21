@@ -31,7 +31,7 @@ var rootCmd = &cobra.Command{
 	Long:              "The dfget is the client of Dragonfly, a non-interactive P2P downloader.",
 	DisableAutoGenTag: true, // disable displaying auto generation tag in cli docs
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return runDfget(args)
+		return runDfget()
 	},
 }
 
@@ -40,14 +40,14 @@ func init() {
 }
 
 // runDfget do some init operations and start to download.
-func runDfget(args []string) error {
+func runDfget() error {
 	// initialize logger and get properties
 	initLog()
 	initProperties()
 
 	// check the legitimacy of parameters
 	checkParameters()
-	cfg.ClientLogger.Infof("get cmd params:%q", args)
+	cfg.ClientLogger.Infof("get cmd params:%q", os.Args)
 
 	config.AssertConfig(cfg)
 	cfg.ClientLogger.Infof("get init config:%v", cfg)
@@ -75,7 +75,7 @@ func initProperties() {
 			cfg.ClientLogger.Debugf("initProperties[%s] success: %v", v, properties)
 			break
 		} else {
-			cfg.ClientLogger.Warnf("initProperties[%s] fail: %v", v, err)
+			cfg.ClientLogger.Debugf("initProperties[%s] fail: %v", v, err)
 		}
 	}
 
