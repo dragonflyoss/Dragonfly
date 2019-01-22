@@ -39,7 +39,6 @@ func CreateConfig(writer io.Writer, workHome string) *config.Config {
 
 	logrus.StandardLogger().Out = writer
 	cfg.ClientLogger = logrus.StandardLogger()
-	cfg.ServerLogger = logrus.StandardLogger()
 	return cfg
 }
 

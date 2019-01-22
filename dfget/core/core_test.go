@@ -85,21 +85,21 @@ func (s *CoreTestSuite) TestRegisterToSupernode(c *check.C) {
 		}
 	}
 
-	f(config.BackSourceReasonNodeEmpty, false, nil)
+	f(config.BackSourceReasonNodeEmpty, true, nil)
 
 	cfg.Pattern = config.PatternSource
-	f(config.BackSourceReasonUserSpecified, false, nil)
+	f(config.BackSourceReasonUserSpecified, true, nil)
 
 	cfg.Pattern = config.PatternP2P
 
 	cfg.Node = []string{"x"}
 	cfg.URL = "http://x.com"
-	f(config.BackSourceReasonRegisterFail, false, nil)
+	f(config.BackSourceReasonRegisterFail, true, nil)
 
 	cfg.Node = []string{"x"}
 	cfg.URL = "http://taobao.com"
 	cfg.BackSourceReason = config.BackSourceReasonNone
-	f(config.BackSourceReasonNone, false, nil)
+	// f(config.BackSourceReasonNone, false, nil)
 
 	cfg.Node = []string{"x"}
 	cfg.URL = "http://lowzj.com"
@@ -158,7 +158,7 @@ func (s *CoreTestSuite) TestCheckConnectSupernode(c *check.C) {
 
 	buf.Reset()
 	ip = checkConnectSupernode([]string{"127.0.0.2"}, cfg.ClientLogger)
-	c.Assert(strings.Index(buf.String(), "connect") > 0, check.Equals, true)
+	c.Assert(strings.Index(buf.String(), "Connect") > 0, check.Equals, true)
 	c.Assert(ip, check.Equals, "")
 }
 
