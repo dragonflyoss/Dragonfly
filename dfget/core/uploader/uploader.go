@@ -148,64 +148,74 @@ func WaitForShutdown() {
 
 // LaunchPeerServer launch a server to send piece data
 func LaunchPeerServer(cfg *config.Config) (int, error) {
-	var (
-		servicePort = 0
-		retryCount  = 10
-		c           = make(chan error)
-	)
-
-	if cfg.RV.PeerPort > 0 {
-		servicePort = cfg.RV.PeerPort
-		retryCount = 1
-	}
-
 	cfg.ServerLogger.Infof("********************")
 	cfg.ServerLogger.Infof("start peer server...")
+
+	res := make(chan error)
 	go func() {
-		var err error
-		shouldGeneratePort := servicePort <= 0
-		for i := 0; i < retryCount; i++ {
-			if shouldGeneratePort {
-				servicePort = generatePort(i)
-			}
-			p2p = newPeerServer(cfg, servicePort)
-			if err = p2p.ListenAndServe(); err != nil {
-				if strings.Index(err.Error(), "address already in use") < 0 {
-					// start failed
-					c <- err
-					return
-				} else if pingServer(p2p.host, p2p.port) {
-					// a peer server is already existing
-					c <- nil
-					cfg.ServerLogger.Infof("reuse exist service with port:%d", servicePort)
-					close(p2p.finished)
-					return
-				}
-				cfg.ServerLogger.Warnf("start error:%v, remain retry times:%d",
-					err, retryCount-i)
-			}
-		}
-		// send last error
-		c <- err
+		res <- launch(cfg)
 	}()
 
-	var err error
-	if err = waitTimeout(c, 100*time.Millisecond); err == nil {
-		updateServicePortInMeta(cfg, servicePort)
-		cfg.ServerLogger.Infof("start peer server success, host:%s, port:%d",
-			cfg.RV.LocalIP, servicePort)
-		go monitorAlive(cfg, 15*time.Second)
-		return servicePort, nil
+	if err := waitForStartup(res, cfg); err != nil {
+		cfg.ServerLogger.Errorf("start peer server error:%v, exit directly", err)
+		return 0, err
 	}
-	cfg.ServerLogger.Errorf("start peer server error:%v, exit directly", err)
-	return 0, err
+	updateServicePortInMeta(cfg, p2p.port)
+	cfg.ServerLogger.Infof("start peer server success, host:%s, port:%d",
+		p2p.host, p2p.port)
+	go monitorAlive(cfg, 15*time.Second)
+	return p2p.port, nil
 }
 
-func waitTimeout(c chan error, timeout time.Duration) error {
+func launch(cfg *config.Config) error {
+	var (
+		retryCount         = 10
+		port               = 0
+		shouldGeneratePort = true
+	)
+	if cfg.RV.PeerPort > 0 {
+		retryCount = 1
+		port = cfg.RV.PeerPort
+		shouldGeneratePort = false
+	}
+	for i := 0; i < retryCount; i++ {
+		if shouldGeneratePort {
+			port = generatePort(i)
+		}
+		p2p = newPeerServer(cfg, port)
+		if err := p2p.ListenAndServe(); err != nil {
+			if strings.Index(err.Error(), "address already in use") < 0 {
+				// start failed or shutdown
+				return err
+			} else if pingServer(p2p.host, p2p.port) {
+				// a peer server is already existing
+				return nil
+			}
+			cfg.ServerLogger.Warnf("start error:%v, remain retry times:%d",
+				err, retryCount-i)
+		}
+	}
+	return fmt.Errorf("star peer server error and retried at most %d times", retryCount)
+}
+
+func waitForStartup(result chan error, cfg *config.Config) error {
 	select {
-	case err := <-c:
+	case err := <-result:
+		if err == nil {
+			cfg.ServerLogger.Infof("reuse exist server on port:%d", p2p.port)
+			close(p2p.finished)
+		}
 		return err
-	case <-time.After(timeout):
+	case <-time.After(100 * time.Millisecond):
+		// The peer server go routine will block and serve if it starts successfully.
+		// So we have to wait a moment and check again whether the peer server is
+		// started.
+		if p2p == nil {
+			return fmt.Errorf("initialize peer server error")
+		}
+		if !pingServer(p2p.host, p2p.port) {
+			return fmt.Errorf("cann't ping port:%d", p2p.port)
+		}
 		return nil
 	}
 }
@@ -269,6 +279,10 @@ func deleteExpiredFile(api api.SupernodeAPI, path string, info os.FileInfo,
 }
 
 func monitorAlive(cfg *config.Config, interval time.Duration) {
+	if !isRunning() {
+		return
+	}
+
 	cfg.ServerLogger.Info("monitor peer server whether is alive, aliveTime:",
 		cfg.RV.ServerAliveTime)
 	go serverGC(cfg, interval)
@@ -289,6 +303,18 @@ func monitorAlive(cfg *config.Config, interval time.Duration) {
 			}
 			return
 		}
+	}
+}
+
+func isRunning() bool {
+	if p2p == nil {
+		return false
+	}
+	select {
+	case <-p2p.finished:
+		return false
+	default:
+		return true
 	}
 }
 
