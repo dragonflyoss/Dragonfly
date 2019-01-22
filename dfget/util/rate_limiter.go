@@ -137,3 +137,13 @@ func (rl *RateLimiter) blocking(requiredToken int32) {
 	windowCount := int64(Max(requiredToken/rl.ratePerWindow, 1))
 	time.Sleep(time.Duration(windowCount * rl.window * time.Millisecond.Nanoseconds()))
 }
+
+// TransRate trans the rate to multiples of 1000
+// For NewRateLimiter, the production of rate should be division by 1000.
+func TransRate(rate int) int32 {
+	if rate <= 0 {
+		rate = 10 * 1024 * 1024
+	}
+	rate = (rate/1000 + 1) * 1000
+	return int32(rate)
+}
