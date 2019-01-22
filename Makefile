@@ -62,7 +62,7 @@ build-dfget: build-dirs
 	    -w /go/src/$(PKG)                                                  \
 	    $(BUILD_IMAGE)                                                     \
 	    go install -v -pkgdir /go/pkg $(LDFLAGS_DFGET) ./cmd/dfget
-.PHONY: build-dfget	
+.PHONY: build-dfget
 
 build-dfdaemon: build-dirs
 	@echo "Begin to build dfdaemon."
@@ -72,7 +72,7 @@ build-dfdaemon: build-dirs
 	    -u $$(id -u):$$(id -g)                                             \
 	    -v $$(pwd)/.go:/go                                                 \
 	    -v $$(pwd):/go/src/$(PKG)                                          \
-	    -v $$(pwd)/$(BUILD_PATH):/go/bin                                         \
+	    -v $$(pwd)/$(BUILD_PATH):/go/bin                                   \
 	    -v $$(pwd)/.cache:/.cache                                          \
 	    -e GOOS=$(GOOS)                                                    \
 	    -e GOARCH=$(GOARCH)                                                \
@@ -80,7 +80,7 @@ build-dfdaemon: build-dirs
 	    -w /go/src/$(PKG)                                                  \
 	    $(BUILD_IMAGE)                                                     \
 	    go install -v -pkgdir /go/pkg $(LDFLAGS_DFDAEMON) ./cmd/dfdaemon
-.PHONY: build-dfdaemon	
+.PHONY: build-dfdaemon
 
 build-supernode:
 	./hack/compile-supernode.sh
@@ -99,7 +99,7 @@ install:
 uninstall:
 	@echo "Begin to uninstall dfget and dfdaemon."
 	./hack/install-client.sh uninstall
-.PHONY: uninstall 
+.PHONY: uninstall
 
 build-client: check-client build-dfget build-dfdaemon
 .PHONY: build-client
