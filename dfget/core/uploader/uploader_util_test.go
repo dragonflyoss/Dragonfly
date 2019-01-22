@@ -25,8 +25,8 @@ import (
 	"net/http/httptest"
 	"os"
 	"path"
-	"strconv"
 	"testing"
+	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/version"
@@ -135,9 +135,9 @@ func (s *UploadUtilTestSuite) TestTransFile(c *check.C) {
 
 }
 
-func (s *UploadUtilTestSuite) TestCheckPort(c *check.C) {
+func (s *UploadUtilTestSuite) TestCheckServer(c *check.C) {
 	// normal test
-	result, err := checkServer(s.ip, s.port, s.dataDir, taskFileName, 10)
+	result, err := checkServer(s.ip, s.port, s.dataDir, taskFileName, 10*time.Millisecond)
 	c.Check(err, check.IsNil)
 	c.Check(result, check.Equals, taskFileName)
 
@@ -212,9 +212,13 @@ func (s *UploadUtilTestSuite) TestParseRange(c *check.C) {
 }
 
 func (s *UploadUtilTestSuite) TestGetPort(c *check.C) {
-	metaPath := path.Join(s.dataDir, "meta")
 	servicePort := 8080
-	ioutil.WriteFile(metaPath, []byte(strconv.Itoa(servicePort)), 0666)
+	metaPath := path.Join(s.dataDir, "meta")
+	meta := config.NewMetaData(metaPath)
+	meta.ServicePort = servicePort
+	err := meta.Persist()
+	c.Check(err, check.IsNil)
+
 	port := getPortFromMeta(metaPath)
 	c.Check(port, check.Equals, servicePort)
 }

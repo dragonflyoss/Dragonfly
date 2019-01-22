@@ -140,11 +140,10 @@ func (suit *dfgetSuit) TestResultMsg() {
 	end := cfg.StartTime.Add(100 * time.Millisecond)
 
 	msg := resultMsg(cfg, end, nil)
-	suit.Equal(msg, "download SUCCESS(0) cost:0.100s length:0 reason:0")
+	suit.Equal(msg, "download SUCCESS(0) cost:0.100s length:-1 reason:0")
 
-	cfg.BackSourceReason = config.BackSourceReasonRegisterFail
 	msg = resultMsg(cfg, end, errors.New(1, "TestFail"))
-	suit.Equal(msg, "download FAIL(1) cost:0.100s length:0 reason:1 error:"+
+	suit.Equal(msg, "download FAIL(1) cost:0.100s length:-1 reason:0 error:"+
 		`{"Code":1,"Msg":"TestFail"}`)
 }
 

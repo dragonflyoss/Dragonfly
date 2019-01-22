@@ -53,6 +53,7 @@ func (suite *ConfigSuite) SetUpTest(c *check.C) {
 }
 
 func (suite *ConfigSuite) TestConfig_String(c *check.C) {
+	cfg := NewConfig()
 	expected := "{\"url\":\"\",\"output\":\"\""
 	c.Assert(strings.Contains(cfg.String(), expected), check.Equals, true)
 	cfg.LocalLimit = 20971520
@@ -95,16 +96,15 @@ func (suite *ConfigSuite) TestAssertConfig(c *check.C) {
 
 	var cases = []struct {
 		clog      *logrus.Logger
-		slog      *logrus.Logger
 		url       string
 		output    string
 		checkFunc func(err error) bool
 	}{
 		{checkFunc: errors.IsNotInitialized},
-		{clog: clog, checkFunc: errors.IsNotInitialized},
-		{clog: clog, slog: clog, checkFunc: errors.IsInvalidValue},
-		{clog: clog, slog: clog, url: "http://a.b", checkFunc: errors.IsNilError},
-		{clog: clog, slog: clog, url: "http://a.b", output: "/root", checkFunc: errors.IsInvalidValue},
+		{clog: clog, checkFunc: errors.IsInvalidValue},
+		{clog: clog, url: "http://a", checkFunc: errors.IsInvalidValue},
+		{clog: clog, url: "http://a.b.com", output: "/tmp/output", checkFunc: errors.IsNilError},
+		{clog: clog, url: "http://a.b.com", output: "/root", checkFunc: errors.IsInvalidValue},
 	}
 
 	var f = func() (err error) {
@@ -113,13 +113,12 @@ func (suite *ConfigSuite) TestAssertConfig(c *check.C) {
 
 	for _, v := range cases {
 		cfg.ClientLogger = v.clog
-		cfg.ServerLogger = v.slog
 		cfg.URL = v.url
 		cfg.Output = v.output
 		actual := f()
 		expected := v.checkFunc(actual)
 		c.Assert(expected, check.Equals, true,
-			check.Commentf("actual:[%s] expected:[%s]", actual, expected))
+			check.Commentf("actual:[%s] expected:[%t]", actual, expected))
 	}
 }
 
