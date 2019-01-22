@@ -43,6 +43,8 @@ type PowerClient struct {
 	cfg         *config.Config
 	queue       util.Queue
 	clientQueue util.Queue
+
+	rateLimiter *util.RateLimiter
 }
 
 // Run starts run the task.
@@ -54,59 +56,64 @@ func (pc *PowerClient) Run() (err error) {
 
 	defer func() {
 		if err != nil {
-			pc.cfg.ClientLogger.Errorf("read piece cont error:%s from dst:%s", err, dstIP)
-			// TODO handle dst_ip == self.node
+			pc.cfg.ClientLogger.Errorf("failed to read piece cont from dst:%s ,error:%s", err, dstIP)
 		}
 	}()
 
-	_, err = util.CheckConnect(dstIP, peerPort, -1)
-	if dstIP == pc.node || err == nil {
-		url := fmt.Sprintf("http://%s:%d%s", dstIP, peerPort, pc.pieceTask.Path)
-		startTime := time.Now().Unix()
-
-		headers := make(map[string]string)
-		headers["Range"] = pc.pieceTask.Range
-		headers["pieceNum"] = strconv.Itoa(pc.pieceTask.PieceNum)
-		headers["pieceSize"] = strconv.Itoa(pc.pieceTask.PieceSize)
-		resp, err := httpGetWithHeaders(url, headers)
-		if err != nil {
-			return err
+	// check that the target download peer is available
+	if dstIP != pc.node {
+		if _, err = util.CheckConnect(dstIP, peerPort, -1); err != nil {
+			piece := NewPiece(pc.taskID, pc.node, pc.pieceTask.Cid, pc.pieceTask.Range, config.ResultFail, config.TaskStatusRunning)
+			pc.queue.Put(piece)
+			return nil
 		}
-		defer resp.Body.Close()
-
-		buf := make([]byte, 0, 256*1024)
-		pieceCont := bytes.NewBuffer(buf)
-		reader := NewLimitReader(resp.Body, pc.cfg.LocalLimit, pieceMD5 != "")
-		total, err := pieceCont.ReadFrom(reader)
-		pc.cfg.ClientLogger.Infof("get pieceCont total: %d", total)
-		if err != nil {
-			return err
-		}
-		// TODO handle read timeout
-
-		readFinish := time.Now().Unix()
-		realMd5 := reader.Md5()
-		if realMd5 != pieceMD5 {
-			pc.cfg.ClientLogger.Errorf("piece range:%s error,realMd5:%s,expectedMd5:%s,dstIp:%s,total:%d", pc.pieceTask.Range, realMd5, pieceMD5, dstIP, total)
-			return fmt.Errorf("md5 not match, expected:%s real:%s", pieceMD5, realMd5)
-		}
-		piece := NewPieceContent(pc.taskID, pc.node, pc.pieceTask.Cid, pc.pieceTask.Range, config.ResultSemiSuc, config.TaskStatusRunning, pieceCont)
-		// NOTE should unify the type
-		piece.PieceSize = int32(pc.pieceTask.PieceSize)
-		piece.PieceNum = pc.pieceTask.PieceNum
-		pc.clientQueue.Put(piece)
-		pc.queue.Put(piece)
-
-		endTime := time.Now().Unix()
-		timeDuring := endTime - startTime
-		if timeDuring > 2.0 {
-			pc.cfg.ClientLogger.Warnf("client range:%s cost:%.3f from peer:%s,its readCost:%.3f,cont length:%d", pc.pieceTask.Range, timeDuring, dstIP, readFinish-startTime, total)
-		}
-		return nil
 	}
 
-	piece := NewPiece(pc.taskID, pc.node, pc.pieceTask.Cid, pc.pieceTask.Range, config.ResultFail, config.TaskStatusRunning)
+	// send download request
+	url := fmt.Sprintf("http://%s:%d%s", dstIP, peerPort, pc.pieceTask.Path)
+	headers := make(map[string]string)
+	headers["Range"] = "bytes=" + pc.pieceTask.Range
+	headers["pieceNum"] = strconv.Itoa(pc.pieceTask.PieceNum)
+	headers["pieceSize"] = fmt.Sprint(pc.pieceTask.PieceSize)
+	startTime := time.Now()
+	resp, err := httpGetWithHeaders(url, headers)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// start to read data from resp
+	// use limitReader to limit the download speed
+	limitReader := util.NewLimitReaderWithLimiter(pc.rateLimiter, resp.Body, pieceMD5 != "")
+
+	buf := make([]byte, 0, 256*1024)
+	pieceCont := bytes.NewBuffer(buf)
+
+	total, err := pieceCont.ReadFrom(limitReader)
+	pc.cfg.ClientLogger.Infof("get pieceCont total: %d", total)
+	if err != nil {
+		return err
+	}
+
+	// TODO handle read timeout
+	readFinish := time.Now()
+
+	// Verify md5 code
+	realMd5 := limitReader.Md5()
+	if realMd5 != pieceMD5 {
+		return fmt.Errorf("piece range:%s md5 not match, expected:%s real:%s", pc.pieceTask.Range, pieceMD5, realMd5)
+	}
+
+	piece := NewPieceContent(pc.taskID, pc.node, pc.pieceTask.Cid, pc.pieceTask.Range, config.ResultSemiSuc, config.TaskStatusRunning, pieceCont)
+	piece.PieceSize = pc.pieceTask.PieceSize
+	piece.PieceNum = pc.pieceTask.PieceNum
+	pc.clientQueue.Put(piece)
 	pc.queue.Put(piece)
+
+	timeDuring := time.Since(startTime).Seconds()
+	if timeDuring > 2.0 {
+		pc.cfg.ClientLogger.Warnf("client range:%s cost:%.3f from peer:%s,its readCost:%.3f,cont length:%d", pc.pieceTask.Range, timeDuring, dstIP, readFinish.Sub(startTime).Seconds(), total)
+	}
 	return nil
 }
 

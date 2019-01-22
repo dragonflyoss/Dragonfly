@@ -32,12 +32,16 @@ var (
 
 	// ErrConvertFailed represents failed to convert.
 	ErrConvertFailed = &DFGetError{codeConvertFailed, "convert failed"}
+
+	// ErrInsufficientFileLength represents the length of file is insufficient.
+	ErrInsufficientFileLength = &DFGetError{codeInsufficientFileLength, "insufficient length"}
 )
 
 const (
 	codeInvalidValue = iota
 	codeNotInitialized
 	codeConvertFailed
+	codeInsufficientFileLength
 )
 
 // New function creates a DFGetError.
@@ -88,6 +92,12 @@ func IsNotInitialized(err error) bool {
 // IsConvertFailed check the error is a conversion error or not.
 func IsConvertFailed(err error) bool {
 	return checkError(err, codeConvertFailed)
+}
+
+// IsInsufficientFileLength check the error is a
+// insufficient file length error or not.
+func IsInsufficientFileLength(err error) bool {
+	return checkError(err, codeInsufficientFileLength)
 }
 
 func checkError(err error, code int) bool {

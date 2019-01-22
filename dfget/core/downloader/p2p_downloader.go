@@ -18,8 +18,10 @@ package downloader
 
 import (
 	"bytes"
+	"fmt"
 	"math/rand"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
@@ -51,7 +53,6 @@ type P2PDownloader struct {
 	pieceSizeHistory [2]int32
 	queue            util.Queue
 	clientQueue      util.Queue
-	writerDone       chan struct{}
 
 	clientFilePath  string
 	serviceFilePath string
@@ -62,6 +63,8 @@ type P2PDownloader struct {
 	// not in: the range hasn't been processed
 	pieceSet map[string]bool
 	total    int64
+
+	rateLimiter *util.RateLimiter
 }
 
 func (p2p *P2PDownloader) init() {
@@ -77,12 +80,13 @@ func (p2p *P2PDownloader) init() {
 	p2p.queue.Put(NewPieceSimple(p2p.taskID, p2p.node, config.TaskStatusStart))
 
 	p2p.clientQueue = util.NewQueue(config.DefaultClientQueueSize)
-	p2p.writerDone = make(chan struct{})
 
 	p2p.clientFilePath = helper.GetTaskFile(p2p.taskFileName, p2p.Cfg.RV.DataDir)
 	p2p.serviceFilePath = helper.GetServiceFile(p2p.taskFileName, p2p.Cfg.RV.DataDir)
 
 	p2p.pieceSet = make(map[string]bool)
+
+	p2p.rateLimiter = util.NewRateLimiter(int32(p2p.Cfg.LocalLimit), 2)
 }
 
 // Run starts to download the file.
@@ -203,8 +207,37 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 	return res, err
 }
 
-func (p2p *P2PDownloader) pullRate(data *types.PullPieceTaskResponseContinueData) {
+// getPullRate get download rate limit dynamically.
+func (p2p *P2PDownloader) getPullRate(data *types.PullPieceTaskResponseContinueData) {
+	var localRate int
 
+	if p2p.Cfg.LocalLimit > 0 {
+		localRate = p2p.Cfg.LocalLimit
+	} else {
+		localRate = data.DownLink * 1024
+	}
+
+	// Calculate the download speed limit
+	// that the current download task can be assigned
+	// by the uploader server.
+	// TODO: Reduce the frequency of requests.
+	url := fmt.Sprintf("http://%s:%d%s%s", p2p.Cfg.RV.LocalIP, p2p.Cfg.RV.PeerPort, config.LocalHTTPPathRate, p2p.taskFileName)
+	headers := make(map[string]string)
+	headers["rateLimit"] = strconv.Itoa(localRate)
+	resp, err := util.Do(url, headers, util.DefaultTimeout)
+	if err != nil {
+		p2p.Cfg.ClientLogger.Errorf("failed to pullRate: %v", err)
+		p2p.rateLimiter.SetRate(util.TransRate(localRate))
+		return
+	}
+
+	reqRate, err := strconv.Atoi(resp)
+	if err != nil {
+		p2p.Cfg.ClientLogger.Errorf("failed to parse rate from resp %s: %v", resp, err)
+		p2p.rateLimiter.SetRate(util.TransRate(localRate))
+		return
+	}
+	p2p.rateLimiter.SetRate(util.TransRate(reqRate))
 }
 
 func (p2p *P2PDownloader) startTask(data *types.PullPieceTaskResponseContinueData) {
@@ -215,6 +248,7 @@ func (p2p *P2PDownloader) startTask(data *types.PullPieceTaskResponseContinueDat
 		cfg:         p2p.Cfg,
 		queue:       p2p.queue,
 		clientQueue: p2p.clientQueue,
+		rateLimiter: p2p.rateLimiter,
 	}
 	powerClient.Run()
 }
@@ -296,7 +330,7 @@ func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 		}
 		if !ok {
 			p2p.pieceSet[pieceRange] = false
-			p2p.pullRate(pieceTask)
+			p2p.getPullRate(pieceTask)
 			go p2p.startTask(pieceTask)
 			hasTask = true
 		}
