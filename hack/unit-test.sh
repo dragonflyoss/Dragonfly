@@ -12,16 +12,21 @@ unit_test() {
     cmd="go list ./... | grep 'github.com/dragonflyoss/Dragonfly/'"
     sources="${GO_SOURCE_DIRECTORIES[*]}"
     sources="${sources// /|}"
+    retCode=0
     test -n "${sources}" && cmd+=" | grep -E '${sources}'"
 
     for d in $(eval "${cmd}")
     do
         go test -race -coverprofile=profile.out -covermode=atomic "${d}"
+        if [ "$?" != "0" ]; then
+            retCode=1
+        fi
         if [ -f profile.out ] ; then
             cat profile.out >> coverage.txt
             rm profile.out > /dev/null 2>&1
         fi
     done
+    return ${retCode}
 }
 
 unit_test "$@"
