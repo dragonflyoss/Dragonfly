@@ -6,8 +6,7 @@ jdk:
   - oraclejdk8
 script:
   - ./hack/check-supernode.sh
-  - ./hack/compile-supernode.sh
-  - ./hack/build-supernode-image.sh
+  - ./hack/build-supernode.sh
   # - (cd ./build/client && ./configure && make unit-test) && export LOG_HOME=/tmp/supernode && ./build/build.sh
 
 # after_success:

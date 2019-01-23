@@ -12,84 +12,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-PKG := github.com/dragonflyoss/Dragonfly
-SUPERNODE_SOURCE_HOME="${curDir}/../../src/supernode"
-BUILD_IMAGE ?= golang:1.10.4
-GOARCH := $(shell go env GOARCH)
-GOOS := $(shell go env GOOS)
-BUILD := $(shell git rev-parse HEAD)
-BUILD_PATH := release/${GOOS}_${GOARCH}
-
-LDFLAGS_DFGET = -ldflags "-X ${PKG}/cmd/dfget/app.Build=${BUILD}"
-LDFLAGS_DFDAEMON = -ldflags "-X ${PKG}/cmd/dfdaemon/app.Build=${BUILD}"
-
-ifeq ($(GOOS),darwin)
-    BUILD_PATH := release
-endif
+# You can assign 1 to USE_DOCKER so that you can build components of Dragonfly
+# with docker.
+USE_DOCKER?=0 # Default: build components in the local environment.
 
 clean:
 	@echo "Begin to clean redundant files."
-	@rm -rf ./release
+	@rm -rf ./bin
 .PHONY: clean
 
-check-client:
-	@echo "Begin to check client code formats."
-	./hack/check-client.sh
-.PHONY: check
-
-check-supernode:
-	@echo "Begin to check supernode code formats."
-	./hack/check-supernode.sh
-
 build-dirs:
-	@mkdir -p .go/src/$(PKG) .go/bin .cache
-	@mkdir -p $(BUILD_PATH)
+	@mkdir -p ./bin
 .PHONY: build-dirs
 
-build-dfget: build-dirs
-	@echo "Begin to build dfget."
-	@docker run                                                            \
-	    --rm                                                               \
-	    -ti                                                                \
-	    -u $$(id -u):$$(id -g)                                             \
-	    -v $$(pwd)/.go:/go                                                 \
-	    -v $$(pwd):/go/src/$(PKG)                                          \
-	    -v $$(pwd)/$(BUILD_PATH):/go/bin                                   \
-	    -v $$(pwd)/.cache:/.cache                                          \
-	    -e GOOS=$(GOOS)                                                    \
-	    -e GOARCH=$(GOARCH)                                                \
-	    -e CGO_ENABLED=0                                                   \
-	    -w /go/src/$(PKG)                                                  \
-	    $(BUILD_IMAGE)                                                     \
-	    go install -v -pkgdir /go/pkg $(LDFLAGS_DFGET) ./cmd/dfget
-.PHONY: build-dfget
+build: build-dirs
+	@echo "Begin to build dfget and dfdaemon and supernode."
+	./hack/build-supernode.sh 
+	./hack/build-client.sh
+.PHONY: build
 
-build-dfdaemon: build-dirs
-	@echo "Begin to build dfdaemon."
-	@docker run                                                            \
-	    --rm                                                               \
-	    -ti                                                                \
-	    -u $$(id -u):$$(id -g)                                             \
-	    -v $$(pwd)/.go:/go                                                 \
-	    -v $$(pwd):/go/src/$(PKG)                                          \
-	    -v $$(pwd)/$(BUILD_PATH):/go/bin                                   \
-	    -v $$(pwd)/.cache:/.cache                                          \
-	    -e GOOS=$(GOOS)                                                    \
-	    -e GOARCH=$(GOARCH)                                                \
-	    -e CGO_ENABLED=0                                                   \
-	    -w /go/src/$(PKG)                                                  \
-	    $(BUILD_IMAGE)                                                     \
-	    go install -v -pkgdir /go/pkg $(LDFLAGS_DFDAEMON) ./cmd/dfdaemon
-.PHONY: build-dfdaemon
+build-client: build-dirs
+	@echo "Begin to build dfget and dfdaemon."
+	./hack/build-client.sh
+.PHONY: build-client
 
-build-supernode:
-	./hack/compile-supernode.sh
-	./hack/build-supernode-image.sh
+build-supernode: build-dirs
+	@echo "Begin to build supernode."
+	./hack/build-supernode.sh 
 .PHONY: build-supernode
-
-unit-test: build-dirs
-	./hack/unit-test.sh
-.PHONY: unit-test
 
 install:
 	@echo "Begin to install dfget and dfdaemon."
@@ -101,14 +51,13 @@ uninstall:
 	./hack/install-client.sh uninstall
 .PHONY: uninstall
 
-build-client: check-client build-dfget build-dfdaemon
-.PHONY: build-client
+unit-test: build-dirs
+	./hack/unit-test.sh
+.PHONY: unit-test
 
-# Create for the tool of generate docs of the client.
-build-client-local: build-dirs
-	./hack/build-client-local.sh
-.PHONY: build-client-local
-
-# Use the technology of the container to build binary files, so that developers
-# don't need to worry about the inconsistency between the CI and the local environment.
-build: check-client build-dfget build-dfdaemon check-supernode build-supernode
+check:
+	@echo "Begin to check client code formats."
+	./hack/check-client.sh	
+	@echo "Begin to check supernode code formats."
+	./hack/check-supernode.sh
+.PHONY: check
