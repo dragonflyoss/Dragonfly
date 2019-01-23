@@ -1,5 +1,5 @@
 #!/bin/bash
-BIN_DIR="../release"
+BIN_DIR="../bin"
 DFDAEMON_BINARY_NAME=dfdaemon
 DFGET_BINARY_NAME=dfget
 
