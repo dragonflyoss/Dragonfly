@@ -73,7 +73,7 @@ func (pc *PowerClient) Run() (err error) {
 		}
 		defer resp.Body.Close()
 
-		buf := make([]byte, 256*1024)
+		buf := make([]byte, 0, 256*1024)
 		pieceCont := bytes.NewBuffer(buf)
 		reader := NewLimitReader(resp.Body, pc.cfg.LocalLimit, pieceMD5 != "")
 		total, err := pieceCont.ReadFrom(reader)
