@@ -140,6 +140,7 @@ func registerToSuperNode(cfg *config.Config, register regist.SupernodeRegister) 
 	if cfg.Pattern == config.PatternP2P {
 		if e := launchPeerServer(cfg); e != nil {
 			cfg.ClientLogger.Warnf("start peer server error:%v, change to CDN pattern", e)
+			cfg.Pattern = config.PatternCDN
 		}
 	}
 

@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 )
@@ -143,6 +144,7 @@ type ClientWriter struct {
 	pieceIndex  int
 	result      bool
 	acrossWrite bool
+	p2pPattern  bool
 	total       int
 
 	targetFinish chan struct{}
@@ -153,14 +155,16 @@ type ClientWriter struct {
 }
 
 func (cw *ClientWriter) init() (err error) {
-	if e := util.Link(cw.Cfg.RV.TempTarget, cw.clientFilePath); e != nil {
-		cw.Cfg.ClientLogger.Warn(e)
-		cw.acrossWrite = true
+	cw.p2pPattern = helper.IsP2P(cw.Cfg.Pattern)
+	if cw.p2pPattern {
+		if e := util.Link(cw.Cfg.RV.TempTarget, cw.clientFilePath); e != nil {
+			cw.Cfg.ClientLogger.Warn(e)
+			cw.acrossWrite = true
+		}
+
+		cw.serviceFile, _ = util.OpenFile(cw.serviceFilePath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0755)
+		util.Link(cw.serviceFilePath, cw.clientFilePath)
 	}
-
-	cw.serviceFile, _ = util.OpenFile(cw.serviceFilePath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0755)
-
-	util.Link(cw.serviceFilePath, cw.clientFilePath)
 
 	cw.result = true
 	cw.targetQueue = util.NewQueue(0)
@@ -188,7 +192,9 @@ func (cw *ClientWriter) Run() {
 			break
 		}
 		if ok && state == reset {
-			cw.serviceFile.Truncate(0)
+			if cw.serviceFile != nil {
+				cw.serviceFile.Truncate(0)
+			}
 			if cw.acrossWrite {
 				cw.targetQueue.Put(state)
 			}
@@ -208,7 +214,9 @@ func (cw *ClientWriter) Run() {
 			cw.result = false
 		}
 	}
-	cw.serviceFile.Close()
+	if cw.serviceFile != nil {
+		cw.serviceFile.Close()
+	}
 	cw.targetQueue.Put(last)
 	cw.targetWriter.Wait()
 	close(cw.finish)
@@ -222,6 +230,15 @@ func (cw *ClientWriter) Wait() {
 }
 
 func (cw *ClientWriter) write(piece *Piece, startTime time.Time) error {
+	if !cw.p2pPattern {
+		cw.targetQueue.Put(piece)
+		return nil
+	}
+
+	if cw.acrossWrite {
+		cw.targetQueue.Put(piece)
+	}
+
 	start := int64(piece.PieceNum) * (int64(piece.PieceSize) - 5)
 
 	cw.pieceIndex++
@@ -229,9 +246,6 @@ func (cw *ClientWriter) write(piece *Piece, startTime time.Time) error {
 	buf := bufio.NewWriterSize(cw.serviceFile, 4*1024*1024)
 	_, err := io.Copy(buf, piece.RawContent())
 	buf.Flush()
-	if cw.acrossWrite {
-		cw.targetQueue.Put(piece)
-	}
 
 	return err
 }
