@@ -137,6 +137,10 @@ public class Downloader implements Callable<Boolean> {
                         beforeTime = System.currentTimeMillis();
                         rateLimiter.acquire(bufSize, true);
                     }
+                    if (realFileLength == 0) {
+                        bb.flip();
+                        qu.put(ProtocolContent.buildPieceContent(bb, 0));
+                    }
 
                     String realMd5 = Hex.encodeHexString(fileM5.digest());
                     boolean isSuccess = true;

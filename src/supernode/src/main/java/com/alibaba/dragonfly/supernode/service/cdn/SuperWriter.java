@@ -84,9 +84,10 @@ public class SuperWriter implements Runnable {
 
                 int threadSize = CdnConstants.WRITER_THREAD_LIMIT;
                 Integer pieceSize = task.getPieceSize();
-                if (httpFileLen != null && httpFileLen > 0) {
+                if (httpFileLen != null && httpFileLen >= 0) {
                     int tmpSize = (int)((httpFileLen + pieceSize - 1) / pieceSize);
                     threadSize = tmpSize >= threadSize ? threadSize : tmpSize;
+                    threadSize = threadSize > 0 ? threadSize : 1;
                 }
                 downLatch = new CountDownLatch(threadSize);
                 AtomicInteger sucCount = new AtomicInteger(0);
