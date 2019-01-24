@@ -323,7 +323,7 @@ func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, clie
 
 	// get the temp path where the downloaded file exists.
 	var src string
-	if clientWriter.acrossWrite {
+	if clientWriter.acrossWrite || !helper.IsP2P(p2p.Cfg.Pattern) {
 		src = p2p.Cfg.RV.TempTarget
 	} else {
 		if _, err := os.Stat(p2p.clientFilePath); err != nil {
