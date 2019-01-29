@@ -20,6 +20,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"math/rand"
+	"os"
 	"path"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
@@ -39,7 +41,33 @@ func CreateConfig(writer io.Writer, workHome string) *config.Config {
 
 	logrus.StandardLogger().Out = writer
 	cfg.ClientLogger = logrus.StandardLogger()
+	cfg.ServerLogger = logrus.StandardLogger()
 	return cfg
+}
+
+// CreateTestFile create a temp file and write a string.
+func CreateTestFile(path string, content string) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	if content != "" {
+		f.WriteString(content)
+	}
+	return nil
+}
+
+// CreateRandomString create a random string of specified length.
+func CreateRandomString(cap int) string {
+	var letterBytes = "abcdefghijklmnopqrstuvwxyz"
+	var length = len(letterBytes)
+
+	b := make([]byte, cap)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(length)]
+	}
+	return string(b)
 }
 
 // ----------------------------------------------------------------------------

@@ -14,32 +14,34 @@
  * limitations under the License.
  */
 
-package downloader
+package util
 
 import (
 	"crypto/md5"
 	"fmt"
 	"hash"
 	"io"
-
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
 )
 
 // NewLimitReader create LimitReader
 // src: reader
 // rate: bytes/second
 func NewLimitReader(src io.Reader, rate int, calculateMd5 bool) *LimitReader {
+	limiter := NewRateLimiter(TransRate(rate), 2)
+	return NewLimitReaderWithLimiter(limiter, src, calculateMd5)
+}
+
+// NewLimitReaderWithLimiter create LimitReader with a ratelimiter.
+// src: reader
+// rate: bytes/second
+func NewLimitReaderWithLimiter(ratelimiter *RateLimiter, src io.Reader, calculateMd5 bool) *LimitReader {
 	var md5sum hash.Hash
 	if calculateMd5 {
 		md5sum = md5.New()
 	}
-	if rate <= 0 {
-		rate = 10 * 1024 * 1024
-	}
-	rate = (rate/1000 + 1) * 1000
 	return &LimitReader{
 		Src:     src,
-		Limiter: util.NewRateLimiter(int32(rate), 2),
+		Limiter: ratelimiter,
 		md5sum:  md5sum,
 	}
 }
@@ -47,7 +49,7 @@ func NewLimitReader(src io.Reader, rate int, calculateMd5 bool) *LimitReader {
 // LimitReader read stream with RateLimiter.
 type LimitReader struct {
 	Src     io.Reader
-	Limiter *util.RateLimiter
+	Limiter *RateLimiter
 	md5sum  hash.Hash
 }
 

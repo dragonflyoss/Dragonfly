@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	errType "github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/go-check/check"
@@ -37,7 +38,7 @@ import (
 
 var (
 	taskFileName    = "testFile"
-	tempFileCOntent = "hello File"
+	tempFileContent = "hello File"
 )
 
 func Test(t *testing.T) {
@@ -59,25 +60,10 @@ func init() {
 
 func (s *UploadUtilTestSuite) SetUpSuite(c *check.C) {
 	s.dataDir, _ = ioutil.TempDir("/tmp", "dfget-UploadUtilTestSuite-")
-	tc := &taskConfig{dataDir: s.dataDir}
-	s.servicePath = path.Join(s.dataDir, taskFileName+".service")
+	newTestPeerServer(s.dataDir)
+	initHelper(taskFileName, s.dataDir, tempFileContent)
 
-	createTestFile(s.servicePath)
-	syncTaskMap.Store(taskFileName, tc)
-
-	// run a server
-	s.ip = "127.0.0.1"
-	s.port = rand.Intn(1000) + 63000
-
-	s.host = fmt.Sprintf("%s:%d", s.ip, s.port)
-	s.ln, _ = net.Listen("tcp", s.host)
-	checkHandler := func(w http.ResponseWriter, r *http.Request) {
-		fileName := mux.Vars(r)["taskFileName"]
-		fmt.Fprintf(w, "%s@%s", fileName, version.DFGetVersion)
-	}
-	r := mux.NewRouter()
-	r.HandleFunc(config.LocalHTTPPathCheck+"{taskFileName:.*}", checkHandler).Methods("GET")
-	go http.Serve(s.ln, r)
+	s.startTestServer()
 }
 
 func (s *UploadUtilTestSuite) TearDownSuite(c *check.C) {
@@ -90,64 +76,71 @@ func (s *UploadUtilTestSuite) TearDownSuite(c *check.C) {
 	}
 }
 
-// TestGetTaskFile
 func (s *UploadUtilTestSuite) TestGetTaskFile(c *check.C) {
-	f, err := getTaskFile(taskFileName)
+	// normal test
+	f, err := p2p.getTaskFile(taskFileName, &uploadParam{})
 	defer f.Close()
-
 	// check get file correctly
 	c.Assert(err, check.IsNil)
 	c.Assert(f, check.NotNil)
-
 	// check read file correctly
 	result, err := ioutil.ReadAll(f)
 	c.Assert(err, check.IsNil)
-	c.Assert(string(result), check.Equals, tempFileCOntent)
+	c.Assert(string(result), check.Equals, tempFileContent)
+
+	// check file length test
+	params := &uploadParam{
+		start:    0,
+		pieceLen: 20,
+	}
+	f2, err := p2p.getTaskFile(taskFileName, params)
+	defer f2.Close()
+	c.Assert(errType.IsInsufficientFileLength(err), check.Equals, true)
 }
 
 func (s *UploadUtilTestSuite) TestTransFile(c *check.C) {
-	f, _ := getTaskFile(taskFileName)
+	f, _ := p2p.getTaskFile(taskFileName, &uploadParam{})
 	defer f.Close()
 
 	// normal test when start offset equals zero
 	rr := httptest.NewRecorder()
-	err := transFile(f, rr, 0, 10)
+	err := p2p.transFile(f, rr, 0, 10)
 	c.Check(err, check.IsNil)
-	c.Check(rr.Body.String(), check.Equals, tempFileCOntent)
+	c.Check(rr.Body.String(), check.Equals, tempFileContent)
 
 	// normal test when start offset not equals zero
 	rr = httptest.NewRecorder()
-	err = transFile(f, rr, 1, 5)
+	err = p2p.transFile(f, rr, 1, 5)
 	c.Check(err, check.IsNil)
-	c.Check(rr.Body.String(), check.Equals, tempFileCOntent[1:6])
+	c.Check(rr.Body.String(), check.Equals, tempFileContent[1:6])
 
 	// readLen more than file data test
 	rr = httptest.NewRecorder()
-	err = transFile(f, rr, 0, 20)
+	err = p2p.transFile(f, rr, 0, 20)
 	c.Check(err, check.IsNil)
-	c.Check(rr.Body.String(), check.Equals, tempFileCOntent)
+	c.Check(rr.Body.String(), check.Equals, tempFileContent)
 
 	// readLen less than file data test
 	rr = httptest.NewRecorder()
-	err = transFile(f, rr, 0, 5)
+	err = p2p.transFile(f, rr, 0, 5)
 	c.Check(err, check.IsNil)
-	c.Check(rr.Body.String(), check.Equals, tempFileCOntent[:5])
+	c.Check(rr.Body.String(), check.Equals, tempFileContent[:5])
 
 }
 
 func (s *UploadUtilTestSuite) TestCheckServer(c *check.C) {
 	// normal test
-	result, err := checkServer(s.ip, s.port, s.dataDir, taskFileName, 10*time.Millisecond)
+	result, err := checkServer(s.ip, s.port, s.dataDir, taskFileName, 0, 10*time.Millisecond)
 	c.Check(err, check.IsNil)
 	c.Check(result, check.Equals, taskFileName)
 
 	// timeout equals zero test
-	result, err = checkServer(s.ip, s.port, s.dataDir, taskFileName, 0)
+	result, err = checkServer(s.ip, s.port, s.dataDir, taskFileName, 0, 0)
 	c.Check(err, check.IsNil)
 	c.Check(result, check.Equals, taskFileName)
 
 	// error url test
-	result, err = checkServer(s.ip+"1", s.port, s.dataDir, taskFileName, 0)
+	result, err = checkServer(s.ip+"1", s.port, s.dataDir, taskFileName, 0, 0)
 	c.Check(err, check.NotNil)
 	c.Check(result, check.Equals, "")
 }
@@ -165,19 +158,18 @@ func (s *UploadUtilTestSuite) TestParseRange(c *check.C) {
 		{
 			name: "normalTest",
 			args: args{
-				rangeStr: "0-65575",
+				rangeStr: "bytes=0-65575",
 			},
 			want: &uploadParam{
 				start:    0,
 				pieceLen: 65576,
-				readLen:  65576,
 			},
 			wantErr: false,
 		},
 		{
 			name: "MultDashesTest",
 			args: args{
-				rangeStr: "0-65-575",
+				rangeStr: "bytes=0-65-575",
 			},
 			want:    nil,
 			wantErr: true,
@@ -185,7 +177,7 @@ func (s *UploadUtilTestSuite) TestParseRange(c *check.C) {
 		{
 			name: "NotIntTest",
 			args: args{
-				rangeStr: "0-hello",
+				rangeStr: "bytes=0-hello",
 			},
 			want:    nil,
 			wantErr: true,
@@ -193,7 +185,15 @@ func (s *UploadUtilTestSuite) TestParseRange(c *check.C) {
 		{
 			name: "EndLessStartTest",
 			args: args{
-				rangeStr: "65575-0",
+				rangeStr: "bytes=65575-0",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "NegativeStartTest",
+			args: args{
+				rangeStr: "bytes=-1-8",
 			},
 			want:    nil,
 			wantErr: true,
@@ -223,13 +223,17 @@ func (s *UploadUtilTestSuite) TestGetPort(c *check.C) {
 	c.Check(port, check.Equals, servicePort)
 }
 
-// createTestFile create a temp file and write a string.
-func createTestFile(path string) error {
-	f, err := os.Create(path)
-	if err != nil {
-		return err
+func (s *UploadUtilTestSuite) startTestServer() {
+	// run a server
+	s.ip = "127.0.0.1"
+	s.port = rand.Intn(1000) + 63000
+	s.host = fmt.Sprintf("%s:%d", s.ip, s.port)
+	s.ln, _ = net.Listen("tcp", s.host)
+	checkHandler := func(w http.ResponseWriter, r *http.Request) {
+		fileName := mux.Vars(r)["taskFileName"]
+		fmt.Fprintf(w, "%s@%s", fileName, version.DFGetVersion)
 	}
-	defer f.Close()
-	f.WriteString(tempFileCOntent)
-	return nil
+	r := mux.NewRouter()
+	r.HandleFunc(config.LocalHTTPPathCheck+"{taskFileName:.*}", checkHandler).Methods("GET")
+	go http.Serve(s.ln, r)
 }
