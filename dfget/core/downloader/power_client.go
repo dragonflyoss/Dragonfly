@@ -56,7 +56,8 @@ func (pc *PowerClient) Run() (err error) {
 
 	defer func() {
 		if err != nil {
-			pc.cfg.ClientLogger.Errorf("failed to read piece cont from dst:%s ,error:%s", err, dstIP)
+			pc.cfg.ClientLogger.Errorf("failed to read piece cont from dst:%s:%d, error:%s",
+				dstIP, peerPort, err)
 		}
 	}()
 
@@ -90,12 +91,10 @@ func (pc *PowerClient) Run() (err error) {
 	pieceCont := bytes.NewBuffer(buf)
 
 	total, err := pieceCont.ReadFrom(limitReader)
-	pc.cfg.ClientLogger.Infof("get pieceCont total: %d", total)
 	if err != nil {
 		return err
 	}
 
-	// TODO handle read timeout
 	readFinish := time.Now()
 
 	// Verify md5 code

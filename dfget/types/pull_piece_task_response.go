@@ -73,6 +73,11 @@ type PullPieceTaskResponseFinishData struct {
 	FileLength int64  `json:"fileLength"`
 }
 
+func (data *PullPieceTaskResponseFinishData) String() string {
+	b, _ := json.Marshal(data)
+	return string(b)
+}
+
 // PullPieceTaskResponseContinueData is the data when successfully pulling piece task
 // and the task is continuing.
 type PullPieceTaskResponseContinueData struct {
@@ -85,4 +90,9 @@ type PullPieceTaskResponseContinueData struct {
 	PeerPort  int    `json:"peerPort"`
 	Path      string `json:"path"`
 	DownLink  int    `json:"downLink"`
+}
+
+func (data *PullPieceTaskResponseContinueData) String() string {
+	b, _ := json.Marshal(data)
+	return string(b)
 }

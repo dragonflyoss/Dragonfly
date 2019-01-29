@@ -38,9 +38,11 @@ func (suite *DFGetUtilSuite) TestCreateLogger(c *check.C) {
 
 	var checkLogs = func(level logrus.Level, msg string) {
 		line, _, _ := r.ReadLine()
-		tmpStr := strings.Split(strings.Trim(string(line), "\n"), " ")
+		tmpStr := strings.Fields(strings.Trim(string(line), "\n"))
 		c.Assert(len(tmpStr) >= 6, check.Equals, true)
-		c.Assert(tmpStr[2], check.Equals, strings.ToUpper(level.String()))
+		c.Assert(len(tmpStr[2]), check.Equals, 4)
+		c.Assert(strings.Index(strings.ToUpper(level.String()), tmpStr[2]),
+			check.Equals, 0)
 		c.Assert(tmpStr[3], check.Equals, "sign:x")
 		c.Assert(strings.Join(tmpStr[5:], " "), check.Equals, msg)
 	}
