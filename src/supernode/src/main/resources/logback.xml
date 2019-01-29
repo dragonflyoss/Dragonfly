@@ -5,6 +5,7 @@
     <property name="LOG_HOME" value="${LOG_HOME:-${supernode.baseHome:-/home/admin/supernode}/logs}"/>
     <property name="LOG_LEVEL" value="${LOG_LEVEL:-INFO}"/>
     <property name="LOG_APPENDER" value="${LOG_APPENDER:-STDOUT}"/>
+    <property name="FILE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%10.10t] %-30.30logger{29} - %msg%n"/>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
