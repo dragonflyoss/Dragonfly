@@ -27,17 +27,18 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
+	errType "github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/dragonflyoss/Dragonfly/version"
 
-	"github.com/valyala/fasthttp"
+	"github.com/pkg/errors"
 )
 
 // uploader helper
 
 // getTaskFile find the taskFile and return the File object.
-func getTaskFile(taskFileName string) (*os.File, error) {
-	v, ok := syncTaskMap.Load(taskFileName)
+func (ps *peerServer) getTaskFile(taskFileName string, params *uploadParam) (*os.File, error) {
+	v, ok := ps.syncTaskMap.Load(taskFileName)
 	if !ok {
 		return nil, fmt.Errorf("failed to get taskPath: %s", taskFileName)
 	}
@@ -47,6 +48,17 @@ func getTaskFile(taskFileName string) (*os.File, error) {
 	}
 
 	taskPath := helper.GetServiceFile(taskFileName, tc.dataDir)
+
+	// Pre-check the length of the file as expected.
+	fileInfo, err := os.Stat(taskPath)
+	if err != nil {
+		return nil, err
+	}
+	fileSize := fileInfo.Size()
+	if fileSize-params.start < params.pieceLen {
+		return nil, errors.Wrapf(errType.ErrInsufficientFileLength, "file: %s", taskPath)
+	}
+
 	taskFile, err := os.Open(taskPath)
 	if err != nil {
 		return nil, fmt.Errorf("file:%s not found", taskPath)
@@ -55,7 +67,12 @@ func getTaskFile(taskFileName string) (*os.File, error) {
 }
 
 // parseRange validates the parameter range and parses it
-func parseRange(rangeStr string) (*uploadParam, error) {
+func parseRange(rangeVal string) (*uploadParam, error) {
+	if strings.Count(rangeVal, "=") != 1 {
+		return nil, fmt.Errorf("invaild range: %s", rangeVal)
+	}
+	rangeStr := strings.Split(rangeVal, "=")[1]
+
 	if strings.Count(rangeStr, "-") != 1 {
 		return nil, fmt.Errorf("invaild range: %s", rangeStr)
 	}
@@ -68,6 +85,7 @@ func parseRange(rangeStr string) (*uploadParam, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	if end <= start {
 		return nil, fmt.Errorf("The end of range: %d is less than or equal to the start: %d", end, start)
 	}
@@ -76,20 +94,18 @@ func parseRange(rangeStr string) (*uploadParam, error) {
 	return &uploadParam{
 		start:    start,
 		pieceLen: pieceLen,
-		readLen:  pieceLen,
 	}, nil
 }
 
 // transFile send the file to the remote.
-func transFile(f *os.File, w http.ResponseWriter, start, readLen int64) error {
+func (ps *peerServer) transFile(f *os.File, w http.ResponseWriter, start, pieceLen int64) error {
 	var total int64
 	f.Seek(start, 0)
 
-	remain := readLen
+	remain := pieceLen
 	bufSize := int64(256 * 1024)
 	buf := make([]byte, bufSize)
 
-	// TODO: limit the read rate.
 	for remain > 0 {
 		// read len(buf) of data
 		num, err := f.Read(buf)
@@ -99,19 +115,24 @@ func transFile(f *os.File, w http.ResponseWriter, start, readLen int64) error {
 
 		if num == 0 {
 			if total == 0 {
-				return fmt.Errorf("content is empty")
+				w.Write([]byte(""))
 			}
 			return nil
 		}
 
-		if int64(num) > remain {
-			w.Write(buf[:remain])
-		} else {
-			w.Write(buf[:num])
+		length := int64(num)
+		if length > remain {
+			length = remain
 		}
 
-		total += int64(num)
-		remain = readLen - total
+		if ps.rateLimiter != nil {
+			ps.rateLimiter.AcquireBlocking(int32(length))
+		}
+
+		w.Write(buf[:length])
+
+		total += length
+		remain = pieceLen - total
 
 		if num < len(buf) {
 			break
@@ -135,34 +156,24 @@ func FinishTask(ip string, port int, taskFileName, cid, taskID, node string) err
 }
 
 // checkServer check if the server is available。
-func checkServer(ip string, port int, dataDir string, taskFileName string,
+func checkServer(ip string, port int, dataDir, taskFileName string, totalLimit int,
 	timeout time.Duration) (string, error) {
+	// prepare the request body
 	url := fmt.Sprintf("http://%s:%d%s%s", ip, port, config.LocalHTTPPathCheck, taskFileName)
 	if timeout <= 0 {
 		timeout = util.DefaultTimeout
 	}
+	headers := make(map[string]string)
+	headers["dataDir"] = dataDir
+	headers["totalLimit"] = strconv.Itoa(totalLimit)
 
-	// construct request
-	req := fasthttp.AcquireRequest()
-	req.SetRequestURI(url)
-	req.Header.Add("dataDir", dataDir)
-	resp := fasthttp.AcquireResponse()
-
-	// send request
-	if err := fasthttp.DoTimeout(req, resp, timeout); err != nil {
+	// send the request
+	result, err := util.Do(url, headers, timeout)
+	if err != nil {
 		return "", err
 	}
 
-	// get resp result
-	statusCode := resp.StatusCode()
-	if statusCode != config.Success {
-		return "", fmt.Errorf("unexpected status code: %d", statusCode)
-	}
-
-	bodyBytes := resp.Body()
-
 	// parse resp result
-	result := string(bodyBytes[:])
 	resultSuffix := "@" + version.DFGetVersion
 	if strings.HasSuffix(result, resultSuffix) {
 		return result[:len(result)-len(resultSuffix)], nil
@@ -171,8 +182,8 @@ func checkServer(ip string, port int, dataDir string, taskFileName string,
 }
 
 func pingServer(ip string, port int) bool {
-	url := fmt.Sprintf("http://%s:%d/%s", ip, port, config.LocalHTTPPing)
-	code, _, _ := fasthttp.GetTimeout(nil, url, util.DefaultTimeout)
+	url := fmt.Sprintf("http://%s:%d%s", ip, port, config.LocalHTTPPing)
+	code, _, _ := util.Get(url, util.DefaultTimeout)
 	return code == http.StatusOK
 }
 

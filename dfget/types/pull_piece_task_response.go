@@ -78,7 +78,7 @@ type PullPieceTaskResponseFinishData struct {
 type PullPieceTaskResponseContinueData struct {
 	Range     string `json:"range"`
 	PieceNum  int    `json:"pieceNum"`
-	PieceSize int    `json:"pieceSize"`
+	PieceSize int32  `json:"pieceSize"`
 	PieceMd5  string `json:"pieceMd5"`
 	Cid       string `json:"cid"`
 	PeerIP    string `json:"peerIp"`

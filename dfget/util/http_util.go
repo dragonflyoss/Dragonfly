@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"net/http"
 	"reflect"
 	"strings"
 	"time"
@@ -112,6 +113,42 @@ func PostJSON(url string, body interface{}, timeout time.Duration) (int, []byte,
 // When timeout <= 0, it will block until receiving response from server.
 func Get(url string, timeout time.Duration) (int, []byte, error) {
 	return DefaultHTTPClient.Get(url, timeout)
+}
+
+// Do performs the given http request and fills the given http response.
+// When timeout <= 0, it will block until receiving response from server.
+func Do(url string, headers map[string]string, timeout time.Duration) (string, error) {
+	// init request and response
+	req := fasthttp.AcquireRequest()
+	defer fasthttp.ReleaseRequest(req)
+
+	req.SetRequestURI(url)
+	for k, v := range headers {
+		req.Header.Add(k, v)
+	}
+
+	resp := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseResponse(resp)
+
+	// send request
+	var err error
+	if timeout > 0 {
+		err = fasthttp.DoTimeout(req, resp, timeout)
+	}
+	err = fasthttp.Do(req, resp)
+	if err != nil {
+		return "", err
+	}
+
+	// get resp status code
+	statusCode := resp.StatusCode()
+	if statusCode != http.StatusOK {
+		return "", fmt.Errorf("unexpected status code: %d", statusCode)
+	}
+
+	result := string(resp.Body())
+
+	return result, nil
 }
 
 // HTTPStatusOk reports whether the http response code is 200.
