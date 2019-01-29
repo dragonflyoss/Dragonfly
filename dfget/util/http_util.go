@@ -151,6 +151,20 @@ func Do(url string, headers map[string]string, timeout time.Duration) (string, e
 	return result, nil
 }
 
+// HTTPGetWithHeaders send an HTTP GET request with headers.
+func HTTPGetWithHeaders(url string, headers map[string]string) (*http.Response, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range headers {
+		req.Header.Add(k, v)
+	}
+
+	return http.DefaultClient.Do(req)
+}
+
 // HTTPStatusOk reports whether the http response code is 200.
 func HTTPStatusOk(code int) bool {
 	return fasthttp.StatusOK == code

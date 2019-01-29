@@ -22,11 +22,11 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
@@ -71,13 +71,15 @@ func (pc *PowerClient) Run() (err error) {
 	}
 
 	// send download request
-	url := fmt.Sprintf("http://%s:%d%s", dstIP, peerPort, pc.pieceTask.Path)
-	headers := make(map[string]string)
-	headers["Range"] = "bytes=" + pc.pieceTask.Range
-	headers["pieceNum"] = strconv.Itoa(pc.pieceTask.PieceNum)
-	headers["pieceSize"] = fmt.Sprint(pc.pieceTask.PieceSize)
+	req := &api.DownloadRequest{
+		Path:       pc.pieceTask.Path,
+		PieceRange: pc.pieceTask.Range,
+		PieceNum:   pc.pieceTask.PieceNum,
+		PieceSize:  pc.pieceTask.PieceSize,
+	}
+
 	startTime := time.Now()
-	resp, err := httpGetWithHeaders(url, headers)
+	resp, err := downloadAPI.Download(dstIP, peerPort, req)
 	if err != nil {
 		return err
 	}
