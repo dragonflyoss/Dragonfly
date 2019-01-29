@@ -87,6 +87,25 @@ const (
 	DefaultClientQueueSize = 6
 )
 
+/* http headers */
+const (
+	StrRange         = "Range"
+	StrContentLength = "Content-Length"
+	StrContentType   = "Content-Type"
+
+	StrTaskFileName = "taskFileName"
+	StrClientID     = "cid"
+	StrTaskID       = "taskID"
+	StrSuperNode    = "superNode"
+	StrRateLimit    = "rateLimit"
+	StrPieceNum     = "pieceNum"
+	StrPieceSize    = "pieceSize"
+	StrDataDir      = "dataDir"
+	StrTotalLimit   = "totalLimit"
+
+	StrBytes = "bytes"
+)
+
 /* others */
 const (
 	DefaultTimestampFormat = "2006-01-02 15:04:05"

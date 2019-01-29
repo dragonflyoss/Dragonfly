@@ -18,7 +18,6 @@ package downloader
 
 import (
 	"bytes"
-	"fmt"
 	"math/rand"
 	"os"
 	"strconv"
@@ -35,6 +34,11 @@ import (
 const (
 	reset = "reset"
 	last  = "last"
+)
+
+var (
+	uploaderAPI = api.NewUploaderAPI(util.DefaultTimeout)
+	downloadAPI = api.NewDownloadAPI()
 )
 
 // P2PDownloader is one implementation of Downloader that uses p2p pattern
@@ -226,10 +230,11 @@ func (p2p *P2PDownloader) getPullRate(data *types.PullPieceTaskResponseContinueD
 	// Calculate the download speed limit
 	// that the current download task can be assigned
 	// by the uploader server.
-	url := fmt.Sprintf("http://%s:%d%s%s", p2p.Cfg.RV.LocalIP, p2p.Cfg.RV.PeerPort, config.LocalHTTPPathRate, p2p.taskFileName)
-	headers := make(map[string]string)
-	headers["rateLimit"] = strconv.Itoa(localRate)
-	resp, err := util.Do(url, headers, util.DefaultTimeout)
+	req := &api.ParseRateRequest{
+		RateLimit:    localRate,
+		TaskFileName: p2p.taskFileName,
+	}
+	resp, err := uploaderAPI.ParseRate(p2p.Cfg.RV.LocalIP, p2p.Cfg.RV.PeerPort, req)
 	if err != nil {
 		p2p.Cfg.ClientLogger.Errorf("failed to pullRate: %v", err)
 		p2p.rateLimiter.SetRate(util.TransRate(localRate))
