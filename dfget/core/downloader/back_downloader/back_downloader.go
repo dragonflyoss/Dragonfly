@@ -25,6 +25,8 @@ import (
 	"path"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/downloader"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 )
 
@@ -41,6 +43,28 @@ type BackDownloader struct {
 
 	tempFileName string
 	cleaned      bool
+}
+
+// NewBackDownloader create BackDownloader
+func NewBackDownloader(cfg *config.Config, result *regist.RegisterResult) *BackDownloader {
+	var (
+		taskID string
+		node   string
+	)
+	if result != nil {
+		taskID = result.TaskID
+		node = result.Node
+	}
+	return &BackDownloader{
+		Cfg:     cfg,
+		URL:     cfg.URL,
+		Target:  cfg.RV.RealTarget,
+		Md5:     cfg.Md5,
+		TaskID:  taskID,
+		Node:    node,
+		Total:   0,
+		Success: false,
+	}
 }
 
 // Run starts to download the file.
@@ -70,7 +94,7 @@ func (bd *BackDownloader) Run() error {
 	bd.tempFileName = f.Name()
 	defer f.Close()
 
-	if resp, err = util.HTTPGetWithHeaders(bd.URL, convertHeaders(bd.Cfg.Header)); err != nil {
+	if resp, err = util.HTTPGetWithHeaders(bd.URL, downloader.ConvertHeaders(bd.Cfg.Header)); err != nil {
 		return err
 	}
 	defer resp.Body.Close()
@@ -83,7 +107,7 @@ func (bd *BackDownloader) Run() error {
 
 	realMd5 := reader.Md5()
 	if bd.Md5 == "" || bd.Md5 == realMd5 {
-		err = moveFile(bd.tempFileName, bd.Target, "", bd.Cfg.ClientLogger)
+		err = downloader.MoveFile(bd.tempFileName, bd.Target, "", bd.Cfg.ClientLogger)
 	} else {
 		err = fmt.Errorf("md5 not match, expected:%s real:%s", bd.Md5, realMd5)
 	}

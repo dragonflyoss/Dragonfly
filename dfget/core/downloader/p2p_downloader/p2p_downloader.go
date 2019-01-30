@@ -25,6 +25,8 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/downloader"
+	backDown "github.com/dragonflyoss/Dragonfly/dfget/core/downloader/back_downloader"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
@@ -70,6 +72,21 @@ type P2PDownloader struct {
 
 	rateLimiter  *util.RateLimiter
 	pullRateTime time.Time
+}
+
+// NewP2PDownloader create P2PDownloader
+func NewP2PDownloader(cfg *config.Config,
+	api api.SupernodeAPI,
+	register regist.SupernodeRegister,
+	result *regist.RegisterResult) *P2PDownloader {
+	p2p := &P2PDownloader{
+		Cfg:            cfg,
+		API:            api,
+		Register:       register,
+		RegisterResult: result,
+	}
+	p2p.init()
+	return p2p
 }
 
 func (p2p *P2PDownloader) init() {
@@ -143,8 +160,10 @@ func (p2p *P2PDownloader) Run() error {
 			}
 		}
 
+		// NOTE: Should we call it directly here？
+		// Maybe we should return an error and let the caller decide whether to call it.
 		if p2p.Cfg.BackSourceReason != 0 {
-			backDownloader := NewBackDownloader(p2p.Cfg, p2p.RegisterResult)
+			backDownloader := backDown.NewBackDownloader(p2p.Cfg, p2p.RegisterResult)
 			return backDownloader.Run()
 		}
 	}
@@ -383,7 +402,7 @@ func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, clie
 	}
 
 	// move file to the target file path.
-	if err := moveFile(src, p2p.targetFile, p2p.Cfg.Md5, p2p.Cfg.ClientLogger); err != nil {
+	if err := downloader.MoveFile(src, p2p.targetFile, p2p.Cfg.Md5, p2p.Cfg.ClientLogger); err != nil {
 		return
 	}
 	p2p.Cfg.ClientLogger.Infof("download successfully from dragonfly")
