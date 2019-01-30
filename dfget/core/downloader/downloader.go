@@ -26,9 +26,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/dfget/config"
-	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
-	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/sirupsen/logrus"
 )
@@ -37,43 +34,6 @@ import (
 type Downloader interface {
 	Run() error
 	Cleanup()
-}
-
-// NewBackDownloader create BackDownloader
-func NewBackDownloader(cfg *config.Config, result *regist.RegisterResult) Downloader {
-	var (
-		taskID string
-		node   string
-	)
-	if result != nil {
-		taskID = result.TaskID
-		node = result.Node
-	}
-	return &BackDownloader{
-		Cfg:     cfg,
-		URL:     cfg.URL,
-		Target:  cfg.RV.RealTarget,
-		Md5:     cfg.Md5,
-		TaskID:  taskID,
-		Node:    node,
-		Total:   0,
-		Success: false,
-	}
-}
-
-// NewP2PDownloader create P2PDownloader
-func NewP2PDownloader(cfg *config.Config,
-	api api.SupernodeAPI,
-	register regist.SupernodeRegister,
-	result *regist.RegisterResult) Downloader {
-	p2p := &P2PDownloader{
-		Cfg:            cfg,
-		API:            api,
-		Register:       register,
-		RegisterResult: result,
-	}
-	p2p.init()
-	return p2p
 }
 
 // DoDownloadTimeout downloads the file and waits for response during
@@ -98,7 +58,8 @@ func DoDownloadTimeout(downloader Downloader, timeout time.Duration) error {
 	return err
 }
 
-func convertHeaders(headers []string) map[string]string {
+// ConvertHeaders converts headers from array type to map type for http request.
+func ConvertHeaders(headers []string) map[string]string {
 	if len(headers) == 0 {
 		return nil
 	}
@@ -121,7 +82,9 @@ func convertHeaders(headers []string) map[string]string {
 	return hm
 }
 
-func moveFile(src string, dst string, expectMd5 string, log *logrus.Logger) error {
+// MoveFile moves a file from src to dst and
+// checks if the MD5 code is expected before that.
+func MoveFile(src string, dst string, expectMd5 string, log *logrus.Logger) error {
 	start := time.Now()
 	if expectMd5 != "" {
 		realMd5 := util.Md5Sum(src)

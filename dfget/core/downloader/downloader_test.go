@@ -17,11 +17,9 @@
 package downloader
 
 import (
-	"os"
 	"testing"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/go-check/check"
 )
 
@@ -64,7 +62,7 @@ func (s *DownloaderTestSuite) TestConvertHeaders(c *check.C) {
 		},
 	}
 	for _, v := range cases {
-		headers := convertHeaders(v.h)
+		headers := ConvertHeaders(v.h)
 		c.Assert(headers, check.DeepEquals, v.e)
 	}
 }
@@ -82,14 +80,4 @@ func (md *MockDownloader) Run() error {
 }
 
 func (md *MockDownloader) Cleanup() {
-}
-
-func createTestFile(name string) string {
-	f, err := os.Create(name)
-	if err != nil {
-		return ""
-	}
-	defer f.Close()
-	f.WriteString("test downloader")
-	return util.Md5Sum(f.Name())
 }
