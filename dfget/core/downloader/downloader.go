@@ -23,7 +23,6 @@ package downloader
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
 	"time"
 
@@ -137,17 +136,4 @@ func moveFile(src string, dst string, expectMd5 string, log *logrus.Logger) erro
 	log.Infof("move src:%s to dst:%s result:%t cost:%.3f",
 		src, dst, err == nil, time.Since(start).Seconds())
 	return err
-}
-
-func httpGetWithHeaders(url string, headers map[string]string) (*http.Response, error) {
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	for k, v := range headers {
-		req.Header.Add(k, v)
-	}
-
-	return http.DefaultClient.Do(req)
 }

@@ -50,7 +50,10 @@ var (
 	p2p *peerServer
 )
 
-var aliveQueue = util.NewQueue(0)
+var (
+	aliveQueue  = util.NewQueue(0)
+	uploaderAPI = api.NewUploaderAPI(util.DefaultTimeout)
+)
 
 // TODO: Move this part out of the uploader
 
@@ -186,7 +189,7 @@ func launch(cfg *config.Config) error {
 			if strings.Index(err.Error(), "address already in use") < 0 {
 				// start failed or shutdown
 				return err
-			} else if pingServer(p2p.host, p2p.port) {
+			} else if uploaderAPI.PingServer(p2p.host, p2p.port) {
 				// a peer server is already existing
 				return nil
 			}
@@ -212,7 +215,7 @@ func waitForStartup(result chan error, cfg *config.Config) error {
 		if p2p == nil {
 			return fmt.Errorf("initialize peer server error")
 		}
-		if !pingServer(p2p.host, p2p.port) {
+		if !uploaderAPI.PingServer(p2p.host, p2p.port) {
 			return fmt.Errorf("cann't ping port:%d", p2p.port)
 		}
 		return nil
@@ -386,7 +389,7 @@ func (ps *peerServer) uploadHandler(w http.ResponseWriter, r *http.Request) {
 	aliveQueue.Put(true)
 	// Step1: parse param
 	taskFileName := mux.Vars(r)["taskFileName"]
-	rangeStr := r.Header.Get("Range")
+	rangeStr := r.Header.Get(config.StrRange)
 	params, err := parseRange(rangeStr)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -406,7 +409,7 @@ func (ps *peerServer) uploadHandler(w http.ResponseWriter, r *http.Request) {
 	defer f.Close()
 
 	// Step3: write header
-	w.Header().Set("Content-Length", strconv.FormatInt(params.pieceLen, 10))
+	w.Header().Set(config.StrContentLength, strconv.FormatInt(params.pieceLen, 10))
 	sendSuccess(w)
 
 	// Step4: tans task file
@@ -420,7 +423,7 @@ func (ps *peerServer) parseRateHandler(w http.ResponseWriter, r *http.Request) {
 
 	// get params from request
 	taskFileName := mux.Vars(r)["taskFileName"]
-	rateLimit := r.Header.Get("rateLimit")
+	rateLimit := r.Header.Get(config.StrRateLimit)
 	clientRate, err := strconv.Atoi(rateLimit)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -464,12 +467,13 @@ func (ps *peerServer) parseRateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // checkHandler use to check the server status.
+// TODO: Disassemble this function for too many things done.
 func (ps *peerServer) checkHandler(w http.ResponseWriter, r *http.Request) {
 	aliveQueue.Put(true)
 	sendSuccess(w)
 
 	// handle totalLimit
-	totalLimit, err := strconv.Atoi(r.Header.Get("totalLimit"))
+	totalLimit, err := strconv.Atoi(r.Header.Get(config.StrTotalLimit))
 	if err == nil && totalLimit > 0 {
 		if ps.rateLimiter == nil {
 			ps.rateLimiter = util.NewRateLimiter(int32(totalLimit), 2)
@@ -482,7 +486,7 @@ func (ps *peerServer) checkHandler(w http.ResponseWriter, r *http.Request) {
 
 	// get parameters
 	taskFileName := mux.Vars(r)["taskFileName"]
-	dataDir := r.Header.Get("dataDir")
+	dataDir := r.Header.Get(config.StrDataDir)
 
 	param := &taskConfig{
 		dataDir: dataDir,
@@ -499,10 +503,10 @@ func (ps *peerServer) oneFinishHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	taskFileName := r.FormValue("taskFileName")
-	taskID := r.FormValue("taskId")
-	cid := r.FormValue("cid")
-	superNode := r.FormValue("superNode")
+	taskFileName := r.FormValue(config.StrTaskFileName)
+	taskID := r.FormValue(config.StrTaskID)
+	cid := r.FormValue(config.StrClientID)
+	superNode := r.FormValue(config.StrSuperNode)
 	if v, ok := ps.syncTaskMap.Load(taskFileName); ok {
 		task := v.(*taskConfig)
 		task.taskID = taskID
@@ -527,6 +531,6 @@ func sendSuccess(w http.ResponseWriter) {
 }
 
 func sendHeader(w http.ResponseWriter, code int) {
-	w.Header().Set("Content-type", ctype)
+	w.Header().Set(config.StrContentType, ctype)
 	w.WriteHeader(code)
 }
