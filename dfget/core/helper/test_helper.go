@@ -26,6 +26,7 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
+	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/sirupsen/logrus"
 )
 
@@ -47,15 +48,33 @@ func CreateConfig(writer io.Writer, workHome string) *config.Config {
 
 // CreateTestFile create a temp file and write a string.
 func CreateTestFile(path string, content string) error {
-	f, err := os.Create(path)
+	f, err := createFile(path, content)
+	if f != nil {
+		f.Close()
+	}
+	return err
+}
+
+// CreateTestFileWithMD5 create a temp file and write a string
+// and return the md5 of the file.
+func CreateTestFileWithMD5(path string, content string) string {
+	f, err := createFile(path, content)
 	if err != nil {
-		return err
+		return ""
 	}
 	defer f.Close()
+	return util.Md5Sum(f.Name())
+}
+
+func createFile(path string, content string) (*os.File, error) {
+	f, err := os.Create(path)
+	if err != nil {
+		return nil, err
+	}
 	if content != "" {
 		f.WriteString(content)
 	}
-	return nil
+	return f, nil
 }
 
 // CreateRandomString create a random string of specified length.

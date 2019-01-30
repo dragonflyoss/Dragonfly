@@ -58,7 +58,7 @@ func (s *BackDownloaderTestSuite) TearDownSuite(c *check.C) {
 }
 
 func (s *BackDownloaderTestSuite) TestBackDownloader_Run(c *check.C) {
-	testFileMd5 := createTestFile(path.Join(s.workHome, "download.test"))
+	testFileMd5 := helper.CreateTestFileWithMD5(path.Join(s.workHome, "download.test"), "test downloader")
 	dst := path.Join(s.workHome, "back.test")
 
 	cfg := helper.CreateConfig(nil, s.workHome)
