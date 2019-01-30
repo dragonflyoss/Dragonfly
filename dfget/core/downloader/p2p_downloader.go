@@ -64,7 +64,8 @@ type P2PDownloader struct {
 	pieceSet map[string]bool
 	total    int64
 
-	rateLimiter *util.RateLimiter
+	rateLimiter  *util.RateLimiter
+	pullRateTime time.Time
 }
 
 func (p2p *P2PDownloader) init() {
@@ -87,6 +88,7 @@ func (p2p *P2PDownloader) init() {
 	p2p.pieceSet = make(map[string]bool)
 
 	p2p.rateLimiter = util.NewRateLimiter(int32(p2p.Cfg.LocalLimit), 2)
+	p2p.pullRateTime = time.Now().Add(-3 * time.Second)
 }
 
 // Run starts to download the file.
@@ -110,7 +112,7 @@ func (p2p *P2PDownloader) Run() error {
 		if !goNext {
 			continue
 		}
-		p2p.Cfg.ClientLogger.Infof("P2P download:%v", lastItem)
+		p2p.Cfg.ClientLogger.Infof("downloading piece:%v", lastItem)
 
 		curItem := *lastItem
 		curItem.Content = &bytes.Buffer{}
@@ -125,13 +127,13 @@ func (p2p *P2PDownloader) Run() error {
 				p2p.finishTask(response, clientWriter)
 				return nil
 			} else {
-				p2p.Cfg.ClientLogger.Warnf("Request piece result:%v", response)
+				p2p.Cfg.ClientLogger.Warnf("request piece result:%v", response)
 				if code == config.TaskCodeSourceError {
 					p2p.Cfg.BackSourceReason = config.BackSourceReasonSourceError
 				}
 			}
 		} else {
-			p2p.Cfg.ClientLogger.Errorf("P2P download fail: %v", err)
+			p2p.Cfg.ClientLogger.Errorf("download piece fail: %v", err)
 			if p2p.Cfg.BackSourceReason == 0 {
 				p2p.Cfg.BackSourceReason = config.BackSourceReasonDownloadError
 			}
@@ -175,10 +177,10 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 
 	for {
 		if res, err = p2p.API.PullPieceTask(item.SuperNode, req); err != nil {
-			p2p.Cfg.ClientLogger.Errorf("Pull piece task error: %v", err)
+			p2p.Cfg.ClientLogger.Errorf("pull piece task error: %v", err)
 		} else if res.Code == config.TaskCodeWait {
 			sleepTime := time.Duration(rand.Intn(1400)+600) * time.Millisecond
-			p2p.Cfg.ClientLogger.Infof("Pull piece task result:%s and sleep %.3fs",
+			p2p.Cfg.ClientLogger.Infof("pull piece task result:%s and sleep %.3fs",
 				res, sleepTime.Seconds())
 			time.Sleep(sleepTime)
 			continue
@@ -190,7 +192,7 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 		res.Code != config.TaskCodeFinish &&
 		res.Code != config.TaskCodeLimited &&
 		res.Code != config.Success) {
-		p2p.Cfg.ClientLogger.Errorf("Pull piece task fail:%v and will migrate", res)
+		p2p.Cfg.ClientLogger.Errorf("pull piece task fail:%v and will migrate", res)
 
 		var registerRes *regist.RegisterResult
 		if registerRes, err = p2p.Register.Register(p2p.Cfg.RV.PeerPort); err != nil {
@@ -209,8 +211,12 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 
 // getPullRate get download rate limit dynamically.
 func (p2p *P2PDownloader) getPullRate(data *types.PullPieceTaskResponseContinueData) {
-	var localRate int
+	if time.Since(p2p.pullRateTime).Seconds() < 3 {
+		return
+	}
+	p2p.pullRateTime = time.Now()
 
+	var localRate int
 	if p2p.Cfg.LocalLimit > 0 {
 		localRate = p2p.Cfg.LocalLimit
 	} else {
@@ -220,7 +226,6 @@ func (p2p *P2PDownloader) getPullRate(data *types.PullPieceTaskResponseContinueD
 	// Calculate the download speed limit
 	// that the current download task can be assigned
 	// by the uploader server.
-	// TODO: Reduce the frequency of requests.
 	url := fmt.Sprintf("http://%s:%d%s%s", p2p.Cfg.RV.LocalIP, p2p.Cfg.RV.PeerPort, config.LocalHTTPPathRate, p2p.taskFileName)
 	headers := make(map[string]string)
 	headers["rateLimit"] = strconv.Itoa(localRate)
@@ -270,7 +275,7 @@ func (p2p *P2PDownloader) getItem(latestItem *Piece) (bool, *Piece) {
 		if item.Range != "" {
 			v, ok := p2p.pieceSet[item.Range]
 			if !ok {
-				p2p.Cfg.ClientLogger.Warnf("PieceRange:%s is neither running nor success", item.Range)
+				p2p.Cfg.ClientLogger.Warnf("pieceRange:%s is neither running nor success", item.Range)
 				return false, latestItem
 			}
 			if !v && (item.Result == config.ResultSemiSuc ||
@@ -283,7 +288,7 @@ func (p2p *P2PDownloader) getItem(latestItem *Piece) (bool, *Piece) {
 		}
 		latestItem = item
 	} else {
-		p2p.Cfg.ClientLogger.Warnf("Get item timeout(2s) from queue.")
+		p2p.Cfg.ClientLogger.Warnf("get item timeout(2s) from queue.")
 		needMerge = false
 	}
 	if util.IsNil(latestItem) {
@@ -309,17 +314,18 @@ func (p2p *P2PDownloader) getItem(latestItem *Piece) (bool, *Piece) {
 func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 	item *Piece) {
 	var (
-		hasTask  = false
-		sucCount = 0
+		hasTask         = false
+		alreadyDownload []string
 	)
 	p2p.refresh(item)
 
 	data := response.ContinueData()
+	p2p.Cfg.ClientLogger.Debugf("pieces to be processed:%v", data)
 	for _, pieceTask := range data {
 		pieceRange := pieceTask.Range
 		v, ok := p2p.pieceSet[pieceRange]
 		if ok && v {
-			sucCount++
+			alreadyDownload = append(alreadyDownload, pieceRange)
 			p2p.queue.Put(NewPiece(p2p.taskID,
 				p2p.node,
 				pieceTask.Cid,
@@ -336,20 +342,21 @@ func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 		}
 	}
 	if !hasTask {
-		p2p.Cfg.ClientLogger.Warnf("Has not available pieceTask,maybe resource lack")
+		p2p.Cfg.ClientLogger.Warnf("has not available pieceTask, maybe resource lack")
 	}
-	if sucCount > 0 {
-		p2p.Cfg.ClientLogger.Warnf("Already suc item count:%d after a request super", sucCount)
+	if len(alreadyDownload) > 0 {
+		p2p.Cfg.ClientLogger.Warnf("already downloaded pieces:%v", alreadyDownload)
 	}
 }
 
 func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, clientWriter *ClientWriter) {
 	// wait client writer finished
-	p2p.Cfg.ClientLogger.Infof("Remaining writed piece count:%d", p2p.clientQueue.Len())
+	p2p.Cfg.ClientLogger.Infof("remaining piece to be written count:%d", p2p.clientQueue.Len())
 	p2p.clientQueue.Put(last)
-	waitStart := time.Now().Unix()
+	waitStart := time.Now()
 	clientWriter.Wait()
-	p2p.Cfg.ClientLogger.Infof("Wait client writer finish cost %d,main qu size:%d,client qu size:%d", time.Now().Unix()-waitStart, p2p.queue.Len(), p2p.clientQueue.Len())
+	p2p.Cfg.ClientLogger.Infof("wait client writer finish cost:%.3f,main qu size:%d,client qu size:%d",
+		time.Since(waitStart).Seconds(), p2p.queue.Len(), p2p.clientQueue.Len())
 
 	if p2p.Cfg.BackSourceReason > 0 {
 		return
@@ -361,9 +368,9 @@ func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, clie
 		src = p2p.Cfg.RV.TempTarget
 	} else {
 		if _, err := os.Stat(p2p.clientFilePath); err != nil {
-			p2p.Cfg.ClientLogger.Infof("Client file path:%s not found", p2p.clientFilePath)
+			p2p.Cfg.ClientLogger.Warnf("client file path:%s not found", p2p.clientFilePath)
 			if e := util.Link(p2p.serviceFilePath, p2p.clientFilePath); e != nil {
-				p2p.Cfg.ClientLogger.Warnln("Link failed, instead of use copy")
+				p2p.Cfg.ClientLogger.Warnln("hard link failed, instead of use copy")
 				util.CopyFile(p2p.serviceFilePath, p2p.clientFilePath)
 			}
 		}
@@ -374,7 +381,7 @@ func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, clie
 	if err := moveFile(src, p2p.targetFile, p2p.Cfg.Md5, p2p.Cfg.ClientLogger); err != nil {
 		return
 	}
-	p2p.Cfg.ClientLogger.Infof("Download successfully from dragonfly")
+	p2p.Cfg.ClientLogger.Infof("download successfully from dragonfly")
 }
 
 func (p2p *P2PDownloader) refresh(item *Piece) {
