@@ -19,6 +19,7 @@ package types
 import (
 	"math/rand"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -88,6 +89,8 @@ func (suite *TypesSuite) TestPullPieceTaskResponse_FinishData(c *check.C) {
 	res.Data = []byte("{\"fileLength\":1}")
 	c.Assert(res.FinishData(), check.NotNil)
 	c.Assert(res.FinishData().FileLength, check.Equals, int64(1))
+	c.Assert(strings.Index(res.FinishData().String(), "\"fileLength\":1") > 0,
+		check.Equals, true)
 }
 
 func (suite *TypesSuite) TestPullPieceTaskResponse_ContinueData(c *check.C) {
@@ -105,4 +108,6 @@ func (suite *TypesSuite) TestPullPieceTaskResponse_ContinueData(c *check.C) {
 	c.Assert(res.ContinueData(), check.NotNil)
 	c.Assert(len(res.ContinueData()), check.Equals, 1)
 	c.Assert(res.ContinueData()[0].PieceNum, check.Equals, 1)
+	c.Assert(strings.Index(res.ContinueData()[0].String(), "\"pieceNum\":1") > 0,
+		check.Equals, true)
 }

@@ -120,7 +120,9 @@ func (f *DragonflyFormatter) Format(entry *log.Entry) ([]byte, error) {
 		timestampFormat = DefaultLogTimeFormat
 	}
 	f.appendValue(b, entry.Time.Format(timestampFormat), true)
-	f.appendValue(b, strings.ToUpper(entry.Level.String()), true)
+	f.appendValue(b,
+		fmt.Sprintf("%-4.4s", strings.ToUpper(entry.Level.String())),
+		true)
 	if !IsEmptyStr(f.Sign) {
 		fmt.Fprintf(b, "sign:%s ", f.Sign)
 	}
