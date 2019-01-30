@@ -26,9 +26,9 @@ import (
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	errType "github.com/dragonflyoss/Dragonfly/dfget/errors"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/pkg/errors"
@@ -145,30 +145,29 @@ func (ps *peerServer) transFile(f *os.File, w http.ResponseWriter, start, pieceL
 
 // FinishTask report a finished task to peer server.
 func FinishTask(ip string, port int, taskFileName, cid, taskID, node string) error {
-	url := fmt.Sprintf("http://%s:%d%sfinish?taskFileName=%s&cid=%s&taskId=%s&node=%s",
-		ip, port, config.LocalHTTPPathClient,
-		taskFileName, taskID, cid, node)
-	code, _, err := util.Get(url, util.DefaultTimeout)
-	if code == http.StatusOK {
-		return nil
+	req := &api.FinishTaskRequest{
+		TaskFileName: taskFileName,
+		TaskID:       taskID,
+		ClientID:     cid,
+		Node:         node,
 	}
-	return err
+
+	return uploaderAPI.FinishTask(ip, port, req)
 }
 
 // checkServer check if the server is available。
 func checkServer(ip string, port int, dataDir, taskFileName string, totalLimit int,
 	timeout time.Duration) (string, error) {
+
 	// prepare the request body
-	url := fmt.Sprintf("http://%s:%d%s%s", ip, port, config.LocalHTTPPathCheck, taskFileName)
-	if timeout <= 0 {
-		timeout = util.DefaultTimeout
+	req := &api.CheckServerRequest{
+		TaskFileName: taskFileName,
+		TotalLimit:   totalLimit,
+		DataDir:      dataDir,
 	}
-	headers := make(map[string]string)
-	headers["dataDir"] = dataDir
-	headers["totalLimit"] = strconv.Itoa(totalLimit)
 
 	// send the request
-	result, err := util.Do(url, headers, timeout)
+	result, err := uploaderAPI.CheckServer(ip, port, req)
 	if err != nil {
 		return "", err
 	}
@@ -179,12 +178,6 @@ func checkServer(ip string, port int, dataDir, taskFileName string, totalLimit i
 		return result[:len(result)-len(resultSuffix)], nil
 	}
 	return "", nil
-}
-
-func pingServer(ip string, port int) bool {
-	url := fmt.Sprintf("http://%s:%d%s", ip, port, config.LocalHTTPPing)
-	code, _, _ := util.Get(url, util.DefaultTimeout)
-	return code == http.StatusOK
 }
 
 func generatePort(inc int) int {
