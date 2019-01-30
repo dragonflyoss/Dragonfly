@@ -31,6 +31,8 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/downloader"
+	backDown "github.com/dragonflyoss/Dragonfly/dfget/core/downloader/back_downloader"
+	p2pDown "github.com/dragonflyoss/Dragonfly/dfget/core/downloader/p2p_downloader"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
 	"github.com/dragonflyoss/Dragonfly/dfget/errors"
@@ -161,10 +163,10 @@ func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 	register regist.SupernodeRegister, result *regist.RegisterResult) error {
 	var getter downloader.Downloader
 	if cfg.BackSourceReason > 0 {
-		getter = downloader.NewBackDownloader(cfg, result)
+		getter = backDown.NewBackDownloader(cfg, result)
 	} else {
 		util.Printer.Printf("start download by dragonfly")
-		getter = downloader.NewP2PDownloader(cfg, supernodeAPI, register, result)
+		getter = p2pDown.NewP2PDownloader(cfg, supernodeAPI, register, result)
 	}
 
 	timeout := calculateTimeout(cfg.RV.FileLength, cfg.Timeout)
@@ -191,7 +193,7 @@ func reportFinishedTask(cfg *config.Config, getter downloader.Downloader) {
 	if cfg.RV.PeerPort <= 0 {
 		return
 	}
-	if getter, ok := getter.(*downloader.P2PDownloader); ok {
+	if getter, ok := getter.(*p2pDown.P2PDownloader); ok {
 		uploader.FinishTask(cfg.RV.LocalIP, cfg.RV.PeerPort,
 			cfg.RV.TaskFileName, cfg.RV.Cid,
 			getter.GetTaskID(), getter.GetNode())
