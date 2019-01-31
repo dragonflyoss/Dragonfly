@@ -27,7 +27,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -85,7 +84,7 @@ public class HttpClientUtil {
                 fillHeaders(conn, headers);
                 conn.setUseCaches(false);
                 conn.setConnectTimeout(2000);
-                conn.setReadTimeout(1000);
+                conn.setReadTimeout(2000);
                 if (lastModified > 0) {
                     conn.setIfModifiedSince(lastModified);
                 }
@@ -106,7 +105,10 @@ public class HttpClientUtil {
                 }
                 break;
             } catch (Exception e) {
-                logger.warn("url:{} isExpired error", fileUrl, e);
+                logger.warn("url:{} isExpired error:%s", fileUrl, e.getMessage(), e);
+                if (times == 0) {
+                    return false;
+                }
             } finally {
                 closeConn(conn);
                 conn = null;
