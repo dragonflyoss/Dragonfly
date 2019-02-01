@@ -15,10 +15,8 @@
 
 export INSTALL_HOME=/opt/dragonfly
 export INSTALL_CLIENT_PATH=df-client
-export GO_SOURCE_DIRECTORIES=( \
-    "dfdaemon" \
-    "dfget" \
-    "version" \
+export GO_SOURCE_EXCLUDES=( \
+    "test" \
 )
 
 GOOS=$(go env GOOS)
