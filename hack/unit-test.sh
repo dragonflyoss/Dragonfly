@@ -9,11 +9,13 @@ unit_test() {
     cd ../ || return
     go test -i ./...
 
+    # folder /test contains test cases for integration test.
+    # then we exclude them in unit test.
     cmd="go list ./... | grep 'github.com/dragonflyoss/Dragonfly/'"
-    sources="${GO_SOURCE_DIRECTORIES[*]}"
-    sources="${sources// /|}"
+    excludes="${GO_SOURCE_EXCLUDES[*]}"
+    excludes="${excludes// /|}"
     retCode=0
-    test -n "${sources}" && cmd+=" | grep -E '${sources}'"
+    test -n "${excludes}" && cmd+=" | grep -vE '${excludes}'"
 
     for d in $(eval "${cmd}")
     do
