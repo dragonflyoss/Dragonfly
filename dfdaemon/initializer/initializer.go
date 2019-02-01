@@ -17,7 +17,6 @@ package initializer
 import (
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -101,32 +100,35 @@ func cleanLocalRepo(options *options.Options) {
 }
 
 // rotateLog truncates the logs file by a certain amount bytes.
-func rotateLog(logFile *os.File, logFilePath string) {
+func rotateLog(logFile *os.File) error {
+	stat, err := logFile.Stat()
+	if err != nil {
+		return err
+	}
 	logSizeLimit := int64(20 * 1024 * 1024)
-	for {
-		time.Sleep(time.Second * 60)
-		stat, err := os.Stat(logFilePath)
+	// if it exceeds the 20MB limitation
+	if stat.Size() > logSizeLimit {
+		log.SetOutput(ioutil.Discard)
+		// make sure set the output of log back to logFile when error be raised.
+		defer log.SetOutput(logFile)
+		logFile.Sync()
+		truncateSize := logSizeLimit/2 - 1
+		mem, err := syscall.Mmap(int(logFile.Fd()), 0, int(stat.Size()), syscall.PROT_READ|syscall.PROT_WRITE, syscall.MAP_SHARED)
 		if err != nil {
-			log.Errorf("failed to stat %s: %s", logFilePath, err)
-			continue
+			return err
 		}
-		// if it exceeds the 20MB limitation
-		if stat.Size() > logSizeLimit {
-			log.SetOutput(ioutil.Discard)
-			logFile.Sync()
-			if transFile, err := os.Open(logFilePath); err == nil {
-				// move the pointer to be (end - 10MB)
-				transFile.Seek(-10*1024*1024, 2)
-				// move the pointer to head
-				logFile.Seek(0, 0)
-				count, _ := io.Copy(logFile, transFile)
-				logFile.Truncate(count)
-				log.SetOutput(logFile)
-				transFile.Close()
-			}
+		copy(mem[0:], mem[truncateSize:])
+		if err := syscall.Munmap(mem); err != nil {
+			return err
+		}
+		if err := logFile.Truncate(stat.Size() - truncateSize); err != nil {
+			return err
+		}
+		if _, err := logFile.Seek(truncateSize, 0); err != nil {
+			return err
 		}
 	}
-
+	return nil
 }
 
 func initLogger() {
@@ -147,7 +149,14 @@ func initLogger() {
 		if logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644); err == nil {
 			logFile.Seek(0, 2)
 			log.SetOutput(logFile)
-			go rotateLog(logFile, logFilePath)
+			go func(logFile *os.File) {
+				ticker := time.NewTicker(60 * time.Second)
+				for range ticker.C {
+					if err := rotateLog(logFile); err != nil {
+						log.Errorf("failed to rotate log %s: %v", logFile.Name(), err)
+					}
+				}
+			}(logFile)
 		}
 	}
 
