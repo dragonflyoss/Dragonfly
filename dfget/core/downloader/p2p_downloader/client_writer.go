@@ -27,6 +27,8 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
+
+	"github.com/sirupsen/logrus"
 )
 
 // ClientWriter writes a file for uploading and a target file.
@@ -77,7 +79,7 @@ func (cw *ClientWriter) init() (err error) {
 	cw.p2pPattern = helper.IsP2P(cw.cfg.Pattern)
 	if cw.p2pPattern {
 		if e := util.Link(cw.cfg.RV.TempTarget, cw.clientFilePath); e != nil {
-			cw.cfg.ClientLogger.Warn(e)
+			logrus.Warn(e)
 			cw.acrossWrite = true
 		}
 
@@ -128,7 +130,7 @@ func (cw *ClientWriter) Run() {
 			continue
 		}
 		if err := cw.write(piece, time.Now()); err != nil {
-			cw.cfg.ClientLogger.Errorf("write item:%s error:%v", piece, err)
+			logrus.Errorf("write item:%s error:%v", piece, err)
 			cw.cfg.BackSourceReason = config.BackSourceReasonWriteError
 			cw.result = false
 		}
@@ -182,7 +184,7 @@ func (cw *ClientWriter) sendSuccessPiece(piece *Piece, cost time.Duration) {
 		PieceRange: piece.Range,
 	})
 	if cost.Seconds() > 2.0 {
-		cw.cfg.ClientLogger.Infof(
+		logrus.Infof(
 			"async writer and report suc from dst:%s... cost:%.3f for range:%s",
 			piece.DstCid[:25], cost.Seconds(), piece.Range)
 	}

@@ -84,19 +84,18 @@ func ConvertHeaders(headers []string) map[string]string {
 
 // MoveFile moves a file from src to dst and
 // checks if the MD5 code is expected before that.
-func MoveFile(src string, dst string, expectMd5 string, log *logrus.Logger) error {
+func MoveFile(src string, dst string, expectMd5 string) error {
 	start := time.Now()
 	if expectMd5 != "" {
 		realMd5 := util.Md5Sum(src)
-		log.Infof("compute raw md5:%s for file:%s cost:%.3fs", realMd5,
+		logrus.Infof("compute raw md5:%s for file:%s cost:%.3fs", realMd5,
 			src, time.Since(start).Seconds())
 		if realMd5 != expectMd5 {
 			return fmt.Errorf("Md5NotMatch, real:%s expect:%s", realMd5, expectMd5)
 		}
 	}
 	err := util.MoveFile(src, dst)
-
-	log.Infof("move src:%s to dst:%s result:%t cost:%.3f",
+	logrus.Infof("move src:%s to dst:%s result:%t cost:%.3f",
 		src, dst, err == nil, time.Since(start).Seconds())
 	return err
 }

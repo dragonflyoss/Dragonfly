@@ -26,6 +26,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/dragonflyoss/Dragonfly/version"
+	"github.com/sirupsen/logrus"
 )
 
 // SupernodeRegister encapsulates the Register steps into a struct.
@@ -56,15 +57,15 @@ func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errors.DFG
 		start      = time.Now()
 	)
 
-	s.cfg.ClientLogger.Infof("do register to one of %v", s.cfg.Node)
+	logrus.Infof("do register to one of %v", s.cfg.Node)
 	nodes, nLen := s.cfg.Node, len(s.cfg.Node)
 	req := s.constructRegisterRequest(peerPort)
 	for i = 0; i < nLen; i++ {
 		req.SupernodeIP = nodes[i]
 		resp, e = s.api.Register(nodes[i], req)
-		s.cfg.ClientLogger.Infof("do register to %s, res:%s error:%v", nodes[i], resp, e)
+		logrus.Infof("do register to %s, res:%s error:%v", nodes[i], resp, e)
 		if e != nil {
-			s.cfg.ClientLogger.Errorf("register to node:%s error:%v", nodes[i], e)
+			logrus.Errorf("register to node:%s error:%v", nodes[i], e)
 			continue
 		}
 		if resp.Code == config.Success || resp.Code == config.TaskCodeNeedAuth {
@@ -73,20 +74,20 @@ func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errors.DFG
 		if resp.Code == config.TaskCodeWaitAuth && retryTimes < 3 {
 			i--
 			retryTimes++
-			s.cfg.ClientLogger.Infof("sleep 2.5s to wait auth(%d/3)...", retryTimes)
+			logrus.Infof("sleep 2.5s to wait auth(%d/3)...", retryTimes)
 			time.Sleep(2500 * time.Millisecond)
 		}
 	}
 	s.setRemainderNodes(i)
 	if err := s.checkResponse(resp, e); err != nil {
-		s.cfg.ClientLogger.Errorf("register fail:%v", err)
+		logrus.Errorf("register fail:%v", err)
 		return nil, err
 	}
 
 	result := NewRegisterResult(nodes[i], s.cfg.Node, s.cfg.URL,
 		resp.Data.TaskID, resp.Data.FileLength, resp.Data.PieceSize)
 
-	s.cfg.ClientLogger.Infof("do register result:%s and cost:%.3fs", resp,
+	logrus.Infof("do register result:%s and cost:%.3fs", resp,
 		time.Since(start).Seconds())
 	return result, nil
 }

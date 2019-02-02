@@ -85,7 +85,6 @@ func (suit *dfgetSuit) Test_initProperties() {
 	for _, v := range cases {
 		cfg = config.NewConfig()
 		buf.Reset()
-		cfg.ClientLogger = logrus.StandardLogger()
 		cfg.ConfigFiles = v.configs
 		localLimitStr := strconv.FormatInt(int64(v.expected.LocalLimit/1024), 10)
 		totalLimitStr := strconv.FormatInt(int64(v.expected.TotalLimit/1024), 10)

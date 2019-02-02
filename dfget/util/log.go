@@ -30,7 +30,66 @@ import (
 // DefaultLogTimeFormat defines the timestamp format.
 const DefaultLogTimeFormat = "2006-01-02 15:04:05.000"
 
-// CreateLogger creates a logger.
+// InitLog initializes the file logger for process.
+// logfile is used to stored generated log in local filesystem.
+func InitLog(debug bool, logFilePath string, sign string) error {
+	// set the log level
+	logLevel := log.InfoLevel
+	if debug {
+		logLevel = log.DebugLevel
+	}
+
+	// create and log file
+	if err := os.MkdirAll(filepath.Dir(logFilePath), 0755); err != nil {
+		return fmt.Errorf("failed to create log file %s: %v", logFilePath, err)
+	}
+	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return err
+	}
+	logFile.Seek(0, 2)
+
+	// create formatter for default log Logger
+	formatter := &DragonflyFormatter{
+		TimestampFormat: DefaultLogTimeFormat,
+		Sign:            sign,
+	}
+
+	// set all details in log default logger
+	log.SetLevel(logLevel)
+	log.SetOutput(logFile)
+	log.SetFormatter(formatter)
+	return nil
+}
+
+// InitConsoleLog initializes console logger for process.
+// console log will output the dfget client's log in console/terminal for
+// debugging usage.
+func InitConsoleLog(debug bool, sign string) {
+	formatter := &DragonflyFormatter{
+		TimestampFormat: DefaultLogTimeFormat,
+		Sign:            sign,
+	}
+
+	logLevel := log.InfoLevel
+	if debug {
+		logLevel = log.DebugLevel
+	}
+
+	consoleLog := &log.Logger{
+		Out:       os.Stdout,
+		Formatter: formatter,
+		Hooks:     make(log.LevelHooks),
+		Level:     logLevel,
+	}
+	hook := &ConsoleHook{
+		logger: consoleLog,
+		levels: log.AllLevels,
+	}
+	log.AddHook(hook)
+}
+
+// CreateLogger creates a Logger.
 func CreateLogger(logPath string, logName string, logLevel string, sign string) (*log.Logger, error) {
 	// parse log level
 	level, err := log.ParseLevel(logLevel)
@@ -51,23 +110,23 @@ func CreateLogger(logPath string, logName string, logLevel string, sign string) 
 	}
 
 	logFile.Seek(0, 2)
-	logger := log.New()
-	logger.Out = logFile
-	logger.Formatter = &DragonflyFormatter{TimestampFormat: DefaultLogTimeFormat, Sign: sign}
-	logger.Level = level
-	return logger, nil
+	Logger := log.New()
+	Logger.Out = logFile
+	Logger.Formatter = &DragonflyFormatter{TimestampFormat: DefaultLogTimeFormat, Sign: sign}
+	Logger.Level = level
+	return Logger, nil
 }
 
-// AddConsoleLog will add a ConsoleLog into logger's hooks.
-// It will output logs to console when logger's outputting logs.
-func AddConsoleLog(logger *log.Logger) {
+// AddConsoleLog will add a ConsoleLog into Logger's hooks.
+// It will output logs to console when Logger's outputting logs.
+func AddConsoleLog(Logger *log.Logger) {
 	consoleLog := &log.Logger{
 		Out:       os.Stdout,
-		Formatter: logger.Formatter,
+		Formatter: Logger.Formatter,
 		Hooks:     make(log.LevelHooks),
-		Level:     logger.Level,
+		Level:     Logger.Level,
 	}
-	logger.Hooks.Add(&ConsoleHook{logger: consoleLog, levels: log.AllLevels})
+	Logger.Hooks.Add(&ConsoleHook{logger: consoleLog, levels: log.AllLevels})
 }
 
 // ConsoleHook shows logs on console.

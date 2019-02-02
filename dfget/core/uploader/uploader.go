@@ -42,6 +42,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -130,15 +131,15 @@ func checkPeerServerExist(cfg *config.Config, port int) int {
 
 	// check the peer server whether is available
 	result, err := checkServer(cfg.RV.LocalIP, port, cfg.RV.DataDir, taskFileName, cfg.TotalLimit, 0)
-	cfg.ClientLogger.Infof("local http result:%s err:%v, port:%d path:%s",
+	logrus.Infof("local http result:%s err:%v, port:%d path:%s",
 		result, err, port, config.LocalHTTPPathCheck)
 
 	if err == nil {
 		if result == taskFileName {
-			cfg.ClientLogger.Infof("use peer server on port:%d", port)
+			logrus.Infof("use peer server on port:%d", port)
 			return port
 		}
-		cfg.ClientLogger.Warnf("not found process on port:%d, version:%s", port, version.DFGetVersion)
+		logrus.Warnf("not found process on port:%d, version:%s", port, version.DFGetVersion)
 	}
 	return 0
 }
@@ -155,8 +156,8 @@ func WaitForShutdown() {
 
 // LaunchPeerServer launch a server to send piece data
 func LaunchPeerServer(cfg *config.Config) (int, error) {
-	cfg.ServerLogger.Infof("********************")
-	cfg.ServerLogger.Infof("start peer server...")
+	logrus.Infof("********************")
+	logrus.Infof("start peer server...")
 
 	res := make(chan error)
 	go func() {
@@ -164,11 +165,11 @@ func LaunchPeerServer(cfg *config.Config) (int, error) {
 	}()
 
 	if err := waitForStartup(res, cfg); err != nil {
-		cfg.ServerLogger.Errorf("start peer server error:%v, exit directly", err)
+		logrus.Errorf("start peer server error:%v, exit directly", err)
 		return 0, err
 	}
 	updateServicePortInMeta(cfg, p2p.port)
-	cfg.ServerLogger.Infof("start peer server success, host:%s, port:%d",
+	logrus.Infof("start peer server success, host:%s, port:%d",
 		p2p.host, p2p.port)
 	go monitorAlive(cfg, 15*time.Second)
 	return p2p.port, nil
@@ -198,7 +199,7 @@ func launch(cfg *config.Config) error {
 				// a peer server is already existing
 				return nil
 			}
-			cfg.ServerLogger.Warnf("start error:%v, remain retry times:%d",
+			logrus.Warnf("start error:%v, remain retry times:%d",
 				err, retryCount-i)
 		}
 	}
@@ -209,7 +210,7 @@ func waitForStartup(result chan error, cfg *config.Config) error {
 	select {
 	case err := <-result:
 		if err == nil {
-			cfg.ServerLogger.Infof("reuse exist server on port:%d", p2p.port)
+			logrus.Infof("reuse exist server on port:%d", p2p.port)
 			close(p2p.finished)
 		}
 		return err
@@ -237,7 +238,7 @@ func updateServicePortInMeta(cfg *config.Config, port int) {
 }
 
 func serverGC(cfg *config.Config, interval time.Duration) {
-	cfg.ServerLogger.Info("start server gc, expireTime:", cfg.RV.DataExpireTime)
+	logrus.Info("start server gc, expireTime:", cfg.RV.DataExpireTime)
 
 	supernode := api.NewSupernodeAPI()
 	var walkFn filepath.WalkFunc = func(path string, info os.FileInfo, err error) error {
@@ -249,14 +250,14 @@ func serverGC(cfg *config.Config, interval time.Duration) {
 			return filepath.SkipDir
 		}
 		if deleteExpiredFile(supernode, path, info, cfg.RV.DataExpireTime) {
-			cfg.ServerLogger.Info("server gc, delete file:", path)
+			logrus.Info("server gc, delete file:", path)
 		}
 		return nil
 	}
 
 	for {
 		if err := filepath.Walk(cfg.RV.SystemDataDir, walkFn); err != nil {
-			cfg.ServerLogger.Warnf("server gc error:%v", err)
+			logrus.Warnf("server gc error:%v", err)
 		}
 		time.Sleep(interval)
 	}
@@ -290,7 +291,7 @@ func monitorAlive(cfg *config.Config, interval time.Duration) {
 		return
 	}
 
-	cfg.ServerLogger.Info("monitor peer server whether is alive, aliveTime:",
+	logrus.Info("monitor peer server whether is alive, aliveTime:",
 		cfg.RV.ServerAliveTime)
 	go serverGC(cfg, interval)
 
@@ -300,12 +301,12 @@ func monitorAlive(cfg *config.Config, interval time.Duration) {
 				continue
 			}
 			if p2p != nil {
-				cfg.ServerLogger.Info("no more task, peer server will stop...")
+				logrus.Info("no more task, peer server will stop...")
 				c, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Minute))
 				p2p.Shutdown(c)
 				cancel()
 				updateServicePortInMeta(cfg, 0)
-				cfg.ServerLogger.Info("peer server is shutdown.")
+				logrus.Info("peer server is shutdown.")
 				close(p2p.finished)
 			}
 			return
@@ -408,24 +409,20 @@ func (ps *peerServer) uploadHandler(w http.ResponseWriter, r *http.Request) {
 	taskFileName := mux.Vars(r)["taskFileName"]
 	rangeStr := r.Header.Get(config.StrRange)
 
-	if util.IsDebug(ps.cfg.ServerLogger.Level) {
-		ps.cfg.ServerLogger.Debugf("upload file:%s to %s, req:%v",
-			taskFileName, r.RemoteAddr, jsonStr(r.Header))
-	}
+	logrus.Debugf("upload file:%s to %s, req:%v", taskFileName, r.RemoteAddr, jsonStr(r.Header))
 
 	// Step1: parse param
 	if up, err = parseParams(rangeStr, r.Header.Get(config.StrPieceNum),
 		r.Header.Get(config.StrPieceSize)); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		ps.cfg.ServerLogger.Warnf("invalid param file:%s req:%v, %v",
-			taskFileName, r.Header, err)
+		logrus.Warnf("invalid param file:%s req:%v, %v", taskFileName, r.Header, err)
 		return
 	}
 
 	// Step2: get task file
 	if f, size, err = ps.getTaskFile(taskFileName); err != nil {
 		rangeErrorResponse(w, err)
-		ps.cfg.ServerLogger.Errorf("failed to open file:%s, %v", taskFileName, err)
+		logrus.Errorf("failed to open file:%s, %v", taskFileName, err)
 		return
 	}
 	defer f.Close()
@@ -433,15 +430,13 @@ func (ps *peerServer) uploadHandler(w http.ResponseWriter, r *http.Request) {
 	// Step3: amend range with piece meta data
 	if err = amendRange(size, true, up); err != nil {
 		rangeErrorResponse(w, err)
-		ps.cfg.ServerLogger.Errorf("failed to amend range of file:%s, %v",
-			taskFileName, err)
+		logrus.Errorf("failed to amend range of file %s: %v", taskFileName, err)
 		return
 	}
 
 	// Step4: send piece wrapped by meta data
 	if err := ps.uploadPiece(f, w, up); err != nil {
-		ps.cfg.ServerLogger.Errorf("send range:%s of file:%s, error:%v",
-			rangeStr, taskFileName, err)
+		logrus.Errorf("failed to send range(%s) of file(%s): %v", rangeStr, taskFileName, err)
 	}
 }
 
@@ -455,7 +450,7 @@ func (ps *peerServer) parseRateHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprint(w, err.Error())
-		ps.cfg.ServerLogger.Errorf("failed to convert rateLimit %v, %v", rateLimit, err)
+		logrus.Errorf("failed to convert rateLimit %v, %v", rateLimit, err)
 		return
 	}
 	sendSuccess(w)
@@ -508,7 +503,7 @@ func (ps *peerServer) checkHandler(w http.ResponseWriter, r *http.Request) {
 			ps.rateLimiter.SetRate(util.TransRate(totalLimit))
 		}
 		ps.totalLimitRate = totalLimit
-		ps.cfg.ServerLogger.Infof("update total limit to %d", totalLimit)
+		logrus.Infof("update total limit to %d", totalLimit)
 	}
 
 	// get parameters
