@@ -165,16 +165,6 @@ func initClientLog() error {
 }
 
 func initFlags() {
-	persistFlagSet := rootCmd.PersistentFlags()
-
-	// pass to server
-	persistFlagSet.DurationVar(&cfg.RV.DataExpireTime, "expiretime", config.DataExpireTime,
-		"server will delete cached files if these files doesn't be modification within this duration")
-	persistFlagSet.DurationVar(&cfg.RV.ServerAliveTime, "alivetime", config.ServerAliveTime,
-		"server will stop if there is no uploading task within this duration")
-	persistFlagSet.BoolVar(&cfg.Verbose, "verbose", false,
-		"be verbose")
-
 	flagSet := rootCmd.Flags()
 
 	// url & output
@@ -224,6 +214,14 @@ func initFlags() {
 		"show progress bar, it's conflict with '--console'")
 	flagSet.BoolVar(&cfg.Console, "console", false,
 		"show log on console, it's conflict with '--showbar'")
+	flagSet.BoolVar(&cfg.Verbose, "verbose", false,
+		"be verbose")
+
+	// pass to server
+	flagSet.DurationVar(&cfg.RV.DataExpireTime, "expiretime", config.DataExpireTime,
+		"server will delete cached files if these files doesn't be modification within this duration")
+	flagSet.DurationVar(&cfg.RV.ServerAliveTime, "alivetime", config.ServerAliveTime,
+		"server will stop if there is no uploading task within this duration")
 
 	flagSet.MarkDeprecated("exceed", "please use '--timeout' or '-e' instead")
 }

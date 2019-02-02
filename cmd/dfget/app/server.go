@@ -24,7 +24,6 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
-
 	"github.com/spf13/cobra"
 )
 
@@ -64,6 +63,12 @@ func initServerFlags() {
 		"the port that server will listen on")
 	flagSet.StringVar(&cfg.RV.MetaPath, "meta", cfg.RV.MetaPath,
 		"meta file path")
+	flagSet.DurationVar(&cfg.RV.DataExpireTime, "expiretime", config.DataExpireTime,
+		"server will delete cached files if these files doesn't be modification within this duration")
+	flagSet.DurationVar(&cfg.RV.ServerAliveTime, "alivetime", config.ServerAliveTime,
+		"server will stop if there is no uploading task within this duration")
+	flagSet.BoolVar(&cfg.Verbose, "verbose", false,
+		"be verbose")
 }
 
 func initServerLog() {
