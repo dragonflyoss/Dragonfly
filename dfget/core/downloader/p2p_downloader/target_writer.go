@@ -35,15 +35,15 @@ type TargetWriter struct {
 	pieceIndex int
 	result     bool
 	syncQueue  util.Queue
-	Cfg        *config.Config
+	cfg        *config.Config
 }
 
 // NewTargetWriter creates and initialize a TargetWriter instance.
-func NewTargetWriter(dst string, queue util.Queue, Cfg *config.Config) (*TargetWriter, error) {
+func NewTargetWriter(dst string, queue util.Queue, cfg *config.Config) (*TargetWriter, error) {
 	targetWriter := &TargetWriter{
 		dst:        dst,
 		pieceQueue: queue,
-		Cfg:        Cfg,
+		cfg:        cfg,
 	}
 	if err := targetWriter.init(); err != nil {
 		return nil, err
@@ -87,8 +87,8 @@ func (tw *TargetWriter) Run() {
 			continue
 		}
 		if err := tw.write(piece); err != nil {
-			tw.Cfg.ClientLogger.Errorf("write item:%s error:%v", piece, err)
-			tw.Cfg.BackSourceReason = config.BackSourceReasonWriteError
+			tw.cfg.ClientLogger.Errorf("write item:%s error:%v", piece, err)
+			tw.cfg.BackSourceReason = config.BackSourceReasonWriteError
 			tw.result = false
 		}
 	}

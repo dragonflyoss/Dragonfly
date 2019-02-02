@@ -23,6 +23,7 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/version"
 )
 
 // DownloadRequest wraps the request which is sent to peer
@@ -54,6 +55,7 @@ func (d *downloadAPI) Download(ip string, port int, req *DownloadRequest) (*http
 	headers[config.StrRange] = config.StrBytes + "=" + req.PieceRange
 	headers[config.StrPieceNum] = strconv.Itoa(req.PieceNum)
 	headers[config.StrPieceSize] = fmt.Sprint(req.PieceSize)
+	headers[config.StrUserAgent] = "dfget/" + version.DFGetVersion
 
 	url := fmt.Sprintf("http://%s:%d%s", ip, port, req.Path)
 	return util.HTTPGetWithHeaders(url, headers)

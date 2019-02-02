@@ -17,6 +17,7 @@
 package uploader
 
 import (
+	"encoding/binary"
 	"fmt"
 	"io"
 	"net/http"
@@ -28,46 +29,80 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
-	errType "github.com/dragonflyoss/Dragonfly/dfget/errors"
+	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/version"
-
-	"github.com/pkg/errors"
 )
 
 // uploader helper
 
 // getTaskFile find the taskFile and return the File object.
-func (ps *peerServer) getTaskFile(taskFileName string, params *uploadParam) (*os.File, error) {
+func (ps *peerServer) getTaskFile(taskFileName string) (*os.File, int64, error) {
+	errSize := int64(-1)
+
 	v, ok := ps.syncTaskMap.Load(taskFileName)
 	if !ok {
-		return nil, fmt.Errorf("failed to get taskPath: %s", taskFileName)
+		return nil, errSize, fmt.Errorf("failed to get taskPath: %s", taskFileName)
 	}
 	tc, ok := v.(*taskConfig)
 	if !ok {
-		return nil, fmt.Errorf("failed to assert: %s", taskFileName)
+		return nil, errSize, fmt.Errorf("failed to assert: %s", taskFileName)
 	}
 
 	taskPath := helper.GetServiceFile(taskFileName, tc.dataDir)
 
-	// Pre-check the length of the file as expected.
 	fileInfo, err := os.Stat(taskPath)
 	if err != nil {
-		return nil, err
-	}
-	fileSize := fileInfo.Size()
-	if fileSize-params.start < params.pieceLen {
-		return nil, errors.Wrapf(errType.ErrInsufficientFileLength, "file: %s", taskPath)
+		return nil, errSize, err
 	}
 
 	taskFile, err := os.Open(taskPath)
 	if err != nil {
-		return nil, fmt.Errorf("file:%s not found", taskPath)
+		return nil, errSize, err
 	}
-	return taskFile, nil
+	return taskFile, fileInfo.Size(), nil
 }
 
-// parseRange validates the parameter range and parses it
-func parseRange(rangeVal string) (*uploadParam, error) {
+func amendRange(size int64, needPad bool, up *uploadParam) error {
+	if needPad {
+		up.padSize = config.PieceMetaSize
+		// we must send an whole piece with both piece head and tail
+		if up.length < up.padSize {
+			return errors.ErrRangeNotSatisfiable
+		}
+		up.start -= up.pieceNum * up.padSize
+		up.end = up.start + (up.length - up.padSize) - 1
+	}
+
+	if up.start >= size && !needPad {
+		return errors.ErrRangeNotSatisfiable
+	}
+
+	if up.end >= size {
+		up.end = size - 1
+		up.length = size - up.start + up.padSize
+		if size == 0 {
+			up.length = up.padSize
+		}
+	}
+
+	return nil
+}
+
+// parseParams validates the parameter range and parses it
+func parseParams(rangeVal, pieceNumStr, pieceSizeStr string) (*uploadParam, error) {
+	var (
+		err error
+		up  = &uploadParam{}
+	)
+
+	if up.pieceNum, err = strconv.ParseInt(pieceNumStr, 10, 64); err != nil {
+		return nil, err
+	}
+
+	if up.pieceSize, err = strconv.ParseInt(pieceSizeStr, 10, 64); err != nil {
+		return nil, err
+	}
+
 	if strings.Count(rangeVal, "=") != 1 {
 		return nil, fmt.Errorf("invaild range: %s", rangeVal)
 	}
@@ -77,34 +112,35 @@ func parseRange(rangeVal string) (*uploadParam, error) {
 		return nil, fmt.Errorf("invaild range: %s", rangeStr)
 	}
 	rangeArr := strings.Split(rangeStr, "-")
-	start, err := strconv.ParseInt(rangeArr[0], 10, 64)
-	if err != nil {
+	if up.start, err = strconv.ParseInt(rangeArr[0], 10, 64); err != nil {
 		return nil, err
 	}
-	end, err := strconv.ParseInt(rangeArr[1], 10, 64)
-	if err != nil {
+	if up.end, err = strconv.ParseInt(rangeArr[1], 10, 64); err != nil {
 		return nil, err
 	}
 
-	if end <= start {
-		return nil, fmt.Errorf("The end of range: %d is less than or equal to the start: %d", end, start)
+	if up.end <= up.start {
+		return nil, fmt.Errorf("invalid range: %s", rangeStr)
 	}
-	pieceLen := end - start + 1
-
-	return &uploadParam{
-		start:    start,
-		pieceLen: pieceLen,
-	}, nil
+	up.length = up.end - up.start + 1
+	return up, nil
 }
 
-// transFile send the file to the remote.
-func (ps *peerServer) transFile(f *os.File, w http.ResponseWriter, start, pieceLen int64) error {
-	var total int64
-	f.Seek(start, 0)
+// uploadPiece send a piece of the file to the remote peer.
+func (ps *peerServer) uploadPiece(f *os.File, w http.ResponseWriter, up *uploadParam) error {
+	w.Header().Set(config.StrContentLength, strconv.FormatInt(up.length, 10))
+	sendHeader(w, http.StatusPartialContent)
 
-	remain := pieceLen
-	bufSize := int64(256 * 1024)
-	buf := make([]byte, bufSize)
+	f.Seek(up.start, 0)
+
+	remain := up.length - up.padSize
+	buf := make([]byte, 256*1024)
+
+	if up.padSize > 0 {
+		binary.BigEndian.PutUint32(buf, uint32((remain)|(up.pieceSize)<<4))
+		w.Write(buf[:config.PieceHeadSize])
+		defer w.Write([]byte{config.PieceTailChar})
+	}
 
 	for remain > 0 {
 		// read len(buf) of data
@@ -114,10 +150,9 @@ func (ps *peerServer) transFile(f *os.File, w http.ResponseWriter, start, pieceL
 		}
 
 		if num == 0 {
-			if total == 0 {
-				w.Write([]byte(""))
-			}
-			return nil
+			ps.cfg.ServerLogger.Warnf("empty range:%s-%s of file:%s",
+				up.start, up.end, f.Name())
+			break
 		}
 
 		length := int64(num)
@@ -130,14 +165,13 @@ func (ps *peerServer) transFile(f *os.File, w http.ResponseWriter, start, pieceL
 		}
 
 		w.Write(buf[:length])
-
-		total += length
-		remain = pieceLen - total
+		remain -= length
 
 		if num < len(buf) {
 			break
 		}
 	}
+
 	return nil
 }
 
