@@ -21,6 +21,7 @@ package uploader
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -36,6 +37,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
+	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/dragonflyoss/Dragonfly/version"
 
@@ -71,6 +73,9 @@ func StartPeerServerProcess(cfg *config.Config) (port int, err error) {
 		"--data", cfg.RV.SystemDataDir,
 		"--expiretime", cfg.RV.DataExpireTime.String(),
 		"--alivetime", cfg.RV.ServerAliveTime.String())
+	if cfg.Verbose {
+		cmd.Args = append(cmd.Args, "--verbose")
+	}
 
 	var stdout io.ReadCloser
 	if stdout, err = cmd.StdoutPipe(); err != nil {
@@ -124,7 +129,7 @@ func checkPeerServerExist(cfg *config.Config, port int) int {
 	}
 
 	// check the peer server whether is available
-	result, err := checkServer(cfg.RV.LocalIP, port, cfg.RV.TargetDir, taskFileName, cfg.TotalLimit, 0)
+	result, err := checkServer(cfg.RV.LocalIP, port, cfg.RV.DataDir, taskFileName, cfg.TotalLimit, 0)
 	cfg.ClientLogger.Infof("local http result:%s err:%v, port:%d path:%s",
 		result, err, port, config.LocalHTTPPathCheck)
 
@@ -380,41 +385,63 @@ type taskConfig struct {
 
 // uploadParam refers to all params needed in the handler of upload.
 type uploadParam struct {
-	pieceLen int64
-	start    int64
+	padSize int64
+	start   int64
+	end     int64
+	length  int64
+
+	pieceSize int64
+	pieceNum  int64
 }
 
 // uploadHandler use to upload a task file when other peers download from it.
 func (ps *peerServer) uploadHandler(w http.ResponseWriter, r *http.Request) {
 	aliveQueue.Put(true)
-	// Step1: parse param
+
+	var (
+		up   *uploadParam
+		f    *os.File
+		size int64
+		err  error
+	)
+
 	taskFileName := mux.Vars(r)["taskFileName"]
 	rangeStr := r.Header.Get(config.StrRange)
-	params, err := parseRange(rangeStr)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, err.Error())
-		ps.cfg.ServerLogger.Errorf("failed to parse param from request %v, %v", r, err)
+
+	if util.IsDebug(ps.cfg.ServerLogger.Level) {
+		ps.cfg.ServerLogger.Debugf("upload file:%s to %s, req:%v",
+			taskFileName, r.RemoteAddr, jsonStr(r.Header))
+	}
+
+	// Step1: parse param
+	if up, err = parseParams(rangeStr, r.Header.Get(config.StrPieceNum),
+		r.Header.Get(config.StrPieceSize)); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		ps.cfg.ServerLogger.Warnf("invalid param file:%s req:%v, %v",
+			taskFileName, r.Header, err)
 		return
 	}
 
 	// Step2: get task file
-	f, err := ps.getTaskFile(taskFileName, params)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, err.Error())
-		ps.cfg.ServerLogger.Errorf("failed to open TaskFile %s, %v", taskFileName, err)
+	if f, size, err = ps.getTaskFile(taskFileName); err != nil {
+		rangeErrorResponse(w, err)
+		ps.cfg.ServerLogger.Errorf("failed to open file:%s, %v", taskFileName, err)
 		return
 	}
 	defer f.Close()
 
-	// Step3: write header
-	w.Header().Set(config.StrContentLength, strconv.FormatInt(params.pieceLen, 10))
-	sendSuccess(w)
+	// Step3: amend range with piece meta data
+	if err = amendRange(size, true, up); err != nil {
+		rangeErrorResponse(w, err)
+		ps.cfg.ServerLogger.Errorf("failed to amend range of file:%s, %v",
+			taskFileName, err)
+		return
+	}
 
-	// Step4: tans task file
-	if err := ps.transFile(f, w, params.start, params.pieceLen); err != nil {
-		ps.cfg.ServerLogger.Errorf("send range:%s error: %v", rangeStr, err)
+	// Step4: send piece wrapped by meta data
+	if err := ps.uploadPiece(f, w, up); err != nil {
+		ps.cfg.ServerLogger.Errorf("send range:%s of file:%s, error:%v",
+			rangeStr, taskFileName, err)
 	}
 }
 
@@ -433,7 +460,7 @@ func (ps *peerServer) parseRateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	sendSuccess(w)
 
-	// update the ratelimit of taskFileName
+	// update the rateLimit of taskFileName
 	if v, ok := ps.syncTaskMap.Load(taskFileName); ok {
 		param := v.(*taskConfig)
 		param.rateLimit = clientRate
@@ -533,4 +560,21 @@ func sendSuccess(w http.ResponseWriter) {
 func sendHeader(w http.ResponseWriter, code int) {
 	w.Header().Set(config.StrContentType, ctype)
 	w.WriteHeader(code)
+}
+
+func rangeErrorResponse(w http.ResponseWriter, err error) {
+	if errors.IsRangeNotSatisfiable(err) {
+		http.Error(w, config.RangeNotSatisfiableDesc, http.StatusRequestedRangeNotSatisfiable)
+	} else if os.IsPermission(err) {
+		http.Error(w, err.Error(), http.StatusForbidden)
+	} else if os.IsNotExist(err) {
+		http.Error(w, err.Error(), http.StatusNotFound)
+	} else {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func jsonStr(v interface{}) string {
+	b, _ := json.Marshal(v)
+	return string(b)
 }

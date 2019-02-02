@@ -46,10 +46,11 @@ var (
 // P2PDownloader is one implementation of Downloader that uses p2p pattern
 // to download files.
 type P2PDownloader struct {
-	Cfg            *config.Config
 	API            api.SupernodeAPI
 	Register       regist.SupernodeRegister
 	RegisterResult *regist.RegisterResult
+
+	cfg *config.Config
 
 	node         string
 	taskID       string
@@ -80,7 +81,7 @@ func NewP2PDownloader(cfg *config.Config,
 	register regist.SupernodeRegister,
 	result *regist.RegisterResult) *P2PDownloader {
 	p2p := &P2PDownloader{
-		Cfg:            cfg,
+		cfg:            cfg,
 		API:            api,
 		Register:       register,
 		RegisterResult: result,
@@ -92,8 +93,8 @@ func NewP2PDownloader(cfg *config.Config,
 func (p2p *P2PDownloader) init() {
 	p2p.node = p2p.RegisterResult.Node
 	p2p.taskID = p2p.RegisterResult.TaskID
-	p2p.targetFile = p2p.Cfg.RV.RealTarget
-	p2p.taskFileName = p2p.Cfg.RV.TaskFileName
+	p2p.targetFile = p2p.cfg.RV.RealTarget
+	p2p.taskFileName = p2p.cfg.RV.TaskFileName
 
 	p2p.pieceSizeHistory[0], p2p.pieceSizeHistory[1] =
 		p2p.RegisterResult.PieceSize, p2p.RegisterResult.PieceSize
@@ -103,12 +104,12 @@ func (p2p *P2PDownloader) init() {
 
 	p2p.clientQueue = util.NewQueue(config.DefaultClientQueueSize)
 
-	p2p.clientFilePath = helper.GetTaskFile(p2p.taskFileName, p2p.Cfg.RV.DataDir)
-	p2p.serviceFilePath = helper.GetServiceFile(p2p.taskFileName, p2p.Cfg.RV.DataDir)
+	p2p.clientFilePath = helper.GetTaskFile(p2p.taskFileName, p2p.cfg.RV.DataDir)
+	p2p.serviceFilePath = helper.GetServiceFile(p2p.taskFileName, p2p.cfg.RV.DataDir)
 
 	p2p.pieceSet = make(map[string]bool)
 
-	p2p.rateLimiter = util.NewRateLimiter(int32(p2p.Cfg.LocalLimit), 2)
+	p2p.rateLimiter = util.NewRateLimiter(int32(p2p.cfg.LocalLimit), 2)
 	p2p.pullRateTime = time.Now().Add(-3 * time.Second)
 }
 
@@ -120,7 +121,8 @@ func (p2p *P2PDownloader) Run() error {
 	)
 
 	// start ClientWriter
-	clientWriter, err := NewClientWriter(p2p.taskFileName, p2p.Cfg.RV.Cid, p2p.clientFilePath, p2p.serviceFilePath, p2p.clientQueue, p2p.Cfg)
+	clientWriter, err := NewClientWriter(p2p.taskFileName, p2p.cfg.RV.Cid,
+		p2p.clientFilePath, p2p.serviceFilePath, p2p.clientQueue, p2p.API, p2p.cfg)
 	if err != nil {
 		return err
 	}
@@ -133,7 +135,7 @@ func (p2p *P2PDownloader) Run() error {
 		if !goNext {
 			continue
 		}
-		p2p.Cfg.ClientLogger.Infof("downloading piece:%v", lastItem)
+		p2p.cfg.ClientLogger.Infof("downloading piece:%v", lastItem)
 
 		curItem := *lastItem
 		curItem.Content = &bytes.Buffer{}
@@ -148,22 +150,22 @@ func (p2p *P2PDownloader) Run() error {
 				p2p.finishTask(response, clientWriter)
 				return nil
 			} else {
-				p2p.Cfg.ClientLogger.Warnf("request piece result:%v", response)
+				p2p.cfg.ClientLogger.Warnf("request piece result:%v", response)
 				if code == config.TaskCodeSourceError {
-					p2p.Cfg.BackSourceReason = config.BackSourceReasonSourceError
+					p2p.cfg.BackSourceReason = config.BackSourceReasonSourceError
 				}
 			}
 		} else {
-			p2p.Cfg.ClientLogger.Errorf("download piece fail: %v", err)
-			if p2p.Cfg.BackSourceReason == 0 {
-				p2p.Cfg.BackSourceReason = config.BackSourceReasonDownloadError
+			p2p.cfg.ClientLogger.Errorf("download piece fail: %v", err)
+			if p2p.cfg.BackSourceReason == 0 {
+				p2p.cfg.BackSourceReason = config.BackSourceReasonDownloadError
 			}
 		}
 
 		// NOTE: Should we call it directly here？
 		// Maybe we should return an error and let the caller decide whether to call it.
-		if p2p.Cfg.BackSourceReason != 0 {
-			backDownloader := backDown.NewBackDownloader(p2p.Cfg, p2p.RegisterResult)
+		if p2p.cfg.BackSourceReason != 0 {
+			backDownloader := backDown.NewBackDownloader(p2p.cfg, p2p.RegisterResult)
 			return backDownloader.Run()
 		}
 	}
@@ -190,7 +192,7 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 		err error
 	)
 	req := &types.PullPieceTaskRequest{
-		SrcCid: p2p.Cfg.RV.Cid,
+		SrcCid: p2p.cfg.RV.Cid,
 		DstCid: item.DstCid,
 		Range:  item.Range,
 		Result: item.Result,
@@ -200,10 +202,10 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 
 	for {
 		if res, err = p2p.API.PullPieceTask(item.SuperNode, req); err != nil {
-			p2p.Cfg.ClientLogger.Errorf("pull piece task error: %v", err)
+			p2p.cfg.ClientLogger.Errorf("pull piece task error: %v", err)
 		} else if res.Code == config.TaskCodeWait {
 			sleepTime := time.Duration(rand.Intn(1400)+600) * time.Millisecond
-			p2p.Cfg.ClientLogger.Infof("pull piece task result:%s and sleep %.3fs",
+			p2p.cfg.ClientLogger.Infof("pull piece task result:%s and sleep %.3fs",
 				res, sleepTime.Seconds())
 			time.Sleep(sleepTime)
 			continue
@@ -215,10 +217,10 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 		res.Code != config.TaskCodeFinish &&
 		res.Code != config.TaskCodeLimited &&
 		res.Code != config.Success) {
-		p2p.Cfg.ClientLogger.Errorf("pull piece task fail:%v and will migrate", res)
+		p2p.cfg.ClientLogger.Errorf("pull piece task fail:%v and will migrate", res)
 
 		var registerRes *regist.RegisterResult
-		if registerRes, err = p2p.Register.Register(p2p.Cfg.RV.PeerPort); err != nil {
+		if registerRes, err = p2p.Register.Register(p2p.cfg.RV.PeerPort); err != nil {
 			return nil, err
 		}
 		p2p.pieceSizeHistory[1] = registerRes.PieceSize
@@ -240,8 +242,8 @@ func (p2p *P2PDownloader) getPullRate(data *types.PullPieceTaskResponseContinueD
 	p2p.pullRateTime = time.Now()
 
 	var localRate int
-	if p2p.Cfg.LocalLimit > 0 {
-		localRate = p2p.Cfg.LocalLimit
+	if p2p.cfg.LocalLimit > 0 {
+		localRate = p2p.cfg.LocalLimit
 	} else {
 		localRate = data.DownLink * 1024
 	}
@@ -253,16 +255,16 @@ func (p2p *P2PDownloader) getPullRate(data *types.PullPieceTaskResponseContinueD
 		RateLimit:    localRate,
 		TaskFileName: p2p.taskFileName,
 	}
-	resp, err := uploaderAPI.ParseRate(p2p.Cfg.RV.LocalIP, p2p.Cfg.RV.PeerPort, req)
+	resp, err := uploaderAPI.ParseRate(p2p.cfg.RV.LocalIP, p2p.cfg.RV.PeerPort, req)
 	if err != nil {
-		p2p.Cfg.ClientLogger.Errorf("failed to pullRate: %v", err)
+		p2p.cfg.ClientLogger.Errorf("failed to pullRate: %v", err)
 		p2p.rateLimiter.SetRate(util.TransRate(localRate))
 		return
 	}
 
 	reqRate, err := strconv.Atoi(resp)
 	if err != nil {
-		p2p.Cfg.ClientLogger.Errorf("failed to parse rate from resp %s: %v", resp, err)
+		p2p.cfg.ClientLogger.Errorf("failed to parse rate from resp %s: %v", resp, err)
 		p2p.rateLimiter.SetRate(util.TransRate(localRate))
 		return
 	}
@@ -274,7 +276,7 @@ func (p2p *P2PDownloader) startTask(data *types.PullPieceTaskResponseContinueDat
 		taskID:      p2p.taskID,
 		node:        p2p.node,
 		pieceTask:   data,
-		cfg:         p2p.Cfg,
+		cfg:         p2p.cfg,
 		queue:       p2p.queue,
 		clientQueue: p2p.clientQueue,
 		rateLimiter: p2p.rateLimiter,
@@ -299,7 +301,7 @@ func (p2p *P2PDownloader) getItem(latestItem *Piece) (bool, *Piece) {
 		if item.Range != "" {
 			v, ok := p2p.pieceSet[item.Range]
 			if !ok {
-				p2p.Cfg.ClientLogger.Warnf("pieceRange:%s is neither running nor success", item.Range)
+				p2p.cfg.ClientLogger.Warnf("pieceRange:%s is neither running nor success", item.Range)
 				return false, latestItem
 			}
 			if !v && (item.Result == config.ResultSemiSuc ||
@@ -312,7 +314,7 @@ func (p2p *P2PDownloader) getItem(latestItem *Piece) (bool, *Piece) {
 		}
 		latestItem = item
 	} else {
-		p2p.Cfg.ClientLogger.Warnf("get item timeout(2s) from queue.")
+		p2p.cfg.ClientLogger.Warnf("get item timeout(2s) from queue.")
 		needMerge = false
 	}
 	if util.IsNil(latestItem) {
@@ -344,7 +346,7 @@ func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 	p2p.refresh(item)
 
 	data := response.ContinueData()
-	p2p.Cfg.ClientLogger.Debugf("pieces to be processed:%v", data)
+	p2p.cfg.ClientLogger.Debugf("pieces to be processed:%v", data)
 	for _, pieceTask := range data {
 		pieceRange := pieceTask.Range
 		v, ok := p2p.pieceSet[pieceRange]
@@ -366,35 +368,35 @@ func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 		}
 	}
 	if !hasTask {
-		p2p.Cfg.ClientLogger.Warnf("has not available pieceTask, maybe resource lack")
+		p2p.cfg.ClientLogger.Warnf("has not available pieceTask, maybe resource lack")
 	}
 	if len(alreadyDownload) > 0 {
-		p2p.Cfg.ClientLogger.Warnf("already downloaded pieces:%v", alreadyDownload)
+		p2p.cfg.ClientLogger.Warnf("already downloaded pieces:%v", alreadyDownload)
 	}
 }
 
 func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, clientWriter *ClientWriter) {
 	// wait client writer finished
-	p2p.Cfg.ClientLogger.Infof("remaining piece to be written count:%d", p2p.clientQueue.Len())
+	p2p.cfg.ClientLogger.Infof("remaining piece to be written count:%d", p2p.clientQueue.Len())
 	p2p.clientQueue.Put(last)
 	waitStart := time.Now()
 	clientWriter.Wait()
-	p2p.Cfg.ClientLogger.Infof("wait client writer finish cost:%.3f,main qu size:%d,client qu size:%d",
+	p2p.cfg.ClientLogger.Infof("wait client writer finish cost:%.3f,main qu size:%d,client qu size:%d",
 		time.Since(waitStart).Seconds(), p2p.queue.Len(), p2p.clientQueue.Len())
 
-	if p2p.Cfg.BackSourceReason > 0 {
+	if p2p.cfg.BackSourceReason > 0 {
 		return
 	}
 
 	// get the temp path where the downloaded file exists.
 	var src string
-	if clientWriter.acrossWrite || !helper.IsP2P(p2p.Cfg.Pattern) {
-		src = p2p.Cfg.RV.TempTarget
+	if clientWriter.acrossWrite || !helper.IsP2P(p2p.cfg.Pattern) {
+		src = p2p.cfg.RV.TempTarget
 	} else {
 		if _, err := os.Stat(p2p.clientFilePath); err != nil {
-			p2p.Cfg.ClientLogger.Warnf("client file path:%s not found", p2p.clientFilePath)
+			p2p.cfg.ClientLogger.Warnf("client file path:%s not found", p2p.clientFilePath)
 			if e := util.Link(p2p.serviceFilePath, p2p.clientFilePath); e != nil {
-				p2p.Cfg.ClientLogger.Warnln("hard link failed, instead of use copy")
+				p2p.cfg.ClientLogger.Warnln("hard link failed, instead of use copy")
 				util.CopyFile(p2p.serviceFilePath, p2p.clientFilePath)
 			}
 		}
@@ -402,10 +404,10 @@ func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, clie
 	}
 
 	// move file to the target file path.
-	if err := downloader.MoveFile(src, p2p.targetFile, p2p.Cfg.Md5, p2p.Cfg.ClientLogger); err != nil {
+	if err := downloader.MoveFile(src, p2p.targetFile, p2p.cfg.Md5, p2p.cfg.ClientLogger); err != nil {
 		return
 	}
-	p2p.Cfg.ClientLogger.Infof("download successfully from dragonfly")
+	p2p.cfg.ClientLogger.Infof("download successfully from dragonfly")
 }
 
 func (p2p *P2PDownloader) refresh(item *Piece) {

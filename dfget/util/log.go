@@ -35,7 +35,6 @@ func CreateLogger(logPath string, logName string, logLevel string, sign string) 
 	// parse log level
 	level, err := log.ParseLevel(logLevel)
 	if err != nil {
-		// TODO: print a warning.
 		level = log.InfoLevel
 	}
 
@@ -148,4 +147,11 @@ func (f *DragonflyFormatter) appendValue(b *bytes.Buffer, value interface{}, wit
 	if withSpace {
 		b.WriteByte(' ')
 	}
+}
+
+// ----------------------------------------------------------------------------
+
+// IsDebug returns the log level is debug.
+func IsDebug(level log.Level) bool {
+	return level >= log.DebugLevel
 }

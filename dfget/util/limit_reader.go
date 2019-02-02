@@ -34,14 +34,14 @@ func NewLimitReader(src io.Reader, rate int, calculateMd5 bool) *LimitReader {
 // NewLimitReaderWithLimiter create LimitReader with a ratelimiter.
 // src: reader
 // rate: bytes/second
-func NewLimitReaderWithLimiter(ratelimiter *RateLimiter, src io.Reader, calculateMd5 bool) *LimitReader {
+func NewLimitReaderWithLimiter(rateLimiter *RateLimiter, src io.Reader, calculateMd5 bool) *LimitReader {
 	var md5sum hash.Hash
 	if calculateMd5 {
 		md5sum = md5.New()
 	}
 	return &LimitReader{
 		Src:     src,
-		Limiter: ratelimiter,
+		Limiter: rateLimiter,
 		md5sum:  md5sum,
 	}
 }

@@ -29,7 +29,6 @@ import (
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
-	errType "github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/go-check/check"
@@ -78,7 +77,7 @@ func (s *UploadUtilTestSuite) TearDownSuite(c *check.C) {
 
 func (s *UploadUtilTestSuite) TestGetTaskFile(c *check.C) {
 	// normal test
-	f, err := p2p.getTaskFile(taskFileName, &uploadParam{})
+	f, _, err := p2p.getTaskFile(taskFileName)
 	defer f.Close()
 	// check get file correctly
 	c.Assert(err, check.IsNil)
@@ -87,44 +86,61 @@ func (s *UploadUtilTestSuite) TestGetTaskFile(c *check.C) {
 	result, err := ioutil.ReadAll(f)
 	c.Assert(err, check.IsNil)
 	c.Assert(string(result), check.Equals, tempFileContent)
-
-	// check file length test
-	params := &uploadParam{
-		start:    0,
-		pieceLen: 20,
-	}
-	f2, err := p2p.getTaskFile(taskFileName, params)
-	defer f2.Close()
-	c.Assert(errType.IsInsufficientFileLength(err), check.Equals, true)
 }
 
-func (s *UploadUtilTestSuite) TestTransFile(c *check.C) {
-	f, _ := p2p.getTaskFile(taskFileName, &uploadParam{})
+func (s *UploadUtilTestSuite) TestUploadPiece(c *check.C) {
+	f, size, _ := p2p.getTaskFile(taskFileName)
 	defer f.Close()
 
-	// normal test when start offset equals zero
-	rr := httptest.NewRecorder()
-	err := p2p.transFile(f, rr, 0, 10)
-	c.Check(err, check.IsNil)
-	c.Check(rr.Body.String(), check.Equals, tempFileContent)
+	var up = func(start, end int64, pad bool) *uploadParam {
+		up := &uploadParam{
+			start:     start,
+			end:       end,
+			length:    end - start + 1,
+			pieceNum:  0,
+			pieceSize: defaultPieceSize,
+		}
+		amendRange(size, pad, up)
+		return up
+	}
 
-	// normal test when start offset not equals zero
-	rr = httptest.NewRecorder()
-	err = p2p.transFile(f, rr, 1, 5)
-	c.Check(err, check.IsNil)
-	c.Check(rr.Body.String(), check.Equals, tempFileContent[1:6])
+	var cases = []struct {
+		start    int64
+		end      int64
+		pad      bool
+		expected string
+	}{
+		// normal test when start offset equals zero
+		{0, 10, false, tempFileContent},
+		// normal test when start offset not equals zero
+		{1, 5, false, tempFileContent[1:6]},
+		// range length more than file data test
+		{0, 20, false, tempFileContent},
+		// range length less than file data test
+		{0, 5, false, tempFileContent[:6]},
+		// with piece meta data
+		{0, 5, true, tempFileContent[:1]},
+		{0, 4, true, ""},
+		{0, 15, true, tempFileContent},
+	}
 
-	// readLen more than file data test
-	rr = httptest.NewRecorder()
-	err = p2p.transFile(f, rr, 0, 20)
-	c.Check(err, check.IsNil)
-	c.Check(rr.Body.String(), check.Equals, tempFileContent)
+	for _, v := range cases {
+		rr := httptest.NewRecorder()
+		p := up(v.start, v.end, v.pad)
+		err := p2p.uploadPiece(f, rr, p)
+		c.Check(err, check.IsNil)
+		cmt := check.Commentf("content:'%s' start:%d end:%d pad:%v",
+			tempFileContent, v.start, v.end, v.pad)
+		if v.pad {
+			c.Check(rr.Body.String(), check.DeepEquals,
+				pieceContent(p.pieceSize, v.expected), cmt)
+		} else {
+			c.Check(rr.Body.String(), check.Equals, v.expected, cmt)
+		}
+	}
+}
 
-	// readLen less than file data test
-	rr = httptest.NewRecorder()
-	err = p2p.transFile(f, rr, 0, 5)
-	c.Check(err, check.IsNil)
-	c.Check(rr.Body.String(), check.Equals, tempFileContent[:5])
+func (s *UploadUtilTestSuite) TestAmendRange(c *check.C) {
 
 }
 
@@ -145,69 +161,62 @@ func (s *UploadUtilTestSuite) TestCheckServer(c *check.C) {
 	c.Check(result, check.Equals, "")
 }
 
-func (s *UploadUtilTestSuite) TestParseRange(c *check.C) {
-	type args struct {
-		rangeStr string
-	}
+func (s *UploadUtilTestSuite) TestParseParams(c *check.C) {
+	uh := defaultUploadHeader
+
 	tests := []struct {
 		name    string
-		args    args
+		header  uploadHeader
 		want    *uploadParam
 		wantErr bool
 	}{
 		{
-			name: "normalTest",
-			args: args{
-				rangeStr: "bytes=0-65575",
-			},
+			name:   "normalTest",
+			header: uh.newRange("0-65575"),
 			want: &uploadParam{
-				start:    0,
-				pieceLen: 65576,
+				start:     0,
+				end:       65575,
+				length:    65576,
+				pieceSize: defaultPieceSize,
 			},
 			wantErr: false,
 		},
 		{
-			name: "MultDashesTest",
-			args: args{
-				rangeStr: "bytes=0-65-575",
-			},
+			name:    "MultiDashesTest",
+			header:  uh.newRange("0-65-575"),
 			want:    nil,
 			wantErr: true,
 		},
 		{
-			name: "NotIntTest",
-			args: args{
-				rangeStr: "bytes=0-hello",
-			},
+			name:    "NotIntTest",
+			header:  uh.newRange("0-hello"),
 			want:    nil,
 			wantErr: true,
 		},
 		{
-			name: "EndLessStartTest",
-			args: args{
-				rangeStr: "bytes=65575-0",
-			},
+			name:    "EndLessStartTest",
+			header:  uh.newRange("65575-0"),
 			want:    nil,
 			wantErr: true,
 		},
 		{
-			name: "NegativeStartTest",
-			args: args{
-				rangeStr: "bytes=-1-8",
-			},
+			name:    "NegativeStartTest",
+			header:  uh.newRange("-1-8"),
 			want:    nil,
 			wantErr: true,
 		},
 	}
 
 	for _, tt := range tests {
-		got, err := parseRange(tt.args.rangeStr)
+		h := tt.header
+		got, err := parseParams(h.rangeStr, h.num, h.size)
 		if tt.wantErr {
 			c.Check(err, check.NotNil)
 		} else {
 			c.Check(err, check.IsNil)
 		}
-		c.Check(got, check.DeepEquals, tt.want)
+		c.Check(got, check.DeepEquals, tt.want,
+			check.Commentf("%s:%v", tt.name, tt.header))
 	}
 }
 

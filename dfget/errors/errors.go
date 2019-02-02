@@ -33,15 +33,15 @@ var (
 	// ErrConvertFailed represents failed to convert.
 	ErrConvertFailed = &DFGetError{codeConvertFailed, "convert failed"}
 
-	// ErrInsufficientFileLength represents the length of file is insufficient.
-	ErrInsufficientFileLength = &DFGetError{codeInsufficientFileLength, "insufficient length"}
+	// ErrRangeNotSatisfiable represents the length of file is insufficient.
+	ErrRangeNotSatisfiable = &DFGetError{codeRangeNotSatisfiable, "range not satisfiable"}
 )
 
 const (
 	codeInvalidValue = iota
 	codeNotInitialized
 	codeConvertFailed
-	codeInsufficientFileLength
+	codeRangeNotSatisfiable
 )
 
 // New function creates a DFGetError.
@@ -73,10 +73,7 @@ func (e *DFGetError) Error() string {
 
 // IsNilError check the error is nil or not.
 func IsNilError(err error) bool {
-	if err == nil {
-		return true
-	}
-	return false
+	return err == nil
 }
 
 // IsInvalidValue check the error is the value is invalid or not.
@@ -94,16 +91,13 @@ func IsConvertFailed(err error) bool {
 	return checkError(err, codeConvertFailed)
 }
 
-// IsInsufficientFileLength check the error is a
-// insufficient file length error or not.
-func IsInsufficientFileLength(err error) bool {
-	return checkError(err, codeInsufficientFileLength)
+// IsRangeNotSatisfiable check the error is a
+// range not exist error or not.
+func IsRangeNotSatisfiable(err error) bool {
+	return checkError(err, codeRangeNotSatisfiable)
 }
 
 func checkError(err error, code int) bool {
-	errCause := errHandler.Cause(err)
-	if errTemp, ok := errCause.(*DFGetError); ok && errTemp.Code == code {
-		return true
-	}
-	return false
+	e, ok := errHandler.Cause(err).(*DFGetError)
+	return ok && e.Code == code
 }
