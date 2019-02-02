@@ -26,7 +26,6 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/go-check/check"
-	"github.com/sirupsen/logrus"
 )
 
 func Test(t *testing.T) {
@@ -77,24 +76,23 @@ func (s *DownloaderTestSuite) TestMoveFile(c *check.C) {
 	tmp, _ := ioutil.TempDir("/tmp", "dfget-TestMoveFile-")
 	defer os.RemoveAll(tmp)
 
-	log := &logrus.Logger{}
 	src := path.Join(tmp, "a")
 	dst := path.Join(tmp, "b")
 	md5str := helper.CreateTestFileWithMD5(src, "hello")
 
-	err := MoveFile(src, dst, "x", log)
+	err := MoveFile(src, dst, "x")
 	c.Assert(util.PathExist(src), check.Equals, true)
 	c.Assert(util.PathExist(dst), check.Equals, false)
 	c.Assert(err, check.NotNil)
 
-	err = MoveFile(src, dst, md5str, log)
+	err = MoveFile(src, dst, md5str)
 	c.Assert(util.PathExist(src), check.Equals, false)
 	c.Assert(util.PathExist(dst), check.Equals, true)
 	c.Assert(err, check.IsNil)
 	content, _ := ioutil.ReadFile(dst)
 	c.Assert(string(content), check.Equals, "hello")
 
-	err = MoveFile(src, dst, "", log)
+	err = MoveFile(src, dst, "")
 	c.Assert(err, check.NotNil)
 }
 

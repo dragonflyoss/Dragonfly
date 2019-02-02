@@ -31,6 +31,8 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/version"
+
+	"github.com/sirupsen/logrus"
 )
 
 // uploader helper
@@ -150,7 +152,7 @@ func (ps *peerServer) uploadPiece(f *os.File, w http.ResponseWriter, up *uploadP
 		}
 
 		if num == 0 {
-			ps.cfg.ServerLogger.Warnf("empty range:%s-%s of file:%s",
+			logrus.Warnf("empty range:%s-%s of file:%s",
 				up.start, up.end, f.Name())
 			break
 		}

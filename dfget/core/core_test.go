@@ -32,6 +32,7 @@ import (
 	. "github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
+
 	"github.com/go-check/check"
 	"github.com/valyala/fasthttp"
 )
@@ -150,14 +151,14 @@ func (s *CoreTestSuite) TestCheckConnectSupernode(c *check.C) {
 	go fasthttp.Serve(ln, func(ctx *fasthttp.RequestCtx) {})
 
 	buf := &bytes.Buffer{}
-	cfg := s.createConfig(buf)
+	s.createConfig(buf)
 
 	nodes := []string{host}
-	ip := checkConnectSupernode(nodes, cfg.ClientLogger)
+	ip := checkConnectSupernode(nodes)
 	c.Assert(ip, check.Equals, "127.0.0.1")
 
 	buf.Reset()
-	ip = checkConnectSupernode([]string{"127.0.0.2"}, cfg.ClientLogger)
+	ip = checkConnectSupernode([]string{"127.0.0.2"})
 	c.Assert(strings.Index(buf.String(), "Connect") > 0, check.Equals, true)
 	c.Assert(ip, check.Equals, "")
 }

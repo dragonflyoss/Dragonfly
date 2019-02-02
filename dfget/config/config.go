@@ -34,7 +34,6 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"gopkg.in/gcfg.v1"
 	"gopkg.in/warnings.v0"
 	"gopkg.in/yaml.v2"
@@ -223,12 +222,6 @@ type Config struct {
 
 	// The reason of backing to source.
 	BackSourceReason int `json:"-"`
-
-	// Client logger.
-	ClientLogger *logrus.Logger `json:"-"`
-
-	// Server logger, only created when Pattern equals 'p2p'.
-	ServerLogger *logrus.Logger `json:"-"`
 }
 
 func (cfg *Config) String() string {
@@ -263,10 +256,6 @@ func NewConfig() *Config {
 func AssertConfig(cfg *Config) (err error) {
 	if util.IsNil(cfg) {
 		return errors.Wrap(errType.ErrNotInitialized, "runtime config")
-	}
-
-	if util.IsNil(cfg.ClientLogger) {
-		return errors.Wrap(errType.ErrNotInitialized, "client log")
 	}
 
 	if err := checkURL(cfg); err != nil {

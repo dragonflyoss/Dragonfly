@@ -28,6 +28,8 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/core/downloader"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
+
+	"github.com/sirupsen/logrus"
 )
 
 // BackDownloader downloads the file from file resource.
@@ -75,7 +77,6 @@ func (bd *BackDownloader) Run() error {
 		err  error
 		f    *os.File
 	)
-	log := bd.cfg.ClientLogger
 
 	if bd.cfg.Notbs || bd.cfg.BackSourceReason == config.BackSourceReasonNoSpace {
 		bd.cfg.BackSourceReason += config.ForceNotBackSourceAddition
@@ -84,7 +85,7 @@ func (bd *BackDownloader) Run() error {
 	}
 
 	util.Printer.Printf("download from source")
-	log.Infof("start download %s from the source station", path.Base(bd.Target))
+	logrus.Infof("start download %s from the source station", path.Base(bd.Target))
 
 	defer bd.Cleanup()
 
@@ -108,7 +109,7 @@ func (bd *BackDownloader) Run() error {
 
 	realMd5 := reader.Md5()
 	if bd.Md5 == "" || bd.Md5 == realMd5 {
-		err = downloader.MoveFile(bd.tempFileName, bd.Target, "", bd.cfg.ClientLogger)
+		err = downloader.MoveFile(bd.tempFileName, bd.Target, "")
 	} else {
 		err = fmt.Errorf("md5 not match, expected:%s real:%s", bd.Md5, realMd5)
 	}
