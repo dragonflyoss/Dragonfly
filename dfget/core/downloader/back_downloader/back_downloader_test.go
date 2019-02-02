@@ -63,7 +63,7 @@ func (s *BackDownloaderTestSuite) TestBackDownloader_Run(c *check.C) {
 
 	cfg := helper.CreateConfig(nil, s.workHome)
 	bd := &BackDownloader{
-		Cfg:    cfg,
+		cfg:    cfg,
 		URL:    "http://" + s.host + "/download.test",
 		Target: dst,
 	}

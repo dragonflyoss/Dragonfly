@@ -74,6 +74,8 @@ func (u *UploaderTestSuite) TearDownSuite(c *check.C) {
 
 func (u *UploaderTestSuite) TestUploadHandler(c *check.C) {
 	headers := make(map[string]string)
+	headers[config.StrPieceSize] = defaultPieceSizeStr
+	headers[config.StrPieceNum] = "0"
 
 	// normal test
 	headers["range"] = "bytes=0-1999"
@@ -82,20 +84,20 @@ func (u *UploaderTestSuite) TestUploadHandler(c *check.C) {
 		url:     config.PeerHTTPPathPrefix + taskFile,
 		headers: headers,
 	}); err == nil {
-		c.Check(rr.Code, check.Equals, http.StatusOK)
-		c.Check(rr.Body.String(), check.Equals, fileContent)
+		c.Check(rr.Code, check.Equals, http.StatusPartialContent)
+		c.Check(rr.Body.String(), check.Equals, pc(fileContent[:1995]))
 
 		// TODO: limit read check
 	}
 
-	// insufficient file length test
+	// RangeNotSatisfiable
 	headers["range"] = "bytes=0-1"
 	if rr, err := u.testHandlerHelper(&HandlerHelper{
 		method:  http.MethodGet,
 		url:     config.PeerHTTPPathPrefix + emptyFile,
 		headers: headers,
 	}); err == nil {
-		c.Check(rr.Code, check.Equals, http.StatusInternalServerError)
+		c.Check(rr.Code, check.Equals, http.StatusRequestedRangeNotSatisfiable)
 	}
 
 	// not found test

@@ -32,7 +32,6 @@ import (
 
 // BackDownloader downloads the file from file resource.
 type BackDownloader struct {
-	Cfg     *config.Config
 	URL     string
 	Target  string
 	Md5     string
@@ -40,6 +39,8 @@ type BackDownloader struct {
 	Node    string
 	Total   int64
 	Success bool
+
+	cfg *config.Config
 
 	tempFileName string
 	cleaned      bool
@@ -56,7 +57,7 @@ func NewBackDownloader(cfg *config.Config, result *regist.RegisterResult) *BackD
 		node = result.Node
 	}
 	return &BackDownloader{
-		Cfg:     cfg,
+		cfg:     cfg,
 		URL:     cfg.URL,
 		Target:  cfg.RV.RealTarget,
 		Md5:     cfg.Md5,
@@ -74,11 +75,11 @@ func (bd *BackDownloader) Run() error {
 		err  error
 		f    *os.File
 	)
-	log := bd.Cfg.ClientLogger
+	log := bd.cfg.ClientLogger
 
-	if bd.Cfg.Notbs || bd.Cfg.BackSourceReason == config.BackSourceReasonNoSpace {
-		bd.Cfg.BackSourceReason += config.ForceNotBackSourceAddition
-		err = fmt.Errorf("download fail and not back source: %d", bd.Cfg.BackSourceReason)
+	if bd.cfg.Notbs || bd.cfg.BackSourceReason == config.BackSourceReasonNoSpace {
+		bd.cfg.BackSourceReason += config.ForceNotBackSourceAddition
+		err = fmt.Errorf("download fail and not back source: %d", bd.cfg.BackSourceReason)
 		return err
 	}
 
@@ -87,27 +88,27 @@ func (bd *BackDownloader) Run() error {
 
 	defer bd.Cleanup()
 
-	prefix := "backsource." + bd.Cfg.Sign + "."
+	prefix := "backsource." + bd.cfg.Sign + "."
 	if f, err = ioutil.TempFile(path.Dir(bd.Target), prefix); err != nil {
 		return err
 	}
 	bd.tempFileName = f.Name()
 	defer f.Close()
 
-	if resp, err = util.HTTPGetWithHeaders(bd.URL, downloader.ConvertHeaders(bd.Cfg.Header)); err != nil {
+	if resp, err = util.HTTPGetWithHeaders(bd.URL, downloader.ConvertHeaders(bd.cfg.Header)); err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
 	buf := make([]byte, 512*1024)
-	reader := util.NewLimitReader(resp.Body, bd.Cfg.LocalLimit, bd.Md5 != "")
+	reader := util.NewLimitReader(resp.Body, bd.cfg.LocalLimit, bd.Md5 != "")
 	if bd.Total, err = io.CopyBuffer(f, reader, buf); err != nil {
 		return err
 	}
 
 	realMd5 := reader.Md5()
 	if bd.Md5 == "" || bd.Md5 == realMd5 {
-		err = downloader.MoveFile(bd.tempFileName, bd.Target, "", bd.Cfg.ClientLogger)
+		err = downloader.MoveFile(bd.tempFileName, bd.Target, "", bd.cfg.ClientLogger)
 	} else {
 		err = fmt.Errorf("md5 not match, expected:%s real:%s", bd.Md5, realMd5)
 	}

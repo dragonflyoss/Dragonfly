@@ -112,6 +112,25 @@ func (suite *DFGetUtilSuite) TestAddConsoleLog(c *check.C) {
 	})
 }
 
+func (suite *DFGetUtilSuite) TestIsDebug(c *check.C) {
+	var cases = []struct {
+		level    logrus.Level
+		expected bool
+	}{
+		{logrus.DebugLevel, true},
+		{logrus.InfoLevel, false},
+		{logrus.WarnLevel, false},
+		{logrus.ErrorLevel, false},
+	}
+	for _, v := range cases {
+		c.Assert(IsDebug(v.level), check.Equals, v.expected,
+			check.Commentf("%s:%v", v.level.String(), v.expected))
+	}
+}
+
+// ----------------------------------------------------------------------------
+// helper functions
+
 func tempFileAndLogger(level string, sign string) (*logrus.Logger, *os.File, *bufio.Reader, error) {
 	tmpPath := "/tmp"
 	tmpFile, err := ioutil.TempFile(tmpPath, "dfget_test")

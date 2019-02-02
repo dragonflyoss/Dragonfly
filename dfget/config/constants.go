@@ -92,6 +92,7 @@ const (
 	StrRange         = "Range"
 	StrContentLength = "Content-Length"
 	StrContentType   = "Content-Type"
+	StrUserAgent     = "User-Agent"
 
 	StrTaskFileName = "taskFileName"
 	StrClientID     = "cid"
@@ -106,6 +107,26 @@ const (
 	StrBytes = "bytes"
 )
 
+/* piece meta */
+const (
+	// PieceHeadSize every piece starts with a piece head which has 4 bytes,
+	// its value is:
+	//    real data size | (piece size << 4)
+	// And it's written with big-endian into the first four bytes of piece data.
+	PieceHeadSize = 4
+
+	// PieceTailSize every piece ends with a piece tail which has 1 byte,
+	// its value is: 0x7f
+	PieceTailSize = 1
+
+	// PieceMetaSize piece meta is constructed with piece head and tail,
+	// its size is 5 bytes.
+	PieceMetaSize = PieceHeadSize + PieceTailSize
+
+	// PieceTailChar the value of piece tail
+	PieceTailChar = byte(0x7f)
+)
+
 /* others */
 const (
 	DefaultTimestampFormat = "2006-01-02 15:04:05"
@@ -114,8 +135,8 @@ const (
 	ServerPortLowerLimit = 15000
 	ServerPortUpperLimit = 65000
 
-	RangeNotExistDesc = "range not satisfiable"
-	AddrUsedDesc      = "address already in use"
+	RangeNotSatisfiableDesc = "range not satisfiable"
+	AddrUsedDesc            = "address already in use"
 
 	PeerHTTPPathPrefix = "/peer/file/"
 	CDNPathPrefix      = "/qtdown/"

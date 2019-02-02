@@ -23,7 +23,9 @@ import (
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
+	"github.com/dragonflyoss/Dragonfly/dfget/types"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 )
 
@@ -49,18 +51,21 @@ type ClientWriter struct {
 	targetQueue  util.Queue
 	targetWriter *TargetWriter
 
-	Cfg *config.Config
+	api api.SupernodeAPI
+	cfg *config.Config
 }
 
 // NewClientWriter creates and initialize a ClientWriter instance.
-func NewClientWriter(taskFileName, cid, clientFilePath, serviceFilePath string, clientQueue util.Queue, Cfg *config.Config) (*ClientWriter, error) {
+func NewClientWriter(taskFileName, cid, clientFilePath, serviceFilePath string,
+	clientQueue util.Queue, api api.SupernodeAPI, cfg *config.Config) (*ClientWriter, error) {
 	clientWriter := &ClientWriter{
 		taskFileName:    taskFileName,
 		cid:             cid,
 		clintQueue:      clientQueue,
-		Cfg:             Cfg,
 		clientFilePath:  clientFilePath,
 		serviceFilePath: serviceFilePath,
+		api:             api,
+		cfg:             cfg,
 	}
 	if err := clientWriter.init(); err != nil {
 		return nil, err
@@ -69,10 +74,10 @@ func NewClientWriter(taskFileName, cid, clientFilePath, serviceFilePath string, 
 }
 
 func (cw *ClientWriter) init() (err error) {
-	cw.p2pPattern = helper.IsP2P(cw.Cfg.Pattern)
+	cw.p2pPattern = helper.IsP2P(cw.cfg.Pattern)
 	if cw.p2pPattern {
-		if e := util.Link(cw.Cfg.RV.TempTarget, cw.clientFilePath); e != nil {
-			cw.Cfg.ClientLogger.Warn(e)
+		if e := util.Link(cw.cfg.RV.TempTarget, cw.clientFilePath); e != nil {
+			cw.cfg.ClientLogger.Warn(e)
 			cw.acrossWrite = true
 		}
 
@@ -82,7 +87,7 @@ func (cw *ClientWriter) init() (err error) {
 
 	cw.result = true
 	cw.targetQueue = util.NewQueue(0)
-	cw.targetWriter, err = NewTargetWriter(cw.Cfg.RV.TempTarget, cw.targetQueue, cw.Cfg)
+	cw.targetWriter, err = NewTargetWriter(cw.cfg.RV.TempTarget, cw.targetQueue, cw.cfg)
 	if err != nil {
 		return
 	}
@@ -123,8 +128,8 @@ func (cw *ClientWriter) Run() {
 			continue
 		}
 		if err := cw.write(piece, time.Now()); err != nil {
-			cw.Cfg.ClientLogger.Errorf("write item:%s error:%v", piece, err)
-			cw.Cfg.BackSourceReason = config.BackSourceReasonWriteError
+			cw.cfg.ClientLogger.Errorf("write item:%s error:%v", piece, err)
+			cw.cfg.BackSourceReason = config.BackSourceReasonWriteError
 			cw.result = false
 		}
 	}
@@ -161,9 +166,24 @@ func (cw *ClientWriter) write(piece *Piece, startTime time.Time) error {
 	_, err := io.Copy(buf, piece.RawContent())
 	buf.Flush()
 
+	go cw.sendSuccessPiece(piece, time.Since(startTime))
 	return err
 }
 
 func startSyncWriter(queue util.Queue) util.Queue {
 	return nil
+}
+
+func (cw *ClientWriter) sendSuccessPiece(piece *Piece, cost time.Duration) {
+	cw.api.ReportPiece(piece.SuperNode, &types.ReportPieceRequest{
+		TaskID:     piece.TaskID,
+		Cid:        cw.cfg.RV.Cid,
+		DstCid:     piece.DstCid,
+		PieceRange: piece.Range,
+	})
+	if cost.Seconds() > 2.0 {
+		cw.cfg.ClientLogger.Infof(
+			"async writer and report suc from dst:%s... cost:%.3f for range:%s",
+			piece.DstCid[:25], cost.Seconds(), piece.Range)
+	}
 }

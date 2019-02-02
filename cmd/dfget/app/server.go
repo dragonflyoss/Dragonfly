@@ -32,13 +32,8 @@ var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Launch a peer server for uploading files.",
 	Run: func(cmd *cobra.Command, args []string) {
-		// init server logger.
-		serverLogger, err := util.CreateLogger(filepath.Join(cfg.WorkHome, "logs"), "dfserver.log", "INFO", cfg.Sign)
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(config.CodeLaunchServerError)
-		}
-		cfg.ServerLogger = serverLogger
+
+		initServerLog()
 
 		// launch a peer server as a uploader server
 		port, err := uploader.LaunchPeerServer(cfg)
@@ -69,4 +64,18 @@ func initServerFlags() {
 		"the port that server will listen on")
 	flagSet.StringVar(&cfg.RV.MetaPath, "meta", cfg.RV.MetaPath,
 		"meta file path")
+}
+
+func initServerLog() {
+	level := "INFO"
+	if cfg.Verbose {
+		level = "DEBUG"
+	}
+	serverLogger, err := util.CreateLogger(filepath.Join(cfg.WorkHome, "logs"),
+		"dfserver.log", level, cfg.Sign)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(config.CodeLaunchServerError)
+	}
+	cfg.ServerLogger = serverLogger
 }
