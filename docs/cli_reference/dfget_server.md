@@ -26,6 +26,7 @@ dfget server [flags]
 ```
       --alivetime duration    server will stop if there is no uploading task within this duration (default 5m0s)
       --expiretime duration   server will delete cached files if these files doesn't be modification within this duration (default 3m0s)
+      --verbose               be verbose
 ```
 
 ### SEE ALSO
