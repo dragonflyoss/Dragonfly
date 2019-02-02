@@ -31,6 +31,8 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -135,7 +137,7 @@ func (p2p *P2PDownloader) Run() error {
 		if !goNext {
 			continue
 		}
-		p2p.cfg.ClientLogger.Infof("downloading piece:%v", lastItem)
+		logrus.Infof("downloading piece:%v", lastItem)
 
 		curItem := *lastItem
 		curItem.Content = &bytes.Buffer{}
@@ -150,13 +152,13 @@ func (p2p *P2PDownloader) Run() error {
 				p2p.finishTask(response, clientWriter)
 				return nil
 			} else {
-				p2p.cfg.ClientLogger.Warnf("request piece result:%v", response)
+				logrus.Warnf("request piece result:%v", response)
 				if code == config.TaskCodeSourceError {
 					p2p.cfg.BackSourceReason = config.BackSourceReasonSourceError
 				}
 			}
 		} else {
-			p2p.cfg.ClientLogger.Errorf("download piece fail: %v", err)
+			logrus.Errorf("download piece fail: %v", err)
 			if p2p.cfg.BackSourceReason == 0 {
 				p2p.cfg.BackSourceReason = config.BackSourceReasonDownloadError
 			}
@@ -202,10 +204,10 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 
 	for {
 		if res, err = p2p.API.PullPieceTask(item.SuperNode, req); err != nil {
-			p2p.cfg.ClientLogger.Errorf("pull piece task error: %v", err)
+			logrus.Errorf("pull piece task error: %v", err)
 		} else if res.Code == config.TaskCodeWait {
 			sleepTime := time.Duration(rand.Intn(1400)+600) * time.Millisecond
-			p2p.cfg.ClientLogger.Infof("pull piece task result:%s and sleep %.3fs",
+			logrus.Infof("pull piece task result:%s and sleep %.3fs",
 				res, sleepTime.Seconds())
 			time.Sleep(sleepTime)
 			continue
@@ -217,7 +219,7 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 		res.Code != config.TaskCodeFinish &&
 		res.Code != config.TaskCodeLimited &&
 		res.Code != config.Success) {
-		p2p.cfg.ClientLogger.Errorf("pull piece task fail:%v and will migrate", res)
+		logrus.Errorf("pull piece task fail:%v and will migrate", res)
 
 		var registerRes *regist.RegisterResult
 		if registerRes, err = p2p.Register.Register(p2p.cfg.RV.PeerPort); err != nil {
@@ -257,14 +259,14 @@ func (p2p *P2PDownloader) getPullRate(data *types.PullPieceTaskResponseContinueD
 	}
 	resp, err := uploaderAPI.ParseRate(p2p.cfg.RV.LocalIP, p2p.cfg.RV.PeerPort, req)
 	if err != nil {
-		p2p.cfg.ClientLogger.Errorf("failed to pullRate: %v", err)
+		logrus.Errorf("failed to pullRate: %v", err)
 		p2p.rateLimiter.SetRate(util.TransRate(localRate))
 		return
 	}
 
 	reqRate, err := strconv.Atoi(resp)
 	if err != nil {
-		p2p.cfg.ClientLogger.Errorf("failed to parse rate from resp %s: %v", resp, err)
+		logrus.Errorf("failed to parse rate from resp %s: %v", resp, err)
 		p2p.rateLimiter.SetRate(util.TransRate(localRate))
 		return
 	}
@@ -301,7 +303,7 @@ func (p2p *P2PDownloader) getItem(latestItem *Piece) (bool, *Piece) {
 		if item.Range != "" {
 			v, ok := p2p.pieceSet[item.Range]
 			if !ok {
-				p2p.cfg.ClientLogger.Warnf("pieceRange:%s is neither running nor success", item.Range)
+				logrus.Warnf("pieceRange:%s is neither running nor success", item.Range)
 				return false, latestItem
 			}
 			if !v && (item.Result == config.ResultSemiSuc ||
@@ -314,7 +316,7 @@ func (p2p *P2PDownloader) getItem(latestItem *Piece) (bool, *Piece) {
 		}
 		latestItem = item
 	} else {
-		p2p.cfg.ClientLogger.Warnf("get item timeout(2s) from queue.")
+		logrus.Warnf("get item timeout(2s) from queue.")
 		needMerge = false
 	}
 	if util.IsNil(latestItem) {
@@ -346,7 +348,7 @@ func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 	p2p.refresh(item)
 
 	data := response.ContinueData()
-	p2p.cfg.ClientLogger.Debugf("pieces to be processed:%v", data)
+	logrus.Debugf("pieces to be processed:%v", data)
 	for _, pieceTask := range data {
 		pieceRange := pieceTask.Range
 		v, ok := p2p.pieceSet[pieceRange]
@@ -368,20 +370,20 @@ func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 		}
 	}
 	if !hasTask {
-		p2p.cfg.ClientLogger.Warnf("has not available pieceTask, maybe resource lack")
+		logrus.Warnf("has not available pieceTask, maybe resource lack")
 	}
 	if len(alreadyDownload) > 0 {
-		p2p.cfg.ClientLogger.Warnf("already downloaded pieces:%v", alreadyDownload)
+		logrus.Warnf("already downloaded pieces:%v", alreadyDownload)
 	}
 }
 
 func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, clientWriter *ClientWriter) {
 	// wait client writer finished
-	p2p.cfg.ClientLogger.Infof("remaining piece to be written count:%d", p2p.clientQueue.Len())
+	logrus.Infof("remaining piece to be written count:%d", p2p.clientQueue.Len())
 	p2p.clientQueue.Put(last)
 	waitStart := time.Now()
 	clientWriter.Wait()
-	p2p.cfg.ClientLogger.Infof("wait client writer finish cost:%.3f,main qu size:%d,client qu size:%d",
+	logrus.Infof("wait client writer finish cost:%.3f,main qu size:%d,client qu size:%d",
 		time.Since(waitStart).Seconds(), p2p.queue.Len(), p2p.clientQueue.Len())
 
 	if p2p.cfg.BackSourceReason > 0 {
@@ -394,9 +396,9 @@ func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, clie
 		src = p2p.cfg.RV.TempTarget
 	} else {
 		if _, err := os.Stat(p2p.clientFilePath); err != nil {
-			p2p.cfg.ClientLogger.Warnf("client file path:%s not found", p2p.clientFilePath)
+			logrus.Warnf("client file path:%s not found", p2p.clientFilePath)
 			if e := util.Link(p2p.serviceFilePath, p2p.clientFilePath); e != nil {
-				p2p.cfg.ClientLogger.Warnln("hard link failed, instead of use copy")
+				logrus.Warnln("hard link failed, instead of use copy")
 				util.CopyFile(p2p.serviceFilePath, p2p.clientFilePath)
 			}
 		}
@@ -404,10 +406,10 @@ func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, clie
 	}
 
 	// move file to the target file path.
-	if err := downloader.MoveFile(src, p2p.targetFile, p2p.cfg.Md5, p2p.cfg.ClientLogger); err != nil {
+	if err := downloader.MoveFile(src, p2p.targetFile, p2p.cfg.Md5); err != nil {
 		return
 	}
-	p2p.cfg.ClientLogger.Infof("download successfully from dragonfly")
+	logrus.Infof("download successfully from dragonfly")
 }
 
 func (p2p *P2PDownloader) refresh(item *Piece) {

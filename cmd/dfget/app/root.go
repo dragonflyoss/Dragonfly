@@ -73,13 +73,13 @@ func runDfget() error {
 	}
 
 	checkParameters()
-	cfg.ClientLogger.Infof("get cmd params:%q", os.Args)
+	logrus.Infof("get cmd params:%q", os.Args)
 
 	if err := config.AssertConfig(cfg); err != nil {
 		util.Printer.Println(fmt.Sprintf("assert context error: %v", err))
 		return err
 	}
-	cfg.ClientLogger.Infof("get init config:%v", cfg)
+	logrus.Infof("get init config:%v", cfg)
 
 	// enter the core process
 	err := core.Start(cfg)
@@ -102,10 +102,10 @@ func initProperties() {
 	properties := config.NewProperties()
 	for _, v := range cfg.ConfigFiles {
 		if err := properties.Load(v); err == nil {
-			cfg.ClientLogger.Debugf("initProperties[%s] success: %v", v, properties)
+			logrus.Debugf("initProperties[%s] success: %v", v, properties)
 			break
 		} else {
-			cfg.ClientLogger.Debugf("initProperties[%s] fail: %v", v, err)
+			logrus.Debugf("initProperties[%s] fail: %v", v, err)
 		}
 	}
 
@@ -143,23 +143,19 @@ func transParams() error {
 	return nil
 }
 
-// initClientLog init client logger.
+// initClientLog initializes dfget client's logger.
+// There are two kinds of logger dfget client uses: logfile and console.
+// logfile is used to stored generated log in local filesystem,
+// while console log will output the dfget client's log in console/terminal for
+// debugging usage.
 func initClientLog() error {
-	var (
-		logPath  = path.Join(cfg.WorkHome, "logs")
-		logLevel = "info"
-	)
-	if cfg.Verbose {
-		logLevel = "debug"
-	}
+	logFilePath := path.Join(cfg.WorkHome, "logs", "dfclient.log")
 
-	var err error
-	if cfg.ClientLogger, err = util.CreateLogger(logPath, "dfclient.log", logLevel, cfg.Sign); err != nil {
-		return err
-	}
+	util.InitLog(cfg.Verbose, logFilePath, cfg.Sign)
 
+	// once cfg.Console is set, process should also output log to console
 	if cfg.Console {
-		util.AddConsoleLog(cfg.ClientLogger)
+		util.InitConsoleLog(cfg.Verbose, cfg.Sign)
 	}
 	return nil
 }

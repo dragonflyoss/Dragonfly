@@ -24,6 +24,8 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
+
+	"github.com/sirupsen/logrus"
 )
 
 // TargetWriter writes downloading file to disk.
@@ -87,7 +89,7 @@ func (tw *TargetWriter) Run() {
 			continue
 		}
 		if err := tw.write(piece); err != nil {
-			tw.cfg.ClientLogger.Errorf("write item:%s error:%v", piece, err)
+			logrus.Errorf("write item:%s error:%v", piece, err)
 			tw.cfg.BackSourceReason = config.BackSourceReasonWriteError
 			tw.result = false
 		}

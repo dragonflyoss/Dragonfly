@@ -77,7 +77,7 @@ func Start(cfg *config.Config) *errors.DFGetError {
 func prepare(cfg *config.Config) (err error) {
 	util.Printer.Printf("dfget version:%s", version.DFGetVersion)
 	util.Printer.Printf("workspace:%s sign:%s", cfg.WorkHome, cfg.Sign)
-	cfg.ClientLogger.Infof("target file path:%s", cfg.Output)
+	logrus.Infof("target file path:%s", cfg.Output)
 
 	rv := &cfg.RV
 
@@ -103,11 +103,11 @@ func prepare(cfg *config.Config) (err error) {
 	rv.DataDir = cfg.RV.SystemDataDir
 
 	cfg.Node = adjustSupernodeList(cfg.Node)
-	rv.LocalIP = checkConnectSupernode(cfg.Node, cfg.ClientLogger)
+	rv.LocalIP = checkConnectSupernode(cfg.Node)
 	rv.Cid = getCid(rv.LocalIP, cfg.Sign)
 	rv.TaskFileName = getTaskFileName(rv.RealTarget, cfg.Sign)
 	rv.TaskURL = getTaskURL(cfg.URL, cfg.Filter)
-	cfg.ClientLogger.Info("runtimeVariable: " + cfg.RV.String())
+	logrus.Info("runtimeVariable: " + cfg.RV.String())
 
 	return nil
 }
@@ -125,7 +125,7 @@ func registerToSuperNode(cfg *config.Config, register regist.SupernodeRegister) 
 	*regist.RegisterResult, error) {
 	defer func() {
 		if r := recover(); r != nil {
-			cfg.ClientLogger.Warnf("register fail but try to download from source, "+
+			logrus.Warnf("register fail but try to download from source, "+
 				"reason:%d(%v)", cfg.BackSourceReason, r)
 		}
 	}()
@@ -141,7 +141,7 @@ func registerToSuperNode(cfg *config.Config, register regist.SupernodeRegister) 
 
 	if cfg.Pattern == config.PatternP2P {
 		if e := launchPeerServer(cfg); e != nil {
-			cfg.ClientLogger.Warnf("start peer server error:%v, change to CDN pattern", e)
+			logrus.Warnf("start peer server error:%v, change to CDN pattern", e)
 			cfg.Pattern = config.PatternCDN
 		}
 	}
@@ -173,7 +173,7 @@ func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 	err := downloader.DoDownloadTimeout(getter, timeout)
 	success := "SUCCESS"
 	if err != nil {
-		cfg.ClientLogger.Error(err)
+		logrus.Error(err)
 		success = "FAIL"
 	} else if cfg.RV.FileLength < 0 && util.IsRegularFile(cfg.RV.RealTarget) {
 		if info, err := os.Stat(cfg.RV.RealTarget); err == nil {
@@ -184,7 +184,7 @@ func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 	reportFinishedTask(cfg, getter)
 
 	os.Remove(cfg.RV.TempTarget)
-	cfg.ClientLogger.Infof("download %s cost:%.3fs length:%d reason:%d",
+	logrus.Infof("download %s cost:%.3fs length:%d reason:%d",
 		success, time.Since(cfg.StartTime).Seconds(), cfg.RV.FileLength, cfg.BackSourceReason)
 	return err
 }
@@ -266,7 +266,7 @@ func adjustSupernodeList(nodes []string) []string {
 	}
 }
 
-func checkConnectSupernode(nodes []string, clientLogger *logrus.Logger) (localIP string) {
+func checkConnectSupernode(nodes []string) (localIP string) {
 	var (
 		e    error
 		port = 8002
@@ -279,9 +279,7 @@ func checkConnectSupernode(nodes []string, clientLogger *logrus.Logger) (localIP
 		if localIP, e = util.CheckConnect(nodeFields[0], port, 1000); e == nil {
 			return localIP
 		}
-		if clientLogger != nil {
-			clientLogger.Errorf("Connect to node:%s error: %v", n, e)
-		}
+		logrus.Errorf("Connect to node:%s error: %v", n, e)
 	}
 	return ""
 }

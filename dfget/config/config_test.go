@@ -100,7 +100,6 @@ func (suite *ConfigSuite) TestAssertConfig(c *check.C) {
 		output    string
 		checkFunc func(err error) bool
 	}{
-		{checkFunc: errors.IsNotInitialized},
 		{clog: clog, checkFunc: errors.IsInvalidValue},
 		{clog: clog, url: "http://a", checkFunc: errors.IsInvalidValue},
 		{clog: clog, url: "http://a.b.com", output: "/tmp/output", checkFunc: errors.IsNilError},
@@ -112,7 +111,6 @@ func (suite *ConfigSuite) TestAssertConfig(c *check.C) {
 	}
 
 	for _, v := range cases {
-		cfg.ClientLogger = v.clog
 		cfg.URL = v.url
 		cfg.Output = v.output
 		actual := f()

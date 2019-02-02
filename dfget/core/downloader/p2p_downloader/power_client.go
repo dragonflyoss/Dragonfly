@@ -29,6 +29,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -54,12 +55,12 @@ func (pc *PowerClient) Run() error {
 	content, err := pc.downloadPiece()
 
 	timeDuring := time.Since(startTime).Seconds()
-	pc.log().Debugf("client range:%s cost:%.3f from peer:%s:%d, readCost:%.3f, length:%d",
+	logrus.Debugf("client range:%s cost:%.3f from peer:%s:%d, readCost:%.3f, length:%d",
 		pc.pieceTask.Range, timeDuring, pc.pieceTask.PeerIP, pc.pieceTask.PeerPort,
 		pc.readCost.Seconds(), pc.total)
 
 	if err != nil {
-		pc.log().Errorf("read piece cont error:%v from dst:%s:%d",
+		logrus.Errorf("read piece cont error:%v from dst:%s:%d",
 			err, pc.pieceTask.PeerIP, pc.pieceTask.PeerPort)
 		pc.queue.Put(pc.failPiece())
 		return err
@@ -114,7 +115,7 @@ func (pc *PowerClient) downloadPiece() (content *bytes.Buffer, e error) {
 	}
 
 	if timeDuring := time.Since(startTime).Seconds(); timeDuring > 2.0 {
-		pc.log().Warnf("client range:%s cost:%.3f from peer:%s, readCost:%.3f, length:%d",
+		logrus.Warnf("client range:%s cost:%.3f from peer:%s, readCost:%.3f, length:%d",
 			pc.pieceTask.Range, timeDuring, dstIP, pc.readCost.Seconds(), pc.total)
 	}
 	return content, nil
@@ -152,8 +153,4 @@ func (pc *PowerClient) readBody(body io.ReadCloser) string {
 		return ""
 	}
 	return buf.String()
-}
-
-func (pc *PowerClient) log() *logrus.Logger {
-	return pc.cfg.ClientLogger
 }

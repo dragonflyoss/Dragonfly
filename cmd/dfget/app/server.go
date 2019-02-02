@@ -18,30 +18,20 @@ package app
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
+	"path"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
+
 	"github.com/spf13/cobra"
 )
 
 var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Launch a peer server for uploading files.",
-	Run: func(cmd *cobra.Command, args []string) {
-
-		initServerLog()
-
-		// launch a peer server as a uploader server
-		port, err := uploader.LaunchPeerServer(cfg)
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(config.CodeLaunchServerError)
-		}
-		fmt.Println(port)
-		uploader.WaitForShutdown()
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runServer()
 	},
 }
 
@@ -71,16 +61,19 @@ func initServerFlags() {
 		"be verbose")
 }
 
-func initServerLog() {
-	level := "INFO"
-	if cfg.Verbose {
-		level = "DEBUG"
-	}
-	serverLogger, err := util.CreateLogger(filepath.Join(cfg.WorkHome, "logs"),
-		"dfserver.log", level, cfg.Sign)
+func runServer() error {
+	initServerLog()
+	// launch a peer server as a uploader server
+	port, err := uploader.LaunchPeerServer(cfg)
 	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(config.CodeLaunchServerError)
+		return err
 	}
-	cfg.ServerLogger = serverLogger
+	fmt.Println(port)
+	uploader.WaitForShutdown()
+	return nil
+}
+
+func initServerLog() error {
+	logFilePath := path.Join(cfg.WorkHome, "logs", "dfserver.log")
+	return util.InitLog(cfg.Verbose, logFilePath, cfg.Sign)
 }
