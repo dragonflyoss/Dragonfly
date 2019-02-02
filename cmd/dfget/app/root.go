@@ -172,6 +172,8 @@ func initFlags() {
 		"server will delete cached files if these files doesn't be modification within this duration")
 	persistFlagSet.DurationVar(&cfg.RV.ServerAliveTime, "alivetime", config.ServerAliveTime,
 		"server will stop if there is no uploading task within this duration")
+	persistFlagSet.BoolVar(&cfg.Verbose, "verbose", false,
+		"be verbose")
 
 	flagSet := rootCmd.Flags()
 
@@ -222,8 +224,6 @@ func initFlags() {
 		"show progress bar, it's conflict with '--console'")
 	flagSet.BoolVar(&cfg.Console, "console", false,
 		"show log on console, it's conflict with '--showbar'")
-	flagSet.BoolVar(&cfg.Verbose, "verbose", false,
-		"be verbose")
 
 	flagSet.MarkDeprecated("exceed", "please use '--timeout' or '-e' instead")
 }
