@@ -44,19 +44,21 @@ func initServerFlags() {
 	flagSet := serverCmd.Flags()
 
 	flagSet.StringVar(&cfg.RV.SystemDataDir, "data", cfg.RV.SystemDataDir,
-		"the directory which stores temporary files for p2p uploading")
+		"local directory which stores temporary files for p2p uploading")
 	flagSet.StringVar(&cfg.WorkHome, "home", cfg.WorkHome,
-		"the work home of dfget server")
+		"the work home directory of dfget server")
 	flagSet.StringVar(&cfg.RV.LocalIP, "ip", "",
-		"the ip that server will listen on")
+		"IP address that server will listen on")
 	flagSet.IntVar(&cfg.RV.PeerPort, "port", 0,
-		"the port that server will listen on")
+		"port number that server will listen on")
 	flagSet.StringVar(&cfg.RV.MetaPath, "meta", cfg.RV.MetaPath,
 		"meta file path")
+
 	flagSet.DurationVar(&cfg.RV.DataExpireTime, "expiretime", config.DataExpireTime,
-		"server will delete cached files if these files doesn't be modification within this duration")
+		"caching duration for which cached file keeps no accessed by any process, after this period cache file will be deleted")
 	flagSet.DurationVar(&cfg.RV.ServerAliveTime, "alivetime", config.ServerAliveTime,
-		"server will stop if there is no uploading task within this duration")
+		"Alive duration for which uploader keeps no accessing by any uploading requests, after this period uploader will automically exit")
+
 	flagSet.BoolVar(&cfg.Verbose, "verbose", false,
 		"be verbose")
 }
