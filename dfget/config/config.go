@@ -204,6 +204,7 @@ type Config struct {
 	StartTime time.Time `json:"startTime"`
 
 	// Sign the value is 'Pid + float64(time.Now().UnixNano())/float64(time.Second) format: "%d-%.3f"'.
+	// It is unique for downloading task, and is used for debugging.
 	Sign string `json:"sign"`
 
 	// Username of the system currently logged in.

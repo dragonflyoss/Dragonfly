@@ -42,11 +42,20 @@ var (
 
 var cfg = config.NewConfig()
 
+// dfgetDescription is used to describe dfget command in details.
+var dfgetDescription = `dfget is the client of Dragonfly which takes a role of 
+peer in a P2P network. When user triggers a file downloading task, dfget will 
+download the pieces of file from other peers. Meanwhile, it will act as an 
+uploader to support other peers to download pieces from it if it owns them. 
+In addition, dfget has the abilities to provide more advanced functionality, 
+such as network bandwidth limit, transmission encryption and so on.`
+
 var rootCmd = &cobra.Command{
 	Use:               "dfget",
-	Short:             "The dfget is the client of Dragonfly.",
-	Long:              "The dfget is the client of Dragonfly, a non-interactive P2P downloader.",
+	Short:             "client of Dragonfly used to download and upload files",
+	Long:              dfgetDescription,
 	DisableAutoGenTag: true, // disable displaying auto generation tag in cli docs
+	Example:           dfgetExample(),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runDfget()
 	},
@@ -161,53 +170,51 @@ func initClientLog() error {
 }
 
 func initFlags() {
+	// pass to server
 	flagSet := rootCmd.Flags()
 
 	// url & output
-	flagSet.StringVarP(&cfg.URL, "url", "u", "",
-		"will download a file from this url")
+	flagSet.StringVarP(&cfg.URL, "url", "u", "", "URL of user requested downloading file(only HTTP/HTTPs supported)")
 	flagSet.StringVarP(&cfg.Output, "output", "o", "",
-		"output path that not only contains the dir part but also name part")
+		"Destination path which is used to store the requested downloading file. It must contain detailed directory and specific filename, for example, '/tmp/file.mp4'")
 
 	// localLimit & totalLimit & timeout
 	flagSet.StringVarP(&localLimit, "locallimit", "s", "",
-		"rate limit about a single download task, its format is 20M/m/K/k")
+		"network bandwidth rate limit for single download task, in format of 20M/m/K/k")
 	flagSet.StringVar(&totalLimit, "totallimit", "",
-		"rate limit about the whole host, its format is 20M/m/K/k")
+		"network bandwidth rate limit for the whole host, in format of 20M/m/K/k")
 	flagSet.IntVarP(&cfg.Timeout, "timeout", "e", 0,
-		"download timeout(second)")
+		"Timeout set for file downloading task. If dfget has not finished downloading all pieces of file before --timeout, the dfget will throw an error and exit")
 
 	// md5 & identifier
 	flagSet.StringVarP(&cfg.Md5, "md5", "m", "",
-		"expected file md5")
+		"md5 value input from user for the requested downloading file to enhance security")
 	flagSet.StringVarP(&cfg.Identifier, "identifier", "i", "",
-		"identify download task, it is available merely when md5 param not exist")
-
+		"The usage of identifier is making different downloading tasks generate different downloading task IDs even if they have the same URLs. conflict with --md5.")
 	flagSet.StringVar(&cfg.CallSystem, "callsystem", "",
-		"system name that executes dfget")
+		"The name of dfget caller which is for debugging. Once set, it will be passed to all components around the request to make debugging easy")
 
 	flagSet.StringVarP(&cfg.Pattern, "pattern", "p", "p2p",
-		"download pattern, must be 'p2p' or 'cdn' or 'source'"+
-			"\ncdn/source pattern not support 'totallimit' flag")
+		"download pattern, must be p2p/cdn/source, cdn and source do not support flag --totallimit")
 
 	flagSet.StringVarP(&filter, "filter", "f", "",
-		"filter some query params of url, use char '&' to separate different params"+
+		"filter some query params of URL, use char '&' to separate different params"+
 			"\neg: -f 'key&sign' will filter 'key' and 'sign' query param"+
-			"\nin this way, different urls correspond one same download task that can use p2p mode")
+			"\nin this way, different but actually the same URLs can reuse the same downloading task")
 
 	flagSet.StringSliceVar(&cfg.Header, "header", nil,
 		"http header, eg: --header='Accept: *' --header='Host: abc'")
 
 	flagSet.StringSliceVarP(&cfg.Node, "node", "n", nil,
-		"specify supnernodes")
+		"specify the addresses(IP:port) of supnernodes")
 
 	flagSet.BoolVar(&cfg.Notbs, "notbs", false,
-		"not back source when p2p fail")
+		"disable back source downloading for requested file when p2p fails to download it")
 	flagSet.BoolVar(&cfg.DFDaemon, "dfdaemon", false,
-		"caller is from dfdaemon")
+		"identify whether the request is from dfdaemon")
 	// others
 	flagSet.BoolVarP(&cfg.ShowBar, "showbar", "b", false,
-		"show progress bar, it's conflict with '--console'")
+		"show progress bar, it is conflict with '--console'")
 	flagSet.BoolVar(&cfg.Console, "console", false,
 		"show log on console, it's conflict with '--showbar'")
 	flagSet.BoolVar(&cfg.Verbose, "verbose", false,
@@ -215,9 +222,9 @@ func initFlags() {
 
 	// pass to server
 	flagSet.DurationVar(&cfg.RV.DataExpireTime, "expiretime", config.DataExpireTime,
-		"server will delete cached files if these files doesn't be modification within this duration")
+		"caching duration for which cached file keeps no accessed by any process, after this period cache file will be deleted")
 	flagSet.DurationVar(&cfg.RV.ServerAliveTime, "alivetime", config.ServerAliveTime,
-		"server will stop if there is no uploading task within this duration")
+		"Alive duration for which uploader keeps no accessing by any uploading requests, after this period uploader will automically exit")
 
 	flagSet.MarkDeprecated("exceed", "please use '--timeout' or '-e' instead")
 }
@@ -268,4 +275,17 @@ func Execute() {
 		logrus.Error(err)
 		os.Exit(1)
 	}
+}
+
+// dfgetExample shows examples in dfget command, and is used in auto-generated cli docs.
+func dfgetExample() string {
+	return `
+$ dfget -u https://www.taobao.com -o /tmp/test/b.test --notbs --expiretime 20s
+--2019-02-02 18:56:34--  https://www.taobao.com
+dfget version:0.3.0
+workspace:/root/.small-dragonfly sign:96414-1549104994.143
+client:127.0.0.1 connected to node:127.0.0.1
+start download by dragonfly
+download SUCCESS(0) cost:0.026s length:141898 reason:0
+`
 }
