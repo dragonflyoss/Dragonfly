@@ -13,18 +13,18 @@ dfget server [flags]
 ### Options
 
 ```
-      --alivetime duration    server will stop if there is no uploading task within this duration (default 5m0s)
-      --data string           the directory which stores temporary files for p2p uploading (default "/root/.small-dragonfly/data")
-      --expiretime duration   server will delete cached files if these files doesn't be modification within this duration (default 3m0s)
+      --alivetime duration    Alive duration for which uploader keeps no accessing by any uploading requests, after this period uploader will automically exit (default 5m0s)
+      --data string           local directory which stores temporary files for p2p uploading (default "/root/.small-dragonfly/data")
+      --expiretime duration   caching duration for which cached file keeps no accessed by any process, after this period cache file will be deleted (default 3m0s)
   -h, --help                  help for server
-      --home string           the work home of dfget server (default "/root/.small-dragonfly")
-      --ip string             the ip that server will listen on
+      --home string           the work home directory of dfget server (default "/root/.small-dragonfly")
+      --ip string             IP address that server will listen on
       --meta string           meta file path (default "/root/.small-dragonfly/meta/host.meta")
-      --port int              the port that server will listen on
+      --port int              port number that server will listen on
       --verbose               be verbose
 ```
 
 ### SEE ALSO
 
-* [dfget](dfget.md)	 - The dfget is the client of Dragonfly.
+* [dfget](dfget.md)	 - client of Dragonfly used to download and upload files
 
