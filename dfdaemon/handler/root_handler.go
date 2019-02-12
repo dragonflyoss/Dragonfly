@@ -36,7 +36,10 @@ func Process(w http.ResponseWriter, r *http.Request) {
 			r.URL.Host = r.Header.Get("Host")
 		}
 		if r.URL.Host == "" {
+			// if host is still empty, we need skip to forward it.
+			w.WriteHeader(http.StatusForbidden)
 			log.Errorf("url host is empty")
+			return
 		}
 	}
 	r.Host = r.URL.Host
@@ -57,6 +60,7 @@ func Process(w http.ResponseWriter, r *http.Request) {
 	targetURL.RawQuery = ""
 
 	hostIP := util.ExtractHost(r.URL.Host)
+	trustHost := global.CommandLine.TrustHosts[hostIP]
 	switch hostIP {
 	case "127.0.0.1", "localhost", global.CommandLine.HostIP:
 		if len(global.CommandLine.Registry) > 0 {
@@ -65,6 +69,10 @@ func Process(w http.ResponseWriter, r *http.Request) {
 		} else {
 			log.Warnf("registry not config but url host is %s", hostIP)
 		}
+	case trustHost:
+		// if the hostIP is trusted, we should forward it directly.
+		targetURL.Host = r.URL.Host
+		targetURL.Scheme = r.URL.Scheme
 	default:
 		// non localhost access should be denied explicitly, otherwise we
 		// are falling into a dead loop: a reverse proxy for itself.
@@ -72,6 +80,7 @@ func Process(w http.ResponseWriter, r *http.Request) {
 		// by dfdaemon should only be accessed by localhost which should
 		// be controlled by the listener addr.
 		w.WriteHeader(http.StatusForbidden)
+		log.Warnf("%s is forbidden to forward", hostIP)
 		return
 	}
 
