@@ -20,12 +20,16 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
+	"github.com/dragonflyoss/Dragonfly/dfget/util"
 )
 
 var (
+	defaultRateLimit    = 1000
 	defaultPieceSize    = int64(4 * 1024 * 1024)
 	defaultPieceSizeStr = fmt.Sprintf("%d", defaultPieceSize)
 )
@@ -42,6 +46,34 @@ func pieceContent(pieceSize int64, origin string) string {
 	buf.Write([]byte(origin))
 	buf.Write([]byte{config.PieceTailChar})
 	return buf.String()
+}
+
+// newTestPeerServer init the peer server for testing.
+func newTestPeerServer(workHome string) {
+	buf := &bytes.Buffer{}
+	cfg := helper.CreateConfig(buf, workHome)
+	p2p = newPeerServer(cfg, 0)
+	p2p.totalLimitRate = 1000
+	p2p.rateLimiter = util.NewRateLimiter(int32(defaultRateLimit), 2)
+}
+
+// initHelper create a temporary file and store it in the syncTaskMap.
+func initHelper(fileName, workHome, content string) {
+	helper.CreateTestFile(helper.GetServiceFile(fileName, workHome), content)
+	p2p.syncTaskMap.Store(fileName, &taskConfig{
+		dataDir:   workHome,
+		rateLimit: defaultRateLimit,
+	})
+}
+
+// ----------------------------------------------------------------------------
+// handler helper
+
+type HandlerHelper struct {
+	method  string
+	url     string
+	body    io.Reader
+	headers map[string]string
 }
 
 // ----------------------------------------------------------------------------
@@ -79,4 +111,40 @@ func (u uploadHeader) newSize(size int) uploadHeader {
 	newU := u
 	newU.size = fmt.Sprintf("%d", size)
 	return newU
+}
+
+// ----------------------------------------------------------------------------
+// upload param
+
+type uploadParamBuilder struct {
+	up uploadParam
+}
+
+func (upb *uploadParamBuilder) build() *uploadParam {
+	return &upb.up
+}
+
+func (upb *uploadParamBuilder) padSize(padSize int64) *uploadParamBuilder {
+	upb.up.padSize = padSize
+	return upb
+}
+
+func (upb *uploadParamBuilder) start(start int64) *uploadParamBuilder {
+	upb.up.start = start
+	return upb
+}
+
+func (upb *uploadParamBuilder) length(length int64) *uploadParamBuilder {
+	upb.up.length = length
+	return upb
+}
+
+func (upb *uploadParamBuilder) pieceSize(pieceSize int64) *uploadParamBuilder {
+	upb.up.pieceSize = pieceSize
+	return upb
+}
+
+func (upb *uploadParamBuilder) pieceNum(pieceNum int64) *uploadParamBuilder {
+	upb.up.pieceNum = pieceNum
+	return upb
 }

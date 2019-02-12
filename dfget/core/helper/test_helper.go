@@ -17,9 +17,9 @@
 package helper
 
 import (
-	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"path"
@@ -33,7 +33,7 @@ import (
 // CreateConfig create a temporary config
 func CreateConfig(writer io.Writer, workHome string) *config.Config {
 	if writer == nil {
-		writer = &bytes.Buffer{}
+		writer = ioutil.Discard
 	}
 	cfg := config.NewConfig()
 	cfg.WorkHome = workHome
