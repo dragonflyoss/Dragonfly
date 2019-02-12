@@ -87,10 +87,10 @@ jobs:
       - run:
           name: start supernode daemon background & run all integration test cases in test
           command: |
-            cd supernode
-            go build
+            cd cmd
+            cd supernode && go build
             ./supernode &
-            go test ../test
+            go test ../../test
 
 workflows:
   version: 2
