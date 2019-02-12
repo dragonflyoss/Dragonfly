@@ -229,6 +229,13 @@ func initParam(options *options.Options) {
 		}
 	}
 
+	parsedTrustHosts := make(map[string]string)
+	for _, trustHost := range options.TrustHosts {
+		if _, ok := parsedTrustHosts[trustHost]; !ok {
+			parsedTrustHosts[trustHost] = trustHost
+		}
+	}
+
 	// copy options to g.CommandLine so we do not break anything, but finally
 	// we should get rid of g.CommandLine totally.
 	g.CommandLine = global.CommandParam{
@@ -240,5 +247,6 @@ func initParam(options *options.Options) {
 		Notbs:      options.Notbs,
 		HostIP:     options.HostIP,
 		Registry:   options.Registry,
+		TrustHosts: parsedTrustHosts,
 	}
 }
