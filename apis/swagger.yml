@@ -9,9 +9,8 @@ produces:
 consumes:
   - "application/json"
   - "text/plain"
-basePath: "/v1.24"
 info:
-  title: "Drgonfly SuperNode API"
+  title: "Dragonfly SuperNode API"
   version: "0.1"
   description: |
     API is an HTTP API served by Dragonfly's SuperNode. It is the API dfget or Harbor uses to communicate
