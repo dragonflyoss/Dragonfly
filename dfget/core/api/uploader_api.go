@@ -28,7 +28,7 @@ import (
 
 // UploaderAPI defines the communication methods between dfget and uploader.
 type UploaderAPI interface {
-	// ParseRate sends a request to uploader to calculate the ratelimit dynamically
+	// ParseRate sends a request to uploader to calculate the rateLimit dynamically
 	// for the speed limit of the whole host machine.
 	ParseRate(ip string, port int, req *ParseRateRequest) (string, error)
 

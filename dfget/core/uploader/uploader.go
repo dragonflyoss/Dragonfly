@@ -20,28 +20,22 @@
 package uploader
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
 	"io"
-	"net"
-	"net/http"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
+	"syscall"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
-	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
-	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/dragonflyoss/Dragonfly/version"
 
-	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 )
 
@@ -130,7 +124,7 @@ func checkPeerServerExist(cfg *config.Config, port int) int {
 	}
 
 	// check the peer server whether is available
-	result, err := checkServer(cfg.RV.LocalIP, port, cfg.RV.DataDir, taskFileName, cfg.TotalLimit, 0)
+	result, err := checkServer(cfg.RV.LocalIP, port, cfg.RV.DataDir, taskFileName, cfg.TotalLimit)
 	logrus.Infof("local http result:%s err:%v, port:%d path:%s",
 		result, err, port, config.LocalHTTPPathCheck)
 
@@ -164,11 +158,11 @@ func LaunchPeerServer(cfg *config.Config) (int, error) {
 		res <- launch(cfg)
 	}()
 
-	if err := waitForStartup(res, cfg); err != nil {
+	if err := waitForStartup(res); err != nil {
 		logrus.Errorf("start peer server error:%v, exit directly", err)
 		return 0, err
 	}
-	updateServicePortInMeta(cfg, p2p.port)
+	updateServicePortInMeta(cfg.RV.MetaPath, p2p.port)
 	logrus.Infof("start peer server success, host:%s, port:%d",
 		p2p.host, p2p.port)
 	go monitorAlive(cfg, 15*time.Second)
@@ -206,7 +200,7 @@ func launch(cfg *config.Config) error {
 	return fmt.Errorf("star peer server error and retried at most %d times", retryCount)
 }
 
-func waitForStartup(result chan error, cfg *config.Config) error {
+func waitForStartup(result chan error) error {
 	select {
 	case err := <-result:
 		if err == nil {
@@ -228,19 +222,9 @@ func waitForStartup(result chan error, cfg *config.Config) error {
 	}
 }
 
-func updateServicePortInMeta(cfg *config.Config, port int) {
-	meta := config.NewMetaData(cfg.RV.MetaPath)
-	meta.Load()
-	if meta.ServicePort != port {
-		meta.ServicePort = port
-		meta.Persist()
-	}
-}
-
 func serverGC(cfg *config.Config, interval time.Duration) {
 	logrus.Info("start server gc, expireTime:", cfg.RV.DataExpireTime)
 
-	supernode := api.NewSupernodeAPI()
 	var walkFn filepath.WalkFunc = func(path string, info os.FileInfo, err error) error {
 		if path == cfg.RV.SystemDataDir || info == nil || err != nil {
 			return nil
@@ -249,7 +233,7 @@ func serverGC(cfg *config.Config, interval time.Duration) {
 			os.RemoveAll(path)
 			return filepath.SkipDir
 		}
-		if deleteExpiredFile(supernode, path, info, cfg.RV.DataExpireTime) {
+		if p2p != nil && p2p.deleteExpiredFile(path, info, cfg.RV.DataExpireTime) {
 			logrus.Info("server gc, delete file:", path)
 		}
 		return nil
@@ -263,27 +247,16 @@ func serverGC(cfg *config.Config, interval time.Duration) {
 	}
 }
 
-func deleteExpiredFile(api api.SupernodeAPI, path string, info os.FileInfo,
-	expireTime time.Duration) bool {
-	taskName := helper.GetTaskName(info.Name())
-	if v, ok := p2p.syncTaskMap.Load(taskName); ok {
-		task, ok := v.(*taskConfig)
-		if ok && !task.finished {
-			return false
-		}
-		if time.Now().Sub(info.ModTime()) > expireTime {
-			if ok {
-				api.ServiceDown(task.superNode, task.taskID, task.cid)
-			}
-			os.Remove(path)
-			p2p.syncTaskMap.Delete(taskName)
-			return true
-		}
-	} else {
-		os.Remove(path)
-		return true
+func captureQuitSignal() {
+	c := make(chan os.Signal)
+	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGSTOP)
+	s := <-c
+	logrus.Infof("capture stop signal: %s, will shutdown...", s)
+
+	if p2p == nil {
+		return
 	}
-	return false
+	p2p.shutdown()
 }
 
 func monitorAlive(cfg *config.Config, interval time.Duration) {
@@ -294,6 +267,7 @@ func monitorAlive(cfg *config.Config, interval time.Duration) {
 	logrus.Info("monitor peer server whether is alive, aliveTime:",
 		cfg.RV.ServerAliveTime)
 	go serverGC(cfg, interval)
+	go captureQuitSignal()
 
 	for {
 		if _, ok := aliveQueue.PollTimeout(cfg.RV.ServerAliveTime); !ok {
@@ -302,12 +276,7 @@ func monitorAlive(cfg *config.Config, interval time.Duration) {
 			}
 			if p2p != nil {
 				logrus.Info("no more task, peer server will stop...")
-				c, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Minute))
-				p2p.Shutdown(c)
-				cancel()
-				updateServicePortInMeta(cfg, 0)
-				logrus.Info("peer server is shutdown.")
-				close(p2p.finished)
+				p2p.shutdown()
 			}
 			return
 		}
@@ -324,252 +293,4 @@ func isRunning() bool {
 	default:
 		return true
 	}
-}
-
-// ----------------------------------------------------------------------------
-// peerServer structure
-
-// newPeerServer return a new P2PServer.
-
-func newPeerServer(cfg *config.Config, port int) *peerServer {
-	s := &peerServer{
-		cfg:      cfg,
-		finished: make(chan struct{}),
-		host:     cfg.RV.LocalIP,
-		port:     port,
-	}
-
-	r := s.initRouter()
-	s.Server = &http.Server{
-		Addr:    net.JoinHostPort(s.host, strconv.Itoa(port)),
-		Handler: r,
-	}
-
-	return s
-}
-
-func (ps *peerServer) initRouter() *mux.Router {
-	r := mux.NewRouter()
-	r.HandleFunc(config.PeerHTTPPathPrefix+"{taskFileName:.*}", ps.uploadHandler).Methods("GET")
-	r.HandleFunc(config.LocalHTTPPathRate+"{taskFileName:.*}", ps.parseRateHandler).Methods("GET")
-	r.HandleFunc(config.LocalHTTPPathCheck+"{taskFileName:.*}", ps.checkHandler).Methods("GET")
-	r.HandleFunc(config.LocalHTTPPathClient+"finish", ps.oneFinishHandler).Methods("GET")
-	r.HandleFunc(config.LocalHTTPPing, ps.pingHandler).Methods("GET")
-
-	return r
-}
-
-// peerServer offer file-block to other clients
-type peerServer struct {
-	cfg      *config.Config
-	finished chan struct{}
-
-	// server related fields
-	host string
-	port int
-	*http.Server
-
-	rateLimiter    *util.RateLimiter
-	totalLimitRate int
-	syncTaskMap    sync.Map
-}
-
-// taskConfig refers to some info about peer task.
-type taskConfig struct {
-	taskID    string
-	rateLimit int
-	cid       string
-	dataDir   string
-	superNode string
-	finished  bool
-}
-
-// uploadParam refers to all params needed in the handler of upload.
-type uploadParam struct {
-	padSize int64
-	start   int64
-	end     int64
-	length  int64
-
-	pieceSize int64
-	pieceNum  int64
-}
-
-// uploadHandler use to upload a task file when other peers download from it.
-func (ps *peerServer) uploadHandler(w http.ResponseWriter, r *http.Request) {
-	aliveQueue.Put(true)
-
-	var (
-		up   *uploadParam
-		f    *os.File
-		size int64
-		err  error
-	)
-
-	taskFileName := mux.Vars(r)["taskFileName"]
-	rangeStr := r.Header.Get(config.StrRange)
-
-	logrus.Debugf("upload file:%s to %s, req:%v", taskFileName, r.RemoteAddr, jsonStr(r.Header))
-
-	// Step1: parse param
-	if up, err = parseParams(rangeStr, r.Header.Get(config.StrPieceNum),
-		r.Header.Get(config.StrPieceSize)); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		logrus.Warnf("invalid param file:%s req:%v, %v", taskFileName, r.Header, err)
-		return
-	}
-
-	// Step2: get task file
-	if f, size, err = ps.getTaskFile(taskFileName); err != nil {
-		rangeErrorResponse(w, err)
-		logrus.Errorf("failed to open file:%s, %v", taskFileName, err)
-		return
-	}
-	defer f.Close()
-
-	// Step3: amend range with piece meta data
-	if err = amendRange(size, true, up); err != nil {
-		rangeErrorResponse(w, err)
-		logrus.Errorf("failed to amend range of file %s: %v", taskFileName, err)
-		return
-	}
-
-	// Step4: send piece wrapped by meta data
-	if err := ps.uploadPiece(f, w, up); err != nil {
-		logrus.Errorf("failed to send range(%s) of file(%s): %v", rangeStr, taskFileName, err)
-	}
-}
-
-func (ps *peerServer) parseRateHandler(w http.ResponseWriter, r *http.Request) {
-	aliveQueue.Put(true)
-
-	// get params from request
-	taskFileName := mux.Vars(r)["taskFileName"]
-	rateLimit := r.Header.Get(config.StrRateLimit)
-	clientRate, err := strconv.Atoi(rateLimit)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		fmt.Fprint(w, err.Error())
-		logrus.Errorf("failed to convert rateLimit %v, %v", rateLimit, err)
-		return
-	}
-	sendSuccess(w)
-
-	// update the rateLimit of taskFileName
-	if v, ok := ps.syncTaskMap.Load(taskFileName); ok {
-		param := v.(*taskConfig)
-		param.rateLimit = clientRate
-	}
-
-	// no need to calculate rate when totalLimitRate less than or equals zero.
-	if ps.totalLimitRate <= 0 {
-		fmt.Fprintf(w, rateLimit)
-		return
-	}
-
-	total := 0
-
-	// define a function that Range will call it sequentially
-	// for each key and value present in the map
-	f := func(key, value interface{}) bool {
-		if task, ok := value.(*taskConfig); ok {
-			total += task.rateLimit
-		}
-
-		return true
-	}
-	ps.syncTaskMap.Range(f)
-
-	// calculate the rate limit again according to totalLimit
-	if total > ps.totalLimitRate {
-		clientRate = (clientRate*ps.totalLimitRate + total - 1) / total
-	}
-
-	fmt.Fprintf(w, strconv.Itoa(clientRate))
-}
-
-// checkHandler use to check the server status.
-// TODO: Disassemble this function for too many things done.
-func (ps *peerServer) checkHandler(w http.ResponseWriter, r *http.Request) {
-	aliveQueue.Put(true)
-	sendSuccess(w)
-
-	// handle totalLimit
-	totalLimit, err := strconv.Atoi(r.Header.Get(config.StrTotalLimit))
-	if err == nil && totalLimit > 0 {
-		if ps.rateLimiter == nil {
-			ps.rateLimiter = util.NewRateLimiter(int32(totalLimit), 2)
-		} else {
-			ps.rateLimiter.SetRate(util.TransRate(totalLimit))
-		}
-		ps.totalLimitRate = totalLimit
-		logrus.Infof("update total limit to %d", totalLimit)
-	}
-
-	// get parameters
-	taskFileName := mux.Vars(r)["taskFileName"]
-	dataDir := r.Header.Get(config.StrDataDir)
-
-	param := &taskConfig{
-		dataDir: dataDir,
-	}
-	ps.syncTaskMap.Store(taskFileName, param)
-	fmt.Fprintf(w, "%s@%s", taskFileName, version.DFGetVersion)
-}
-
-// oneFinishHandler use to update the status of peer task.
-func (ps *peerServer) oneFinishHandler(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		sendHeader(w, http.StatusBadRequest)
-		fmt.Fprintf(w, err.Error())
-		return
-	}
-
-	taskFileName := r.FormValue(config.StrTaskFileName)
-	taskID := r.FormValue(config.StrTaskID)
-	cid := r.FormValue(config.StrClientID)
-	superNode := r.FormValue(config.StrSuperNode)
-	if v, ok := ps.syncTaskMap.Load(taskFileName); ok {
-		task := v.(*taskConfig)
-		task.taskID = taskID
-		task.cid = cid
-		task.superNode = superNode
-		task.finished = true
-	}
-	sendSuccess(w)
-	fmt.Fprintf(w, "success")
-}
-
-func (ps *peerServer) pingHandler(w http.ResponseWriter, r *http.Request) {
-	sendSuccess(w)
-	fmt.Fprintf(w, "success")
-}
-
-// ----------------------------------------------------------------------------
-// helper functions
-
-func sendSuccess(w http.ResponseWriter) {
-	sendHeader(w, http.StatusOK)
-}
-
-func sendHeader(w http.ResponseWriter, code int) {
-	w.Header().Set(config.StrContentType, ctype)
-	w.WriteHeader(code)
-}
-
-func rangeErrorResponse(w http.ResponseWriter, err error) {
-	if errors.IsRangeNotSatisfiable(err) {
-		http.Error(w, config.RangeNotSatisfiableDesc, http.StatusRequestedRangeNotSatisfiable)
-	} else if os.IsPermission(err) {
-		http.Error(w, err.Error(), http.StatusForbidden)
-	} else if os.IsNotExist(err) {
-		http.Error(w, err.Error(), http.StatusNotFound)
-	} else {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
-func jsonStr(v interface{}) string {
-	b, _ := json.Marshal(v)
-	return string(b)
 }
