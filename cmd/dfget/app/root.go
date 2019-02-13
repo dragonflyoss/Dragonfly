@@ -43,12 +43,12 @@ var (
 var cfg = config.NewConfig()
 
 // dfgetDescription is used to describe dfget command in details.
-var dfgetDescription = `dfget is the client of Dragonfly which takes a role of 
-peer in a P2P network. When user triggers a file downloading task, dfget will 
-download the pieces of file from other peers. Meanwhile, it will act as an 
-uploader to support other peers to download pieces from it if it owns them. 
-In addition, dfget has the abilities to provide more advanced functionality, 
-such as network bandwidth limit, transmission encryption and so on.`
+var dfgetDescription = `dfget is the client of Dragonfly which takes a role of peer in a P2P network.
+When user triggers a file downloading task, dfget will download the pieces of
+file from other peers. Meanwhile, it will act as an uploader to support other
+peers to download pieces from it if it owns them. In addition, dfget has the
+abilities to provide more advanced functionality, such as network bandwidth
+limit, transmission encryption and so on.`
 
 var rootCmd = &cobra.Command{
 	Use:               "dfget",
