@@ -17,9 +17,10 @@
 // Package version represents the version the project Dragonfly.
 package version
 
-const (
+var (
 	// Version is the version of the project Dragonfly
-	Version = "0.3.0"
+	// populate via ldflags
+	Version string
 
 	// DFDaemonVersion is the version of dfdaemon
 	DFDaemonVersion = Version

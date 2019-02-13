@@ -3,6 +3,8 @@ DFDAEMON_BINARY_NAME=dfdaemon
 DFGET_BINARY_NAME=dfget
 PKG=github.com/dragonflyoss/Dragonfly
 BUILD_IMAGE=golang:1.10.4
+VERSION=$(git describe --tags | cut -c 2-)
+LDFLAGS="-X ${PKG}/version.Version=${VERSION}"
 
 curDir=$(cd "$(dirname "$0")" && pwd)
 cd "${curDir}" || return
@@ -10,7 +12,6 @@ BUILD_SOURCE_HOME=$(cd ".." && pwd)
 
 . ./env.sh
 
-BUILD=$(git rev-parse HEAD)
 BUILD_PATH=bin/${GOOS}_${GOARCH}
 USE_DOCKER=${USE_DOCKER:-"0"}
 
@@ -27,7 +28,7 @@ create-dirs() {
 build-dfdaemon-local() {	
     test -f "${BUILD_SOURCE_HOME}/${BUILD_PATH}/${DFDAEMON_BINARY_NAME}" && rm -f "${BUILD_SOURCE_HOME}/${BUILD_PATH}/${DFDAEMON_BINARY_NAME}"	
     cd "${BUILD_SOURCE_HOME}/cmd/dfdaemon" || return	
-    go build -o "${BUILD_SOURCE_HOME}/${BUILD_PATH}/${DFDAEMON_BINARY_NAME}"	
+    go build -o "${BUILD_SOURCE_HOME}/${BUILD_PATH}/${DFDAEMON_BINARY_NAME}" -ldflags "${LDFLAGS}"
     chmod a+x "${BUILD_SOURCE_HOME}/${BUILD_PATH}/${DFDAEMON_BINARY_NAME}"
     echo "BUILD: dfdaemon in ${BUILD_SOURCE_HOME}/${BUILD_PATH}/${DFDAEMON_BINARY_NAME}" 
 }
@@ -35,7 +36,7 @@ build-dfdaemon-local() {
 build-dfget-local() {
     test -f "${BUILD_SOURCE_HOME}/${BUILD_PATH}/${DFGET_BINARY_NAME}" && rm -f "${BUILD_SOURCE_HOME}/${BUILD_PATH}/${DFGET_BINARY_NAME}"	
     cd "${BUILD_SOURCE_HOME}/cmd/dfget"	|| return
-    go build -o "${BUILD_SOURCE_HOME}/${BUILD_PATH}/${DFGET_BINARY_NAME}"	
+    go build -o "${BUILD_SOURCE_HOME}/${BUILD_PATH}/${DFGET_BINARY_NAME}" -ldflags "${LDFLAGS}"
     chmod a+x "${BUILD_SOURCE_HOME}/${BUILD_PATH}/${DFGET_BINARY_NAME}"	
     echo "BUILD: dfget in ${BUILD_SOURCE_HOME}/${BUILD_PATH}/${DFGET_BINARY_NAME}"	
 }
@@ -55,7 +56,7 @@ build-dfdaemon-docker() {
         -e CGO_ENABLED=0                                                  \
         -w /go/src/${PKG}                                                 \
         ${BUILD_IMAGE}                                                    \
-        go install -v -pkgdir /go/pkg -ldflags "-X ${PKG}/cmd/dfdaemon/app.Build=${BUILD}" ./cmd/dfdaemon
+        go install -v -pkgdir /go/pkg -ldflags "${LDFLAGS}" ./cmd/dfdaemon
     echo "BUILD: dfdaemon in ${BUILD_SOURCE_HOME}/${BUILD_PATH}/${DFDAEMON_BINARY_NAME}" 
 }
 
@@ -74,7 +75,7 @@ build-dfget-docker() {
         -e CGO_ENABLED=0                                                  \
         -w /go/src/${PKG}                                                 \
         ${BUILD_IMAGE}                                                    \
-        go install -v -pkgdir /go/pkg -ldflags "-X ${PKG}/cmd/dfget/app.Build=${BUILD}" ./cmd/dfget
+        go install -v -pkgdir /go/pkg -ldflags "${LDFLAGS}" ./cmd/dfget
 echo "BUILD: dfget in ${BUILD_SOURCE_HOME}/${BUILD_PATH}/${DFGET_BINARY_NAME}"	
 }
 
