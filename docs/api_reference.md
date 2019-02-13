@@ -1,4 +1,4 @@
-# Drgonfly SuperNode API
+# Dragonfly SuperNode API
 
 
 <a name="overview"></a>
@@ -12,7 +12,6 @@ with the supernode.
 
 
 ### URI scheme
-*BasePath* : /v1.24  
 *Schemes* : HTTP, HTTPS
 
 
