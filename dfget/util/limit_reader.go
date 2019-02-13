@@ -31,7 +31,7 @@ func NewLimitReader(src io.Reader, rate int, calculateMd5 bool) *LimitReader {
 	return NewLimitReaderWithLimiter(limiter, src, calculateMd5)
 }
 
-// NewLimitReaderWithLimiter create LimitReader with a ratelimiter.
+// NewLimitReaderWithLimiter create LimitReader with a rateLimiter.
 // src: reader
 // rate: bytes/second
 func NewLimitReaderWithLimiter(rateLimiter *RateLimiter, src io.Reader, calculateMd5 bool) *LimitReader {
