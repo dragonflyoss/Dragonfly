@@ -3,17 +3,16 @@ DFDAEMON_BINARY_NAME=dfdaemon
 DFGET_BINARY_NAME=dfget
 PKG=github.com/dragonflyoss/Dragonfly
 BUILD_IMAGE=golang:1.10.4
-GOARCH=$(go env GOARCH)
-GOOS=$(go env GOOS)
-BUILD=$(git rev-parse HEAD)
-BUILD_PATH=bin/${GOOS}_${GOARCH}
-USE_DOCKER=${USE_DOCKER:-"0"}
 
 curDir=$(cd "$(dirname "$0")" && pwd)
 cd "${curDir}" || return
 BUILD_SOURCE_HOME=$(cd ".." && pwd)
 
 . ./env.sh
+
+BUILD=$(git rev-parse HEAD)
+BUILD_PATH=bin/${GOOS}_${GOARCH}
+USE_DOCKER=${USE_DOCKER:-"0"}
 
 create-dirs() {
     cd "${BUILD_SOURCE_HOME}" || return
