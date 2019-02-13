@@ -123,7 +123,7 @@ Only when there is no new task to download file/images or no other peers coming 
 
 ## Do I have to change my container engine configuration to support Dragonfly
 
-Currently Dragonfly supports almost all kinds of container engines, such as Docker, [PouchContainer](https://github.com/alibaba/pouch). When using Dragonfly, only one part of container engine's configuration needs update. It is the `registry-mirrors` configuration. This configuration update aims at making image pulling request from container engine will all be sent to `dfdaemon` process locally. And dfget does the request translation thing and proxies it to `dfget` locally.
+Currently Dragonfly supports almost all kinds of container engines, such as Docker, [PouchContainer](https://github.com/alibaba/pouch). When using Dragonfly, only one part of container engine's configuration needs update. It is the `registry-mirrors` configuration. This configuration update aims at making image pulling requests, which does not contain a third-party non-dockerhub registry address, from container engine will all be sent to `dfdaemon` process locally. And dfget does the request translation thing and proxies it to `dfget` locally.
 
 Configure container engine's `registry-mirrors` is quite easy. We take docker as an example. Administrator should modify configuration file of docker `/etc/docker/daemon.json` to add the following item:
 
@@ -131,7 +131,15 @@ Configure container engine's `registry-mirrors` is quite easy. We take docker as
 "registry-mirrors": ["http://127.0.0.1:65001"]
 ```
 
+With updating the configuration, request `docker pull mysql:5.6` will be sent to dfdaemon, while request `docker pull a.b.com/mysql:5.6` will not be sent to dfdaemon. Because docker engine only deals official images from docker hub to take advantages of registry mirror. However, if you set `--registry a.b.com` in dfdaemon, and send a request `docker pull mysql:5.6`, dfdaemon will proxy the request and distribute image `mysql:5.6` from registry `a.b.com`.
+
 > Note: please remember restarting container engine after updating configuration.
+
+## Can I set HTTP_PROXY to be dfdaemon address?
+
+Yes, HTTP_PROXY is used to proxy every request from docker engine, including requests `docker login`, `docker pull` and `docker push`. Once it is configured, the influenced parts could be expanded much more widely. Dragonfly's feature is only taking effect on `docker pull`. Thus every `docker pull` request will be sent to dfdaemon, no matter it is an official image from docker hub or from a third-party registry. However, everyone should keep in mind one point that even if user wish to pull image `a.b.com/mysql:5.6` from registry `a.b.com`, dfdaemon will pull the image `mysql:5.6` from the configured registry address of dfdaemon, such as `c.d.com`. As a result, user pulled image `mysql:5.6` from `c.d.com` rather than `a.b.com`.
+
+In addition, with `HTTP_PROXY` enabled, Dragonfly only supports protocol scheme `HTTP`. `HTTPs` will never be supported then.
 
 ## Do we support HA of supernode in Dragonfly
 
@@ -209,4 +217,18 @@ In the above content the `auth_value` base64("${usename}:${password}"). Since us
 
 ```shell
 echo "${usename}:${password}" | base64
+```
+
+## How to check if block piece is distributed among dfgets nodes
+
+Supernode and dfget nodes together build a peer-to-peer network. The running log of dfget will explicitly show where the received block piece is from, supernode or other dfget node.
+
+User can get dfget's log from file `$HOME/.small-dragonfly/logs/dfclient.log`, and search the keyword `downloading piece`. If the prefix of field `dstCid` is `cdnnode`, then this piece block is from supernode, otherwise it is from dfget node.
+
+```
+## download from supernode
+2019-02-13 15:20:45.757 INFO sign:31923-1550042443.708 : downloading piece:{"taskID":"b4b0f175f7aef583ff6ff8da6b00024d7772b165caa66ff8ef3a9dce6701b690","superNode":"127.0.0.1","dstCid":"cdnnode:127.0.0.1~b4b0f175f7aef583ff6ff8da6b00024d7772b165caa66ff8ef3a9dce6701b690","range":"0-4194303","result":503,"status":701,"pieceSize":4194304,"pieceNum":0}
+
+# download from other dfget peer
+2019-02-13 15:22:40.062 INFO sign:32047-1550042560.044 : downloading piece:{"taskID":"b4b0f175f7aef583ff6ff8da6b00024d7772b165caa66ff8ef3a9dce6701b690","superNode":"127.0.0.1","dstCid":"127.0.0.1-31923-1550042443.708","range":"0-4194303","result":503,"status":701,"pieceSize":4194304,"pieceNum":0}
 ```
