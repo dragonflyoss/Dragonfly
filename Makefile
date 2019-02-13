@@ -61,3 +61,8 @@ check:
 	@echo "Begin to check supernode code formats."
 	./hack/check-supernode.sh
 .PHONY: check
+
+docs:
+	@echo "Begin to generate docs of API/CLI"
+	./hack/generate-docs.sh
+.PHONY: docs
