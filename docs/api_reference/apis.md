@@ -12,7 +12,6 @@ with the supernode.
 
 
 ### URI scheme
-*BasePath* : /v1.24  
 *Schemes* : HTTP, HTTPS
 
 
@@ -109,16 +108,19 @@ dfget sends request to register in Supernode as a peer node
 
 #### Parameters
 
-|Type|Name|Description|Schema|
-|---|---|---|---|
-|**Body**|**body**  <br>*optional*|request body which contains peer registrar information.|[PeerCreateRequest](#peercreaterequest)|
+|Type|Name|Description|Schema|Default|
+|---|---|---|---|---|
+|**Query**|**pageNum**  <br>*optional*||integer|`0`|
+|**Query**|**pageSize**  <br>*required*||integer||
+|**Query**|**sortDirect**  <br>*optional*|Determine the direction of sorting rules|enum (ASC, DESC)|`"ASC"`|
+|**Query**|**sortKey**  <br>*optional*|"The keyword used to sort. You can provide multiple keys, if two peers have the same first key, sort by the second key, and so on"|< string > array||
 
 
 #### Responses
 
 |HTTP Code|Description|Schema|
 |---|---|---|
-|**201**|no error|[PeerCreateResponse](#peercreateresponse)|
+|**201**|no error|< [PeerInfo](#peerinfo) > array|
 |**400**|bad parameter|[Error](#error)|
 |**500**|An unexpected server error occurred.|[Error](#error)|
 
@@ -164,7 +166,7 @@ DELETE /peers/{id}
 
 #### Description
 dfget stops playing a role as a peer in peer network constructed by supernode.
-when dfget lasts in five minutes without downloading or uploading task, uploader of dfget
+When dfget lasts in five minutes without downloading or uploading task, the uploader of dfget
 automatically sends a DELETE /peers/{id} request to supernode.
 
 
@@ -416,7 +418,7 @@ the pirces. The request piece number is set in query.
 |Type|Name|Description|Schema|
 |---|---|---|---|
 |**Path**|**id**  <br>*required*|ID of task|string|
-|**Query**|**cid**  <br>*required*|When dfget needs to get pieces of specific task, it must mark which peer it plays role of.|string|
+|**Query**|**clientID**  <br>*required*|When dfget needs to get pieces of specific task, it must mark which peer it plays role of.|string|
 |**Query**|**num**  <br>*optional*|Request number of pieces of task. If request number is larger than the total pieces in supernode,<br>supernode returns the total pieces of task. If not set, supernode will set 4 by default.|integer (int64)|
 
 
@@ -481,6 +483,20 @@ to those peers.
 
 <a name="definitions"></a>
 ## Definitions
+
+<a name="dfgettask"></a>
+### DfGetTask
+A download process initiated by dfget or other clients.
+
+
+|Name|Description|Schema|
+|---|---|---|
+|**cID**  <br>*optional*|CID means the client ID. It maps to the specific dfget process. <br>When user wishes to download an image/file, user would start a dfget process to do this. <br>This dfget is treated a client and carries a client ID. <br>Thus, multiple dfget processes on the same peer have different CIDs.|string|
+|**path**  <br>*optional*|path is used in one peer A for uploading functionality. When peer B hopes<br>to get piece C from peer A, B must provide a URL for piece C.<br>Then when creating a task in supernode, peer A must provide this URL in request.|string|
+|**pieceSize**  <br>*optional*|The size of pieces which is calculated as per the following strategy<br>1. If file's total size is less than 200MB, then the piece size is 4MB by default.<br>2. Otherwise, it equals to the smaller value between totalSize/100MB + 2 MB and 15MB.|integer (int32)|
+|**status**  <br>*optional*|The status of Dfget download process.|enum (WAITING, RUNNING, FAILED, SUCCESS)|
+|**taskId**  <br>*optional*||string|
+
 
 <a name="error"></a>
 ### Error
@@ -563,9 +579,9 @@ request used to update piece attributes.
 
 |Name|Description|Schema|
 |---|---|---|
-|**dstCid**  <br>*optional*|the uploader cid|string|
+|**dstCid**  <br>*optional*|the uploader clientID|string|
 |**result**  <br>*optional*|result It indicates whether the peer task successfully download the piece. <br>It's only useful when `status` is `RUNNING`.|enum (FAILED, SUCCESS, INVALID, SEMISUC)|
-|**srcCid**  <br>*optional*|the downloader cid|string|
+|**srcCid**  <br>*optional*|the downloader clientID|string|
 |**status**  <br>*optional*|status indicates whether the peer task is running.|enum (STARTED, RUNNING, FINISHED)|
 
 
@@ -614,7 +630,7 @@ task because that an image may have more than one layer.
 |---|---|---|
 |**cID**  <br>*optional*|CID means the client ID. It maps to the specific dfget process. <br>When user wishes to download an image/file, user would start a dfget process to do this. <br>This dfget is treated a client and carries a client ID. <br>Thus, multiple dfget processes on the same peer have different CIDs.|string|
 |**callSystem**  <br>*optional*|This field is for debugging. When caller of dfget is using it to files, he can pass callSystem<br>name to dfget. When this field is passing to supernode, supernode has ability to filter them via <br>some black/white list to guarantee security, or some other purposes.  <br>**Minimum length** : `1`|string|
-|**dfdaemon**  <br>*optional*|tells whether it is a call from dfdaemon. dfdaemon is a long running<br>process which works for container engines. It translates the image<br>pulling request into raw requests into those dfget recganises.|boolean|
+|**dfdaemon**  <br>*optional*|tells whether it is a call from dfdaemon. dfdaemon is a long running<br>process which works for container engines. It translates the image<br>pulling request into raw requests into those dfget recognizes.|boolean|
 |**filter**  <br>*optional*|filter is used to filter request queries in URL.<br>For example, when a user wants to start to download a task which has a remote URL of <br>a.b.com/fileA?user=xxx&auth=yyy, user can add a filter parameter ["user", "auth"]<br>to filter the url to a.b.com/fileA. Then this parameter can potentially avoid repeatable<br>downloads, if there is already a task a.b.com/fileA.|< string > array|
 |**headers**  <br>*optional*|extra HTTP headers sent to the rawURL.<br>This field is carried with the request to supernode. <br>Supernode will extract these HTTP headers, and set them in HTTP downloading requests<br>from source server as user's wish.|< string, string > map|
 |**identifier**  <br>*optional*|special attribute of remote source file. This field is used with taskURL to generate new taskID to<br>indetify different downloading task of remote source file. For example, if user A and user B uses<br>the same taskURL and taskID to download file, A and B will share the same peer network to distribute files.<br>If user A additionally adds an indentifier with taskURL, while user B still carries only taskURL, then A's<br>generated taskID is different from B, and the result is that two users use different peer networks.|string|
