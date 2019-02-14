@@ -18,5 +18,5 @@ dfget version [flags]
 
 ### SEE ALSO
 
-* [dfget](dfget.md)	 - The dfget is the client of Dragonfly.
+* [dfget](dfget.md)	 - client of Dragonfly used to download and upload files
 
