@@ -19,15 +19,22 @@ package uploader
 import (
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strconv"
+	"time"
+
+	"github.com/go-check/check"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/dfget/errors"
-	"github.com/go-check/check"
+	"github.com/dragonflyoss/Dragonfly/dfget/types"
+	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/version"
 )
 
 func init() {
@@ -47,14 +54,15 @@ var (
 type PeerServerTestSuite struct {
 	workHome    string
 	servicePath string
+	srv         *peerServer
 }
 
 func (s *PeerServerTestSuite) SetUpSuite(c *check.C) {
 	s.workHome, _ = ioutil.TempDir("/tmp", "dfget-PeerServerTestSuite-")
-	newTestPeerServer(s.workHome)
-	initHelper(commonFile, s.workHome, commonFileContent)
-	initHelper(file2000, s.workHome, file2000Content)
-	initHelper(emptyFile, s.workHome, "")
+	s.srv = newTestPeerServer(s.workHome)
+	initHelper(s.srv, commonFile, s.workHome, commonFileContent)
+	initHelper(s.srv, file2000, s.workHome, file2000Content)
+	initHelper(s.srv, emptyFile, s.workHome, "")
 }
 
 func (s *PeerServerTestSuite) TearDownSuite(c *check.C) {
@@ -67,7 +75,7 @@ func (s *PeerServerTestSuite) TearDownSuite(c *check.C) {
 
 func (s *PeerServerTestSuite) TestGetTaskFile(c *check.C) {
 	// normal test
-	f, _, err := p2p.getTaskFile(commonFile)
+	f, _, err := s.srv.getTaskFile(commonFile)
 	defer f.Close()
 	// check get file correctly
 	c.Assert(err, check.IsNil)
@@ -79,7 +87,7 @@ func (s *PeerServerTestSuite) TestGetTaskFile(c *check.C) {
 }
 
 func (s *PeerServerTestSuite) TestUploadPiece(c *check.C) {
-	f, size, _ := p2p.getTaskFile(commonFile)
+	f, size, _ := s.srv.getTaskFile(commonFile)
 	defer f.Close()
 
 	var up = func(start, length int64, pad bool) *uploadParam {
@@ -116,7 +124,7 @@ func (s *PeerServerTestSuite) TestUploadPiece(c *check.C) {
 	for _, v := range cases {
 		rr := httptest.NewRecorder()
 		p := up(v.start, v.end-v.start+1, v.pad)
-		err := p2p.uploadPiece(f, rr, p)
+		err := s.srv.uploadPiece(f, rr, p)
 		c.Check(err, check.IsNil)
 		cmt := check.Commentf("content:'%s' start:%d end:%d pad:%v",
 			commonFileContent, v.start, v.end, v.pad)
@@ -265,7 +273,124 @@ func (s *PeerServerTestSuite) TestParseParams(c *check.C) {
 	}
 }
 
-// ----------------------------------------------------------------------------
+func (s *PeerServerTestSuite) TestIsFinished(c *check.C) {
+	ps := &peerServer{}
+	c.Assert(ps.isFinished(), check.Equals, true)
+
+	ps.finished = make(chan struct{})
+	c.Assert(ps.isFinished(), check.Equals, false)
+
+	close(ps.finished)
+	c.Assert(ps.isFinished(), check.Equals, true)
+}
+
+func (s *PeerServerTestSuite) TestSetFinished(c *check.C) {
+	ps := &peerServer{finished: make(chan struct{})}
+
+	ps.setFinished()
+	c.Assert(ps.isFinished(), check.Equals, true)
+
+	// close a closed channel
+	defer c.Assert(recover(), check.IsNil,
+		check.Commentf("close a closed channel"))
+	ps.setFinished()
+}
+
+func (s *PeerServerTestSuite) TestShutdown(c *check.C) {
+	cfg := createConfig(s.workHome, 0)
+	updateServicePortInMeta(cfg.RV.MetaPath, 1)
+	c.Assert(getPortFromMeta(cfg.RV.MetaPath), check.Equals, 1)
+
+	taskName := fmt.Sprintf("%d", rand.Int63())
+	tmpFile := helper.GetServiceFile(taskName, cfg.RV.SystemDataDir)
+	ioutil.WriteFile(tmpFile, []byte("hello"), os.ModePerm)
+
+	ps := newPeerServer(cfg, 0)
+	ps.syncTaskMap.Store(taskName, &taskConfig{
+		cid:       "x",
+		superNode: "localhost",
+		taskID:    "b",
+		dataDir:   cfg.RV.SystemDataDir,
+	})
+	ps.api = &helper.MockSupernodeAPI{
+		ServiceDownFunc: func(ip string, taskID string, cid string) (*types.BaseResponse, error) {
+			c.Assert(ip, check.Equals, "localhost")
+			c.Assert(taskID, check.Equals, "b")
+			c.Assert(cid, check.Equals, "x")
+			return nil, nil
+		},
+	}
+
+	ps.shutdown()
+	c.Assert(util.PathExist(tmpFile), check.Equals, false)
+	c.Assert(ps.isFinished(), check.Equals, true)
+	c.Assert(getPortFromMeta(cfg.RV.MetaPath), check.Equals, 0)
+}
+
+func (s *PeerServerTestSuite) TestDeleteExpiredFile(c *check.C) {
+	cfg := createConfig(s.workHome, 0)
+	mark := make(map[string]bool)
+
+	var f = func() string {
+		taskName := fmt.Sprintf("TestDeleteExpiredFile-%d", rand.Int63())
+		tmpFile := helper.GetServiceFile(taskName, cfg.RV.SystemDataDir)
+		ioutil.WriteFile(tmpFile, []byte{}, os.ModePerm)
+		return taskName
+	}
+	var t = func(f bool) *taskConfig {
+		return &taskConfig{
+			taskID:   fmt.Sprintf("%d", rand.Int63()),
+			finished: f,
+			dataDir:  cfg.RV.SystemDataDir,
+		}
+	}
+
+	var cases = []struct {
+		name    string
+		task    *taskConfig
+		expire  time.Duration
+		deleted bool
+	}{
+		// delete finished and expired task file
+		{name: f(), task: t(true), expire: 0, deleted: true},
+		// don't delete finished but not expired task file
+		{name: f(), task: t(true), expire: time.Minute, deleted: false},
+		// don't delete unfinished task file
+		{name: f(), task: t(false), expire: 0, deleted: false},
+		// delete a non-task file
+		{name: f(), task: nil, expire: time.Minute, deleted: true},
+	}
+
+	ps := newPeerServer(cfg, 0)
+	ps.api = &helper.MockSupernodeAPI{
+		ServiceDownFunc: func(ip string, taskID string, cid string) (*types.BaseResponse, error) {
+			mark[taskID] = true
+			return nil, nil
+		},
+	}
+	for _, v := range cases {
+		filePath := helper.GetServiceFile(v.name, cfg.RV.SystemDataDir)
+		finished := "<nil>"
+		if v.task != nil {
+			ps.syncTaskMap.Store(v.name, v.task)
+			finished = fmt.Sprintf("%v", v.task.finished)
+		}
+		info, _ := os.Stat(filePath)
+		deleted := ps.deleteExpiredFile(filePath, info, v.expire)
+		cmt := check.Commentf("task:%v expire:%v deleted:%v",
+			finished, v.expire, v.deleted)
+
+		c.Assert(deleted, check.Equals, v.deleted, cmt)
+		c.Assert(util.PathExist(filePath), check.Equals, !v.deleted, cmt)
+		if v.task != nil {
+			c.Assert(mark[v.task.taskID], check.Equals, v.deleted, cmt)
+			_, ok := ps.syncTaskMap.Load(v.name)
+			c.Assert(ok, check.Equals, !v.deleted, cmt)
+		}
+	}
+}
+
+// -----------------------------------------------------------------------------
 // test peerServer handlers
 
 func (s *PeerServerTestSuite) TestUploadHandler(c *check.C) {
@@ -275,7 +400,7 @@ func (s *PeerServerTestSuite) TestUploadHandler(c *check.C) {
 
 	// normal test
 	headers["range"] = "bytes=0-1999"
-	if rr, err := s.testHandlerHelper(&HandlerHelper{
+	if rr, err := testHandlerHelper(s.srv, &HandlerHelper{
 		method:  http.MethodGet,
 		url:     config.PeerHTTPPathPrefix + file2000,
 		headers: headers,
@@ -288,7 +413,7 @@ func (s *PeerServerTestSuite) TestUploadHandler(c *check.C) {
 
 	// RangeNotSatisfiable
 	headers["range"] = "bytes=0-1"
-	if rr, err := s.testHandlerHelper(&HandlerHelper{
+	if rr, err := testHandlerHelper(s.srv, &HandlerHelper{
 		method:  http.MethodGet,
 		url:     config.PeerHTTPPathPrefix + emptyFile,
 		headers: headers,
@@ -297,7 +422,7 @@ func (s *PeerServerTestSuite) TestUploadHandler(c *check.C) {
 	}
 
 	// not found test
-	if rr, err := s.testHandlerHelper(&HandlerHelper{
+	if rr, err := testHandlerHelper(s.srv, &HandlerHelper{
 		method:  http.MethodGet,
 		url:     config.PeerHTTPPathPrefix + "foo",
 		body:    nil,
@@ -308,7 +433,7 @@ func (s *PeerServerTestSuite) TestUploadHandler(c *check.C) {
 
 	// bad request test
 	headers["range"] = "bytes=0-x"
-	if rr, err := s.testHandlerHelper(&HandlerHelper{
+	if rr, err := testHandlerHelper(s.srv, &HandlerHelper{
 		method:  http.MethodGet,
 		url:     config.PeerHTTPPathPrefix + file2000,
 		headers: headers,
@@ -323,19 +448,19 @@ func (s *PeerServerTestSuite) TestParseRateHandler(c *check.C) {
 	// normal test
 	testRateLimit := 1000
 	headers["rateLimit"] = strconv.Itoa(testRateLimit)
-	if rr, err := s.testHandlerHelper(&HandlerHelper{
+	if rr, err := testHandlerHelper(s.srv, &HandlerHelper{
 		method:  http.MethodGet,
 		url:     config.LocalHTTPPathRate + file2000,
 		headers: headers,
 	}); err == nil {
 		c.Check(rr.Code, check.Equals, http.StatusOK)
-		limit := p2p.calculateRateLimit(testRateLimit)
+		limit := s.srv.calculateRateLimit(testRateLimit)
 		c.Check(rr.Body.String(), check.Equals, strconv.Itoa(limit))
 	}
 
 	// totalLimitRate zero test
-	p2p.totalLimitRate = 0
-	if rr, err := s.testHandlerHelper(&HandlerHelper{
+	s.srv.totalLimitRate = 0
+	if rr, err := testHandlerHelper(s.srv, &HandlerHelper{
 		method:  http.MethodGet,
 		url:     config.LocalHTTPPathRate + file2000,
 		headers: headers,
@@ -343,11 +468,11 @@ func (s *PeerServerTestSuite) TestParseRateHandler(c *check.C) {
 		c.Check(rr.Code, check.Equals, http.StatusOK)
 		c.Check(rr.Body.String(), check.Equals, strconv.Itoa(testRateLimit))
 	}
-	p2p.totalLimitRate = 1000
+	s.srv.totalLimitRate = 1000
 
 	// wrong rateLimit test
 	headers["rateLimit"] = "foo"
-	if rr, err := s.testHandlerHelper(&HandlerHelper{
+	if rr, err := testHandlerHelper(s.srv, &HandlerHelper{
 		method:  http.MethodGet,
 		url:     config.LocalHTTPPathRate + file2000,
 		headers: headers,
@@ -356,7 +481,74 @@ func (s *PeerServerTestSuite) TestParseRateHandler(c *check.C) {
 	}
 }
 
-func (s *PeerServerTestSuite) testHandlerHelper(hh *HandlerHelper) (*httptest.ResponseRecorder, error) {
+func (s *PeerServerTestSuite) TestCheckHandler(c *check.C) {
+	headers := make(map[string]string)
+	srv := newTestPeerServer(s.workHome)
+	taskFile := "a"
+
+	// normal test
+	headers[config.StrDataDir] = srv.cfg.RV.SystemDataDir
+	headers[config.StrTotalLimit] = "1000"
+	if r, e := testHandlerHelper(srv, &HandlerHelper{
+		method:  http.MethodGet,
+		url:     config.LocalHTTPPathCheck + taskFile,
+		headers: headers,
+	}); e == nil {
+		c.Assert(r.Code, check.Equals, http.StatusOK)
+		c.Assert(r.Body.String(), check.Equals, taskFile+"@"+version.DFGetVersion)
+	}
+}
+
+func (s *PeerServerTestSuite) TestOneFinishHandler(c *check.C) {
+	var r = func() *api.FinishTaskRequest {
+		return &api.FinishTaskRequest{
+			TaskFileName: fmt.Sprintf("TestOneFinishHandler%d", rand.Int()),
+			TaskID:       fmt.Sprintf("%d", rand.Int()),
+			ClientID:     fmt.Sprintf("%d", rand.Int()),
+			Node:         "127.0.0.1",
+		}
+	}
+	exist := r()
+	srv := newTestPeerServer(s.workHome)
+	srv.syncTaskMap.Store(exist.TaskFileName, &taskConfig{
+		taskID: exist.TaskID,
+	})
+
+	var cases = []struct {
+		req  *api.FinishTaskRequest
+		code int
+	}{
+		{req: nil, code: http.StatusBadRequest},
+		{req: r(), code: http.StatusOK},
+		{req: exist, code: http.StatusOK},
+	}
+
+	for _, v := range cases {
+		res, err := testHandlerHelper(srv, &HandlerHelper{
+			method: http.MethodGet,
+			url:    config.LocalHTTPPathClient + "finish?" + util.ParseQuery(v.req),
+		})
+		c.Assert(err, check.IsNil)
+		c.Assert(res.Code, check.Equals, v.code)
+
+		if v.req == nil {
+			continue
+		}
+
+		t, ok := srv.syncTaskMap.Load(v.req.TaskFileName)
+		c.Assert(ok, check.Equals, v.code == http.StatusOK)
+		if ok {
+			tt, ok := t.(*taskConfig)
+			c.Assert(ok, check.Equals, true)
+			c.Assert(tt.finished, check.Equals, true)
+		}
+	}
+}
+
+// -----------------------------------------------------------------------------
+// helper functions
+
+func testHandlerHelper(srv *peerServer, hh *HandlerHelper) (*httptest.ResponseRecorder, error) {
 	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
 	// pass 'nil' as the third parameter.
 	req, err := http.NewRequest(hh.method, hh.url, hh.body)
@@ -374,7 +566,7 @@ func (s *PeerServerTestSuite) testHandlerHelper(hh *HandlerHelper) (*httptest.Re
 	rr := httptest.NewRecorder()
 
 	// Init a router.
-	r := p2p.initRouter()
+	r := srv.initRouter()
 	r.ServeHTTP(rr, req)
 
 	return rr, nil
