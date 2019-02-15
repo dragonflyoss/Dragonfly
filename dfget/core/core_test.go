@@ -31,6 +31,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	. "github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 
 	"github.com/go-check/check"
@@ -91,8 +92,8 @@ func (s *CoreTestSuite) TestRegisterToSupernode(c *check.C) {
 	cfg.Pattern = config.PatternSource
 	f(config.BackSourceReasonUserSpecified, true, nil)
 
+	uploader.SetupPeerServerExecutor(nil)
 	cfg.Pattern = config.PatternP2P
-
 	cfg.Node = []string{"x"}
 	cfg.URL = "http://x.com"
 	f(config.BackSourceReasonRegisterFail, true, nil)

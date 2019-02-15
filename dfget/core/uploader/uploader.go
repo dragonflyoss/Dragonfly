@@ -21,12 +21,9 @@ package uploader
 
 import (
 	"fmt"
-	"io"
 	"os"
-	"os/exec"
 	"os/signal"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -34,8 +31,6 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
-	"github.com/dragonflyoss/Dragonfly/version"
-
 	"github.com/sirupsen/logrus"
 )
 
@@ -51,92 +46,6 @@ var (
 	aliveQueue  = util.NewQueue(0)
 	uploaderAPI = api.NewUploaderAPI(util.DefaultTimeout)
 )
-
-// TODO: Move this part out of the uploader
-
-// StartPeerServerProcess starts an independent peer server process for uploading downloaded files
-// if it doesn't exist.
-// This function is invoked when dfget starts to download files in p2p pattern.
-func StartPeerServerProcess(cfg *config.Config) (port int, err error) {
-	if port = checkPeerServerExist(cfg, 0); port > 0 {
-		return port, nil
-	}
-
-	cmd := exec.Command(os.Args[0], "server",
-		"--ip", cfg.RV.LocalIP,
-		"--meta", cfg.RV.MetaPath,
-		"--data", cfg.RV.SystemDataDir,
-		"--expiretime", cfg.RV.DataExpireTime.String(),
-		"--alivetime", cfg.RV.ServerAliveTime.String())
-	if cfg.Verbose {
-		cmd.Args = append(cmd.Args, "--verbose")
-	}
-
-	var stdout io.ReadCloser
-	if stdout, err = cmd.StdoutPipe(); err != nil {
-		return 0, err
-	}
-	if err = cmd.Start(); err == nil {
-		port, err = readPort(stdout)
-	}
-	if err == nil && checkPeerServerExist(cfg, port) <= 0 {
-		err = fmt.Errorf("invalid server on port:%d", port)
-		port = 0
-	}
-
-	return
-}
-
-func readPort(r io.Reader) (int, error) {
-	done := make(chan error)
-	var port int
-
-	go func() {
-		var n = 0
-		var err error
-		buf := make([]byte, 256)
-
-		n, err = r.Read(buf)
-		if err != nil {
-			done <- err
-		}
-
-		content := strings.TrimSpace(string(buf[:n]))
-		port, err = strconv.Atoi(content)
-		done <- err
-		close(done)
-	}()
-
-	select {
-	case err := <-done:
-		return port, err
-	case <-time.After(time.Second):
-		return 0, fmt.Errorf("get peer server's port timeout")
-	}
-}
-
-// checkPeerServerExist checks the peer server on port whether is available.
-// if the parameter port <= 0, it will get port from meta file and checks.
-func checkPeerServerExist(cfg *config.Config, port int) int {
-	taskFileName := cfg.RV.TaskFileName
-	if port <= 0 {
-		port = getPortFromMeta(cfg.RV.MetaPath)
-	}
-
-	// check the peer server whether is available
-	result, err := checkServer(cfg.RV.LocalIP, port, cfg.RV.DataDir, taskFileName, cfg.TotalLimit)
-	logrus.Infof("local http result:%s err:%v, port:%d path:%s",
-		result, err, port, config.LocalHTTPPathCheck)
-
-	if err == nil {
-		if result == taskFileName {
-			logrus.Infof("use peer server on port:%d", port)
-			return port
-		}
-		logrus.Warnf("not found process on port:%d, version:%s", port, version.DFGetVersion)
-	}
-	return 0
-}
 
 // ----------------------------------------------------------------------------
 // dfget server functions
