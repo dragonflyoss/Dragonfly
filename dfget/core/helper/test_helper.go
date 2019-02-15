@@ -39,6 +39,8 @@ func CreateConfig(writer io.Writer, workHome string) *config.Config {
 	cfg.WorkHome = workHome
 	cfg.RV.MetaPath = path.Join(cfg.WorkHome, "meta", "host.meta")
 	cfg.RV.SystemDataDir = path.Join(cfg.WorkHome, "data")
+	util.CreateDirectory(path.Dir(cfg.RV.MetaPath))
+	util.CreateDirectory(cfg.RV.SystemDataDir)
 
 	logrus.StandardLogger().Out = writer
 	return cfg
