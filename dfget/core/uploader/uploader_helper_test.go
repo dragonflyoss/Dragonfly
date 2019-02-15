@@ -18,10 +18,14 @@ package uploader
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
 	"fmt"
 	"io"
+	"math/rand"
+	"net/http"
 	"strings"
+	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
@@ -64,6 +68,25 @@ func initHelper(fileName, workHome, content string) {
 		dataDir:   workHome,
 		rateLimit: defaultRateLimit,
 	})
+}
+
+func startTestServer(handler http.Handler) (ip string, port int, server *http.Server) {
+	// run a server
+	ip = "127.0.0.1"
+	port = rand.Intn(1000) + 63000
+	server = &http.Server{Addr: fmt.Sprintf("%s:%d", ip, port), Handler: handler}
+	go server.ListenAndServe()
+	return
+}
+
+func stopTestServer(server *http.Server) {
+	if server == nil {
+		return
+	}
+
+	c, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Minute))
+	server.Shutdown(c)
+	cancel()
 }
 
 // ----------------------------------------------------------------------------

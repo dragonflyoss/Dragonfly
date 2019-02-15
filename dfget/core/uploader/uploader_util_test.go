@@ -19,8 +19,6 @@ package uploader
 import (
 	"fmt"
 	"io/ioutil"
-	"math/rand"
-	"net"
 	"net/http"
 	"os"
 	"path"
@@ -41,7 +39,7 @@ type UploaderUtilTestSuite struct {
 	host     string
 	ip       string
 	port     int
-	ln       net.Listener
+	server   *http.Server
 }
 
 func (s *UploaderUtilTestSuite) SetUpSuite(c *check.C) {
@@ -50,7 +48,7 @@ func (s *UploaderUtilTestSuite) SetUpSuite(c *check.C) {
 }
 
 func (s *UploaderUtilTestSuite) TearDownSuite(c *check.C) {
-	s.ln.Close()
+	stopTestServer(s.server)
 	if s.workHome != "" {
 		if err := os.RemoveAll(s.workHome); err != nil {
 			fmt.Printf("remove path:%s error", s.workHome)
@@ -101,15 +99,12 @@ func (s *UploaderUtilTestSuite) TestUpdateServicePortInMeta(c *check.C) {
 
 func (s *UploaderUtilTestSuite) startTestServer() {
 	// run a server
-	s.ip = "127.0.0.1"
-	s.port = rand.Intn(1000) + 63000
-	s.host = fmt.Sprintf("%s:%d", s.ip, s.port)
-	s.ln, _ = net.Listen("tcp", s.host)
 	checkHandler := func(w http.ResponseWriter, r *http.Request) {
 		fileName := mux.Vars(r)["commonFile"]
 		fmt.Fprintf(w, "%s@%s", fileName, version.DFGetVersion)
 	}
 	r := mux.NewRouter()
 	r.HandleFunc(config.LocalHTTPPathCheck+"{commonFile:.*}", checkHandler).Methods("GET")
-	go http.Serve(s.ln, r)
+
+	s.ip, s.port, s.server = startTestServer(r)
 }
