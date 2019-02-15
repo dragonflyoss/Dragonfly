@@ -80,9 +80,12 @@ func (u *uploaderAPI) FinishTask(ip string, port int, req *FinishTaskRequest) er
 		ip, port, config.LocalHTTPPathClient,
 		req.TaskFileName, req.TaskID, req.ClientID, req.Node)
 
-	code, _, err := util.Get(url, u.timeout)
+	code, body, err := util.Get(url, u.timeout)
 	if code == http.StatusOK {
 		return nil
+	}
+	if err == nil {
+		return fmt.Errorf("%d:%s", code, body)
 	}
 	return err
 }
