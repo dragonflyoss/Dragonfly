@@ -51,6 +51,10 @@ type CommandParam struct {
 	// Registry addr and must exist if dfdaemon is used to mirror mode,
 	// format: https://xxx.xx.x:port or http://xxx.xx.x:port.
 	Registry string
+
+	// TrustHosts includes the trusted hosts as keys of the map which dfdaemon forward their
+	// requests directly when dfdaemon is used to http_proxy mode.
+	TrustHosts map[string]string
 }
 
 var (
