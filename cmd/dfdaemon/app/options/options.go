@@ -74,6 +74,10 @@ type Options struct {
 
 	// Key file path.
 	KeyFile string
+
+	// TrustHosts includes the trusted hosts which dfdaemon forward their
+	// requests directly when dfdaemon is used to http_proxy mode.
+	TrustHosts []string
 }
 
 // NewOption returns the default options.
@@ -115,5 +119,5 @@ func (o *Options) AddFlags(fs *flag.FlagSet) {
 	fs.StringVar(&o.Registry, "registry", "https://index.docker.io", "registry addr(https://abc.xx.x or http://abc.xx.x) and must exist if dfdaemon is used to mirror mode")
 	fs.StringVar(&o.DownRule, "rule", "", "download the url by P2P if url matches the specified pattern,format:reg1,reg2,reg3")
 	fs.BoolVar(&o.Notbs, "notbs", true, "not try back source to download if throw exception")
-
+	fs.StringSliceVar(&o.TrustHosts, "trust-hosts", o.TrustHosts, "list of trusted hosts which dfdaemon forward their requests directly, comma separated.")
 }
