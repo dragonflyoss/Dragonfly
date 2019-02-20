@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package util
+package dflog
 
 import (
 	"bufio"
@@ -25,12 +25,24 @@ import (
 	"os"
 	"path"
 	"strings"
+	"testing"
 
 	"github.com/go-check/check"
 	"github.com/sirupsen/logrus"
 )
 
-func (suite *DFGetUtilSuite) TestCreateLogger(c *check.C) {
+func Test(t *testing.T) {
+	check.TestingT(t)
+}
+
+func init() {
+	check.Suite(&LogTestSuite{})
+}
+
+type LogTestSuite struct {
+}
+
+func (suite *LogTestSuite) TestCreateLogger(c *check.C) {
 	logger, tmpFile, r, err := tempFileAndLogger("debug", "x")
 	defer cleanTempFile(tmpFile, err)
 
@@ -55,7 +67,7 @@ func (suite *DFGetUtilSuite) TestCreateLogger(c *check.C) {
 	checkLogs(logrus.WarnLevel, "test")
 }
 
-func (suite *DFGetUtilSuite) TestCreateLogger_differentLevel(c *check.C) {
+func (suite *LogTestSuite) TestCreateLogger_differentLevel(c *check.C) {
 	var (
 		tmpPath     = "/tmp"
 		tmpFileName = fmt.Sprintf("dfget_test_%d.log", rand.Int63())
@@ -78,7 +90,7 @@ func (suite *DFGetUtilSuite) TestCreateLogger_differentLevel(c *check.C) {
 	testLevel("fatal", logrus.FatalLevel)
 }
 
-func (suite *DFGetUtilSuite) TestAddConsoleLog(c *check.C) {
+func (suite *LogTestSuite) TestAddConsoleLog(c *check.C) {
 	logger, tmpFile, r, err := tempFileAndLogger("debug", "")
 	defer cleanTempFile(tmpFile, err)
 
@@ -112,7 +124,7 @@ func (suite *DFGetUtilSuite) TestAddConsoleLog(c *check.C) {
 	})
 }
 
-func (suite *DFGetUtilSuite) TestIsDebug(c *check.C) {
+func (suite *LogTestSuite) TestIsDebug(c *check.C) {
 	var cases = []struct {
 		level    logrus.Level
 		expected bool
