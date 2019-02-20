@@ -53,21 +53,23 @@ func pieceContent(pieceSize int64, origin string) string {
 }
 
 // newTestPeerServer init the peer server for testing.
-func newTestPeerServer(workHome string) {
-	buf := &bytes.Buffer{}
-	cfg := helper.CreateConfig(buf, workHome)
-	p2p = newPeerServer(cfg, 0)
-	p2p.totalLimitRate = 1000
-	p2p.rateLimiter = util.NewRateLimiter(int32(defaultRateLimit), 2)
+func newTestPeerServer(workHome string) (srv *peerServer) {
+	cfg := helper.CreateConfig(nil, workHome)
+	srv = newPeerServer(cfg, 0)
+	srv.totalLimitRate = 1000
+	srv.rateLimiter = util.NewRateLimiter(int32(defaultRateLimit), 2)
+	return srv
 }
 
 // initHelper create a temporary file and store it in the syncTaskMap.
-func initHelper(fileName, workHome, content string) {
-	helper.CreateTestFile(helper.GetServiceFile(fileName, workHome), content)
-	p2p.syncTaskMap.Store(fileName, &taskConfig{
-		dataDir:   workHome,
-		rateLimit: defaultRateLimit,
-	})
+func initHelper(srv *peerServer, fileName, dataDir, content string) {
+	helper.CreateTestFile(helper.GetServiceFile(fileName, dataDir), content)
+	if srv != nil {
+		srv.syncTaskMap.Store(fileName, &taskConfig{
+			dataDir:   dataDir,
+			rateLimit: defaultRateLimit,
+		})
+	}
 }
 
 func startTestServer(handler http.Handler) (ip string, port int, server *http.Server) {

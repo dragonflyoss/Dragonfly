@@ -81,11 +81,11 @@ type peerServer struct {
 	// totalLimitRate is the total network bandwidth shared by tasks on the same host
 	totalLimitRate int
 
-	// syncTaskMap stores the meta info of tasks on the host
+	// syncTaskMap stores the meta name of tasks on the host
 	syncTaskMap sync.Map
 }
 
-// taskConfig refers to some info about peer task.
+// taskConfig refers to some name about peer task.
 type taskConfig struct {
 	taskID    string
 	rateLimit int
@@ -240,12 +240,26 @@ func (ps *peerServer) oneFinishHandler(w http.ResponseWriter, r *http.Request) {
 	taskID := r.FormValue(config.StrTaskID)
 	cid := r.FormValue(config.StrClientID)
 	superNode := r.FormValue(config.StrSuperNode)
+	if taskFileName == "" || taskID == "" || cid == "" {
+		sendHeader(w, http.StatusBadRequest)
+		fmt.Fprintf(w, "invalid params")
+		return
+	}
+
 	if v, ok := ps.syncTaskMap.Load(taskFileName); ok {
 		task := v.(*taskConfig)
 		task.taskID = taskID
 		task.cid = cid
 		task.superNode = superNode
 		task.finished = true
+	} else {
+		ps.syncTaskMap.Store(taskFileName, &taskConfig{
+			taskID:    taskID,
+			cid:       cid,
+			dataDir:   ps.cfg.RV.SystemDataDir,
+			superNode: superNode,
+			finished:  true,
+		})
 	}
 	sendSuccess(w)
 	fmt.Fprintf(w, "success")
@@ -401,12 +415,46 @@ func (ps *peerServer) calculateRateLimit(clientRate int) int {
 // ----------------------------------------------------------------------------
 // methods of peerServer
 
+func (ps *peerServer) isFinished() bool {
+	if ps.finished == nil {
+		return true
+	}
+
+	select {
+	case _, notClose := <-ps.finished:
+		return !notClose
+	default:
+		return false
+	}
+}
+
+func (ps *peerServer) setFinished() {
+	if !ps.isFinished() {
+		close(ps.finished)
+	}
+}
+
+func (ps *peerServer) waitForShutdown() {
+	if ps.finished == nil {
+		return
+	}
+
+	for {
+		select {
+		case _, notClose := <-ps.finished:
+			if !notClose {
+				return
+			}
+		}
+	}
+}
+
 func (ps *peerServer) shutdown() {
 	// tell supernode this peer node is down and delete related files.
-	p2p.syncTaskMap.Range(func(key, value interface{}) bool {
+	ps.syncTaskMap.Range(func(key, value interface{}) bool {
 		task, ok := value.(*taskConfig)
 		if ok {
-			p2p.api.ServiceDown(task.superNode, task.taskID, task.cid)
+			ps.api.ServiceDown(task.superNode, task.taskID, task.cid)
 			serviceFile := helper.GetServiceFile(key.(string), task.dataDir)
 			os.Remove(serviceFile)
 			logrus.Infof("shutdown, remove task id:%s file:%s",
@@ -420,7 +468,7 @@ func (ps *peerServer) shutdown() {
 	cancel()
 	updateServicePortInMeta(ps.cfg.RV.MetaPath, 0)
 	logrus.Info("peer server is shutdown.")
-	close(ps.finished)
+	ps.setFinished()
 }
 
 func (ps *peerServer) deleteExpiredFile(path string, info os.FileInfo,

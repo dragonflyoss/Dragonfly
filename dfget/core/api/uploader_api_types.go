@@ -34,8 +34,8 @@ type CheckServerRequest struct {
 // FinishTaskRequest wraps the request which is sent to uploader
 // in order to report a finished task.
 type FinishTaskRequest struct {
-	TaskFileName string
-	TaskID       string
-	ClientID     string
-	Node         string
+	TaskFileName string `request:"taskFileName"`
+	TaskID       string `request:"taskID"`
+	ClientID     string `request:"cid"`
+	Node         string `request:"superNode"`
 }
