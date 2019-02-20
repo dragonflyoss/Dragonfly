@@ -36,6 +36,7 @@ import (
 	g "github.com/dragonflyoss/Dragonfly/dfdaemon/global"
 	mux "github.com/dragonflyoss/Dragonfly/dfdaemon/muxconf"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/util"
+	"github.com/dragonflyoss/Dragonfly/dflog"
 	"github.com/dragonflyoss/Dragonfly/version"
 )
 
@@ -114,7 +115,8 @@ func rotateLog(logFile *os.File) error {
 		defer log.SetOutput(logFile)
 		logFile.Sync()
 		truncateSize := logSizeLimit/2 - 1
-		mem, err := syscall.Mmap(int(logFile.Fd()), 0, int(stat.Size()), syscall.PROT_READ|syscall.PROT_WRITE, syscall.MAP_SHARED)
+		mem, err := syscall.Mmap(int(logFile.Fd()), 0, int(stat.Size()),
+			syscall.PROT_READ|syscall.PROT_WRITE, syscall.MAP_SHARED)
 		if err != nil {
 			return err
 		}
@@ -145,12 +147,10 @@ func initLogger() {
 	}
 
 	logFilePath := g.HomeDir + ".small-dragonfly/logs/dfdaemon.log"
-	log.SetFormatter(&log.TextFormatter{TimestampFormat: "2006-01-02 15:04:00", DisableColors: true})
-	if os.MkdirAll(filepath.Dir(logFilePath), 0755) == nil {
-		if logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644); err == nil {
-			logFile.Seek(0, 2)
-			log.SetOutput(logFile)
+	if err := dflog.InitLog(false, logFilePath, fmt.Sprintf("%d", os.Getpid())); err == nil {
+		if logFile, ok := (log.StandardLogger().Out).(*os.File); ok {
 			go func(logFile *os.File) {
+				log.Infoln("rotate log routine start...")
 				ticker := time.NewTicker(60 * time.Second)
 				for range ticker.C {
 					if err := rotateLog(logFile); err != nil {
@@ -160,7 +160,6 @@ func initLogger() {
 			}(logFile)
 		}
 	}
-
 }
 
 func initParam(options *options.Options) {
@@ -206,9 +205,8 @@ func initParam(options *options.Options) {
 		os.Exit(constant.CodeExitDfgetNotFound)
 	}
 	cmd := exec.Command(options.DfPath, "version")
-	version, _ := cmd.CombinedOutput()
-
-	log.Infof("dfget version:%s", string(version))
+	dfgetVersion, _ := cmd.CombinedOutput()
+	log.Infof("dfget version:%s", strings.TrimSpace(string(dfgetVersion)))
 
 	if !cmd.ProcessState.Success() {
 		fmt.Println("\npython must be 2.7")

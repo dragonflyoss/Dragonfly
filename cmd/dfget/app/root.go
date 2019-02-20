@@ -28,6 +28,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/core"
 	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/dflog"
 
 	errHandler "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -160,11 +161,11 @@ func transParams() error {
 func initClientLog() error {
 	logFilePath := path.Join(cfg.WorkHome, "logs", "dfclient.log")
 
-	util.InitLog(cfg.Verbose, logFilePath, cfg.Sign)
+	dflog.InitLog(cfg.Verbose, logFilePath, cfg.Sign)
 
 	// once cfg.Console is set, process should also output log to console
 	if cfg.Console {
-		util.InitConsoleLog(cfg.Verbose, cfg.Sign)
+		dflog.InitConsoleLog(cfg.Verbose, cfg.Sign)
 	}
 	return nil
 }
