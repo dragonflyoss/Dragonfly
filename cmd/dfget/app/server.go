@@ -22,7 +22,7 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/dflog"
 
 	"github.com/spf13/cobra"
 )
@@ -77,5 +77,5 @@ func runServer() error {
 
 func initServerLog() error {
 	logFilePath := path.Join(cfg.WorkHome, "logs", "dfserver.log")
-	return util.InitLog(cfg.Verbose, logFilePath, cfg.Sign)
+	return dflog.InitLog(cfg.Verbose, logFilePath, cfg.Sign)
 }

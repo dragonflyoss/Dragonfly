@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package util
+package dflog
 
 import (
 	"bytes"
@@ -24,7 +24,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 // DefaultLogTimeFormat defines the timestamp format.
@@ -34,16 +34,16 @@ const DefaultLogTimeFormat = "2006-01-02 15:04:05.000"
 // logfile is used to stored generated log in local filesystem.
 func InitLog(debug bool, logFilePath string, sign string) error {
 	// set the log level
-	logLevel := log.InfoLevel
+	logLevel := logrus.InfoLevel
 	if debug {
-		logLevel = log.DebugLevel
+		logLevel = logrus.DebugLevel
 	}
 
 	// create and log file
 	if err := os.MkdirAll(filepath.Dir(logFilePath), 0755); err != nil {
 		return fmt.Errorf("failed to create log file %s: %v", logFilePath, err)
 	}
-	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
 	if err != nil {
 		return err
 	}
@@ -56,9 +56,9 @@ func InitLog(debug bool, logFilePath string, sign string) error {
 	}
 
 	// set all details in log default logger
-	log.SetLevel(logLevel)
-	log.SetOutput(logFile)
-	log.SetFormatter(formatter)
+	logrus.SetLevel(logLevel)
+	logrus.SetOutput(logFile)
+	logrus.SetFormatter(formatter)
 	return nil
 }
 
@@ -71,30 +71,30 @@ func InitConsoleLog(debug bool, sign string) {
 		Sign:            sign,
 	}
 
-	logLevel := log.InfoLevel
+	logLevel := logrus.InfoLevel
 	if debug {
-		logLevel = log.DebugLevel
+		logLevel = logrus.DebugLevel
 	}
 
-	consoleLog := &log.Logger{
+	consoleLog := &logrus.Logger{
 		Out:       os.Stdout,
 		Formatter: formatter,
-		Hooks:     make(log.LevelHooks),
+		Hooks:     make(logrus.LevelHooks),
 		Level:     logLevel,
 	}
 	hook := &ConsoleHook{
 		logger: consoleLog,
-		levels: log.AllLevels,
+		levels: logrus.AllLevels,
 	}
-	log.AddHook(hook)
+	logrus.AddHook(hook)
 }
 
 // CreateLogger creates a Logger.
-func CreateLogger(logPath string, logName string, logLevel string, sign string) (*log.Logger, error) {
+func CreateLogger(logPath string, logName string, logLevel string, sign string) (*logrus.Logger, error) {
 	// parse log level
-	level, err := log.ParseLevel(logLevel)
+	level, err := logrus.ParseLevel(logLevel)
 	if err != nil {
-		level = log.InfoLevel
+		level = logrus.InfoLevel
 	}
 
 	// create log file path
@@ -110,7 +110,7 @@ func CreateLogger(logPath string, logName string, logLevel string, sign string) 
 	}
 
 	logFile.Seek(0, 2)
-	Logger := log.New()
+	Logger := logrus.New()
 	Logger.Out = logFile
 	Logger.Formatter = &DragonflyFormatter{TimestampFormat: DefaultLogTimeFormat, Sign: sign}
 	Logger.Level = level
@@ -119,38 +119,38 @@ func CreateLogger(logPath string, logName string, logLevel string, sign string) 
 
 // AddConsoleLog will add a ConsoleLog into Logger's hooks.
 // It will output logs to console when Logger's outputting logs.
-func AddConsoleLog(Logger *log.Logger) {
-	consoleLog := &log.Logger{
+func AddConsoleLog(Logger *logrus.Logger) {
+	consoleLog := &logrus.Logger{
 		Out:       os.Stdout,
 		Formatter: Logger.Formatter,
-		Hooks:     make(log.LevelHooks),
+		Hooks:     make(logrus.LevelHooks),
 		Level:     Logger.Level,
 	}
-	Logger.Hooks.Add(&ConsoleHook{logger: consoleLog, levels: log.AllLevels})
+	Logger.Hooks.Add(&ConsoleHook{logger: consoleLog, levels: logrus.AllLevels})
 }
 
 // ConsoleHook shows logs on console.
 type ConsoleHook struct {
-	logger *log.Logger
-	levels []log.Level
+	logger *logrus.Logger
+	levels []logrus.Level
 }
 
 // Fire implements Hook#Fire.
-func (ch *ConsoleHook) Fire(entry *log.Entry) error {
+func (ch *ConsoleHook) Fire(entry *logrus.Entry) error {
 	if ch.logger.Level >= entry.Level {
 		switch entry.Level {
-		case log.PanicLevel, log.FatalLevel:
+		case logrus.PanicLevel, logrus.FatalLevel:
 			defer func() {
 				recover()
 			}()
 			ch.logger.Panic(entry.Message)
-		case log.ErrorLevel:
+		case logrus.ErrorLevel:
 			ch.logger.Error(entry.Message)
-		case log.WarnLevel:
+		case logrus.WarnLevel:
 			ch.logger.Warn(entry.Message)
-		case log.InfoLevel:
+		case logrus.InfoLevel:
 			ch.logger.Info(entry.Message)
-		case log.DebugLevel:
+		case logrus.DebugLevel:
 			ch.logger.Debug(entry.Message)
 		}
 	}
@@ -158,7 +158,7 @@ func (ch *ConsoleHook) Fire(entry *log.Entry) error {
 }
 
 // Levels implements Hook#Levels().
-func (ch *ConsoleHook) Levels() []log.Level {
+func (ch *ConsoleHook) Levels() []logrus.Level {
 	return ch.levels
 }
 
@@ -170,7 +170,7 @@ type DragonflyFormatter struct {
 }
 
 // Format implements Formatter#Format.
-func (f *DragonflyFormatter) Format(entry *log.Entry) ([]byte, error) {
+func (f *DragonflyFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	b := &bytes.Buffer{}
 
 	timestampFormat := f.TimestampFormat
@@ -181,7 +181,7 @@ func (f *DragonflyFormatter) Format(entry *log.Entry) ([]byte, error) {
 	f.appendValue(b,
 		fmt.Sprintf("%-4.4s", strings.ToUpper(entry.Level.String())),
 		true)
-	if !IsEmptyStr(f.Sign) {
+	if f.Sign != "" {
 		fmt.Fprintf(b, "sign:%s ", f.Sign)
 	}
 	b.WriteString(": ")
@@ -211,6 +211,6 @@ func (f *DragonflyFormatter) appendValue(b *bytes.Buffer, value interface{}, wit
 // ----------------------------------------------------------------------------
 
 // IsDebug returns the log level is debug.
-func IsDebug(level log.Level) bool {
-	return level >= log.DebugLevel
+func IsDebug(level logrus.Level) bool {
+	return level >= logrus.DebugLevel
 }
