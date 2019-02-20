@@ -65,7 +65,7 @@ func (s *HTTPUtilTestSuite) TearDownSuite(c *check.C) {
 // unit tests
 
 func (s *HTTPUtilTestSuite) TestPostJson(c *check.C) {
-	code, body, e := PostJSON("http://"+s.host, req(1, 2), 55*time.Millisecond)
+	code, body, e := PostJSON("http://"+s.host, req(1, 2), 60*time.Millisecond)
 	checkOk(c, code, body, e, 3)
 
 	code, body, e = PostJSON("http://"+s.host, req(1, 2), 50*time.Millisecond)

@@ -25,10 +25,6 @@ import (
 	"github.com/dragonflyoss/Dragonfly/version"
 )
 
-// uploader helper
-
-// LaunchPeerServer helper
-
 // FinishTask report a finished task to peer server.
 func FinishTask(ip string, port int, taskFileName, cid, taskID, node string) error {
 	req := &api.FinishTaskRequest{

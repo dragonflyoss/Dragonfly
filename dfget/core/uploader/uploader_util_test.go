@@ -56,6 +56,30 @@ func (s *UploaderUtilTestSuite) TearDownSuite(c *check.C) {
 	}
 }
 
+// -----------------------------------------------------------------------------
+// tests
+
+func (s *UploaderUtilTestSuite) TestFinishTask(c *check.C) {
+	e := FinishTask(s.ip, s.port, "a", "", "", "")
+	c.Assert(e, check.IsNil)
+
+	e = FinishTask(s.ip, s.port, "b", "", "", "")
+	c.Assert(e, check.NotNil)
+	c.Assert(e.Error(), check.Equals, "400:bad request")
+}
+
+func (s *UploaderUtilTestSuite) TestCheckServer(c *check.C) {
+	// normal test
+	result, err := checkServer(s.ip, s.port, s.workHome, commonFile, 0)
+	c.Check(err, check.IsNil)
+	c.Check(result, check.Equals, commonFile)
+
+	// error url test
+	result, err = checkServer(s.ip+"1", s.port, s.workHome, commonFile, 0)
+	c.Check(err, check.NotNil)
+	c.Check(result, check.Equals, "")
+}
+
 func (s *UploaderUtilTestSuite) TestGeneratePort(c *check.C) {
 	port := generatePort(0)
 	c.Assert(port >= config.ServerPortLowerLimit, check.Equals, true)
@@ -77,18 +101,6 @@ func (s *UploaderUtilTestSuite) TestGetPort(c *check.C) {
 	c.Assert(port, check.Equals, servicePort)
 }
 
-func (s *UploaderUtilTestSuite) TestCheckServer(c *check.C) {
-	// normal test
-	result, err := checkServer(s.ip, s.port, s.workHome, commonFile, 0)
-	c.Check(err, check.IsNil)
-	c.Check(result, check.Equals, commonFile)
-
-	// error url test
-	result, err = checkServer(s.ip+"1", s.port, s.workHome, commonFile, 0)
-	c.Check(err, check.NotNil)
-	c.Check(result, check.Equals, "")
-}
-
 func (s *UploaderUtilTestSuite) TestUpdateServicePortInMeta(c *check.C) {
 	expectedPort := 80
 	metaPath := path.Join(s.workHome, "meta")
@@ -97,14 +109,30 @@ func (s *UploaderUtilTestSuite) TestUpdateServicePortInMeta(c *check.C) {
 	c.Assert(port, check.Equals, expectedPort)
 }
 
+// -----------------------------------------------------------------------------
+// helper functions
+
 func (s *UploaderUtilTestSuite) startTestServer() {
-	// run a server
 	checkHandler := func(w http.ResponseWriter, r *http.Request) {
 		fileName := mux.Vars(r)["commonFile"]
 		fmt.Fprintf(w, "%s@%s", fileName, version.DFGetVersion)
 	}
+
+	finishHandler := func(w http.ResponseWriter, r *http.Request) {
+		if e := r.ParseForm(); e == nil {
+			fileName := r.FormValue(config.StrTaskFileName)
+			if fileName == "a" {
+				sendSuccess(w)
+				return
+			}
+		}
+		sendHeader(w, http.StatusBadRequest)
+		fmt.Fprint(w, "bad request")
+	}
+
 	r := mux.NewRouter()
 	r.HandleFunc(config.LocalHTTPPathCheck+"{commonFile:.*}", checkHandler).Methods("GET")
+	r.HandleFunc(config.LocalHTTPPathClient+"finish", finishHandler).Methods("GET")
 
 	s.ip, s.port, s.server = startTestServer(r)
 }
