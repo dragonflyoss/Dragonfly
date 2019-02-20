@@ -30,7 +30,7 @@ var versionCmd = &cobra.Command{
 	SilenceErrors: true,
 	SilenceUsage:  true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Printf("Version: %s\n", version.DFGetVersion)
+		fmt.Printf("%s\n", version.DFGetVersion)
 		return nil
 	},
 }
