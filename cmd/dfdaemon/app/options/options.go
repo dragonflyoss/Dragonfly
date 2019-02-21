@@ -78,6 +78,10 @@ type Options struct {
 	// TrustHosts includes the trusted hosts which dfdaemon forward their
 	// requests directly when dfdaemon is used to http_proxy mode.
 	TrustHosts []string
+
+	// ConfigPath is the path of dfdaemon's configuration file.
+	// default value is: /etc/dragonfly/dfdaemon.yml
+	ConfigPath string
 }
 
 // NewOption returns the default options.
@@ -88,7 +92,6 @@ func NewOption() *Options {
 		if absPath, err := filepath.Abs(path); err == nil {
 			defaultPath = filepath.Dir(absPath) + "/dfget"
 		}
-
 	}
 
 	o := &Options{
@@ -120,4 +123,7 @@ func (o *Options) AddFlags(fs *flag.FlagSet) {
 	fs.StringVar(&o.DownRule, "rule", "", "download the url by P2P if url matches the specified pattern,format:reg1,reg2,reg3")
 	fs.BoolVar(&o.Notbs, "notbs", true, "not try back source to download if throw exception")
 	fs.StringSliceVar(&o.TrustHosts, "trust-hosts", o.TrustHosts, "list of trusted hosts which dfdaemon forward their requests directly, comma separated.")
+
+	fs.StringVar(&o.ConfigPath, "config", "/etc/dragonfly/dfdaemon.yml",
+		"the path of dfdaemon's configuration file")
 }
