@@ -49,7 +49,11 @@ type DFRoundTripper struct {
 }
 
 // NewDFRoundTripper return the default DFRoundTripper.
-func NewDFRoundTripper() *DFRoundTripper {
+func NewDFRoundTripper(cfg *tls.Config) *DFRoundTripper {
+	if cfg == nil {
+		cfg = &tls.Config{InsecureSkipVerify: true}
+	}
+
 	return &DFRoundTripper{
 		Round: &http.Transport{
 			DialContext: (&net.Dialer{
@@ -60,7 +64,7 @@ func NewDFRoundTripper() *DFRoundTripper {
 			IdleConnTimeout:       90 * time.Second,
 			TLSHandshakeTimeout:   10 * time.Second,
 			ExpectContinueTimeout: 1 * time.Second,
-			TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+			TLSClientConfig:       cfg,
 		},
 		Round2: http.NewFileTransport(http.Dir("/")),
 

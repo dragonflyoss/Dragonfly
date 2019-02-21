@@ -25,7 +25,7 @@ import (
 // InitMux initialize web router of dfdaemon
 func InitMux() {
 	router := map[string]func(http.ResponseWriter, *http.Request){
-		"/":       handler.Process,
+		"/":       handler.Proxy,
 		"/args":   handler.GetArgs,
 		"/debug/": handler.DebugInfo,
 		"/env":    handler.GetEnv,

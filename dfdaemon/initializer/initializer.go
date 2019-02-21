@@ -17,6 +17,7 @@
 package initializer
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -31,6 +32,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dragonflyoss/Dragonfly/cmd/dfdaemon/app/options"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/global"
 	g "github.com/dragonflyoss/Dragonfly/dfdaemon/global"
@@ -247,4 +249,36 @@ func initParam(options *options.Options) {
 		Registry:   options.Registry,
 		TrustHosts: parsedTrustHosts,
 	}
+
+	initProperties(options)
+}
+
+func initProperties(ops *options.Options) {
+	props := config.NewProperties()
+	if err := props.Load(ops.ConfigPath); err != nil {
+		log.Error()
+	}
+
+	var regs []*config.Registry
+
+	// add local host, use the default registry schema and host
+	if reg, err := config.NewRegistry(g.RegProto, g.RegDomain,
+		"(^localhost$)|(^127.0.0.1$)|(^"+g.CommandLine.HostIP+"$)",
+		nil); err == nil {
+		regs = append(regs, reg)
+	}
+	// add trust hosts, use request's origin schema and host
+	for _, v := range g.CommandLine.TrustHosts {
+		if reg, err := config.NewRegistry("", "",
+			"^"+v+"$",
+			nil); err == nil {
+			regs = append(regs, reg)
+		}
+	}
+	// registries in config file have lower priority
+	props.Registries = append(regs, props.Registries...)
+
+	g.Properties = props
+	str, _ := json.Marshal(props)
+	log.Infof("init properties:%s", str)
 }

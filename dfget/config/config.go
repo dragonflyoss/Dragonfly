@@ -43,8 +43,8 @@ import (
 // Properties
 
 // Properties holds all configurable Properties.
-// Support INI(or conf) and YAML(since 0.2.0).
-// Before 0.2.0, only support INI config and only have one property(node):
+// Support INI(or conf) and YAML(since 0.3.0).
+// Before 0.3.0, only support INI config and only have one property(node):
 // 		[node]
 // 		address=127.0.0.1,10.10.10.1
 // Since 0.2.0, the INI config is just to be compatible with previous versions.
