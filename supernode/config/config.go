@@ -53,15 +53,15 @@ type Config struct {
 	// default: 20
 	LinkLimit int
 
-	// SystemReservedBindwidth is the network bandwidth reserved for system software.
+	// SystemReservedBandwidth is the network bandwidth reserved for system software.
 	// unit: MB/s
 	// default: 20
-	SystemReservedBindwidth int
+	SystemReservedBandwidth int
 
-	// MaxBindwidth is the network bandwidth that supernode can use.
+	// MaxBandwidth is the network bandwidth that supernode can use.
 	// unit: MB/s
 	// default: 200
-	MaxBindwidth int
+	MaxBandwidth int
 
 	// Whether to enable profiler
 	// default: true
