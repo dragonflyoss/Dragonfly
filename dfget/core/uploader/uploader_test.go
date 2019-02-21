@@ -90,8 +90,9 @@ func (s *UploaderLaunchTestSuite) TestLaunchPeerServer(c *check.C) {
 		{port, 0, "start peer server error"},
 	}
 
+	cfg := createConfig(s.workHome, 0)
 	for _, v := range cases {
-		cfg := createConfig(s.workHome, v.port)
+		cfg.RV.PeerPort = v.port
 		port, err := LaunchPeerServer(cfg)
 
 		c.Assert(port, check.Equals, v.expectedPort)
