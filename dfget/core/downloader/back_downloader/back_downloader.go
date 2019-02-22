@@ -34,13 +34,17 @@ import (
 
 // BackDownloader downloads the file from file resource.
 type BackDownloader struct {
-	URL     string
-	Target  string
-	Md5     string
-	TaskID  string
-	Node    string
-	Total   int64
-	Success bool
+	// URL is the source url of the file to download.
+	URL string
+
+	// Target is the full target path.
+	Target string
+
+	// Md5 is the expected file md5 to prevent files from being tampered with.
+	Md5 string
+
+	// TaskID a string which represents a unique task.
+	TaskID string
 
 	cfg *config.Config
 
@@ -52,21 +56,16 @@ type BackDownloader struct {
 func NewBackDownloader(cfg *config.Config, result *regist.RegisterResult) *BackDownloader {
 	var (
 		taskID string
-		node   string
 	)
 	if result != nil {
 		taskID = result.TaskID
-		node = result.Node
 	}
 	return &BackDownloader{
-		cfg:     cfg,
-		URL:     cfg.URL,
-		Target:  cfg.RV.RealTarget,
-		Md5:     cfg.Md5,
-		TaskID:  taskID,
-		Node:    node,
-		Total:   0,
-		Success: false,
+		cfg:    cfg,
+		URL:    cfg.URL,
+		Target: cfg.RV.RealTarget,
+		Md5:    cfg.Md5,
+		TaskID: taskID,
 	}
 }
 
@@ -103,7 +102,7 @@ func (bd *BackDownloader) Run() error {
 
 	buf := make([]byte, 512*1024)
 	reader := util.NewLimitReader(resp.Body, bd.cfg.LocalLimit, bd.Md5 != "")
-	if bd.Total, err = io.CopyBuffer(f, reader, buf); err != nil {
+	if _, err = io.CopyBuffer(f, reader, buf); err != nil {
 		return err
 	}
 
@@ -113,7 +112,6 @@ func (bd *BackDownloader) Run() error {
 	} else {
 		err = fmt.Errorf("md5 not match, expected:%s real:%s", bd.Md5, realMd5)
 	}
-	bd.Success = err == nil
 	return err
 }
 

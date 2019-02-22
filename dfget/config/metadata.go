@@ -30,8 +30,10 @@ func NewMetaData(metaPath string) *MetaData {
 
 // MetaData stores meta information that should be persisted.
 type MetaData struct {
+	// ServicePort the the TCP port on which the file upload service listens.
 	ServicePort int `json:"servicePort"`
 
+	// MetaPath the path of meta file.
 	MetaPath string `json:"-"`
 }
 

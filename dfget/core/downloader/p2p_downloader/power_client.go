@@ -35,16 +35,28 @@ import (
 
 // PowerClient downloads file from dragonfly.
 type PowerClient struct {
-	taskID      string
-	node        string
-	pieceTask   *types.PullPieceTaskResponseContinueData
-	cfg         *config.Config
-	queue       util.Queue
+	// taskID a string which represents a unique task.
+	taskID string
+	// node indicates the IP address of the currently registered supernode.
+	node string
+	// pieceTask is the data when successfully pulling piece task
+	// and the task is continuing.
+	pieceTask *types.PullPieceTaskResponseContinueData
+
+	cfg *config.Config
+	// queue maintains a queue of tasks that to be downloaded.
+	// When the download fails, the piece is requeued.
+	queue util.Queue
+	// clientQueue maintains a queue of tasks that need to be written to disk.
+	// A piece will be putted into this queue after it be downloaded successfully.
 	clientQueue util.Queue
 
+	// rateLimiter limit the download speed.
 	rateLimiter *util.RateLimiter
 
-	total    int64
+	// total indicates the total length of the downloaded piece.
+	total int64
+	// readCost records how long it took to download the piece.
 	readCost time.Duration
 }
 

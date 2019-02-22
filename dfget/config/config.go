@@ -56,10 +56,20 @@ import (
 // 		totalLimit: 20971520
 // 		clientQueueSize: 6
 type Properties struct {
-	Nodes           []string `yaml:"nodes"`
-	LocalLimit      int      `yaml:"localLimit"`
-	TotalLimit      int      `yaml:"totalLimit"`
-	ClientQueueSize int      `yaml:"clientQueueSize"`
+	// Nodes specify supernodes.
+	Nodes []string `yaml:"nodes"`
+
+	// LocalLimit rate limit about a single download task,format: 20M/m/K/k.
+	LocalLimit int `yaml:"localLimit"`
+
+	// TotalLimit rate limit about the whole host,format: 20M/m/K/k.
+	TotalLimit int `yaml:"totalLimit"`
+
+	// ClientQueueSize is the size of client queue
+	// which controls the number of pieces that can be processed simultaneously.
+	// It is only useful when the Pattern equals "source".
+	// The default value is 6.
+	ClientQueueSize int `yaml:"clientQueueSize"`
 }
 
 // NewProperties create a new properties with default values.
@@ -318,20 +328,57 @@ func checkOutput(cfg *Config) error {
 // RuntimeVariable stores the variables that are initialized and used
 // at downloading task executing.
 type RuntimeVariable struct {
-	MetaPath      string
-	SystemDataDir string
-	DataDir       string
-	RealTarget    string
-	TargetDir     string
-	TempTarget    string
-	Cid           string
-	TaskURL       string
-	TaskFileName  string
-	LocalIP       string
-	PeerPort      int
-	FileLength    int64
+	// MetaPath specify the path of meta file which store the meta info of the peer that should be persisted.
+	// Only server port information is stored currently.
+	MetaPath string
 
-	DataExpireTime  time.Duration
+	// SystemDataDir specify a default directory to store temporary files.
+	SystemDataDir string
+
+	// DataDir specify a directory to store temporary files.
+	// For now, the value of `DataDir` always euqals `SystemDataDir`,
+	// and there is no difference between them.
+	// TODO: If there is insufficient disk space, we should set it to the `TargetDir`.
+	DataDir string
+
+	// RealTarget specify the full target path whose value is equal to the `Output`.
+	RealTarget string
+
+	// TargetDir is the directory of the RealTarget path.
+	TargetDir string
+
+	// TempTarget is a temp file path that try to determine
+	// whether the `TargetDir` and the `DataDir` belong to the same disk by making a hard link.
+	TempTarget string
+
+	// Cid means the client ID which is a string composed of `localIP + "-" + sign` which represents a peer node.
+	// NOTE: Multiple dfget processes on the same peer have different CIDs.
+	Cid string
+
+	// TaskURL is generated from rawURL which may contains some queries or parameter.
+	// Dfget will filter some volatile queries such as timestamps via --filter parameter of dfget.
+	TaskURL string
+
+	// TaskFileName is a string composed of `the last element of RealTarget path + "-" + sign`.
+	TaskFileName string
+
+	// LocalIP is the native IP which can connect supernode successfully.
+	LocalIP string
+
+	// PeerPort is the TCP port on which the file upload service listens as a peer node.
+	PeerPort int
+
+	// FileLength the length of the file to download.
+	FileLength int64
+
+	// DataExpireTime specify the caching duration for which
+	// cached files keep no accessed by any process.
+	// After this period, the cached files will be deleted.
+	DataExpireTime time.Duration
+
+	// ServerAliveTime specify the alive duration for which
+	// uploader keeps no accessing by any uploading requests.
+	// After this period, the uploader will automically exit.
 	ServerAliveTime time.Duration
 }
 
