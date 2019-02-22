@@ -540,6 +540,7 @@ func (s *PeerServerTestSuite) TestOneFinishHandler(c *check.C) {
 		if ok {
 			tt, ok := t.(*taskConfig)
 			c.Assert(ok, check.Equals, true)
+			c.Assert(tt.rateLimit, check.Equals, 0)
 			c.Assert(tt.finished, check.Equals, true)
 		}
 	}

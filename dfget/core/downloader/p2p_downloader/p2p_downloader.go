@@ -243,6 +243,7 @@ func (p2p *P2PDownloader) getPullRate(data *types.PullPieceTaskResponseContinueD
 	}
 	p2p.pullRateTime = time.Now()
 
+	start := time.Now()
 	var localRate int
 	if p2p.cfg.LocalLimit > 0 {
 		localRate = p2p.cfg.LocalLimit
@@ -270,6 +271,7 @@ func (p2p *P2PDownloader) getPullRate(data *types.PullPieceTaskResponseContinueD
 		p2p.rateLimiter.SetRate(util.TransRate(localRate))
 		return
 	}
+	logrus.Infof("pull rate result:%d cost:%d", reqRate, time.Since(start))
 	p2p.rateLimiter.SetRate(util.TransRate(reqRate))
 }
 
