@@ -192,27 +192,26 @@ func initFlags() {
 		"md5 value input from user for the requested downloading file to enhance security")
 	flagSet.StringVarP(&cfg.Identifier, "identifier", "i", "",
 		"The usage of identifier is making different downloading tasks generate different downloading task IDs even if they have the same URLs. conflict with --md5.")
+
 	flagSet.StringVar(&cfg.CallSystem, "callsystem", "",
 		"The name of dfget caller which is for debugging. Once set, it will be passed to all components around the request to make debugging easy")
-
 	flagSet.StringVarP(&cfg.Pattern, "pattern", "p", "p2p",
 		"download pattern, must be p2p/cdn/source, cdn and source do not support flag --totallimit")
-
 	flagSet.StringVarP(&filter, "filter", "f", "",
 		"filter some query params of URL, use char '&' to separate different params"+
 			"\neg: -f 'key&sign' will filter 'key' and 'sign' query param"+
 			"\nin this way, different but actually the same URLs can reuse the same downloading task")
-
 	flagSet.StringSliceVar(&cfg.Header, "header", nil,
 		"http header, eg: --header='Accept: *' --header='Host: abc'")
-
 	flagSet.StringSliceVarP(&cfg.Node, "node", "n", nil,
 		"specify the addresses(IP:port) of supnernodes")
-
 	flagSet.BoolVar(&cfg.Notbs, "notbs", false,
 		"disable back source downloading for requested file when p2p fails to download it")
 	flagSet.BoolVar(&cfg.DFDaemon, "dfdaemon", false,
 		"identify whether the request is from dfdaemon")
+	flagSet.IntVar(&cfg.ClientQueueSize, "clientqueue", config.DefaultClientQueueSize,
+		"specify the size of client queue which controls the number of pieces that can be processed simultaneously")
+
 	// others
 	flagSet.BoolVarP(&cfg.ShowBar, "showbar", "b", false,
 		"show progress bar, it is conflict with '--console'")
