@@ -104,7 +104,7 @@ func (p2p *P2PDownloader) init() {
 	p2p.queue = util.NewQueue(0)
 	p2p.queue.Put(NewPieceSimple(p2p.taskID, p2p.node, config.TaskStatusStart))
 
-	p2p.clientQueue = util.NewQueue(config.DefaultClientQueueSize)
+	p2p.clientQueue = util.NewQueue(p2p.cfg.ClientQueueSize)
 
 	p2p.clientFilePath = helper.GetTaskFile(p2p.taskFileName, p2p.cfg.RV.DataDir)
 	p2p.serviceFilePath = helper.GetServiceFile(p2p.taskFileName, p2p.cfg.RV.DataDir)
