@@ -24,7 +24,6 @@ main() {
     then
         echo "Begin to package with docker."
         FPM="docker run --rm -it -v $(pwd):$(pwd) -w $(pwd) inoc603/fpm:alpine"
-        echo ${FPM}
     else
         echo "Begin to package in local environment."
         FPM="fpm"
