@@ -196,8 +196,10 @@ type Config struct {
 	// Help show help information.
 	Help bool `json:"help,omitempty"`
 
-	// Client queue size.
-	// TODO: support setupFlags
+	// ClientQueueSize is the size of client queue
+	// which controls the number of pieces that can be processed simultaneously.
+	// It is only useful when the pattern not equals "source".
+	// The default value is 6.
 	ClientQueueSize int `json:"clientQueueSize,omitempty"`
 
 	// Start time.
