@@ -249,6 +249,7 @@ func (ps *peerServer) oneFinishHandler(w http.ResponseWriter, r *http.Request) {
 	if v, ok := ps.syncTaskMap.Load(taskFileName); ok {
 		task := v.(*taskConfig)
 		task.taskID = taskID
+		task.rateLimit = 0
 		task.cid = cid
 		task.superNode = superNode
 		task.finished = true
@@ -399,7 +400,9 @@ func (ps *peerServer) calculateRateLimit(clientRate int) int {
 	// for each key and value present in the map
 	f := func(key, value interface{}) bool {
 		if task, ok := value.(*taskConfig); ok {
-			total += task.rateLimit
+			if !task.finished {
+				total += task.rateLimit
+			}
 		}
 		return true
 	}
