@@ -75,7 +75,7 @@ deb:
 	./hack/package.sh deb
 .PHONY: deb
 
-dist:
+release:
 	./hack/package.sh
-.PHONY: dist
+.PHONY: release
 
