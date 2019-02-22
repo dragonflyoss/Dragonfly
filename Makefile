@@ -66,3 +66,16 @@ docs:
 	@echo "Begin to generate docs of API/CLI"
 	./hack/generate-docs.sh
 .PHONY: docs
+
+rpm:
+	./hack/package.sh rpm
+.PHONY: rpm
+
+deb:
+	./hack/package.sh deb
+.PHONY: deb
+
+dist:
+	./hack/package.sh
+.PHONY: dist
+
