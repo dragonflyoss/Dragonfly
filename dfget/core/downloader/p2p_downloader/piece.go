@@ -26,15 +26,32 @@ import (
 
 // Piece contains all information of a piece.
 type Piece struct {
-	TaskID    string        `json:"taskID"`
-	SuperNode string        `json:"superNode"`
-	DstCid    string        `json:"dstCid"`
-	Range     string        `json:"range"`
-	Result    int           `json:"result"`
-	Status    int           `json:"status"`
-	PieceSize int32         `json:"pieceSize"`
-	PieceNum  int           `json:"pieceNum"`
-	Content   *bytes.Buffer `json:"-"`
+	// TaskID a string which represents a unique task.
+	TaskID string `json:"taskID"`
+
+	// SuperNode indicates the IP address of the currently registered supernode.
+	SuperNode string `json:"superNode"`
+
+	// DstCid means the clientID of the target peer node for downloading the piece.
+	DstCid string `json:"dstCid"`
+
+	// Range indicates the range of specific piece in the task, example "0-45565".
+	Range string `json:"range"`
+
+	// Result of the piece downloaded.
+	Result int `json:"result"`
+
+	// Status of the downloading task.
+	Status int `json:"status"`
+
+	// PieceSize the length of the piece.
+	PieceSize int32 `json:"pieceSize"`
+
+	// PieceNum represents the position of the piece in the pieces list by cutting files.
+	PieceNum int `json:"pieceNum"`
+
+	// Content uses a buffer to temporarily store the piece content.
+	Content *bytes.Buffer `json:"-"`
 }
 
 // RawContent return raw contents.
