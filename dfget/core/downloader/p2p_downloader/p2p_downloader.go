@@ -48,22 +48,38 @@ var (
 // P2PDownloader is one implementation of Downloader that uses p2p pattern
 // to download files.
 type P2PDownloader struct {
-	API            api.SupernodeAPI
-	Register       regist.SupernodeRegister
+	// API holds the instance of SupernodeAPI to interact with supernode.
+	API api.SupernodeAPI
+	// Register holds the instance of SupernodeRegister.
+	Register regist.SupernodeRegister
+	// RegisterResult indicates the result set of registering to supernode.
 	RegisterResult *regist.RegisterResult
 
 	cfg *config.Config
 
-	node         string
-	taskID       string
-	targetFile   string
+	// node indicates the IP address of the currently registered supernode.
+	node string
+	// taskID a string which represents a unique task.
+	taskID string
+	// targetFile indicates the full target path whose value is equal to the `Output`.
+	targetFile string
+	// taskFileName is a string composed of `the last element of RealTarget path + "-" + sign`.
 	taskFileName string
 
 	pieceSizeHistory [2]int32
-	queue            util.Queue
-	clientQueue      util.Queue
+	// queue maintains a queue of tasks that to be downloaded.
+	// The downloader will get download tasks from supernode and put them into this queue.
+	// And the downloader will poll values from this queue constantly and do the actual download actions.
+	queue util.Queue
+	// clientQueue maintains a queue of tasks that need to be written to disk.
+	// The downloader will put the piece into this queue after it downloaded a piece successfully.
+	// And clientWriter will poll values from this queue constantly and write to disk.
+	clientQueue util.Queue
 
-	clientFilePath  string
+	// clientFilePath is the full path of the temp file.
+	clientFilePath string
+	// serviceFilePath is the full path of the temp service file which
+	// always ends with ".service".
 	serviceFilePath string
 
 	// pieceSet range -> bool
@@ -71,9 +87,13 @@ type P2PDownloader struct {
 	// false: if the range is in processing
 	// not in: the range hasn't been processed
 	pieceSet map[string]bool
-	total    int64
+	// total indicates the total length of the downloaded file.
+	total int64
 
-	rateLimiter  *util.RateLimiter
+	// rateLimiter limit the download speed.
+	rateLimiter *util.RateLimiter
+	// pullRateTime the time when the pull rate API is called to
+	// control the time interval between two calls to the API.
 	pullRateTime time.Time
 }
 
@@ -123,8 +143,7 @@ func (p2p *P2PDownloader) Run() error {
 	)
 
 	// start ClientWriter
-	clientWriter, err := NewClientWriter(p2p.taskFileName, p2p.cfg.RV.Cid,
-		p2p.clientFilePath, p2p.serviceFilePath, p2p.clientQueue, p2p.API, p2p.cfg)
+	clientWriter, err := NewClientWriter(p2p.clientFilePath, p2p.serviceFilePath, p2p.clientQueue, p2p.API, p2p.cfg)
 	if err != nil {
 		return err
 	}

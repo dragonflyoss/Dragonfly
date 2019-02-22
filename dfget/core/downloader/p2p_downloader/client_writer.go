@@ -33,37 +33,48 @@ import (
 
 // ClientWriter writes a file for uploading and a target file.
 type ClientWriter struct {
-	taskFileName string
-	cid          string
-	clintQueue   util.Queue
-	finish       chan struct{}
+	// clientQueue maintains a queue of tasks that need to be written to disk.
+	// The downloader will put the piece into this queue after it downloaded a piece successfully.
+	// And clientWriter will poll values from this queue constantly and write to disk.
+	clientQueue util.Queue
+	// finish indicates whether the task written is completed.
+	finish chan struct{}
 
-	clientFilePath  string
+	// clientFilePath is the full path of the temp file.
+	clientFilePath string
+	// serviceFilePath is the full path of the temp service file which
+	// always ends with ".service".
 	serviceFilePath string
-	serviceFile     *os.File
+	// serviceFile holds a file object for the serviceFilePath.
+	serviceFile *os.File
 
-	syncQueue   util.Queue
-	pieceIndex  int
-	result      bool
+	syncQueue util.Queue
+	// pieceIndex records the number of pieces currently downloaded.
+	pieceIndex int
+	// result records whether the write operation was successful.
+	result bool
+	// acrossWrite indicates whether the target file location and temporary file location cross file systems.
+	// If that, the value is true. And vice versa.
+	// We judge this by trying to make a hard link.
 	acrossWrite bool
-	p2pPattern  bool
-	total       int
+	// p2pPattern records whether the pattern euqals "p2p".
+	p2pPattern bool
 
-	targetFinish chan struct{}
-	targetQueue  util.Queue
+	// targetQueue maintains a queue of tasks that need to be written to target path.
+	targetQueue util.Queue
+	// targetWriter holds an instance of targetWriter.
 	targetWriter *TargetWriter
 
+	// api holds an instance of SupernodeAPI to interact with supernode.
 	api api.SupernodeAPI
 	cfg *config.Config
 }
 
 // NewClientWriter creates and initialize a ClientWriter instance.
-func NewClientWriter(taskFileName, cid, clientFilePath, serviceFilePath string,
+func NewClientWriter(clientFilePath, serviceFilePath string,
 	clientQueue util.Queue, api api.SupernodeAPI, cfg *config.Config) (*ClientWriter, error) {
 	clientWriter := &ClientWriter{
-		taskFileName:    taskFileName,
-		cid:             cid,
-		clintQueue:      clientQueue,
+		clientQueue:     clientQueue,
 		clientFilePath:  clientFilePath,
 		serviceFilePath: serviceFilePath,
 		api:             api,
@@ -104,7 +115,7 @@ func (cw *ClientWriter) init() (err error) {
 // Run starts writing downloading file.
 func (cw *ClientWriter) Run() {
 	for {
-		item := cw.clintQueue.Poll()
+		item := cw.clientQueue.Poll()
 		state, ok := item.(string)
 		if ok && state == last {
 			if !cw.acrossWrite {

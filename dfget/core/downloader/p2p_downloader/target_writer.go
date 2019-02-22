@@ -30,14 +30,21 @@ import (
 
 // TargetWriter writes downloading file to disk.
 type TargetWriter struct {
-	dst        string
-	dstFile    *os.File
+	// dst is the destination file path.
+	dst string
+	// dstFile holds the file object for dst path.
+	dstFile *os.File
+	// pieceQueue maintains a queue of tasks that need to be written to target path.
 	pieceQueue util.Queue
-	finish     chan struct{}
+	// finish indicates whether the task written by `TargetWriter` is completed.
+	finish chan struct{}
+	// pieceIndex records the number of pieces currently downloaded.
 	pieceIndex int
-	result     bool
-	syncQueue  util.Queue
-	cfg        *config.Config
+	// result records whether the write operation was successful.
+	result bool
+
+	syncQueue util.Queue
+	cfg       *config.Config
 }
 
 // NewTargetWriter creates and initialize a TargetWriter instance.
