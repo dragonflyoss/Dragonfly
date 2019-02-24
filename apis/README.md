@@ -25,7 +25,7 @@ Swagger is a simple yet powerful representation of your RESTful API. [go-swagger
 
 ### Design API 
 
-With swagger installed in your local $PATH, you could start to design or update API of Dragonfly supernode. Here we need to underline that every change for API should be firstly added in [swagger.yml](swagger.yml) of Drgaonfly porject.
+With swagger installed in your local $PATH, you could start to design or update API of Dragonfly supernode. Here we need to underline that every change for API should be firstly added in [swagger.yml](swagger.yml) of Dragonfly project.
 
 Let's us take an example:
 
