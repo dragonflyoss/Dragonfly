@@ -20,7 +20,9 @@ import (
 	"regexp"
 	"sync"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
+
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 )
 
 // CommandParam is a struct that stores all the command line parameters
@@ -76,6 +78,9 @@ var (
 	// DFPattern is the url patterns. Dfdaemon starts downloading by P2P if the downloading url matches DFPattern.
 	DFPattern = make(map[string]*regexp.Regexp)
 
+	// Properties holds all properties get from dfdaemon's config file.
+	Properties *config.Properties
+
 	rwMutex sync.RWMutex
 )
 
@@ -89,7 +94,7 @@ func UpdateDFPattern(reg string) {
 	if compiledReg, err := regexp.Compile(reg); err == nil {
 		DFPattern[reg] = compiledReg
 	} else {
-		log.Warnf("pattern:%s is invalid", reg)
+		logrus.Warnf("pattern:%s is invalid", reg)
 	}
 }
 
@@ -114,7 +119,7 @@ func MatchDfPattern(location string) bool {
 			useGetter = true
 			break
 		}
-		log.Debugf("location:%s not match reg:%s", location, key)
+		logrus.Debugf("location:%s not match reg:%s", location, key)
 	}
 	return useGetter
 }
