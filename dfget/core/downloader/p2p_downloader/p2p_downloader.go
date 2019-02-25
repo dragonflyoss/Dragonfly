@@ -289,7 +289,7 @@ func (p2p *P2PDownloader) getPullRate(data *types.PullPieceTaskResponseContinueD
 		p2p.rateLimiter.SetRate(util.TransRate(localRate))
 		return
 	}
-	logrus.Infof("pull rate result:%d cost:%d", reqRate, time.Since(start))
+	logrus.Infof("pull rate result:%d cost:%v", reqRate, time.Since(start))
 	p2p.rateLimiter.SetRate(util.TransRate(reqRate))
 }
 
