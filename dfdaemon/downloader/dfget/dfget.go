@@ -57,13 +57,13 @@ func NewDFGetter(dstDir, callSystem string, notbs bool, rateLimit, urlFilter str
 
 // Download is the method of DFGetter to download by dragonfly.
 func (dfGetter *DFGetter) Download(url string, header map[string][]string, name string) (string, error) {
-	startTime := time.Now().Unix()
+	startTime := time.Now()
 	cmdPath, args, dstPath := dfGetter.parseCommand(url, header, name)
 	cmd := exec.Command(cmdPath, args...)
 	_, err := cmd.CombinedOutput()
 
 	if cmd.ProcessState.Success() {
-		log.Infof("dfget url:%s [SUCCESS] cost:%ds", url, time.Now().Unix()-startTime)
+		log.Infof("dfget url:%s [SUCCESS] cost:%.3fs", url, time.Since(startTime).Seconds())
 		return dstPath, nil
 	}
 	if value, ok := cmd.ProcessState.Sys().(syscall.WaitStatus); ok {
