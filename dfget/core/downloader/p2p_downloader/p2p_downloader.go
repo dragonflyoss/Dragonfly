@@ -42,7 +42,6 @@ const (
 
 var (
 	uploaderAPI = api.NewUploaderAPI(util.DefaultTimeout)
-	downloadAPI = api.NewDownloadAPI()
 )
 
 // P2PDownloader is one implementation of Downloader that uses p2p pattern
@@ -303,6 +302,7 @@ func (p2p *P2PDownloader) startTask(data *types.PullPieceTaskResponseContinueDat
 		queue:       p2p.queue,
 		clientQueue: p2p.clientQueue,
 		rateLimiter: p2p.rateLimiter,
+		downloadAPI: api.NewDownloadAPI(),
 	}
 	powerClient.Run()
 }

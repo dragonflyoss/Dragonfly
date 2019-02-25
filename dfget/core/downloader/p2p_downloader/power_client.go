@@ -58,6 +58,9 @@ type PowerClient struct {
 	total int64
 	// readCost records how long it took to download the piece.
 	readCost time.Duration
+
+	//downloadAPI holds an instance of DownloadAPI.
+	downloadAPI api.DownloadAPI
 }
 
 // Run starts run the task.
@@ -99,7 +102,7 @@ func (pc *PowerClient) downloadPiece() (content *bytes.Buffer, e error) {
 
 	// send download request
 	startTime := time.Now()
-	resp, err := downloadAPI.Download(dstIP, peerPort, pc.createDownloadRequest())
+	resp, err := pc.downloadAPI.Download(dstIP, peerPort, pc.createDownloadRequest())
 	if err != nil {
 		return nil, err
 	}
