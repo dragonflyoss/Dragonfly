@@ -34,6 +34,7 @@ download SUCCESS(0) cost:0.026s length:141898 reason:0
 ```
       --alivetime duration    Alive duration for which uploader keeps no accessing by any uploading requests, after this period uploader will automically exit (default 5m0s)
       --callsystem string     The name of dfget caller which is for debugging. Once set, it will be passed to all components around the request to make debugging easy
+      --clientqueue int       specify the size of client queue which controls the number of pieces that can be processed simultaneously (default 6)
       --console               show log on console, it's conflict with '--showbar'
       --dfdaemon              identify whether the request is from dfdaemon
       --expiretime duration   caching duration for which cached file keeps no accessed by any process, after this period cache file will be deleted (default 3m0s)
