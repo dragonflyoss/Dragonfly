@@ -140,7 +140,7 @@ func (cw *ClientWriter) Run() {
 		if !ok {
 			continue
 		}
-		if err := cw.write(piece, time.Now()); err != nil {
+		if err := cw.write(piece); err != nil {
 			logrus.Errorf("write item:%s error:%v", piece, err)
 			cw.cfg.BackSourceReason = config.BackSourceReasonWriteError
 			cw.result = false
@@ -161,7 +161,8 @@ func (cw *ClientWriter) Wait() {
 	}
 }
 
-func (cw *ClientWriter) write(piece *Piece, startTime time.Time) error {
+func (cw *ClientWriter) write(piece *Piece) error {
+	startTime := time.Now()
 	if !cw.p2pPattern {
 		cw.targetQueue.Put(piece)
 		return nil
@@ -171,15 +172,21 @@ func (cw *ClientWriter) write(piece *Piece, startTime time.Time) error {
 		cw.targetQueue.Put(piece)
 	}
 
-	start := int64(piece.PieceNum) * (int64(piece.PieceSize) - 5)
-
 	cw.pieceIndex++
-	cw.serviceFile.Seek(start, 0)
-	buf := bufio.NewWriterSize(cw.serviceFile, 4*1024*1024)
+	err := writePieceToFile(piece, cw.serviceFile)
+	if err == nil {
+		go cw.sendSuccessPiece(piece, time.Since(startTime))
+	}
+	return err
+}
+
+func writePieceToFile(piece *Piece, file *os.File) error {
+	start := int64(piece.PieceNum) * (int64(piece.PieceSize) - 5)
+	file.Seek(start, 0)
+
+	buf := bufio.NewWriterSize(file, 4*1024*1024)
 	_, err := io.Copy(buf, piece.RawContent())
 	buf.Flush()
-
-	go cw.sendSuccessPiece(piece, time.Since(startTime))
 	return err
 }
 
