@@ -17,9 +17,7 @@
 package downloader
 
 import (
-	"bufio"
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
@@ -100,6 +98,10 @@ func (tw *TargetWriter) Run() {
 			tw.cfg.BackSourceReason = config.BackSourceReasonWriteError
 			tw.result = false
 		}
+
+		if tw.syncQueue != nil && tw.pieceIndex%4 == 0 {
+			tw.syncQueue.Put(tw.dstFile.Fd())
+		}
 	}
 	tw.dstFile.Close()
 	close(tw.finish)
@@ -113,17 +115,6 @@ func (tw *TargetWriter) Wait() {
 }
 
 func (tw *TargetWriter) write(piece *Piece) error {
-	start := int64(piece.PieceNum) * (int64(piece.PieceSize) - 5)
-
 	tw.pieceIndex++
-	tw.dstFile.Seek(start, 0)
-	buf := bufio.NewWriterSize(tw.dstFile, 4*1024*1024)
-	_, err := io.Copy(buf, piece.RawContent())
-	buf.Flush()
-
-	if tw.syncQueue != nil && tw.pieceIndex%4 == 0 {
-		tw.syncQueue.Put(tw.dstFile.Fd())
-	}
-
-	return err
+	return writePieceToFile(piece, tw.dstFile)
 }

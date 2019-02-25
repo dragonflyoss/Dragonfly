@@ -24,12 +24,18 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"testing"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
+
 	"github.com/go-check/check"
 )
+
+func Test(t *testing.T) {
+	check.TestingT(t)
+}
 
 type BackDownloaderTestSuite struct {
 	workHome string

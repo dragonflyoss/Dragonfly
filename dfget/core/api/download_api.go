@@ -45,7 +45,7 @@ type DownloadAPI interface {
 type downloadAPI struct {
 }
 
-// NewDownloadAPI returns a new UploaderAPI.
+// NewDownloadAPI returns a new DownloadAPI.
 func NewDownloadAPI() DownloadAPI {
 	return &downloadAPI{}
 }
