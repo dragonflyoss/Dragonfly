@@ -256,7 +256,8 @@ func initParam(options *options.Options) {
 func initProperties(ops *options.Options) {
 	props := config.NewProperties()
 	if err := props.Load(ops.ConfigPath); err != nil {
-		log.Error()
+		log.Errorf("init properties failed:%v", err)
+		os.Exit(constant.CodeExitConfigError)
 	}
 
 	var regs []*config.Registry

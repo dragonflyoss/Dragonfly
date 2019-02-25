@@ -16,22 +16,26 @@
 
 package constant
 
-var (
+const (
+	// CodeExitConfigError represents that the config provided can not be load successfully.
+	CodeExitConfigError = 10 + iota
 	// CodeExitUserHomeNotExist represents that the user home directory is not exist.
-	CodeExitUserHomeNotExist = 15
+	CodeExitUserHomeNotExist
 	// CodeExitPathNotAbs represents that the repo directory parsed from command-line is not absolute path.
-	CodeExitPathNotAbs = 16
+	CodeExitPathNotAbs
 	// CodeExitRateLimitInvalid represents that the rate limit is invalid.
-	CodeExitRateLimitInvalid = 17
+	CodeExitRateLimitInvalid
 	// CodeExitPortInvalid represents that the port is invalid.
-	CodeExitPortInvalid = 18
+	CodeExitPortInvalid
 	// CodeExitDfgetNotFound represents that the dfget cannot be found.
-	CodeExitDfgetNotFound = 19
+	CodeExitDfgetNotFound
 	// CodeExitRepoCreateFail represents that the repo directory is created failed.
-	CodeExitRepoCreateFail = 20
+	CodeExitRepoCreateFail
 	// CodeExitDfgetFail represents that executing dfget failed.
-	CodeExitDfgetFail = 21
+	CodeExitDfgetFail
+)
 
+const (
 	// CodeReqAuth represents that an authentication failure happens when executing dfget.
-	CodeReqAuth = 22
+	CodeReqAuth = 100 + iota
 )
