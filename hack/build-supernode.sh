@@ -10,8 +10,8 @@ USE_DOCKER=${USE_DOCKER:-"0"}
 
 build-supernode-docker() {
     docker run --rm -it \
-        -v ${BUILD_SOURCE_HOME}:${BUILD_SOURCE_HOME} \
-        -w ${BUILD_SOURCE_HOME} \
+        -v "${BUILD_SOURCE_HOME}:${BUILD_SOURCE_HOME}" \
+        -w "${BUILD_SOURCE_HOME}" \
         maven:3.6-jdk-8 ./hack/build-supernode.sh
 }
 

@@ -53,30 +53,30 @@ build_rpm() {
     ${FPM} -s dir -t rpm -f -p release --rpm-os=linux \
         --description "${DFGET_DESCRIPTION}" \
         --maintainer "${MAINTAINER}" \
-        -n dfget -v ${VERSION} \
-		${BUILD_PATH}/dfget=${INSTALL_HOME}/${INSTALL_CLIENT_PATH}/dfget
+        -n dfget -v "${VERSION}" \
+	"${BUILD_PATH}/${DFGET_BINARY_NAME}=${INSTALL_HOME}/${INSTALL_CLIENT_PATH}/${DFGET_BINARY_NAME}"
 
     ${FPM} -s dir -t rpm -f -p release --rpm-os=linux \
         --description "${DFDAEMON_DESCRIPTION}" \
         --maintainer "${MAINTAINER}" \
-        -n dfdaemon -v ${VERSION} \
+        -n dfdaemon -v "${VERSION}" \
         -d dfget \
-		${BUILD_PATH}/dfdaemon=${INSTALL_HOME}/${INSTALL_CLIENT_PATH}/dfdaemon
+	"${BUILD_PATH}/${DFDAEMON_BINARY_NAME}=${INSTALL_HOME}/${INSTALL_CLIENT_PATH}/${DFDAEMON_BINARY_NAME}"
 }
 
 build_deb() {
     ${FPM} -s dir -t deb -f -p release \
         --description "${DFGET_DESCRIPTION}" \
         --maintainer "${MAINTAINER}" \
-        -n dfget -v ${VERSION} \
-		${BUILD_PATH}/dfget=${INSTALL_HOME}/${INSTALL_CLIENT_PATH}/dfget
+        -n dfget -v "${VERSION}" \
+	"${BUILD_PATH}/${DFGET_BINARY_NAME}=${INSTALL_HOME}/${INSTALL_CLIENT_PATH}/${DFGET_BINARY_NAME}"
 
     ${FPM} -s dir -t deb -f -p release \
         --description "${DFDAEMON_DESCRIPTION}" \
         --maintainer "${MAINTAINER}" \
-        -n dfdaemon -v ${VERSION} \
+        -n dfdaemon -v "${VERSION}" \
         -d dfget \
-		${BUILD_PATH}/dfdaemon=${INSTALL_HOME}/${INSTALL_CLIENT_PATH}/dfdaemon
+	"${BUILD_PATH}/${DFDAEMON_BINARY_NAME}=${INSTALL_HOME}/${INSTALL_CLIENT_PATH}/${DFDAEMON_BINARY_NAME}"
 }
 
 main "$@"
