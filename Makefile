@@ -19,6 +19,7 @@ USE_DOCKER?=0 # Default: build components in the local environment.
 clean:
 	@echo "Begin to clean redundant files."
 	@rm -rf ./bin
+	@rm -rf ./release
 .PHONY: clean
 
 build-dirs:
