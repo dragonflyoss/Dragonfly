@@ -9,10 +9,9 @@ BIN_DIR="${BUILD_SOURCE_HOME}/bin"
 USE_DOCKER=${USE_DOCKER:-"0"}
 
 build-supernode-docker() {
-    docker run --rm -it \
-        -v "${BUILD_SOURCE_HOME}:${BUILD_SOURCE_HOME}" \
-        -w "${BUILD_SOURCE_HOME}" \
-        maven:3.6-jdk-8 ./hack/build-supernode.sh
+    cd "${SUPERNODE_SOURCE_HOME}" || return
+    mvn clean package -DskipTests docker:build -e
+    cp "${SUPERNODE_BIN}/supernode.jar"  "${BIN_DIR}/${SUPERNODE_BINARY_NAME}"
 }
 
 build-supernode-local(){
