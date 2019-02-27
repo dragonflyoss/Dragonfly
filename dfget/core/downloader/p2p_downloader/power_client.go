@@ -167,5 +167,5 @@ func (pc *PowerClient) readBody(body io.ReadCloser) string {
 	if _, e := buf.ReadFrom(body); e != nil {
 		return ""
 	}
-	return buf.String()
+	return strings.TrimSpace(buf.String())
 }

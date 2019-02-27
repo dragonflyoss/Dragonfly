@@ -95,7 +95,7 @@ Then copy or clone Dragonfly source code to the GOPATH：
 Make a build folder to use later:
 
 ``` shell
-BUILDPATH=/tmp/pouchbuild
+BUILDPATH=/tmp/dragonfly
 export GOPATH=$GOPATH:$BUILDPATH
 ```
 

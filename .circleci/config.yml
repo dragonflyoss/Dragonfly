@@ -5,7 +5,7 @@ version: 2
 jobs:
   markdownlint-misspell-shellcheck:
     docker:
-      # this image is build from Dockerfile 
+      # this image is build from Dockerfile
       # https://github.com/pouchcontainer/pouchlinter/blob/master/Dockerfile
       - image: pouchcontainer/pouchlinter:v0.1.2
     working_directory: /go/src/github.com/dragonflyoss/Dragonfly
@@ -19,31 +19,31 @@ jobs:
           name: use markdown-link-check(https://github.com/tcort/markdown-link-check) to check links in markdown files
           command: |
             set +e
-            for name in $(find . -name \*.md | grep -v vendor | grep -v CHANGELOG); do 
-              if [ -f $name ]; then 
-                markdown-link-check -q $name; 
+            for name in $(find . -name \*.md | grep -v vendor | grep -v CHANGELOG); do
+              if [ -f $name ]; then
+                markdown-link-check -q $name;
                 if [ $? -ne 0 ]; then
                   code=1
                 fi
-              fi 
-            done 
+              fi
+            done
             bash -c "exit $code";
       - run:
-          name: use opensource tool client9/misspell to correct commonly misspelled English words 
+          name: use opensource tool client9/misspell to correct commonly misspelled English words
           command: |
             find  ./* -name  "*"  | grep -v vendor | xargs misspell -error
       - run:
           name: use ShellCheck (https://github.com/koalaman/shellcheck) to check the validateness of shell scripts in pouch repo
           command: |
             find ./ -name "*.sh" | grep -v vendor | xargs shellcheck
-  
+
   gocode-check-via-gometalinter-swagger:
     docker:
       - image: pouchcontainer/pouchlinter:v0.1.2
     working_directory: /go/src/github.com/dragonflyoss/Dragonfly
     steps:
       - checkout
-      - run: 
+      - run:
           name: validate swagger.yml
           command: |
             swagger validate "/go/src/github.com/dragonflyoss/Dragonfly/apis/swagger.yml"
@@ -87,6 +87,11 @@ jobs:
       - run:
           name: start supernode daemon background & run all integration test cases in test
           command: |
+            echo "install maven and jdk8"
+            sudo apt-get update > /dev/null 2>&1
+            sudo apt-get install openjdk-8-jdk maven > /dev/null 2>&1
+            echo "building..."
+            make build > /dev/null
             cd cmd
             cd supernode && go build
             ./supernode &
