@@ -39,3 +39,8 @@ const (
 	// CodeReqAuth represents that an authentication failure happens when executing dfget.
 	CodeReqAuth = 100 + iota
 )
+
+const (
+	// DefaultConfigPath the default path of dfdaemon configuration file.
+	DefaultConfigPath = "/etc/dragonfly/dfdaemon.yml"
+)
