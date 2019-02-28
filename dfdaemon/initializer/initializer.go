@@ -257,7 +257,10 @@ func initProperties(ops *options.Options) {
 	props := config.NewProperties()
 	if err := props.Load(ops.ConfigPath); err != nil {
 		log.Errorf("init properties failed:%v", err)
-		os.Exit(constant.CodeExitConfigError)
+		if ops.ConfigPath != constant.DefaultConfigPath || !os.IsNotExist(err) {
+			fmt.Printf("init properties failed:%v\n", err)
+			os.Exit(constant.CodeExitConfigError)
+		}
 	}
 
 	var regs []*config.Registry
