@@ -44,38 +44,29 @@ main() {
 }
 
 # TODO: Add description
-DFGET_DESCRIPTION="dfget"
-DFDAEMON_DESCRIPTION="dfdaemon"
+DFCLIENT_DESCRIPTION="df-client"
 # TODO: Add maintainer
 MAINTAINER="dragonflyoss"
 
 build_rpm() {
     ${FPM} -s dir -t rpm -f -p release --rpm-os=linux \
-        --description "${DFGET_DESCRIPTION}" \
+        --description "${DFCLIENT_DESCRIPTION}" \
         --maintainer "${MAINTAINER}" \
-        -n dfget -v "${VERSION}" \
-	"${BUILD_PATH}/${DFGET_BINARY_NAME}=${INSTALL_HOME}/${INSTALL_CLIENT_PATH}/${DFGET_BINARY_NAME}"
-
-    ${FPM} -s dir -t rpm -f -p release --rpm-os=linux \
-        --description "${DFDAEMON_DESCRIPTION}" \
-        --maintainer "${MAINTAINER}" \
-        -n dfdaemon -v "${VERSION}" \
-        -d dfget \
+        --after-install ./hack/after-install.sh \
+        --before-remove ./hack/before-remove.sh \
+        -n df-client -v "${VERSION}" \
+	"${BUILD_PATH}/${DFGET_BINARY_NAME}=${INSTALL_HOME}/${INSTALL_CLIENT_PATH}/${DFGET_BINARY_NAME}" \
 	"${BUILD_PATH}/${DFDAEMON_BINARY_NAME}=${INSTALL_HOME}/${INSTALL_CLIENT_PATH}/${DFDAEMON_BINARY_NAME}"
 }
 
 build_deb() {
     ${FPM} -s dir -t deb -f -p release \
-        --description "${DFGET_DESCRIPTION}" \
+        --description "${DFCLIENT_DESCRIPTION}" \
         --maintainer "${MAINTAINER}" \
-        -n dfget -v "${VERSION}" \
-	"${BUILD_PATH}/${DFGET_BINARY_NAME}=${INSTALL_HOME}/${INSTALL_CLIENT_PATH}/${DFGET_BINARY_NAME}"
-
-    ${FPM} -s dir -t deb -f -p release \
-        --description "${DFDAEMON_DESCRIPTION}" \
-        --maintainer "${MAINTAINER}" \
-        -n dfdaemon -v "${VERSION}" \
-        -d dfget \
+        --after-install ./hack/after-install.sh \
+        --before-remove ./hack/before-remove.sh \
+        -n df-client -v "${VERSION}" \
+	"${BUILD_PATH}/${DFGET_BINARY_NAME}=${INSTALL_HOME}/${INSTALL_CLIENT_PATH}/${DFGET_BINARY_NAME}" \
 	"${BUILD_PATH}/${DFDAEMON_BINARY_NAME}=${INSTALL_HOME}/${INSTALL_CLIENT_PATH}/${DFDAEMON_BINARY_NAME}"
 }
 
