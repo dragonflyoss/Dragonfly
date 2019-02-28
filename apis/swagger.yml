@@ -463,7 +463,7 @@ definitions:
         description: |
           IP address which peer client carries.
           (TODO) make IP field contain more information, for example
-          WAN/LAN IP address for supernode to recoganize.
+          WAN/LAN IP address for supernode to recognize.
         format: "ipv4"
       hostName:
         type: "string"
