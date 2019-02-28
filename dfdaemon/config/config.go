@@ -77,7 +77,7 @@ func (p *Properties) Load(path string) error {
 func (p *Properties) loadFromYaml(path string) error {
 	yamlFile, err := ioutil.ReadFile(path)
 	if err != nil {
-		return fmt.Errorf("read yaml config from %s error: %v", path, err)
+		return err
 	}
 	err = yaml.Unmarshal(yamlFile, p)
 	if err != nil {

@@ -22,6 +22,8 @@ import (
 	"path/filepath"
 
 	flag "github.com/spf13/pflag"
+
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
 )
 
 // Options is the configuration
@@ -124,6 +126,6 @@ func (o *Options) AddFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&o.Notbs, "notbs", true, "not try back source to download if throw exception")
 	fs.StringSliceVar(&o.TrustHosts, "trust-hosts", o.TrustHosts, "list of trusted hosts which dfdaemon forward their requests directly, comma separated.")
 
-	fs.StringVar(&o.ConfigPath, "config", "/etc/dragonfly/dfdaemon.yml",
+	fs.StringVar(&o.ConfigPath, "config", constant.DefaultConfigPath,
 		"the path of dfdaemon's configuration file")
 }

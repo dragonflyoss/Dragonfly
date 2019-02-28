@@ -83,7 +83,7 @@ func (s *ConfigTestSuite) TestProperties_Load(c *check.C) {
 		errMsg   string
 		expected *Properties
 	}{
-		{create: false, content: "", errMsg: "read yaml", expected: nil},
+		{create: false, content: "", errMsg: "no such file or directory", expected: nil},
 		{create: true, content: "-", errMsg: "unmarshal yaml", expected: nil},
 		{create: true, content: "registries:\n - regx: '^['",
 			errMsg: "missing closing", expected: nil},
