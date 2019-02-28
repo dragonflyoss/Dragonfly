@@ -19,6 +19,7 @@ USE_DOCKER?=0 # Default: build components in the local environment.
 clean:
 	@echo "Begin to clean redundant files."
 	@rm -rf ./bin
+	@rm -rf ./release
 .PHONY: clean
 
 build-dirs:
@@ -66,3 +67,16 @@ docs:
 	@echo "Begin to generate docs of API/CLI"
 	./hack/generate-docs.sh
 .PHONY: docs
+
+rpm:
+	./hack/package.sh rpm
+.PHONY: rpm
+
+deb:
+	./hack/package.sh deb
+.PHONY: deb
+
+release:
+	./hack/package.sh
+.PHONY: release
+
