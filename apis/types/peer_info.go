@@ -22,7 +22,7 @@ type PeerInfo struct {
 
 	// IP address which peer client carries.
 	// (TODO) make IP field contain more information, for example
-	// WAN/LAN IP address for supernode to recoganize.
+	// WAN/LAN IP address for supernode to recognize.
 	//
 	// Format: ipv4
 	IP strfmt.IPv4 `json:"IP,omitempty"`
