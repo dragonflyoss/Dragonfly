@@ -10,6 +10,6 @@ import lombok.Data;
 @Data
 public class ClusterMember {
     private String ip;
-    private int registerPort = 8001;
-    private int downloadPort = 8002;
+    private int registerPort = 8002;
+    private int downloadPort = 8001;
 }
