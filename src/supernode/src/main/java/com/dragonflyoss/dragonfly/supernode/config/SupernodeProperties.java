@@ -17,16 +17,21 @@
 package com.dragonflyoss.dragonfly.supernode.config;
 
 import javax.annotation.PostConstruct;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
-import com.dragonflyoss.dragonfly.supernode.common.Constants;
 import com.alibaba.fastjson.JSON;
 
+import com.dragonflyoss.dragonfly.supernode.common.Constants;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -68,6 +73,12 @@ public class SupernodeProperties {
      */
     private String dfgetPath = Constants.DFGET_PATH;
 
+    /**
+     * The advertise ip is used to set the ip that we advertise to other peer in the p2p-network.
+     * By default, the first non-loop address is advertised.
+     */
+    private String advertiseIp;
+
     @PostConstruct
     public void init() {
         String cdnHome = baseHome + "/repo";
@@ -82,6 +93,48 @@ public class SupernodeProperties {
             log.error("create repo dir error", e);
             System.exit(1);
         }
+
+        setLocalIp();
+
         log.info("cluster members: {}", JSON.toJSONString(cluster));
+    }
+
+    private void setLocalIp() {
+        if (StringUtils.isNotBlank(advertiseIp)) {
+            Constants.localIp = advertiseIp;
+            Constants.generateNodeCid();
+            log.info("init local ip of supernode, use ip:{}", Constants.localIp);
+        } else {
+            List<String> ips = getAllIps();
+            if (!ips.isEmpty()) {
+                Constants.localIp = ips.get(0);
+                Constants.generateNodeCid();
+            }
+            log.info("init local ip of supernode, ip list:{}, use ip:{}",
+                JSON.toJSONString(ips), Constants.localIp);
+        }
+    }
+
+    private List<String> getAllIps() {
+        List<String> ips = new ArrayList<String>();
+        try {
+            Enumeration<NetworkInterface> allNetInterfaces = NetworkInterface
+                .getNetworkInterfaces();
+            while (allNetInterfaces.hasMoreElements()) {
+                NetworkInterface netInterface = allNetInterfaces.nextElement();
+                Enumeration<InetAddress> addresses = netInterface
+                    .getInetAddresses();
+                while (addresses.hasMoreElements()) {
+                    InetAddress ip = addresses.nextElement();
+                    if (ip instanceof Inet4Address && !ip.isAnyLocalAddress()
+                        && !ip.isLoopbackAddress()) {
+                        ips.add(ip.getHostAddress());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("getAllIps error:{}", e.getMessage(), e);
+        }
+        return ips;
     }
 }
