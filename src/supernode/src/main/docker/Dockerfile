@@ -23,5 +23,6 @@ ADD supernode.jar supernode.jar
 
 EXPOSE 8001 8002
 
-ENTRYPOINT ["/root/start.sh"]
+CMD ["-Dsupernode.advertiseIp="]
+ENTRYPOINT /root/start.sh $0 $@
 
