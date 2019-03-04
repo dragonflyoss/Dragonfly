@@ -28,6 +28,7 @@ import (
 
 	"github.com/go-check/check"
 
+	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
@@ -322,7 +323,7 @@ func (s *PeerServerTestSuite) TestShutdown(c *check.C) {
 	}
 
 	ps.shutdown()
-	c.Assert(util.PathExist(tmpFile), check.Equals, false)
+	c.Assert(cutil.PathExist(tmpFile), check.Equals, false)
 	c.Assert(ps.isFinished(), check.Equals, true)
 	c.Assert(getPortFromMeta(cfg.RV.MetaPath), check.Equals, 0)
 }
@@ -381,7 +382,7 @@ func (s *PeerServerTestSuite) TestDeleteExpiredFile(c *check.C) {
 			finished, v.expire, v.deleted)
 
 		c.Assert(deleted, check.Equals, v.deleted, cmt)
-		c.Assert(util.PathExist(filePath), check.Equals, !v.deleted, cmt)
+		c.Assert(cutil.PathExist(filePath), check.Equals, !v.deleted, cmt)
 		if v.task != nil {
 			c.Assert(mark[v.task.taskID], check.Equals, v.deleted, cmt)
 			_, ok := ps.syncTaskMap.Load(v.name)

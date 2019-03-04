@@ -17,9 +17,7 @@
 package util
 
 import (
-	"math/rand"
 	"testing"
-	"time"
 
 	"github.com/go-check/check"
 )
@@ -28,44 +26,40 @@ func Test(t *testing.T) {
 	check.TestingT(t)
 }
 
-type DFGetUtilSuite struct{}
+type AssertSuite struct{}
 
 func init() {
-	check.Suite(&DFGetUtilSuite{})
+	check.Suite(&AssertSuite{})
 }
 
-func (suite *DFGetUtilSuite) SetUpTest(c *check.C) {
-	rand.Seed(time.Now().UnixNano())
-}
-
-func (suite *DFGetUtilSuite) TestMax(c *check.C) {
+func (suite *AssertSuite) TestMax(c *check.C) {
 	c.Assert(Max(1, 2), check.Not(check.Equals), 2)
 	c.Assert(Max(1, 2), check.Equals, int32(2))
 	c.Assert(Max(1, 1), check.Equals, int32(1))
 	c.Assert(Max(3, 2), check.Equals, int32(3))
 }
 
-func (suite *DFGetUtilSuite) TestMin(c *check.C) {
+func (suite *AssertSuite) TestMin(c *check.C) {
 	c.Assert(Min(1, 2), check.Not(check.Equals), 1)
 	c.Assert(Min(1, 2), check.Equals, int32(1))
 	c.Assert(Min(1, 1), check.Equals, int32(1))
 	c.Assert(Min(3, 2), check.Equals, int32(2))
 }
 
-func (suite *DFGetUtilSuite) TestIsEmptyStr(c *check.C) {
+func (suite *AssertSuite) TestIsEmptyStr(c *check.C) {
 	c.Assert(IsEmptyStr(""), check.Equals, true)
 	c.Assert(IsEmptyStr("x"), check.Equals, false)
 }
 
-func (suite *DFGetUtilSuite) TestIsNil(c *check.C) {
+func (suite *AssertSuite) TestIsNil(c *check.C) {
 	c.Assert(IsNil(nil), check.Equals, true)
 	c.Assert(IsNil(suite), check.Equals, false)
 
-	var temp *DFGetUtilSuite
+	var temp *AssertSuite
 	c.Assert(IsNil(temp), check.Equals, true)
 }
 
-func (suite *DFGetUtilSuite) TestJsonString(c *check.C) {
+func (suite *AssertSuite) TestJsonString(c *check.C) {
 	type T1 struct {
 		A int
 	}

@@ -18,14 +18,9 @@ package util
 
 import (
 	"runtime"
-	"testing"
 
 	"github.com/go-check/check"
 )
-
-func Test(t *testing.T) {
-	check.TestingT(t)
-}
 
 type UtilSuite struct{}
 
