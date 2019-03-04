@@ -17,12 +17,23 @@
 package util
 
 import (
+	"math/rand"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/go-check/check"
 )
+
+type DFGetUtilSuite struct{}
+
+func init() {
+	check.Suite(&DFGetUtilSuite{})
+}
+
+func (suite *DFGetUtilSuite) SetUpTest(c *check.C) {
+	rand.Seed(time.Now().UnixNano())
+}
 
 func (suite *DFGetUtilSuite) TestQueue_infiniteQueue(c *check.C) {
 	timeout := 50 * time.Millisecond

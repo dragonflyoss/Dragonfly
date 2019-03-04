@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"time"
 
+	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/downloader"
@@ -90,7 +91,7 @@ type P2PDownloader struct {
 	total int64
 
 	// rateLimiter limit the download speed.
-	rateLimiter *util.RateLimiter
+	rateLimiter *cutil.RateLimiter
 	// pullRateTime the time when the pull rate API is called to
 	// control the time interval between two calls to the API.
 	pullRateTime time.Time
@@ -130,7 +131,7 @@ func (p2p *P2PDownloader) init() {
 
 	p2p.pieceSet = make(map[string]bool)
 
-	p2p.rateLimiter = util.NewRateLimiter(int32(p2p.cfg.LocalLimit), 2)
+	p2p.rateLimiter = cutil.NewRateLimiter(int32(p2p.cfg.LocalLimit), 2)
 	p2p.pullRateTime = time.Now().Add(-3 * time.Second)
 }
 
@@ -279,18 +280,18 @@ func (p2p *P2PDownloader) getPullRate(data *types.PullPieceTaskResponseContinueD
 	resp, err := uploaderAPI.ParseRate(p2p.cfg.RV.LocalIP, p2p.cfg.RV.PeerPort, req)
 	if err != nil {
 		logrus.Errorf("failed to pullRate: %v", err)
-		p2p.rateLimiter.SetRate(util.TransRate(localRate))
+		p2p.rateLimiter.SetRate(cutil.TransRate(localRate))
 		return
 	}
 
 	reqRate, err := strconv.Atoi(resp)
 	if err != nil {
 		logrus.Errorf("failed to parse rate from resp %s: %v", resp, err)
-		p2p.rateLimiter.SetRate(util.TransRate(localRate))
+		p2p.rateLimiter.SetRate(cutil.TransRate(localRate))
 		return
 	}
 	logrus.Infof("pull rate result:%d cost:%v", reqRate, time.Since(start))
-	p2p.rateLimiter.SetRate(util.TransRate(reqRate))
+	p2p.rateLimiter.SetRate(cutil.TransRate(reqRate))
 }
 
 func (p2p *P2PDownloader) startTask(data *types.PullPieceTaskResponseContinueData) {
@@ -340,7 +341,7 @@ func (p2p *P2PDownloader) getItem(latestItem *Piece) (bool, *Piece) {
 		logrus.Warnf("get item timeout(2s) from queue.")
 		needMerge = false
 	}
-	if util.IsNil(latestItem) {
+	if cutil.IsNil(latestItem) {
 		return false, latestItem
 	}
 	if latestItem.Result == config.ResultSuc ||
@@ -418,9 +419,9 @@ func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, clie
 	} else {
 		if _, err := os.Stat(p2p.clientFilePath); err != nil {
 			logrus.Warnf("client file path:%s not found", p2p.clientFilePath)
-			if e := util.Link(p2p.serviceFilePath, p2p.clientFilePath); e != nil {
+			if e := cutil.Link(p2p.serviceFilePath, p2p.clientFilePath); e != nil {
 				logrus.Warnln("hard link failed, instead of use copy")
-				util.CopyFile(p2p.serviceFilePath, p2p.clientFilePath)
+				cutil.CopyFile(p2p.serviceFilePath, p2p.clientFilePath)
 			}
 		}
 		src = p2p.clientFilePath

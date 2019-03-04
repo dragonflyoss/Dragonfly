@@ -24,9 +24,9 @@ import (
 	"os"
 	"path"
 
+	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/sirupsen/logrus"
 )
 

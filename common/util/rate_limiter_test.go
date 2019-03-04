@@ -22,7 +22,13 @@ import (
 	"github.com/go-check/check"
 )
 
-func (suite *DFGetUtilSuite) TestNewRateLimiter(c *check.C) {
+type RateLimiterSuite struct{}
+
+func init() {
+	check.Suite(&RateLimiterSuite{})
+}
+
+func (suite *RateLimiterSuite) TestNewRateLimiter(c *check.C) {
 	var cases = []struct {
 		r int32
 		w int64
@@ -45,7 +51,7 @@ func (suite *DFGetUtilSuite) TestNewRateLimiter(c *check.C) {
 	}
 }
 
-func (suite *DFGetUtilSuite) TestRateLimiter_SetRate(c *check.C) {
+func (suite *RateLimiterSuite) TestRateLimiter_SetRate(c *check.C) {
 	var cases = []struct {
 		r  int32
 		w  int64
@@ -70,7 +76,7 @@ func (suite *DFGetUtilSuite) TestRateLimiter_SetRate(c *check.C) {
 	}
 }
 
-func (suite *DFGetUtilSuite) TestRateLimiter_AcquireBlocking(c *check.C) {
+func (suite *RateLimiterSuite) TestRateLimiter_AcquireBlocking(c *check.C) {
 	var cases = []struct {
 		r     int32
 		w     int64
@@ -98,7 +104,7 @@ func (suite *DFGetUtilSuite) TestRateLimiter_AcquireBlocking(c *check.C) {
 	}
 }
 
-func (suite *DFGetUtilSuite) TestRateLimiter_AcquireNonBlocking(c *check.C) {
+func (suite *RateLimiterSuite) TestRateLimiter_AcquireNonBlocking(c *check.C) {
 	rl := NewRateLimiter(1000, 1)
 	c.Assert(rl.AcquireNonBlocking(1000), check.Equals, int32(-1))
 	rl.blocking(1000)
