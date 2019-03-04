@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 
+	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 
@@ -60,7 +61,7 @@ func NewTargetWriter(dst string, queue util.Queue, cfg *config.Config) (*TargetW
 
 func (tw *TargetWriter) init() error {
 	var err error
-	tw.dstFile, err = util.OpenFile(tw.dst, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0755)
+	tw.dstFile, err = cutil.OpenFile(tw.dst, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0755)
 	if err != nil {
 		return fmt.Errorf("open target file:%s error:%v", tw.dst, err)
 	}

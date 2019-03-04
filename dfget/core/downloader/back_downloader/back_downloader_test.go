@@ -26,9 +26,9 @@ import (
 	"path"
 	"testing"
 
+	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
 
 	"github.com/go-check/check"
 )

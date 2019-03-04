@@ -26,6 +26,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/common/util"
+
 	"github.com/valyala/fasthttp"
 )
 
@@ -173,7 +175,7 @@ func HTTPStatusOk(code int) bool {
 // ParseQuery only parses the fields with tag 'request' of the query to parameters.
 // query must be a pointer to a struct.
 func ParseQuery(query interface{}) string {
-	if IsNil(query) {
+	if util.IsNil(query) {
 		return ""
 	}
 

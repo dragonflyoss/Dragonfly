@@ -29,8 +29,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/errors"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
 
 	"github.com/go-check/check"
 	"github.com/sirupsen/logrus"

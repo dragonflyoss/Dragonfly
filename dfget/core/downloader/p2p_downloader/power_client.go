@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/errors"
@@ -52,7 +53,7 @@ type PowerClient struct {
 	clientQueue util.Queue
 
 	// rateLimiter limit the download speed.
-	rateLimiter *util.RateLimiter
+	rateLimiter *cutil.RateLimiter
 
 	// total indicates the total length of the downloaded piece.
 	total int64
@@ -116,7 +117,7 @@ func (pc *PowerClient) downloadPiece() (content *bytes.Buffer, e error) {
 
 	// start to read data from resp
 	// use limitReader to limit the download speed
-	limitReader := util.NewLimitReaderWithLimiter(pc.rateLimiter, resp.Body, pieceMD5 != "")
+	limitReader := cutil.NewLimitReaderWithLimiter(pc.rateLimiter, resp.Body, pieceMD5 != "")
 	content = &bytes.Buffer{}
 	if pc.total, e = content.ReadFrom(limitReader); err != nil {
 		return nil, err

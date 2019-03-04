@@ -24,9 +24,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/global"
-	"github.com/dragonflyoss/Dragonfly/dfdaemon/util"
 )
 
 // Proxy makes the dfdaemon as a reverse proxy to download image layers by dragonfly

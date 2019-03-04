@@ -18,9 +18,14 @@ package util
 
 import (
 	"math/rand"
+	"testing"
 
 	"github.com/go-check/check"
 )
+
+func Test(t *testing.T) {
+	check.TestingT(t)
+}
 
 func init() {
 	check.Suite(&AlgorithmTestSuite{})

@@ -30,6 +30,7 @@ import (
 	"syscall"
 	"time"
 
+	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	errType "github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 
@@ -267,7 +268,7 @@ func NewConfig() *Config {
 
 // AssertConfig checks the config and return errors.
 func AssertConfig(cfg *Config) (err error) {
-	if util.IsNil(cfg) {
+	if cutil.IsNil(cfg) {
 		return errors.Wrap(errType.ErrNotInitialized, "runtime config")
 	}
 
@@ -287,7 +288,7 @@ func checkURL(cfg *Config) error {
 		return fmt.Errorf(cfg.URL)
 	}
 	reg := regexp.MustCompile(`(https?|HTTPS?)://([\w_]+:[\w_]+@)?([\w-]+\.)+[\w-]+(/[\w- ./?%&=]*)?`)
-	if url := reg.FindString(cfg.URL); util.IsEmptyStr(url) {
+	if url := reg.FindString(cfg.URL); cutil.IsEmptyStr(url) {
 		return fmt.Errorf(cfg.URL)
 	}
 	return nil
@@ -295,7 +296,7 @@ func checkURL(cfg *Config) error {
 
 // This function must be called after checkURL
 func checkOutput(cfg *Config) error {
-	if util.IsEmptyStr(cfg.Output) {
+	if cutil.IsEmptyStr(cfg.Output) {
 		url := strings.TrimRight(cfg.URL, "/")
 		idx := strings.LastIndexByte(url, '/')
 		if idx < 0 {
@@ -317,7 +318,7 @@ func checkOutput(cfg *Config) error {
 	}
 
 	// check permission
-	for dir := cfg.Output; !util.IsEmptyStr(dir); dir = filepath.Dir(dir) {
+	for dir := cfg.Output; !cutil.IsEmptyStr(dir); dir = filepath.Dir(dir) {
 		if err := syscall.Access(dir, syscall.O_RDWR); err == nil {
 			break
 		} else if os.IsPermission(err) {
