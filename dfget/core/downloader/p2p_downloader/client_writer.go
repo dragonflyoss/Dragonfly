@@ -22,6 +22,7 @@ import (
 	"os"
 	"time"
 
+	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
@@ -89,13 +90,13 @@ func NewClientWriter(clientFilePath, serviceFilePath string,
 func (cw *ClientWriter) init() (err error) {
 	cw.p2pPattern = helper.IsP2P(cw.cfg.Pattern)
 	if cw.p2pPattern {
-		if e := util.Link(cw.cfg.RV.TempTarget, cw.clientFilePath); e != nil {
+		if e := cutil.Link(cw.cfg.RV.TempTarget, cw.clientFilePath); e != nil {
 			logrus.Warn(e)
 			cw.acrossWrite = true
 		}
 
-		cw.serviceFile, _ = util.OpenFile(cw.serviceFilePath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0755)
-		util.Link(cw.serviceFilePath, cw.clientFilePath)
+		cw.serviceFile, _ = cutil.OpenFile(cw.serviceFilePath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0755)
+		cutil.Link(cw.serviceFilePath, cw.clientFilePath)
 	}
 
 	cw.result = true

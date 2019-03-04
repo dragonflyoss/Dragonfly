@@ -19,6 +19,12 @@ package util
 import (
 	"fmt"
 	"io"
+	"os"
+)
+
+var (
+	// Printer is global StdPrinter.
+	Printer = &StdPrinter{Out: os.Stdout}
 )
 
 // StdPrinter output info to console directly.

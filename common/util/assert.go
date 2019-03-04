@@ -20,13 +20,7 @@ package util
 
 import (
 	"encoding/json"
-	"os"
 	"reflect"
-)
-
-var (
-	// Printer is global StdPrinter.
-	Printer = &StdPrinter{Out: os.Stdout}
 )
 
 // Max returns the larger of x or y.

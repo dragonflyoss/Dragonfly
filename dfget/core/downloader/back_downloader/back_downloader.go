@@ -24,6 +24,7 @@ import (
 	"os"
 	"path"
 
+	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/downloader"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
@@ -101,7 +102,7 @@ func (bd *BackDownloader) Run() error {
 	defer resp.Body.Close()
 
 	buf := make([]byte, 512*1024)
-	reader := util.NewLimitReader(resp.Body, bd.cfg.LocalLimit, bd.Md5 != "")
+	reader := cutil.NewLimitReader(resp.Body, bd.cfg.LocalLimit, bd.Md5 != "")
 	if _, err = io.CopyBuffer(f, reader, buf); err != nil {
 		return err
 	}
@@ -121,8 +122,8 @@ func (bd *BackDownloader) Cleanup() {
 		return
 	}
 
-	if !util.IsEmptyStr(bd.tempFileName) {
-		util.DeleteFile(bd.tempFileName)
+	if !cutil.IsEmptyStr(bd.tempFileName) {
+		cutil.DeleteFile(bd.tempFileName)
 	}
 	bd.cleaned = true
 }

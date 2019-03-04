@@ -24,11 +24,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/common/dflog"
+	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core"
 	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
-	"github.com/dragonflyoss/Dragonfly/dflog"
 
 	errHandler "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -231,7 +232,7 @@ func initFlags() {
 
 // Helper functions.
 func transLimit(limit string) (int, error) {
-	if util.IsEmptyStr(limit) {
+	if cutil.IsEmptyStr(limit) {
 		return 0, nil
 	}
 	l := len(limit)
@@ -253,7 +254,7 @@ func transLimit(limit string) (int, error) {
 }
 
 func transFilter(filter string) []string {
-	if util.IsEmptyStr(filter) {
+	if cutil.IsEmptyStr(filter) {
 		return nil
 	}
 	return strings.Split(filter, "&")

@@ -29,9 +29,9 @@ import (
 
 	"github.com/go-check/check"
 
+	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
 )
 
 func Test(t *testing.T) {

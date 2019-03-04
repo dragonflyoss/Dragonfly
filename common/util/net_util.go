@@ -102,3 +102,9 @@ func NetLimit() string {
 
 	return defaultRateLimit
 }
+
+// ExtractHost extracts host ip from the giving string.
+func ExtractHost(hostAndPort string) string {
+	fields := strings.Split(strings.TrimSpace(hostAndPort), ":")
+	return fields[0]
+}

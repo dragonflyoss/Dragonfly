@@ -32,13 +32,13 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dragonflyoss/Dragonfly/cmd/dfdaemon/app/options"
+	"github.com/dragonflyoss/Dragonfly/common/dflog"
+	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/global"
 	g "github.com/dragonflyoss/Dragonfly/dfdaemon/global"
 	mux "github.com/dragonflyoss/Dragonfly/dfdaemon/muxconf"
-	"github.com/dragonflyoss/Dragonfly/dfdaemon/util"
-	"github.com/dragonflyoss/Dragonfly/dflog"
 	"github.com/dragonflyoss/Dragonfly/version"
 )
 

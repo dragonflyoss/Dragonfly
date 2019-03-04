@@ -28,6 +28,7 @@ import (
 	"strings"
 	"time"
 
+	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/downloader"
@@ -83,7 +84,7 @@ func prepare(cfg *config.Config) (err error) {
 
 	rv.RealTarget = cfg.Output
 	rv.TargetDir = path.Dir(rv.RealTarget)
-	if err = util.CreateDirectory(rv.TargetDir); err != nil {
+	if err = cutil.CreateDirectory(rv.TargetDir); err != nil {
 		return err
 	}
 
@@ -91,13 +92,13 @@ func prepare(cfg *config.Config) (err error) {
 		return err
 	}
 
-	if err = util.CreateDirectory(path.Dir(rv.MetaPath)); err != nil {
+	if err = cutil.CreateDirectory(path.Dir(rv.MetaPath)); err != nil {
 		return err
 	}
-	if err = util.CreateDirectory(cfg.WorkHome); err != nil {
+	if err = cutil.CreateDirectory(cfg.WorkHome); err != nil {
 		return err
 	}
-	if err = util.CreateDirectory(rv.SystemDataDir); err != nil {
+	if err = cutil.CreateDirectory(rv.SystemDataDir); err != nil {
 		return err
 	}
 	rv.DataDir = cfg.RV.SystemDataDir
@@ -175,7 +176,7 @@ func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 	if err != nil {
 		logrus.Error(err)
 		success = "FAIL"
-	} else if cfg.RV.FileLength < 0 && util.IsRegularFile(cfg.RV.RealTarget) {
+	} else if cfg.RV.FileLength < 0 && cutil.IsRegularFile(cfg.RV.RealTarget) {
 		if info, err := os.Stat(cfg.RV.RealTarget); err == nil {
 			cfg.RV.FileLength = info.Size()
 		}

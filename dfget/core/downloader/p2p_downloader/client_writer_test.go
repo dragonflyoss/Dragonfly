@@ -23,7 +23,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/common/util"
 
 	"github.com/go-check/check"
 )

@@ -20,8 +20,8 @@ import (
 	"bytes"
 	"encoding/json"
 
+	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
 )
 
 // Piece contains all information of a piece.

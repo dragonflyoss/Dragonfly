@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/dragonflyoss/Dragonfly/common/dflog"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
-	"github.com/dragonflyoss/Dragonfly/dflog"
 
 	"github.com/spf13/cobra"
 )
