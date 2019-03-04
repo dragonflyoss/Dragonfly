@@ -53,7 +53,7 @@ build-dfdaemon-docker() {
         -v "$(pwd)"/.cache:/.cache                                        \
         -e GOOS="${GOOS}"                                                 \
         -e GOARCH="${GOARCH}"                                             \
-        -e CGO_ENABLED=0                                                  \
+        -e CGO_ENABLED=1                                                  \
         -w /go/src/${PKG}                                                 \
         ${BUILD_IMAGE}                                                    \
         go install -v -pkgdir /go/pkg -ldflags "${LDFLAGS}" ./cmd/dfdaemon
@@ -72,7 +72,7 @@ build-dfget-docker() {
         -v "$(pwd)"/.cache:/.cache                                        \
         -e GOOS="${GOOS}"                                                 \
         -e GOARCH="${GOARCH}"                                             \
-        -e CGO_ENABLED=0                                                  \
+        -e CGO_ENABLED=1                                                  \
         -w /go/src/${PKG}                                                 \
         ${BUILD_IMAGE}                                                    \
         go install -v -pkgdir /go/pkg -ldflags "${LDFLAGS}" ./cmd/dfget
