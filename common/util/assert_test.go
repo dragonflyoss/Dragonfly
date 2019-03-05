@@ -51,12 +51,38 @@ func (suite *AssertSuite) TestIsEmptyStr(c *check.C) {
 	c.Assert(IsEmptyStr("x"), check.Equals, false)
 }
 
+func (suite *AssertSuite) TestIsEmptySlice(c *check.C) {
+	c.Assert(IsEmptySlice(nil), check.Equals, true)
+	c.Assert(IsEmptySlice([]string{}), check.Equals, true)
+	c.Assert(IsEmptySlice([]string{""}), check.Equals, false)
+	c.Assert(IsEmptySlice([]string{"aaa", "bbb"}), check.Equals, false)
+}
+
 func (suite *AssertSuite) TestIsNil(c *check.C) {
 	c.Assert(IsNil(nil), check.Equals, true)
 	c.Assert(IsNil(suite), check.Equals, false)
 
 	var temp *AssertSuite
 	c.Assert(IsNil(temp), check.Equals, true)
+}
+
+func (suite *AssertSuite) TestIsTrue(c *check.C) {
+	c.Assert(IsTrue(true), check.Equals, true)
+	c.Assert(IsTrue(false), check.Equals, false)
+}
+
+func (suite *AssertSuite) TestIsPositive(c *check.C) {
+	c.Assert(IsPositive(0), check.Equals, false)
+	c.Assert(IsPositive(1), check.Equals, true)
+	c.Assert(IsPositive(-1), check.Equals, false)
+}
+
+func (suite *AssertSuite) TestIsNumeric(c *check.C) {
+	c.Assert(IsNumeric("0"), check.Equals, true)
+	c.Assert(IsNumeric("1"), check.Equals, true)
+	c.Assert(IsNumeric("-1"), check.Equals, true)
+	c.Assert(IsNumeric("1 "), check.Equals, false)
+	c.Assert(IsNumeric("aaa"), check.Equals, false)
 }
 
 func (suite *AssertSuite) TestJsonString(c *check.C) {

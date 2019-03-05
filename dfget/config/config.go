@@ -25,7 +25,6 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -272,24 +271,12 @@ func AssertConfig(cfg *Config) (err error) {
 		return errors.Wrap(errType.ErrNotInitialized, "runtime config")
 	}
 
-	if err := checkURL(cfg); err != nil {
+	if !cutil.IsValidURL(cfg.URL) {
 		return errors.Wrapf(errType.ErrInvalidValue, "url: %v", err)
 	}
 
 	if err := checkOutput(cfg); err != nil {
 		return errors.Wrapf(errType.ErrInvalidValue, "output: %v", err)
-	}
-	return nil
-}
-
-func checkURL(cfg *Config) error {
-	// shorter than the shortest case 'http://a.b'
-	if len(cfg.URL) < 10 {
-		return fmt.Errorf(cfg.URL)
-	}
-	reg := regexp.MustCompile(`(https?|HTTPS?)://([\w_]+:[\w_]+@)?([\w-]+\.)+[\w-]+(/[\w- ./?%&=]*)?`)
-	if url := reg.FindString(cfg.URL); cutil.IsEmptyStr(url) {
-		return fmt.Errorf(cfg.URL)
 	}
 	return nil
 }
