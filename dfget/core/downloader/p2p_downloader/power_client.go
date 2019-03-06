@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/common/constants"
 	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
@@ -148,7 +149,7 @@ func (pc *PowerClient) createDownloadRequest() *api.DownloadRequest {
 
 func (pc *PowerClient) successPiece(content *bytes.Buffer) *Piece {
 	piece := NewPieceContent(pc.taskID, pc.node, pc.pieceTask.Cid, pc.pieceTask.Range,
-		config.ResultSemiSuc, config.TaskStatusRunning, content)
+		constants.ResultSemiSuc, constants.TaskStatusRunning, content)
 	piece.PieceSize = pc.pieceTask.PieceSize
 	piece.PieceNum = pc.pieceTask.PieceNum
 	return piece
@@ -156,7 +157,7 @@ func (pc *PowerClient) successPiece(content *bytes.Buffer) *Piece {
 
 func (pc *PowerClient) failPiece() *Piece {
 	return NewPiece(pc.taskID, pc.node, pc.pieceTask.Cid, pc.pieceTask.Range,
-		config.ResultFail, config.TaskStatusRunning)
+		constants.ResultFail, constants.TaskStatusRunning)
 }
 
 func (pc *PowerClient) is2xxStatus(code int) bool {

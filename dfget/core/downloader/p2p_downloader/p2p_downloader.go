@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/common/constants"
 	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
@@ -122,7 +123,7 @@ func (p2p *P2PDownloader) init() {
 		p2p.RegisterResult.PieceSize, p2p.RegisterResult.PieceSize
 
 	p2p.queue = util.NewQueue(0)
-	p2p.queue.Put(NewPieceSimple(p2p.taskID, p2p.node, config.TaskStatusStart))
+	p2p.queue.Put(NewPieceSimple(p2p.taskID, p2p.node, constants.TaskStatusStart))
 
 	p2p.clientQueue = util.NewQueue(p2p.cfg.ClientQueueSize)
 
@@ -165,14 +166,14 @@ func (p2p *P2PDownloader) Run() error {
 		response, err := p2p.pullPieceTask(&curItem)
 		if err == nil {
 			code := response.Code
-			if code == config.TaskCodeContinue {
+			if code == constants.CodePeerContinue {
 				p2p.processPiece(response, &curItem)
-			} else if code == config.TaskCodeFinish {
+			} else if code == constants.CodePeerFinish {
 				p2p.finishTask(response, clientWriter)
 				return nil
 			} else {
 				logrus.Warnf("request piece result:%v", response)
-				if code == config.TaskCodeSourceError {
+				if code == constants.CodeSourceError {
 					p2p.cfg.BackSourceReason = config.BackSourceReasonSourceError
 				}
 			}
@@ -224,7 +225,7 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 	for {
 		if res, err = p2p.API.PullPieceTask(item.SuperNode, req); err != nil {
 			logrus.Errorf("pull piece task error: %v", err)
-		} else if res.Code == config.TaskCodeWait {
+		} else if res.Code == constants.CodePeerWait {
 			sleepTime := time.Duration(rand.Intn(1400)+600) * time.Millisecond
 			logrus.Infof("pull piece task result:%s and sleep %.3fs",
 				res, sleepTime.Seconds())
@@ -234,10 +235,10 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 		break
 	}
 
-	if res == nil || (res.Code != config.TaskCodeContinue &&
-		res.Code != config.TaskCodeFinish &&
-		res.Code != config.TaskCodeLimited &&
-		res.Code != config.Success) {
+	if res == nil || (res.Code != constants.CodePeerContinue &&
+		res.Code != constants.CodePeerFinish &&
+		res.Code != constants.CodePeerLimited &&
+		res.Code != constants.Success) {
 		logrus.Errorf("pull piece task fail:%v and will migrate", res)
 
 		var registerRes *regist.RegisterResult
@@ -245,7 +246,7 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 			return nil, err
 		}
 		p2p.pieceSizeHistory[1] = registerRes.PieceSize
-		item.Status = config.TaskStatusStart
+		item.Status = constants.TaskStatusStart
 		item.SuperNode = registerRes.Node
 		item.TaskID = registerRes.TaskID
 		util.Printer.Println("migrated to node:" + item.SuperNode)
@@ -328,8 +329,8 @@ func (p2p *P2PDownloader) getItem(latestItem *Piece) (bool, *Piece) {
 				logrus.Warnf("pieceRange:%s is neither running nor success", item.Range)
 				return false, latestItem
 			}
-			if !v && (item.Result == config.ResultSemiSuc ||
-				item.Result == config.ResultSuc) {
+			if !v && (item.Result == constants.ResultSemiSuc ||
+				item.Result == constants.ResultSuc) {
 				p2p.total += int64(item.Content.Len())
 				p2p.pieceSet[item.Range] = true
 			} else if !v {
@@ -344,9 +345,9 @@ func (p2p *P2PDownloader) getItem(latestItem *Piece) (bool, *Piece) {
 	if cutil.IsNil(latestItem) {
 		return false, latestItem
 	}
-	if latestItem.Result == config.ResultSuc ||
-		latestItem.Result == config.ResultFail ||
-		latestItem.Result == config.ResultInvalid {
+	if latestItem.Result == constants.ResultSuc ||
+		latestItem.Result == constants.ResultFail ||
+		latestItem.Result == constants.ResultInvalid {
 		needMerge = false
 	}
 	runningCount := 0
@@ -380,8 +381,8 @@ func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 				p2p.node,
 				pieceTask.Cid,
 				pieceRange,
-				config.ResultSemiSuc,
-				config.TaskStatusRunning))
+				constants.ResultSemiSuc,
+				constants.TaskStatusRunning))
 			continue
 		}
 		if !ok {

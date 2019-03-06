@@ -25,6 +25,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/dragonflyoss/Dragonfly/common/constants"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	. "github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/go-check/check"
@@ -90,26 +91,26 @@ func (s *RegistTestSuite) TestSupernodeRegister_Register(c *check.C) {
 	}
 
 	cfg.Node = []string{""}
-	f(config.HTTPError, "connection refused", nil)
+	f(constants.HTTPError, "connection refused", nil)
 
 	cfg.Node = []string{"x"}
 	f(501, "invalid source url", nil)
 
 	cfg.Node = []string{"x"}
 	cfg.URL = "http://taobao.com"
-	f(config.TaskCodeNeedAuth, "need auth", nil)
+	f(constants.CodeNeedAuth, "need auth", nil)
 
 	cfg.Node = []string{"x"}
 	cfg.URL = "http://github.com"
-	f(config.TaskCodeWaitAuth, "wait auth", nil)
+	f(constants.CodeWaitAuth, "wait auth", nil)
 
 	cfg.Node = []string{"x"}
 	cfg.URL = "http://lowzj.com"
-	f(config.Success, "", &RegisterResult{
+	f(constants.Success, "", &RegisterResult{
 		Node: "x", RemainderNodes: []string{}, URL: cfg.URL, TaskID: "a",
 		FileLength: 100, PieceSize: 10})
 
-	f(config.HTTPError, "empty response, unknown error", nil)
+	f(constants.HTTPError, "empty response, unknown error", nil)
 }
 
 func (s *RegistTestSuite) TestSupernodeRegister_constructRegisterRequest(c *check.C) {

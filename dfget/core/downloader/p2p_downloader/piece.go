@@ -20,8 +20,8 @@ import (
 	"bytes"
 	"encoding/json"
 
+	"github.com/dragonflyoss/Dragonfly/common/constants"
 	"github.com/dragonflyoss/Dragonfly/common/util"
-	"github.com/dragonflyoss/Dragonfly/dfget/config"
 )
 
 // Piece contains all information of a piece.
@@ -90,7 +90,7 @@ func NewPieceSimple(taskID string, node string, status int) *Piece {
 		TaskID:    taskID,
 		SuperNode: node,
 		Status:    status,
-		Result:    config.ResultInvalid,
+		Result:    constants.ResultInvalid,
 		Content:   &bytes.Buffer{},
 	}
 }

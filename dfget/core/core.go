@@ -28,6 +28,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/common/constants"
 	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
@@ -149,7 +150,7 @@ func registerToSuperNode(cfg *config.Config, register regist.SupernodeRegister) 
 
 	result, e := register.Register(cfg.RV.PeerPort)
 	if e != nil {
-		if e.Code == config.TaskCodeNeedAuth {
+		if e.Code == constants.CodeNeedAuth {
 			return nil, e
 		}
 		cfg.BackSourceReason = config.BackSourceReasonRegisterFail
