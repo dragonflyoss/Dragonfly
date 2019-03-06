@@ -24,6 +24,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/dragonflyoss/Dragonfly/common/constants"
 	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
@@ -164,13 +165,13 @@ func CreateRegisterFunc() RegisterFuncType {
 		case "":
 			return newResponse(501, "invalid source url"), nil
 		case "http://taobao.com":
-			return newResponse(config.TaskCodeNeedAuth, "need auth"), nil
+			return newResponse(constants.CodeNeedAuth, "need auth"), nil
 		case "http://github.com":
-			return newResponse(config.TaskCodeWaitAuth, "wait auth"), nil
+			return newResponse(constants.CodeWaitAuth, "wait auth"), nil
 		case "http://x.com":
-			return newResponse(config.TaskCodeURLNotReachable, "not reachable"), nil
+			return newResponse(constants.CodeURLNotReachable, "not reachable"), nil
 		case "http://lowzj.com":
-			resp := newResponse(config.Success, "")
+			resp := newResponse(constants.Success, "")
 			resp.Data = &types.RegisterResponseData{
 				TaskID:     "a",
 				FileLength: 100,

@@ -23,7 +23,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/common/constants"
+
 	"github.com/go-check/check"
 )
 
@@ -80,7 +81,7 @@ func (suite *TypesSuite) TestPullPieceTaskResponse_FinishData(c *check.C) {
 
 	c.Assert(res.FinishData(), check.IsNil)
 
-	res.Code = config.TaskCodeFinish
+	res.Code = constants.CodePeerFinish
 	c.Assert(res.FinishData(), check.IsNil)
 
 	res.Data = []byte("x")
@@ -98,7 +99,7 @@ func (suite *TypesSuite) TestPullPieceTaskResponse_ContinueData(c *check.C) {
 
 	c.Assert(res.ContinueData(), check.IsNil)
 
-	res.Code = config.TaskCodeContinue
+	res.Code = constants.CodePeerContinue
 	c.Assert(res.ContinueData(), check.IsNil)
 
 	res.Data = []byte("x")

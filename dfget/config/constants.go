@@ -20,41 +20,6 @@ import (
 	"time"
 )
 
-/* the response code from supernode */
-const (
-	// HTTPError represents that there is an error between client and server.
-	HTTPError = -100
-	// Success represents the request is success.
-	Success       = 200
-	ResultFail    = 500
-	ResultSuc     = 501
-	ResultInvalid = 502
-	// ResultSemiSuc represents the result is partial successful.
-	ResultSemiSuc = 503
-)
-
-/* report status of task to supernode */
-const (
-	TaskStatusStart   = 700
-	TaskStatusRunning = 701
-	TaskStatusFinish  = 702
-)
-
-/* the task code get from supernode */
-const (
-	TaskCodeFinish          = 600
-	TaskCodeContinue        = 601
-	TaskCodeWait            = 602
-	TaskCodeLimited         = 603
-	TaskCodeSuperFail       = 604
-	TaskCodeUnknownError    = 605
-	TaskCodeTaskConflict    = 606
-	TaskCodeURLNotReachable = 607
-	TaskCodeNeedAuth        = 608
-	TaskCodeWaitAuth        = 609
-	TaskCodeSourceError     = 610
-)
-
 /* the reason of backing to source */
 const (
 	BackSourceReasonNone          = 0

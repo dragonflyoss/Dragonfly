@@ -20,6 +20,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/common/constants"
 	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
@@ -68,10 +69,10 @@ func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errors.DFG
 			logrus.Errorf("register to node:%s error:%v", nodes[i], e)
 			continue
 		}
-		if resp.Code == config.Success || resp.Code == config.TaskCodeNeedAuth {
+		if resp.Code == constants.Success || resp.Code == constants.CodeNeedAuth {
 			break
 		}
-		if resp.Code == config.TaskCodeWaitAuth && retryTimes < 3 {
+		if resp.Code == constants.CodeWaitAuth && retryTimes < 3 {
 			i--
 			retryTimes++
 			logrus.Infof("sleep 2.5s to wait auth(%d/3)...", retryTimes)
@@ -94,12 +95,12 @@ func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errors.DFG
 
 func (s *supernodeRegister) checkResponse(resp *types.RegisterResponse, e error) *errors.DFGetError {
 	if e != nil {
-		return errors.New(config.HTTPError, e.Error())
+		return errors.New(constants.HTTPError, e.Error())
 	}
 	if resp == nil {
-		return errors.New(config.HTTPError, "empty response, unknown error")
+		return errors.New(constants.HTTPError, "empty response, unknown error")
 	}
-	if resp.Code != config.Success {
+	if resp.Code != constants.Success {
 		return errors.New(resp.Code, resp.Msg)
 	}
 	return nil

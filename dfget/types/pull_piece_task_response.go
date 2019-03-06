@@ -19,7 +19,7 @@ package types
 import (
 	"encoding/json"
 
-	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/common/constants"
 )
 
 // PullPieceTaskResponse is the response of PullPieceTaskRequest.
@@ -38,7 +38,7 @@ func (res *PullPieceTaskResponse) String() string {
 
 // FinishData gets structured data from json.RawMessage when the task is finished.
 func (res *PullPieceTaskResponse) FinishData() *PullPieceTaskResponseFinishData {
-	if res.Code != config.TaskCodeFinish || res.Data == nil {
+	if res.Code != constants.CodePeerFinish || res.Data == nil {
 		return nil
 	}
 	if res.data == nil {
@@ -53,7 +53,7 @@ func (res *PullPieceTaskResponse) FinishData() *PullPieceTaskResponseFinishData 
 
 // ContinueData gets structured data from json.RawMessage when the task is continuing.
 func (res *PullPieceTaskResponse) ContinueData() []*PullPieceTaskResponseContinueData {
-	if res.Code != config.TaskCodeContinue || res.Data == nil {
+	if res.Code != constants.CodePeerContinue || res.Data == nil {
 		return nil
 	}
 	if res.data == nil {
