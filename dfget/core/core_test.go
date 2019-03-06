@@ -110,24 +110,6 @@ func (s *CoreTestSuite) TestRegisterToSupernode(c *check.C) {
 		FileLength: 100, PieceSize: 10})
 }
 
-func (s *CoreTestSuite) TestGetTaskURL(c *check.C) {
-	var cases = []struct {
-		u string
-		f []string
-		e string
-	}{
-		{"a?b=1", nil, "a?b=1"},
-		{"a?b=1", []string{"b"}, "a"},
-		{"a?b=1&b=1", []string{"b"}, "a"},
-		{"a?b=1&c=1", []string{"b"}, "a?c=1"},
-		{"a?b=1&c=1&c", []string{"b", "c"}, "a"},
-		{"a?", nil, "a?"},
-	}
-	for _, v := range cases {
-		c.Assert(getTaskURL(v.u, v.f), check.Equals, v.e)
-	}
-}
-
 func (s *CoreTestSuite) TestAdjustSupernodeList(c *check.C) {
 	var cases = [][]string{
 		{},

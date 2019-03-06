@@ -107,7 +107,7 @@ func prepare(cfg *config.Config) (err error) {
 	rv.LocalIP = checkConnectSupernode(cfg.Node)
 	rv.Cid = getCid(rv.LocalIP, cfg.Sign)
 	rv.TaskFileName = getTaskFileName(rv.RealTarget, cfg.Sign)
-	rv.TaskURL = getTaskURL(cfg.URL, cfg.Filter)
+	rv.TaskURL = cutil.FilterURLParam(cfg.URL, cfg.Filter)
 	logrus.Info("runtimeVariable: " + cfg.RV.String())
 
 	return nil
@@ -232,25 +232,6 @@ func getTaskFileName(realTarget string, sign string) string {
 
 func getCid(localIP string, sign string) string {
 	return localIP + "-" + sign
-}
-
-func getTaskURL(rawURL string, filters []string) string {
-	idx := strings.IndexByte(rawURL, '?')
-	if len(filters) <= 0 || idx < 0 || idx >= len(rawURL)-1 {
-		return rawURL
-	}
-
-	var params []string
-	for _, p := range strings.Split(rawURL[idx+1:], "&") {
-		kv := strings.Split(p, "=")
-		if !util.ContainsString(filters, kv[0]) {
-			params = append(params, p)
-		}
-	}
-	if len(params) > 0 {
-		return rawURL[:idx+1] + strings.Join(params, "&")
-	}
-	return rawURL[:idx]
 }
 
 func adjustSupernodeList(nodes []string) []string {
