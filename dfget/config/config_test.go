@@ -120,42 +120,6 @@ func (suite *ConfigSuite) TestAssertConfig(c *check.C) {
 	}
 }
 
-func (suite *ConfigSuite) TestCheckURL(c *check.C) {
-	var cases = map[string]bool{
-		"":                     false,
-		"abcdefg":              false,
-		"////a//":              false,
-		"a////a//":             false,
-		"a.com////a//":         true,
-		"a:b@a.com":            true,
-		"a:b@127.0.0.1":        true,
-		"a:b@127.0.0.1?a=b":    true,
-		"127.0.0.1":            true,
-		"127.0.0.1?a=b":        true,
-		"127.0.0.1:":           true,
-		"127.0.0.1:8080":       true,
-		"127.0.0.1:8080/我":     true,
-		"127.0.0.1:8080/我?x=1": true,
-		"a.b":            true,
-		"www.taobao.com": true,
-		"https://github.com/dragonflyoss/Dragonfly/issues?" +
-			"q=is%3Aissue+is%3Aclosed": true,
-	}
-
-	c.Assert(checkURL(cfg), check.NotNil)
-	for k, v := range cases {
-		for _, scheme := range []string{"http", "https", "HTTP", "HTTPS"} {
-			cfg.URL = fmt.Sprintf("%s://%s", scheme, k)
-			actual := fmt.Sprintf("%s:%v", k, checkURL(cfg))
-			expected := fmt.Sprintf("%s:%s://%s", k, scheme, k)
-			if v {
-				expected = fmt.Sprintf("%s:<nil>", k)
-			}
-			c.Assert(actual, check.Equals, expected)
-		}
-	}
-}
-
 func (suite *ConfigSuite) TestCheckOutput(c *check.C) {
 	type tester struct {
 		url      string

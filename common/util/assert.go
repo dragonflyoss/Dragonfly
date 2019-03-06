@@ -21,6 +21,7 @@ package util
 import (
 	"encoding/json"
 	"reflect"
+	"strconv"
 )
 
 // Max returns the larger of x or y.
@@ -39,9 +40,14 @@ func Min(x, y int32) int32 {
 	return y
 }
 
-// IsEmptyStr returns whether the string x is empty.
+// IsEmptyStr returns whether the string s is empty.
 func IsEmptyStr(s string) bool {
 	return s == ""
+}
+
+// IsEmptySlice returns whether the slice values is empty.
+func IsEmptySlice(values []string) bool {
+	return len(values) == 0
 }
 
 // IsNil returns whether the value  is nil.
@@ -55,6 +61,25 @@ func IsNil(value interface{}) (result bool) {
 		}
 	}
 	return
+}
+
+// IsTrue returns whether the value is true.
+func IsTrue(value bool) bool {
+	return value == true
+}
+
+// IsPositive returns whether the value is a positive number.
+func IsPositive(value int64) bool {
+	return value > 0
+}
+
+// IsNumeric returns whether the value is a numeric.
+// If the bitSize of value below 0 or above 64 an error is returned.
+func IsNumeric(value string) bool {
+	if _, err := strconv.Atoi(value); err != nil {
+		return false
+	}
+	return true
 }
 
 // JSONString returns json string of the v.

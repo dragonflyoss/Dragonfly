@@ -87,6 +87,12 @@ func Link(src string, linkName string) error {
 	return os.Link(src, linkName)
 }
 
+// SymbolicLink creates target as a symbolic link to src.
+func SymbolicLink(src string, target string) error {
+	// TODO Add verifications.
+	return os.Symlink(src, target)
+}
+
 // CopyFile copies the file src to dst.
 func CopyFile(src string, dst string) (err error) {
 	var (

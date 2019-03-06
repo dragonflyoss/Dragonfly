@@ -29,6 +29,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	separator = "&"
+)
+
 var defaultRateLimit = "20M"
 
 // NetLimit parse speed of interface that it has prefix of eth
@@ -107,4 +111,79 @@ func NetLimit() string {
 func ExtractHost(hostAndPort string) string {
 	fields := strings.Split(strings.TrimSpace(hostAndPort), ":")
 	return fields[0]
+}
+
+// FilterURLParam filters request queries in URL.
+// Eg:
+// If you pass parameters as follows:
+//     url: http://a.b.com/locate?key1=value1&key2=value2&key3=value3
+//     filter: key2
+// and then you will get the following value as the return:
+//     http://a.b.com/locate?key1=value1&key3=value3
+func FilterURLParam(url string, filters []string) string {
+	rawUrls := strings.SplitN(url, "?", 2)
+	if len(filters) <= 0 || len(rawUrls) != 2 || strings.TrimSpace(rawUrls[1]) == "" {
+		return url
+	}
+	filtersMap := slice2Map(filters)
+
+	var params []string
+	for _, param := range strings.Split(rawUrls[1], separator) {
+		kv := strings.SplitN(param, "=", 2)
+		if !(len(kv) >= 1 && isExist(filtersMap, kv[0])) {
+			params = append(params, param)
+		}
+	}
+	if len(params) > 0 {
+		return rawUrls[0] + "?" + strings.Join(params, separator)
+	}
+	return rawUrls[0]
+}
+
+// IsValidURL returns whether the string url is a valid HTTP URL.
+func IsValidURL(url string) bool {
+	// shorter than the shortest case 'http://a.b'
+	if len(url) < 10 {
+		return false
+	}
+	reg := regexp.MustCompile(`(https?|HTTPS?)://([\w_]+:[\w_]+@)?([\w-]+\.)+[\w-]+(/[\w- ./?%&=]*)?`)
+	if result := reg.FindString(url); IsEmptyStr(result) {
+		return false
+	}
+	return true
+}
+
+// IsValidIP returns whether the string ip is a valid IP Address.
+func IsValidIP(ip string) bool {
+	if strings.TrimSpace(ip) == "" {
+		return false
+	}
+
+	// str is a regex which matches a digital
+	// greater than or equal to 0 and less than or equal to 255
+	str := "(?:25[0-5]|2[0-4]\\d|[01]?\\d?\\d)"
+	result, err := regexp.MatchString("^(?:"+str+"\\.){3}"+str+"$", ip)
+	if err != nil {
+		return false
+	}
+
+	return result
+}
+
+// slice2Map translate a slice to a map with
+// the value in slice as the key and true as the value.
+func slice2Map(value []string) map[string]bool {
+	mmap := make(map[string]bool)
+	for _, v := range value {
+		mmap[v] = true
+	}
+	return mmap
+}
+
+// isExist returns whether the map contains the key.
+func isExist(mmap map[string]bool, key string) bool {
+	if _, ok := mmap[key]; ok {
+		return true
+	}
+	return false
 }
