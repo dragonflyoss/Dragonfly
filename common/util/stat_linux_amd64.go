@@ -14,11 +14,29 @@
  * limitations under the License.
  */
 
-package initializer
+package util
 
-import "syscall"
+import (
+	"syscall"
+	"time"
+)
 
-// Atime returns the last access time in seconds
-func Atime(stat *syscall.Stat_t) int64 {
-	return stat.Atimespec.Sec
+// Atime returns the last access time in time.Time.
+func Atime(stat *syscall.Stat_t) time.Time {
+	return time.Unix(stat.Atim.Sec, stat.Atim.Nsec)
+}
+
+// AtimeSec returns the last access time in seconds.
+func AtimeSec(stat *syscall.Stat_t) int64 {
+	return stat.Atim.Sec
+}
+
+// Ctime returns the create time in time.Time.
+func Ctime(stat *syscall.Stat_t) time.Time {
+	return time.Unix(stat.Ctim.Sec, stat.Ctim.Nsec)
+}
+
+// CtimeSec returns the create time in seconds.
+func CtimeSec(stat *syscall.Stat_t) int64 {
+	return stat.Ctim.Sec
 }
