@@ -24,7 +24,7 @@ import (
 	"regexp"
 	"strings"
 
-	"gopkg.in/yaml.v2"
+	"github.com/dragonflyoss/Dragonfly/common/util"
 )
 
 // -----------------------------------------------------------------------------
@@ -58,7 +58,7 @@ type Properties struct {
 
 // Load loads properties from config file.
 func (p *Properties) Load(path string) error {
-	if err := p.loadFromYaml(path); err != nil {
+	if err := util.LoadYaml(path, p); err != nil {
 		return err
 	}
 	var tmp []*Registry
@@ -71,18 +71,6 @@ func (p *Properties) Load(path string) error {
 		}
 	}
 	p.Registries = tmp
-	return nil
-}
-
-func (p *Properties) loadFromYaml(path string) error {
-	yamlFile, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
-	err = yaml.Unmarshal(yamlFile, p)
-	if err != nil {
-		return fmt.Errorf("unmarshal yaml error:%v", err)
-	}
 	return nil
 }
 
