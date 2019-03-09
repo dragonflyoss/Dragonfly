@@ -18,52 +18,37 @@ package store
 
 import (
 	"fmt"
-	"sync"
+
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
+	"github.com/dragonflyoss/Dragonfly/supernode/plugins"
 )
 
-var (
-	storeMap      sync.Map
-	driverFactory = make(map[string]initFunc)
-)
-
-type initFunc func(config interface{}) (StorageDriver, error)
+// StorageBuilder is a function that creates a new storage plugin instant
+// with the giving conf.
+type StorageBuilder func(conf string) (StorageDriver, error)
 
 // Register defines an interface to register a driver with specified name.
 // All drivers should call this function to register itself to the driverFactory.
-func Register(name string, initializer initFunc) {
-	driverFactory[name] = initializer
+func Register(name string, builder StorageBuilder) {
+	var f plugins.Builder = func(conf string) (plugin plugins.Plugin, e error) {
+		return NewStore(name, builder, conf)
+	}
+	plugins.RegisterPlugin(config.StoragePlugin, name, f)
 }
 
 // Manager manage stores.
 type Manager struct {
 }
 
-// ManagerConfig wraps the config that defined in the config file.
-type ManagerConfig struct {
-	driverName   string
-	driverConfig interface{}
-}
-
 // NewManager create a store manager.
-func NewManager(configs map[string]*ManagerConfig) (*Manager, error) {
-	if configs == nil {
-		return nil, fmt.Errorf("empty configs")
-	}
-	for name, config := range configs {
-		// initialize store
-		store, err := NewStore(config.driverName, config.driverConfig)
-		if err != nil {
-			return nil, err
-		}
-		storeMap.Store(name, store)
-	}
+func NewManager() (*Manager, error) {
 	return &Manager{}, nil
 }
 
 // Get a store from manager with specified name.
 func (sm *Manager) Get(name string) (*Store, error) {
-	v, ok := storeMap.Load(name)
-	if !ok {
+	v := plugins.GetPlugin(config.StoragePlugin, name)
+	if v == nil {
 		return nil, fmt.Errorf("not existed storage: %s", name)
 	}
 	if store, ok := v.(*Store); ok {

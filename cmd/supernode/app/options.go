@@ -14,12 +14,20 @@
  * limitations under the License.
  */
 
-package main
+package app
 
 import (
-	"github.com/dragonflyoss/Dragonfly/cmd/supernode/app"
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
 )
 
-func main() {
-	app.Execute()
+// NewOptions returns a default options instant.
+func NewOptions() *Options {
+	return &Options{
+		BaseProperties: config.NewBaseProperties(),
+	}
+}
+
+// Options store the values that comes from command line parameters.
+type Options struct {
+	*config.BaseProperties
 }

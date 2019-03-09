@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
+	"github.com/dragonflyoss/Dragonfly/supernode/plugins"
 	"github.com/dragonflyoss/Dragonfly/supernode/server"
 
 	"github.com/sirupsen/logrus"
@@ -24,6 +25,10 @@ type Daemon struct {
 
 // New creates a new Daemon.
 func New(cfg *config.Config) (*Daemon, error) {
+	if err := plugins.Initialize(cfg); err != nil {
+		return nil, err
+	}
+
 	s, err := server.New(cfg)
 	if err != nil {
 		return nil, err

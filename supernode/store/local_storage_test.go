@@ -28,6 +28,8 @@ import (
 	"testing"
 
 	"github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
+	"github.com/dragonflyoss/Dragonfly/supernode/plugins"
 
 	"github.com/go-check/check"
 )
@@ -39,7 +41,6 @@ func Test(t *testing.T) {
 type LocalStorageSuite struct {
 	workHome   string
 	storeLocal *Store
-	configs    map[string]*ManagerConfig
 }
 
 func init() {
@@ -47,22 +48,27 @@ func init() {
 }
 
 func (s *LocalStorageSuite) SetUpSuite(c *check.C) {
-	s.workHome, _ = ioutil.TempDir("/tmp", "storedriver-StoreTestSuite-")
-
-	s.configs = make(map[string]*ManagerConfig)
-	s.configs["driver1"] = &ManagerConfig{
-		driverName: LocalStorageDriver,
-		driverConfig: &localStorage{
-			baseDir: path.Join(s.workHome, "download"),
+	s.workHome, _ = ioutil.TempDir("/tmp", "supernode-storageDriver-StoreTestSuite-")
+	pluginProps := map[config.PluginType][]*config.PluginProperties{
+		config.StoragePlugin: {
+			&config.PluginProperties{
+				Name:    LocalStorageDriver,
+				Enabled: true,
+				Config:  "baseDir: " + path.Join(s.workHome, "download"),
+			},
 		},
 	}
+	cfg := &config.Config{
+		Plugins: pluginProps,
+	}
+	plugins.Initialize(cfg)
 
 	// init StorageManager
-	sm, err := NewManager(s.configs)
+	sm, err := NewManager()
 	c.Assert(err, check.IsNil)
 
-	// init store with local storage driver1
-	s.storeLocal, err = sm.Get("driver1")
+	// init store with local storage
+	s.storeLocal, err = sm.Get(LocalStorageDriver)
 	c.Assert(err, check.IsNil)
 }
 
@@ -199,8 +205,8 @@ func (s *LocalStorageSuite) checkStat(raw *Raw, c *check.C) {
 	info, err := s.storeLocal.Stat(context.Background(), raw)
 	c.Assert(err, check.IsNil)
 
-	cfg := s.storeLocal.config.(*localStorage)
-	pathTemp := path.Join(cfg.baseDir, getPrefix(raw.key), raw.key)
+	driver := s.storeLocal.driver.(*localStorage)
+	pathTemp := path.Join(driver.BaseDir, getPrefix(raw.key), raw.key)
 	f, _ := os.Stat(pathTemp)
 	sys, _ := util.GetSys(f)
 

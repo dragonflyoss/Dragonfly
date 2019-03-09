@@ -84,7 +84,7 @@ func (s *ConfigTestSuite) TestProperties_Load(c *check.C) {
 		expected *Properties
 	}{
 		{create: false, content: "", errMsg: "no such file or directory", expected: nil},
-		{create: true, content: "-", errMsg: "unmarshal yaml", expected: nil},
+		{create: true, content: "-", errMsg: "unmarshal errors", expected: nil},
 		{create: true, content: "registries:\n - regx: '^['",
 			errMsg: "missing closing", expected: nil},
 		{create: true, content: "registries:\n  -", errMsg: "", expected: f()},
@@ -100,7 +100,7 @@ func (s *ConfigTestSuite) TestProperties_Load(c *check.C) {
 		if v.create {
 			ioutil.WriteFile(filename, []byte(v.content), os.ModePerm)
 		}
-		p := &Properties{}
+		p := NewProperties()
 		err := p.Load(filename)
 		if v.expected != nil {
 			c.Assert(err, check.IsNil)

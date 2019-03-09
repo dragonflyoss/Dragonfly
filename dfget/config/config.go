@@ -20,7 +20,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/user"
 	"path"
@@ -36,7 +35,6 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/gcfg.v1"
 	"gopkg.in/warnings.v0"
-	"gopkg.in/yaml.v2"
 )
 
 // ----------------------------------------------------------------------------
@@ -92,7 +90,7 @@ func (p *Properties) Load(path string) error {
 	case "ini":
 		return p.loadFromIni(path)
 	case "yaml":
-		return p.loadFromYaml(path)
+		return cutil.LoadYaml(path, p)
 	}
 	return fmt.Errorf("extension of %s is not in 'conf/ini/yaml/yml'", path)
 }
@@ -112,18 +110,6 @@ func (p *Properties) loadFromIni(path string) error {
 		}
 	}
 	p.Nodes = strings.Split(oldConfig.Node.Address, ",")
-	return nil
-}
-
-func (p *Properties) loadFromYaml(path string) error {
-	yamlFile, err := ioutil.ReadFile(path)
-	if err != nil {
-		return fmt.Errorf("read yaml config from %s error: %v", path, err)
-	}
-	err = yaml.Unmarshal(yamlFile, p)
-	if err != nil {
-		return fmt.Errorf("unmarshal yaml error:%v", err)
-	}
 	return nil
 }
 
