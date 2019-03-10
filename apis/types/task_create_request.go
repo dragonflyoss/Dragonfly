@@ -52,9 +52,9 @@ type TaskCreateRequest struct {
 	Headers map[string]string `json:"headers,omitempty"`
 
 	// special attribute of remote source file. This field is used with taskURL to generate new taskID to
-	// indetify different downloading task of remote source file. For example, if user A and user B uses
+	// identify different downloading task of remote source file. For example, if user A and user B uses
 	// the same taskURL and taskID to download file, A and B will share the same peer network to distribute files.
-	// If user A additionally adds an indentifier with taskURL, while user B still carries only taskURL, then A's
+	// If user A additionally adds an identifier with taskURL, while user B still carries only taskURL, then A's
 	// generated taskID is different from B, and the result is that two users use different peer networks.
 	//
 	Identifier string `json:"identifier,omitempty"`

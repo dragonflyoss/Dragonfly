@@ -26,7 +26,7 @@ type PreheatCreateRequest struct {
 	//
 	Headers map[string]string `json:"headers,omitempty"`
 
-	// This field is used for generating new downloading taskID to indetify different downloading task of remote URL.
+	// This field is used for generating new downloading taskID to identify different downloading task of remote URL.
 	//
 	Identifier string `json:"identifier,omitempty"`
 
