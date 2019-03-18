@@ -45,6 +45,8 @@ type DownloadAPI interface {
 type downloadAPI struct {
 }
 
+var _ DownloadAPI = &downloadAPI{}
+
 // NewDownloadAPI returns a new DownloadAPI.
 func NewDownloadAPI() DownloadAPI {
 	return &downloadAPI{}
