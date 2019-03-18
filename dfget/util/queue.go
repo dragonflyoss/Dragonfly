@@ -70,6 +70,8 @@ type infiniteQueue struct {
 	empty unsafe.Pointer
 }
 
+var _ Queue = &infiniteQueue{}
+
 func (q *infiniteQueue) Put(item interface{}) {
 	if util.IsNil(item) {
 		return

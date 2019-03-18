@@ -60,6 +60,8 @@ type SimpleHTTPClient interface {
 type defaultHTTPClient struct {
 }
 
+var _ SimpleHTTPClient = &defaultHTTPClient{}
+
 // PostJSON send a POST request whose content-type is 'application/json;charset=utf-8'.
 // When timeout <= 0, it will block until receiving response from server.
 func (c *defaultHTTPClient) PostJSON(url string, body interface{}, timeout time.Duration) (

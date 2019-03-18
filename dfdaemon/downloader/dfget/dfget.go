@@ -26,6 +26,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/downloader"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/exception"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/global"
 )
@@ -43,6 +44,8 @@ type DFGetter struct {
 	// the notbs param of dfget
 	notbs bool
 }
+
+var _ downloader.Interface = &DFGetter{}
 
 // NewDFGetter returns the default DFGetter.
 func NewDFGetter(dstDir, callSystem string, notbs bool, rateLimit, urlFilter string) *DFGetter {
