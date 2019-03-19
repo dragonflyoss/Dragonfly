@@ -20,8 +20,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/common/constants"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
+
 	"github.com/go-check/check"
 )
 
@@ -67,12 +68,12 @@ func (s *SupernodeAPITestSuite) TestSupernodeAPI_Register(c *check.C) {
 	c.Assert(r, check.NotNil)
 	c.Assert(r.Code, check.Equals, 0)
 
-	res.Code = config.Success
+	res.Code = constants.Success
 	res.Data = &types.RegisterResponseData{FileLength: int64(32)}
 	s.mock.postJSON = s.mock.createPostJSONFunc(200, []byte(res.String()), nil)
 	r, e = s.api.Register(ip, createRegisterRequest())
 	c.Assert(r, check.NotNil)
-	c.Assert(r.Code, check.Equals, config.Success)
+	c.Assert(r.Code, check.Equals, constants.Success)
 	c.Assert(r.Data.FileLength, check.Equals, res.Data.FileLength)
 }
 
@@ -80,7 +81,7 @@ func (s *SupernodeAPITestSuite) TestSupernodeAPI_PullPieceTask(c *check.C) {
 	ip := "127.0.0.1"
 
 	res := &types.PullPieceTaskResponse{BaseResponse: &types.BaseResponse{}}
-	res.Code = config.TaskCodeFinish
+	res.Code = constants.CodePeerFinish
 	res.Data = []byte(`{"fileLength":2}`)
 	s.mock.get = s.mock.createGetFunc(200, []byte(res.String()), nil)
 
