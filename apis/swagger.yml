@@ -482,7 +482,10 @@ definitions:
       version: 
         type: "string"
         description: "version number of dfget binary"
-
+      created:
+        type : "string"
+        format : "date-time"
+        description: "the time to join the P2P network"
   TaskCreateRequest:
     type: "object"
     description: ""
