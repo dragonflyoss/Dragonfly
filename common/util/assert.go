@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"reflect"
 	"strconv"
+	"unicode"
 )
 
 // Max returns the larger of x or y.
@@ -42,7 +43,12 @@ func Min(x, y int32) int32 {
 
 // IsEmptyStr returns whether the string s is empty.
 func IsEmptyStr(s string) bool {
-	return s == ""
+	for _, v := range s {
+		if !unicode.IsSpace(v) {
+			return false
+		}
+	}
+	return true
 }
 
 // IsEmptySlice returns whether the slice values is empty.
@@ -71,6 +77,14 @@ func IsTrue(value bool) bool {
 // IsPositive returns whether the value is a positive number.
 func IsPositive(value int64) bool {
 	return value > 0
+}
+
+// IsNatural returns whether the value>=0.
+func IsNatural(value string) bool {
+	if v, err := strconv.Atoi(value); err == nil {
+		return v >= 0
+	}
+	return false
 }
 
 // IsNumeric returns whether the value is a numeric.
