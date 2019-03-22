@@ -98,6 +98,8 @@ type P2PDownloader struct {
 	pullRateTime time.Time
 }
 
+var _ downloader.Downloader = &P2PDownloader{}
+
 // NewP2PDownloader create P2PDownloader
 func NewP2PDownloader(cfg *config.Config,
 	api api.SupernodeAPI,

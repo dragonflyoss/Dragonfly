@@ -53,6 +53,8 @@ type BackDownloader struct {
 	cleaned      bool
 }
 
+var _ downloader.Downloader = &BackDownloader{}
+
 // NewBackDownloader create BackDownloader
 func NewBackDownloader(cfg *config.Config, result *regist.RegisterResult) *BackDownloader {
 	var (
