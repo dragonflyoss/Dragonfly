@@ -66,6 +66,8 @@ type PeerServerExecutor interface {
 type peerServerExecutor struct {
 }
 
+var _ PeerServerExecutor = &peerServerExecutor{}
+
 func (pe *peerServerExecutor) StartPeerServerProcess(cfg *config.Config) (port int, err error) {
 	if port = pe.checkPeerServerExist(cfg, 0); port > 0 {
 		return port, nil

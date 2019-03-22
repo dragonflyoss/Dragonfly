@@ -40,6 +40,8 @@ type supernodeRegister struct {
 	cfg *config.Config
 }
 
+var _ SupernodeRegister = &supernodeRegister{}
+
 // NewSupernodeRegister creates an instance of supernodeRegister.
 func NewSupernodeRegister(cfg *config.Config, api api.SupernodeAPI) SupernodeRegister {
 	return &supernodeRegister{

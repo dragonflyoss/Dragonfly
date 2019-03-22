@@ -47,6 +47,8 @@ type uploaderAPI struct {
 	timeout time.Duration
 }
 
+var _ UploaderAPI = &uploaderAPI{}
+
 // NewUploaderAPI returns a new UploaderAPI.
 func NewUploaderAPI(timeout time.Duration) UploaderAPI {
 	return &uploaderAPI{

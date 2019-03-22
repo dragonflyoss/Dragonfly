@@ -58,6 +58,8 @@ type supernodeAPI struct {
 	HTTPClient  util.SimpleHTTPClient
 }
 
+var _ SupernodeAPI = &supernodeAPI{}
+
 // Register sends a request to the supernode to register itself as a peer
 // and create downloading task.
 func (api *supernodeAPI) Register(ip string, req *types.RegisterRequest) (
