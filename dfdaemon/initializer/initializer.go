@@ -85,13 +85,13 @@ func cleanLocalRepo(options *options.Options) {
 				return nil
 			}
 			// get the last access time
-			statT, ok := info.Sys().(*syscall.Stat_t)
+			statT, ok := util.GetSys(info)
 			if !ok {
 				log.Warnf("ignore %s: failed to get last access time", path)
 				return nil
 			}
 			// if the last access time is 1 hour ago
-			if time.Now().Unix()-Atime(statT) >= 3600 {
+			if time.Now().Unix()-util.AtimeSec(statT) >= 3600 {
 				if err := os.Remove(path); err == nil {
 					log.Infof("remove file:%s success", path)
 				} else {
