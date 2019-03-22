@@ -23,6 +23,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"syscall"
 )
 
 // BufferSize define the buffer size when reading and writing file
@@ -205,4 +206,10 @@ func Md5Sum(name string) string {
 	}
 
 	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+// GetSys returns the underlying data source of the os.FileInfo.
+func GetSys(info os.FileInfo) (*syscall.Stat_t, bool) {
+	sys, ok := info.Sys().(*syscall.Stat_t)
+	return sys, ok
 }
