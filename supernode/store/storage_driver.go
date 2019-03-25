@@ -17,6 +17,7 @@
 package store
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"time"
@@ -42,31 +43,31 @@ type StorageDriver interface {
 	// The data should be written into the writer as io stream.
 	// If the length<=0, the driver should return all data from the raw.offest.
 	// Otherwise, just return the data which starts from raw.offset and the length is raw.length.
-	Get(raw *Raw, writer io.Writer) error
+	Get(ctx context.Context, raw *Raw, writer io.Writer) error
 
 	// Get data from the storage based on raw information.
 	// The data should be returned in bytes.
 	// If the length<=0, the storage driver should return all data from the raw.offest.
 	// Otherwise, just return the data which starts from raw.offset and the length is raw.length.
-	GetBytes(raw *Raw) ([]byte, error)
+	GetBytes(ctx context.Context, raw *Raw) ([]byte, error)
 
 	// Put the data into the storage with raw information.
 	// The storage will get data from io.Reader as io stream.
 	// If the offset>0, the storage driver should starting at byte raw.offset off.
-	Put(raw *Raw, data io.Reader) error
+	Put(ctx context.Context, raw *Raw, data io.Reader) error
 
 	// PutBytes puts the data into the storage with raw information.
 	// The data is passed in bytes.
 	// If the offset>0, the storage driver should starting at byte raw.offset off.
-	PutBytes(raw *Raw, data []byte) error
+	PutBytes(ctx context.Context, raw *Raw, data []byte) error
 
 	// Remove the data from the storage based on raw information.
-	Remove(raw *Raw) error
+	Remove(ctx context.Context, raw *Raw) error
 
 	// Stat determine whether the data exists based on raw information.
 	// If that, and return some info that in the form of struct StorageInfo.
 	// If not, return the ErrNotFound.
-	Stat(raw *Raw) (*StorageInfo, error)
+	Stat(ctx context.Context, raw *Raw) (*StorageInfo, error)
 }
 
 // Raw identifies a piece of data uniquely.
