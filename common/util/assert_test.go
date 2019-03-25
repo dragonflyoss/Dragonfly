@@ -48,6 +48,8 @@ func (suite *AssertSuite) TestMin(c *check.C) {
 
 func (suite *AssertSuite) TestIsEmptyStr(c *check.C) {
 	c.Assert(IsEmptyStr(""), check.Equals, true)
+	c.Assert(IsEmptyStr("  "), check.Equals, true)
+	c.Assert(IsEmptyStr("\n  "), check.Equals, true)
 	c.Assert(IsEmptyStr("x"), check.Equals, false)
 }
 
@@ -75,6 +77,12 @@ func (suite *AssertSuite) TestIsPositive(c *check.C) {
 	c.Assert(IsPositive(0), check.Equals, false)
 	c.Assert(IsPositive(1), check.Equals, true)
 	c.Assert(IsPositive(-1), check.Equals, false)
+}
+
+func (suite *AssertSuite) TestIsNatural(c *check.C) {
+	c.Assert(IsNatural("0"), check.Equals, true)
+	c.Assert(IsNatural("1"), check.Equals, true)
+	c.Assert(IsNatural("-1"), check.Equals, false)
 }
 
 func (suite *AssertSuite) TestIsNumeric(c *check.C) {
