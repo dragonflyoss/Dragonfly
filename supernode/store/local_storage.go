@@ -17,6 +17,7 @@
 package store
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -24,7 +25,6 @@ import (
 	"path"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	"github.com/dragonflyoss/Dragonfly/common/util"
 )
@@ -43,7 +43,7 @@ type fileMutex struct {
 	sync.RWMutex
 }
 
-func getLock(key string, ro bool) {
+func lock(key string, ro bool) {
 	v, _ := fileMutexLocker.LoadOrStore(key, &fileMutex{})
 	f := v.(*fileMutex)
 
@@ -104,13 +104,13 @@ func NewLocalStorage(config interface{}) (StorageDriver, error) {
 }
 
 // Get the content of key from storage and return in io stream.
-func (ls *localStorage) Get(raw *Raw, writer io.Writer) error {
+func (ls *localStorage) Get(ctx context.Context, raw *Raw, writer io.Writer) error {
 	path, _, err := ls.statPath(raw.key)
 	if err != nil {
 		return err
 	}
 
-	getLock(getLockKey(path, raw.offset), true)
+	lock(getLockKey(path, raw.offset), true)
 	defer releaseLock(getLockKey(path, raw.offset), true)
 
 	f, err := os.Open(path)
@@ -133,13 +133,13 @@ func (ls *localStorage) Get(raw *Raw, writer io.Writer) error {
 }
 
 // GetBytes gets the content of key from storage and return in bytes.
-func (ls *localStorage) GetBytes(raw *Raw) (data []byte, err error) {
+func (ls *localStorage) GetBytes(ctx context.Context, raw *Raw) (data []byte, err error) {
 	path, _, err := ls.statPath(raw.key)
 	if err != nil {
 		return nil, err
 	}
 
-	getLock(getLockKey(path, raw.offset), true)
+	lock(getLockKey(path, raw.offset), true)
 	defer releaseLock(getLockKey(path, raw.offset), true)
 
 	f, err := os.Open(path)
@@ -163,13 +163,13 @@ func (ls *localStorage) GetBytes(raw *Raw) (data []byte, err error) {
 }
 
 // Put reads the content from reader and put it into storage.
-func (ls *localStorage) Put(raw *Raw, data io.Reader) error {
+func (ls *localStorage) Put(ctx context.Context, raw *Raw, data io.Reader) error {
 	path, err := ls.preparePath(raw.key)
 	if err != nil {
 		return err
 	}
 
-	getLock(getLockKey(path, raw.offset), false)
+	lock(getLockKey(path, raw.offset), false)
 	defer releaseLock(getLockKey(path, raw.offset), false)
 
 	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC|os.O_SYNC, 0644)
@@ -187,13 +187,13 @@ func (ls *localStorage) Put(raw *Raw, data io.Reader) error {
 }
 
 // PutBytes puts the content of key from storage with bytes.
-func (ls *localStorage) PutBytes(raw *Raw, data []byte) error {
+func (ls *localStorage) PutBytes(ctx context.Context, raw *Raw, data []byte) error {
 	path, err := ls.preparePath(raw.key)
 	if err != nil {
 		return err
 	}
 
-	getLock(getLockKey(path, raw.offset), false)
+	lock(getLockKey(path, raw.offset), false)
 	defer releaseLock(getLockKey(path, raw.offset), false)
 
 	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC|os.O_SYNC, 0644)
@@ -211,7 +211,7 @@ func (ls *localStorage) PutBytes(raw *Raw, data []byte) error {
 }
 
 // Stat determine whether the file exists.
-func (ls *localStorage) Stat(raw *Raw) (*StorageInfo, error) {
+func (ls *localStorage) Stat(ctx context.Context, raw *Raw) (*StorageInfo, error) {
 	path, fileInfo, err := ls.statPath(raw.key)
 	if err != nil {
 		return nil, err
@@ -230,13 +230,13 @@ func (ls *localStorage) Stat(raw *Raw) (*StorageInfo, error) {
 }
 
 // Remove deletes a file or dir.
-func (ls *localStorage) Remove(raw *Raw) error {
+func (ls *localStorage) Remove(ctx context.Context, raw *Raw) error {
 	path, _, err := ls.statPath(raw.key)
 	if err != nil {
 		return err
 	}
 
-	getLock(getLockKey(path, raw.offset), false)
+	lock(getLockKey(path, raw.offset), false)
 	defer releaseLock(getLockKey(path, raw.offset), false)
 
 	if err := os.RemoveAll(path); err != nil {
@@ -274,7 +274,7 @@ func (ls *localStorage) statPath(key string) (string, os.FileInfo, error) {
 }
 
 func getLockKey(path string, offset int64) string {
-	return fmt.Sprintf("%s%d%d", path, offset, time.Now().Unix())
+	return fmt.Sprintf("%s%d", path, offset)
 }
 
 func getPrefix(str string) string {

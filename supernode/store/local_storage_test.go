@@ -18,6 +18,7 @@ package store
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -108,10 +109,10 @@ func (s *LocalStorageSuite) TestGetPutBytes(c *check.C) {
 
 	for _, v := range cases {
 		// put
-		s.storeLocal.PutBytes(v.raw, v.data)
+		s.storeLocal.PutBytes(context.Background(), v.raw, v.data)
 
 		// get
-		result, err := s.storeLocal.GetBytes(v.raw)
+		result, err := s.storeLocal.GetBytes(context.Background(), v.raw)
 		c.Assert(err, check.IsNil)
 		c.Assert(string(result), check.Equals, v.expected)
 
@@ -159,11 +160,11 @@ func (s *LocalStorageSuite) TestGetPut(c *check.C) {
 
 	for _, v := range cases {
 		// put
-		s.storeLocal.Put(v.raw, v.data)
+		s.storeLocal.Put(context.Background(), v.raw, v.data)
 
 		// get
 		buf1 := new(bytes.Buffer)
-		err := s.storeLocal.Get(v.raw, buf1)
+		err := s.storeLocal.Get(context.Background(), v.raw, buf1)
 		c.Assert(err, check.IsNil)
 		c.Assert(buf1.String(), check.Equals, v.expected)
 
@@ -195,7 +196,7 @@ func (s *LocalStorageSuite) TestGetPrefix(c *check.C) {
 // helper function
 
 func (s *LocalStorageSuite) checkStat(raw *Raw, c *check.C) {
-	info, err := s.storeLocal.Stat(raw)
+	info, err := s.storeLocal.Stat(context.Background(), raw)
 	c.Assert(err, check.IsNil)
 
 	cfg := s.storeLocal.config.(*localStorage)
@@ -212,9 +213,9 @@ func (s *LocalStorageSuite) checkStat(raw *Raw, c *check.C) {
 }
 
 func (s *LocalStorageSuite) checkRemove(raw *Raw, c *check.C) {
-	err := s.storeLocal.Remove(raw)
+	err := s.storeLocal.Remove(context.Background(), raw)
 	c.Assert(err, check.IsNil)
 
-	_, err = s.storeLocal.Stat(raw)
+	_, err = s.storeLocal.Stat(context.Background(), raw)
 	c.Assert(err, check.DeepEquals, ErrNotFound)
 }
