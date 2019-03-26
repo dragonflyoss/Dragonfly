@@ -551,6 +551,7 @@ The detailed information of a peer in supernode.
 |---|---|---|
 |**ID**  <br>*optional*|ID of peer|string|
 |**IP**  <br>*optional*|IP address which peer client carries.<br>(TODO) make IP field contain more information, for example<br>WAN/LAN IP address for supernode to recognize.|string (ipv4)|
+|**created**  <br>*optional*|the time to join the P2P network|string (date-time)|
 |**hostName**  <br>*optional*|host name of peer client node, as a valid RFC 1123 hostname.  <br>**Minimum length** : `1`|string (hostname)|
 |**port**  <br>*optional*|when registering, dfget will setup one uploader process. <br>This one acts as a server for peer pulling tasks.<br>This port is which this server listens on.  <br>**Minimum value** : `15000`  <br>**Maximum value** : `65000`|integer (int32)|
 |**version**  <br>*optional*|version number of dfget binary|string|
