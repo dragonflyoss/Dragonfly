@@ -23,10 +23,13 @@ import (
 	"path"
 	"reflect"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/dragonflyoss/Dragonfly/common/dflog"
+	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
+	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon"
 )
@@ -93,6 +96,9 @@ func setupFlags(cmd *cobra.Command, opt *Options) {
 
 	flagSet.IntVar(&opt.PeerDownLimit, "down-limit", opt.PeerDownLimit,
 		"download limit for supernode to serve download tasks")
+
+	flagSet.StringVar(&cfg.AdvertiseIP, "advertise-ip", "",
+		"the supernode ip that we advertise to other peer in the p2p-network")
 }
 
 // runSuperNode prepares configs, setups essential details and runs supernode daemon.
@@ -105,6 +111,16 @@ func runSuperNode() error {
 	if err := initConfig(); err != nil {
 		return err
 	}
+
+	// set supernode advertise ip
+	if cutil.IsEmptyStr(cfg.AdvertiseIP) {
+		if err := setAdvertiseIP(); err != nil {
+			return err
+		}
+	}
+
+	// set up the CIDPrefix
+	cfg.SetCIDPrefix(cfg.AdvertiseIP)
 
 	logrus.Info("start to run supernode")
 
@@ -147,6 +163,20 @@ func initConfig() error {
 
 	opt := getPureOptionFromCLI()
 	choosePropValue(opt.BaseProperties, cfg.BaseProperties)
+	return nil
+}
+
+func setAdvertiseIP() error {
+	// use the first non-loop address if the AdvertiseIP is empty
+	ipList, err := cutil.GetAllIPs()
+	if err != nil {
+		return errors.Wrapf(errorType.ErrSystemError, "failed to get ip list: %v", err)
+	}
+	if len(ipList) != 0 {
+		cfg.AdvertiseIP = ipList[0]
+	}
+
+	logrus.Infof("success to init local ip of supernode, use ip: %s", cfg.AdvertiseIP)
 	return nil
 }
 
