@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"gopkg.in/yaml.v2"
@@ -32,6 +33,17 @@ func (c *Config) String() string {
 		return string(out)
 	}
 	return ""
+}
+
+// SetCIDPrefix sets a string as the prefix for supernode CID
+// which used to distinguish from the other peer nodes.
+func (c *Config) SetCIDPrefix(ip string) {
+	c.cIDPrefix = fmt.Sprintf("cdnnode:%s~", ip)
+}
+
+// GetSuperCID returns the cid string for taskID.
+func (c *Config) GetSuperCID(taskID string) string {
+	return fmt.Sprintf("%s%s", c.cIDPrefix, taskID)
 }
 
 // NewBaseProperties create a instant with default values.
@@ -124,4 +136,11 @@ type BaseProperties struct {
 	// Whether to open DEBUG level
 	// default: false
 	Debug bool `yaml:"debug"`
+
+	// AdvertiseIP is used to set the ip that we advertise to other peer in the p2p-network.
+	// By default, the first non-loop address is advertised.
+	AdvertiseIP string `yaml:"advertiseIP"`
+
+	// cIDPrefix s a prefix string used to indicate that the CID is supernode.
+	cIDPrefix string
 }
