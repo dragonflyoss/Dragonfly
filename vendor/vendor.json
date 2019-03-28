@@ -249,6 +249,12 @@
 			"revisionTime": "2017-12-07T12:09:41Z"
 		},
 		{
+			"checksumSHA1": "Pw49QR3vpeMuxJ3lGh4nvYrhKBU=",
+			"path": "github.com/willf/bitset",
+			"revision": "18bd95f470f9494ca07c36d877424729edc2455c",
+			"revisionTime": "2019-02-28T21:25:26Z"
+		},
+		{
 			"checksumSHA1": "BGm8lKZmvJbf/YOJLeL1rw2WVjA=",
 			"path": "golang.org/x/crypto/ssh/terminal",
 			"revision": "a49355c7e3f8fe157a85be2f77e6e269a0f89602",
