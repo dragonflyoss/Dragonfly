@@ -109,7 +109,7 @@ export PATH=$PATH:$HOME/df-client/
 
     docker run -d -p 65001:65001 [-v /path/to/.small-dragonfly:/root/.small-dragonfly -v /etc/dragonfly.conf:/etc/dragonfly.conf] dragonflyoss/dfclient:v0.3.0 --registry https://xxx.xx.x
     ```
-    
+
     **Note:**
     - /etc/dragonfly.conf must be set supernode addr
     - registry can be private registry like harbor service or mirror url like aliyun mirror,the default value is registry.index.io(In chinese u'll lose connection)
