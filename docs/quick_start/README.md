@@ -39,7 +39,6 @@ docker run -d -p 8001:8001 -p 8002:8002 [-v /path/to/supernode:/home/admin/super
 
 **Note:** docker use private ip(docker0 bridge),client cannot access supernode when it run another machine.
 
-
 ## Step 2: Installing Dragonfly Client
 
 You have two options of installing Dragonfly client: installing from source code, or installing by pulling the image.
@@ -107,6 +106,7 @@ export PATH=$PATH:$HOME/df-client/
     [node]
     address=private/public supernode ip
     EOD
+    
     docker run -d -p 65001:65001 [-v /path/to/.small-dragonfly:/root/.small-dragonfly -v /etc/dragonfly.conf:/etc/dragonfly.conf] dragonflyoss/dfclient:v0.3.0 --registry https://xxx.xx.x
     ```
     **Note:** 
