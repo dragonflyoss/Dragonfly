@@ -1,7 +1,7 @@
 package config
 
 import (
-	"path"
+	"path/filepath"
 
 	"gopkg.in/yaml.v2"
 
@@ -36,11 +36,12 @@ func (c *Config) String() string {
 
 // NewBaseProperties create a instant with default values.
 func NewBaseProperties() *BaseProperties {
+	home := filepath.Join(string(filepath.Separator), "home", "admin", "supernode")
 	return &BaseProperties{
 		ListenPort:              8002,
-		HomeDir:                 "/home/admin/supernode",
+		HomeDir:                 home,
 		SchedulerCorePoolSize:   10,
-		DownloadPath:            path.Join("repo", "download"),
+		DownloadPath:            filepath.Join(home, "repo", "download"),
 		PeerUpLimit:             5,
 		PeerDownLimit:           5,
 		EliminationLimit:        5,
