@@ -26,6 +26,8 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/dragonflyoss/Dragonfly/common/util"
 )
 
@@ -76,30 +78,30 @@ func releaseLock(key string, ro bool) {
 	}
 }
 
-// LocalStorage is one of the implementions of StorageDriver by locally.
+// localStorage is one of the implementations of StorageDriver by locally.
 type localStorage struct {
-	// baseDir is the dir that local storage driver will store content based on it.
-	baseDir string
+	// BaseDir is the dir that local storage driver will store content based on it.
+	BaseDir string `yaml:"baseDir"`
 }
 
-// NewLocalStorage performs initialization for LocalStorage and return a StorageDriver.
-func NewLocalStorage(config interface{}) (StorageDriver, error) {
+// NewLocalStorage performs initialization for localStorage and return a StorageDriver.
+func NewLocalStorage(conf string) (StorageDriver, error) {
 	// type assertion for config
-	cfg, ok := config.(*localStorage)
-	if !ok {
-		return nil, fmt.Errorf("failed to parse config")
+	cfg := &localStorage{}
+	if err := yaml.Unmarshal([]byte(conf), cfg); err != nil {
+		return nil, fmt.Errorf("failed to parse config: %v", err)
 	}
 
 	// prepare the base dir
-	if !path.IsAbs(cfg.baseDir) {
-		return nil, fmt.Errorf("not absolute path: %s", cfg.baseDir)
+	if !path.IsAbs(cfg.BaseDir) {
+		return nil, fmt.Errorf("not absolute path: %s", cfg.BaseDir)
 	}
-	if err := util.CreateDirectory(cfg.baseDir); err != nil {
+	if err := util.CreateDirectory(cfg.BaseDir); err != nil {
 		return nil, err
 	}
 
 	return &localStorage{
-		baseDir: cfg.baseDir,
+		BaseDir: cfg.BaseDir,
 	}, nil
 }
 
@@ -249,7 +251,7 @@ func (ls *localStorage) Remove(ctx context.Context, raw *Raw) error {
 
 // preparePath gets the target path and creates the upper directory if it does not exist.
 func (ls *localStorage) preparePath(key string) (string, error) {
-	dir := path.Join(ls.baseDir, getPrefix(key))
+	dir := path.Join(ls.BaseDir, getPrefix(key))
 
 	if err := util.CreateDirectory(dir); err != nil {
 		return "", err
@@ -261,7 +263,7 @@ func (ls *localStorage) preparePath(key string) (string, error) {
 
 // statPath determines whether the target file exists and returns an fileMutex if so.
 func (ls *localStorage) statPath(key string) (string, os.FileInfo, error) {
-	filePath := path.Join(ls.baseDir, getPrefix(key), key)
+	filePath := path.Join(ls.BaseDir, getPrefix(key), key)
 	f, err := os.Stat(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {

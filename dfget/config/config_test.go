@@ -167,9 +167,9 @@ func (suite *ConfigSuite) TestProperties_Load(c *check.C) {
 		expected *Properties
 	}{
 		{create: false, ext: "x", errMsg: "extension of"},
-		{create: false, ext: "yaml", errMsg: "read yaml config from", expected: nil},
+		{create: false, ext: "yaml", errMsg: "no such file or directory", expected: nil},
 		{create: true, ext: "yaml",
-			content: "nodes:\n\t- 10.10.10.1", errMsg: "unmarshal yaml error", expected: nil},
+			content: "nodes:\n\t- 10.10.10.1", errMsg: "yaml", expected: nil},
 		{create: true, ext: "yaml",
 			content: "nodes:\n  - 10.10.10.1\n  - 10.10.10.2\n",
 			errMsg:  "", expected: &Properties{Nodes: []string{"10.10.10.1", "10.10.10.2"}}},
@@ -203,6 +203,16 @@ func (suite *ConfigSuite) TestProperties_Load(c *check.C) {
 				check.Commentf("error:%v expected:%s", err, v.errMsg))
 		}
 	}
+}
+
+func (suite *ConfigSuite) TestProperties_String(c *check.C) {
+	p := NewProperties()
+	str := p.String()
+
+	actual := &Properties{}
+	e := json.Unmarshal([]byte(str), actual)
+	c.Assert(e, check.IsNil)
+	c.Assert(actual, check.DeepEquals, p)
 }
 
 func (suite *ConfigSuite) TestRuntimeVariable_String(c *check.C) {
