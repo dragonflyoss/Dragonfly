@@ -27,9 +27,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/common/errors"
 	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
-	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"

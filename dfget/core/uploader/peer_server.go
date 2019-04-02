@@ -30,11 +30,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/common/errors"
 	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
-	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/gorilla/mux"

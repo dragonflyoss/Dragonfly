@@ -25,10 +25,10 @@ import (
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/common/constants"
+	"github.com/dragonflyoss/Dragonfly/common/errors"
 	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
-	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 

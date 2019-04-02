@@ -19,7 +19,7 @@ package mgr
 import (
 	"testing"
 
-	"github.com/dragonflyoss/Dragonfly/supernode/errors"
+	"github.com/dragonflyoss/Dragonfly/common/errors"
 
 	"github.com/go-check/check"
 )
