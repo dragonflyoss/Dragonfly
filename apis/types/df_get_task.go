@@ -32,6 +32,12 @@ type DfGetTask struct {
 	//
 	Path string `json:"path,omitempty"`
 
+	// PeerID uniquely identifies a peer, and the cID uniquely identifies a
+	// download task belonging to a peer. One peer can initiate multiple download tasks,
+	// which means that one peer corresponds to multiple cIDs.
+	//
+	PeerID string `json:"peerID,omitempty"`
+
 	// The size of pieces which is calculated as per the following strategy
 	// 1. If file's total size is less than 200MB, then the piece size is 4MB by default.
 	// 2. Otherwise, it equals to the smaller value between totalSize/100MB + 2 MB and 15MB.

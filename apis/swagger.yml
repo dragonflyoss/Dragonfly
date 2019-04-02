@@ -827,6 +827,12 @@ definitions:
         description: |
             The status of Dfget download process.
         enum: ["WAITING", "RUNNING", "FAILED", "SUCCESS",]
+      peerID:
+        type: "string"
+        description: |
+          PeerID uniquely identifies a peer, and the cID uniquely identifies a 
+          download task belonging to a peer. One peer can initiate multiple download tasks, 
+          which means that one peer corresponds to multiple cIDs.
  
   ErrorResponse:
     type: "object"
