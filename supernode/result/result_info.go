@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/dragonflyoss/Dragonfly/common/constants"
-	"github.com/dragonflyoss/Dragonfly/supernode/errors"
+	"github.com/dragonflyoss/Dragonfly/common/errors"
 )
 
 // ResultInfo identify a struct that will returned to the client.

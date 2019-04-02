@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/common/constants"
+	"github.com/dragonflyoss/Dragonfly/common/errors"
 	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
@@ -37,7 +38,6 @@ import (
 	p2pDown "github.com/dragonflyoss/Dragonfly/dfget/core/downloader/p2p_downloader"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
-	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/dragonflyoss/Dragonfly/version"
 
@@ -49,7 +49,7 @@ func init() {
 }
 
 // Start function creates a new task and starts it to download file.
-func Start(cfg *config.Config) *errors.DFGetError {
+func Start(cfg *config.Config) *errors.DfError {
 	var (
 		supernodeAPI = api.NewSupernodeAPI()
 		register     = regist.NewSupernodeRegister(cfg, supernodeAPI)

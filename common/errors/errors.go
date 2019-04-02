@@ -14,34 +14,33 @@
  * limitations under the License.
  */
 
-// Package errors defines all exceptions happened in dfget's runtime.
+// Package errors defines all exceptions happened in dragonfly.
 package errors
 
 import (
-	errHandler "github.com/pkg/errors"
+	"fmt"
+
+	"github.com/pkg/errors"
 )
 
 var (
 	// ErrDataNotFound represents the data cannot be found..
-	ErrDataNotFound = SuperError{codeDataNotFound, "data not found"}
-
-	// ErrInvalidValue represents the value is invalid.
-	ErrInvalidValue = SuperError{codeInvalidValue, "invalid value"}
+	ErrDataNotFound = DfError{codeDataNotFound, "data not found"}
 
 	// ErrEmptyValue represents the value is empty or nil.
-	ErrEmptyValue = SuperError{codeEmptyValue, "empty value"}
+	ErrEmptyValue = DfError{codeEmptyValue, "empty value"}
+
+	// ErrInvalidValue represents the value is invalid.
+	ErrInvalidValue = DfError{codeInvalidValue, "invalid value"}
 
 	// ErrNotInitialized represents the object is not initialized.
-	ErrNotInitialized = SuperError{codeNotInitialized, "not initialized"}
+	ErrNotInitialized = DfError{codeNotInitialized, "not initialized"}
 
 	// ErrConvertFailed represents failed to convert.
-	ErrConvertFailed = SuperError{codeConvertFailed, "convert failed"}
+	ErrConvertFailed = DfError{codeConvertFailed, "convert failed"}
 
 	// ErrRangeNotSatisfiable represents the length of file is insufficient.
-	ErrRangeNotSatisfiable = SuperError{codeRangeNotSatisfiable, "range not satisfiable"}
-
-	// ErrSystemError represents the error is a system error..
-	ErrSystemError = SuperError{codeSystemError, "system error"}
+	ErrRangeNotSatisfiable = DfError{codeRangeNotSatisfiable, "range not satisfiable"}
 )
 
 const (
@@ -51,17 +50,36 @@ const (
 	codeNotInitialized
 	codeConvertFailed
 	codeRangeNotSatisfiable
+
+	// supernode
 	codeSystemError
 )
 
-// SuperError represents a error created by supernode.
-type SuperError struct {
+// DfError represents a Dragonfly error.
+type DfError struct {
 	Code int
 	Msg  string
 }
 
-func (s SuperError) Error() string {
-	return s.Msg
+// New function creates a DfError.
+func New(code int, msg string) *DfError {
+	return &DfError{
+		Code: code,
+		Msg:  msg,
+	}
+}
+
+// Newf function creates a DfError with a message according to
+// a format specifier.
+func Newf(code int, format string, a ...interface{}) *DfError {
+	return &DfError{
+		Code: code,
+		Msg:  fmt.Sprintf(format, a...),
+	}
+}
+
+func (s DfError) Error() string {
+	return fmt.Sprintf("{\"Code\":%d,\"Msg\":\"%s\"}", s.Code, s.Msg)
 }
 
 // IsNilError check the error is nil or not.
@@ -100,12 +118,7 @@ func IsRangeNotSatisfiable(err error) bool {
 	return checkError(err, codeRangeNotSatisfiable)
 }
 
-// IsSystemError check the error is a system error or not.
-func IsSystemError(err error) bool {
-	return checkError(err, codeSystemError)
-}
-
 func checkError(err error, code int) bool {
-	e, ok := errHandler.Cause(err).(SuperError)
+	e, ok := errors.Cause(err).(DfError)
 	return ok && e.Code == code
 }

@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
 	"github.com/dragonflyoss/Dragonfly/common/util"
-	errorType "github.com/dragonflyoss/Dragonfly/supernode/errors"
 
 	"github.com/pkg/errors"
 )

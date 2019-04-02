@@ -28,8 +28,8 @@ import (
 	"syscall"
 	"time"
 
+	errType "github.com/dragonflyoss/Dragonfly/common/errors"
 	cutil "github.com/dragonflyoss/Dragonfly/common/util"
-	errType "github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 
 	"github.com/pkg/errors"
