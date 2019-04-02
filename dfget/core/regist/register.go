@@ -21,10 +21,10 @@ import (
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/common/constants"
+	"github.com/dragonflyoss/Dragonfly/common/errors"
 	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
-	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
 	"github.com/dragonflyoss/Dragonfly/version"
 	"github.com/sirupsen/logrus"
@@ -32,7 +32,7 @@ import (
 
 // SupernodeRegister encapsulates the Register steps into a struct.
 type SupernodeRegister interface {
-	Register(peerPort int) (*RegisterResult, *errors.DFGetError)
+	Register(peerPort int) (*RegisterResult, *errors.DfError)
 }
 
 type supernodeRegister struct {
@@ -51,7 +51,7 @@ func NewSupernodeRegister(cfg *config.Config, api api.SupernodeAPI) SupernodeReg
 }
 
 // Register processes the flow of register.
-func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errors.DFGetError) {
+func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errors.DfError) {
 	var (
 		resp       *types.RegisterResponse
 		e          error
@@ -95,7 +95,7 @@ func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errors.DFG
 	return result, nil
 }
 
-func (s *supernodeRegister) checkResponse(resp *types.RegisterResponse, e error) *errors.DFGetError {
+func (s *supernodeRegister) checkResponse(resp *types.RegisterResponse, e error) *errors.DfError {
 	if e != nil {
 		return errors.New(constants.HTTPError, e.Error())
 	}

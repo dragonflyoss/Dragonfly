@@ -3,7 +3,7 @@ package mgr
 import (
 	"sync"
 
-	errorType "github.com/dragonflyoss/Dragonfly/supernode/errors"
+	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
 
 	"github.com/pkg/errors"
 )

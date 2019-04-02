@@ -25,10 +25,10 @@ import (
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/common/dflog"
+	"github.com/dragonflyoss/Dragonfly/common/errors"
 	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core"
-	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
 
 	errHandler "github.com/pkg/errors"
@@ -260,7 +260,7 @@ func transFilter(filter string) []string {
 	return strings.Split(filter, "&")
 }
 
-func resultMsg(cfg *config.Config, end time.Time, e *errors.DFGetError) string {
+func resultMsg(cfg *config.Config, end time.Time, e *errors.DfError) string {
 	if e != nil {
 		return fmt.Sprintf("download FAIL(%d) cost:%.3fs length:%d reason:%d error:%v",
 			e.Code, end.Sub(cfg.StartTime).Seconds(), cfg.RV.FileLength,
