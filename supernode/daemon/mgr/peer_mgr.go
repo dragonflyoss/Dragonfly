@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
+	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
 	"github.com/dragonflyoss/Dragonfly/common/util"
-	errorType "github.com/dragonflyoss/Dragonfly/supernode/errors"
 
 	"github.com/go-openapi/strfmt"
 	"github.com/pkg/errors"

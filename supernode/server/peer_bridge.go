@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
+	errTypes "github.com/dragonflyoss/Dragonfly/common/errors"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
-	errTypes "github.com/dragonflyoss/Dragonfly/supernode/errors"
 
 	"github.com/go-openapi/strfmt"
 	"github.com/gorilla/mux"
