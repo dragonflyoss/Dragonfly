@@ -14,12 +14,27 @@
  * limitations under the License.
  */
 
-package main
+package config
 
-import (
-	"github.com/dragonflyoss/Dragonfly/cmd/supernode/app"
+// PluginType defines the type of plugin.
+type PluginType string
+
+const (
+	// StoragePlugin the storage plugin type.
+	StoragePlugin = PluginType("storage")
+
+	// SchedulerPlugin the scheduler plugin type.
+	SchedulerPlugin = PluginType("scheduler")
 )
 
-func main() {
-	app.Execute()
+// PluginTypes explicitly stores all available plugin types.
+var PluginTypes = []PluginType{
+	StoragePlugin, SchedulerPlugin,
+}
+
+// PluginProperties the properties of a plugin.
+type PluginProperties struct {
+	Name    string `yaml:"name"`
+	Enabled bool   `yaml:"enabled"`
+	Config  string `yaml:"config"`
 }

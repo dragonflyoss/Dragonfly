@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
 )
 
 // Store is a wrapper of the storage which implements the interface of StorageDriver.
@@ -34,17 +36,15 @@ type Store struct {
 }
 
 // NewStore create a new Store instance.
-func NewStore(name string, cfg interface{}) (*Store, error) {
-	// determine whether the driver has been registered
-	initer, ok := driverFactory[name]
-	if !ok {
-		return nil, fmt.Errorf("unregisterd storage driver : %s", name)
+func NewStore(name string, builder StorageBuilder, cfg string) (*Store, error) {
+	if name == "" || builder == nil {
+		return nil, fmt.Errorf("plugin name or builder cannot be nil")
 	}
 
 	// init driver with specific config
-	driver, err := initer(cfg)
+	driver, err := builder(cfg)
 	if err != nil {
-		return nil, fmt.Errorf("init storage driver failed %s: %v", name, cfg)
+		return nil, fmt.Errorf("failed to init storage driver %s: %v", name, err)
 	}
 
 	return &Store{
@@ -52,6 +52,16 @@ func NewStore(name string, cfg interface{}) (*Store, error) {
 		config:     cfg,
 		driver:     driver,
 	}, nil
+}
+
+// Type return the plugin type: StoragePlugin.
+func (s *Store) Type() config.PluginType {
+	return config.StoragePlugin
+}
+
+// Name return the plugin name.
+func (s *Store) Name() string {
+	return s.driverName
 }
 
 // Get the data from the storage driver in io stream.

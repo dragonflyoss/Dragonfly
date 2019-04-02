@@ -94,7 +94,7 @@ jobs:
             make build > /dev/null
             cd cmd
             cd supernode && go build
-            ./supernode &
+            ./supernode --home-dir /tmp/dragonfly --port 8080 &
             go test ../../test
 
 workflows:

@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/go-check/check"
 )
@@ -215,4 +216,46 @@ func (s *FileUtilTestSuite) TestMd5sum(c *check.C) {
 	os.Mkdir(pathStr, 0755)
 	pathStrMd5 = Md5Sum(pathStr)
 	c.Assert(pathStrMd5, check.Equals, "")
+}
+
+func (s *FileUtilTestSuite) TestLoadYaml(c *check.C) {
+	type T struct {
+		A int    `yaml:"a"`
+		B string `yaml:"b"`
+	}
+	var cases = []struct {
+		create   bool
+		content  string
+		errMsg   string
+		expected *T
+	}{
+		{create: false, content: "", errMsg: ".*no such file or directory", expected: nil},
+		{create: true, content: "a: x",
+			errMsg: ".*yaml: unmarshal.*(\n.*)*", expected: nil},
+		{create: true, content: "a: 1", errMsg: "", expected: &T{1, ""}},
+		{
+			create:   true,
+			content:  "a: 1\nb: x",
+			errMsg:   "",
+			expected: &T{1, "x"},
+		},
+	}
+
+	for idx, v := range cases {
+		filename := filepath.Join(s.tmpDir, fmt.Sprintf("test-%d", idx))
+		if v.create {
+			ioutil.WriteFile(filename, []byte(v.content), os.ModePerm)
+		}
+		var t T
+		err := LoadYaml(filename, &t)
+		if v.expected == nil {
+			c.Assert(err, check.NotNil)
+			c.Assert(err, check.ErrorMatches, v.errMsg,
+				check.Commentf("err:%v expected:%s", err, v.errMsg))
+		} else {
+			c.Assert(err, check.IsNil)
+			c.Assert(&t, check.DeepEquals, v.expected)
+		}
+
+	}
 }

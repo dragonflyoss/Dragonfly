@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
-package main
+package config
 
-import (
-	"github.com/dragonflyoss/Dragonfly/cmd/supernode/app"
+const (
+	// DefaultSupernodeConfigFilePath the default supernode config path.
+	DefaultSupernodeConfigFilePath = "/etc/dragonfly/supernode.yml"
 )
-
-func main() {
-	app.Execute()
-}
