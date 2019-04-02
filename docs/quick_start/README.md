@@ -6,6 +6,8 @@ In this quick start guide, you will get a feeling of Dragonfly by starting a sup
 
 You have started your Docker container.
 
+**Note:** `[command]` is optional
+
 ## Step 1: Starting a SuperNode (the Server) in Your Docker Container
 
 1. Pull the docker image we provided.
@@ -24,7 +26,7 @@ You have started your Docker container.
 
     ```bash
     # Replace ${imageName} with the real image name
-    docker run -d -p 8001:8001 -p 8002:8002 ${imageName}
+    docker run -d -p 8001:8001 -p 8002:8002 [-v /path/to/supernode:/home/admin/supernode] ${imageName} [-Dsupernode.advertiseIp=private/public supernode ip]
     ```
 
 For example, if you're in China, run the following commands:
@@ -32,8 +34,10 @@ For example, if you're in China, run the following commands:
 ```bash
 docker pull registry.cn-hangzhou.aliyuncs.com/dragonflyoss/supernode:0.3.0
 
-docker run -d -p 8001:8001 -p 8002:8002 registry.cn-hangzhou.aliyuncs.com/dragonflyoss/supernode:0.3.0
+docker run -d -p 8001:8001 -p 8002:8002 [-v /path/to/supernode:/home/admin/supernode] registry.cn-hangzhou.aliyuncs.com/dragonflyoss/supernode:0.3.0 [-Dsupernode.advertiseIp=private/public supernode ip]
 ```
+
+**Note:** docker use private ip(docker0 bridge),client cannot access supernode when it run another machine.
 
 ## Step 2: Installing Dragonfly Client
 
@@ -98,8 +102,17 @@ export PATH=$PATH:$HOME/df-client/
 2. Start dfdaemon.
 
     ```bash
-    docker run -d -p 65001:65001 dragonflyoss/dfclient:v0.3.0 --registry https://xxx.xx.x
+    cat <<EOD >/etc/dragonfly.conf
+    [node]
+    address=private/public supernode ip
+    EOD
+
+    docker run -d -p 65001:65001 [-v /path/to/.small-dragonfly:/root/.small-dragonfly -v /etc/dragonfly.conf:/etc/dragonfly.conf] dragonflyoss/dfclient:v0.3.0 --registry https://xxx.xx.x
     ```
+
+    **Note:**
+    - /etc/dragonfly.conf must be set supernode addr
+    - registry can be private registry like harbor service or mirror url like aliyun mirror,the default value is registry.index.io(In chinese u'll lose connection)
 
 3. Configure the Daemon Mirror.
 
