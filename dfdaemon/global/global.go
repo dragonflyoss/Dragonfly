@@ -57,6 +57,9 @@ type CommandParam struct {
 	// TrustHosts includes the trusted hosts as keys of the map which dfdaemon forward their
 	// requests directly when dfdaemon is used to http_proxy mode.
 	TrustHosts map[string]string
+
+	// SupernodeList specify supernode list.
+	SupernodeList []string
 }
 
 var (
