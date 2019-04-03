@@ -74,6 +74,7 @@ func New(cfg *tls.Config) *DFRoundTripper {
 			global.CommandLine.Notbs,
 			global.CommandLine.RateLimit,
 			global.CommandLine.URLFilter,
+			global.CommandLine.SupernodeList,
 		),
 	}
 }

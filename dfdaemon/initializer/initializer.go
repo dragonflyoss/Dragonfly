@@ -235,15 +235,16 @@ func initParam(options *options.Options) {
 	// copy options to g.CommandLine so we do not break anything, but finally
 	// we should get rid of g.CommandLine totally.
 	g.CommandLine = global.CommandParam{
-		DfPath:     options.DfPath,
-		DFRepo:     options.DFRepo,
-		RateLimit:  options.RateLimit,
-		CallSystem: options.CallSystem,
-		URLFilter:  options.URLFilter,
-		Notbs:      options.Notbs,
-		HostIP:     options.HostIP,
-		Registry:   options.Registry,
-		TrustHosts: parsedTrustHosts,
+		DfPath:        options.DfPath,
+		DFRepo:        options.DFRepo,
+		RateLimit:     options.RateLimit,
+		CallSystem:    options.CallSystem,
+		URLFilter:     options.URLFilter,
+		Notbs:         options.Notbs,
+		HostIP:        options.HostIP,
+		Registry:      options.Registry,
+		TrustHosts:    parsedTrustHosts,
+		SupernodeList: options.SupernodeList,
 	}
 
 	initProperties(options)
