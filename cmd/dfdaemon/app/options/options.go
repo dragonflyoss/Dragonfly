@@ -84,6 +84,9 @@ type Options struct {
 	// ConfigPath is the path of dfdaemon's configuration file.
 	// default value is: /etc/dragonfly/dfdaemon.yml
 	ConfigPath string
+
+	// SupernodeList specify supernode list.
+	SupernodeList []string
 }
 
 // NewOption returns the default options.
@@ -125,6 +128,7 @@ func (o *Options) AddFlags(fs *flag.FlagSet) {
 	fs.StringVar(&o.DownRule, "rule", "", "download the url by P2P if url matches the specified pattern,format:reg1,reg2,reg3")
 	fs.BoolVar(&o.Notbs, "notbs", true, "not try back source to download if throw exception")
 	fs.StringSliceVar(&o.TrustHosts, "trust-hosts", o.TrustHosts, "list of trusted hosts which dfdaemon forward their requests directly, comma separated.")
+	fs.StringSliceVar(&o.SupernodeList, "node", o.SupernodeList, "specify the addresses(IP:port) of supnernodes that will be passed to dfget.")
 
 	fs.StringVar(&o.ConfigPath, "config", constant.DefaultConfigPath,
 		"the path of dfdaemon's configuration file")
