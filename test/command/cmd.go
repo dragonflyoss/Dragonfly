@@ -30,7 +30,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/common/util"
 )
 
 var (

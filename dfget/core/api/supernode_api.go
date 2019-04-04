@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
 )
 
 /* the url paths of supernode APIs*/
