@@ -22,8 +22,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
 )
 
 // UploaderAPI defines the communication methods between dfget and uploader.
