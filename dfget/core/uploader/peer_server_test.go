@@ -34,7 +34,6 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/dragonflyoss/Dragonfly/version"
 )
 
@@ -527,7 +526,7 @@ func (s *PeerServerTestSuite) TestOneFinishHandler(c *check.C) {
 	for _, v := range cases {
 		res, err := testHandlerHelper(srv, &HandlerHelper{
 			method: http.MethodGet,
-			url:    config.LocalHTTPPathClient + "finish?" + util.ParseQuery(v.req),
+			url:    config.LocalHTTPPathClient + "finish?" + cutil.ParseQuery(v.req),
 		})
 		c.Assert(err, check.IsNil)
 		c.Assert(res.Code, check.Equals, v.code)

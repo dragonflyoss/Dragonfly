@@ -43,7 +43,7 @@ const (
 )
 
 var (
-	uploaderAPI = api.NewUploaderAPI(util.DefaultTimeout)
+	uploaderAPI = api.NewUploaderAPI(cutil.DefaultTimeout)
 )
 
 // P2PDownloader is one implementation of Downloader that uses p2p pattern

@@ -97,7 +97,7 @@ func (pc *PowerClient) downloadPiece() (content *bytes.Buffer, e error) {
 
 	// check that the target download peer is available
 	if dstIP != pc.node {
-		if _, e = util.CheckConnect(dstIP, peerPort, -1); e != nil {
+		if _, e = cutil.CheckConnect(dstIP, peerPort, -1); e != nil {
 			return nil, e
 		}
 	}

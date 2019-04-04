@@ -259,7 +259,7 @@ func checkConnectSupernode(nodes []string) (localIP string) {
 		if len(nodeFields) == 2 {
 			port, _ = strconv.Atoi(nodeFields[1])
 		}
-		if localIP, e = util.CheckConnect(nodeFields[0], port, 1000); e == nil {
+		if localIP, e = cutil.CheckConnect(nodeFields[0], port, 1000); e == nil {
 			return localIP
 		}
 		logrus.Errorf("Connect to node:%s error: %v", n, e)
