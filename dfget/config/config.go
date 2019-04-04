@@ -213,7 +213,10 @@ type Config struct {
 	WorkHome string `json:"workHome"`
 
 	// Config file paths,
-	// default:["/etc/dragonfly.yaml","/etc/dragonfly.conf"].
+	// default:["/etc/dragonfly/dfget.yml","/etc/dragonfly.conf"].
+	//
+	// NOTE: It is recommended to use `/etc/dragonfly/dfget.yml` as default,
+	// and the `/etc/dragonfly.conf` is just to ensure compatibility with previous versions.
 	ConfigFiles []string `json:"configFile"`
 
 	// RV stores the variables that are initialized and used at downloading task executing.
