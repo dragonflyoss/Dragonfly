@@ -493,6 +493,7 @@ A download process initiated by dfget or other clients.
 |---|---|---|
 |**cID**  <br>*optional*|CID means the client ID. It maps to the specific dfget process. <br>When user wishes to download an image/file, user would start a dfget process to do this. <br>This dfget is treated a client and carries a client ID. <br>Thus, multiple dfget processes on the same peer have different CIDs.|string|
 |**path**  <br>*optional*|path is used in one peer A for uploading functionality. When peer B hopes<br>to get piece C from peer A, B must provide a URL for piece C.<br>Then when creating a task in supernode, peer A must provide this URL in request.|string|
+|**peerID**  <br>*optional*|PeerID uniquely identifies a peer, and the cID uniquely identifies a <br>download task belonging to a peer. One peer can initiate multiple download tasks, <br>which means that one peer corresponds to multiple cIDs.|string|
 |**pieceSize**  <br>*optional*|The size of pieces which is calculated as per the following strategy<br>1. If file's total size is less than 200MB, then the piece size is 4MB by default.<br>2. Otherwise, it equals to the smaller value between totalSize/100MB + 2 MB and 15MB.|integer (int32)|
 |**status**  <br>*optional*|The status of Dfget download process.|enum (WAITING, RUNNING, FAILED, SUCCESS)|
 |**taskId**  <br>*optional*||string|
