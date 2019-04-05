@@ -63,6 +63,9 @@ type Options struct {
 	// Port that dfdaemon will listen, default: 65001.
 	Port uint
 
+	// ProxyPort is the port used by the dfdaemon transparent proxy
+	ProxyPort uint
+
 	// Registry addr and must exist if dfdaemon is used to mirror mode,
 	// format: https://xxx.xx.x:port or http://xxx.xx.x:port.
 	Registry string
@@ -115,6 +118,7 @@ func (o *Options) AddFlags(fs *flag.FlagSet) {
 	// http server config
 	fs.StringVar(&o.HostIP, "hostIp", "127.0.0.1", "dfdaemon host ip, default: 127.0.0.1")
 	fs.UintVar(&o.Port, "port", 65001, "dfdaemon will listen the port")
+	fs.UintVar(&o.ProxyPort, "proxyPort", 65002, "the port dfdaemon proxy listens on")
 	fs.StringVar(&o.CertFile, "certpem", "", "cert.pem file path")
 	fs.StringVar(&o.KeyFile, "keypem", "", "key.pem file path")
 
