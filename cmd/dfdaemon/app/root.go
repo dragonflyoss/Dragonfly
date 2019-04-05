@@ -25,7 +25,9 @@ import (
 	"runtime"
 
 	"github.com/dragonflyoss/Dragonfly/cmd/dfdaemon/app/options"
+	g "github.com/dragonflyoss/Dragonfly/dfdaemon/global"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/initializer"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/proxy"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -49,9 +51,29 @@ func init() {
 	opt.AddFlags(rootCmd.Flags())
 }
 
+func runTransparentProxy(opt *options.Options) error {
+	tp, err := proxy.New(g.Properties.Proxies)
+	if err != nil {
+		return fmt.Errorf("failed to create transparent proxy: %v", err)
+	}
+	s := http.Server{
+		Addr:    fmt.Sprintf(":%d", opt.ProxyPort),
+		Handler: tp,
+	}
+	logrus.Infof("launch dfdaemon transparent proxy on %s:%d", opt.HostIP, opt.ProxyPort)
+	go func() {
+		logrus.Fatalf("Transparent proxy stopped: %v", s.ListenAndServe())
+	}()
+	return nil
+}
+
 // start to run dfdaemon server.
 func runDaemon() error {
 	initOption(opt)
+
+	if err := runTransparentProxy(opt); err != nil {
+		return err
+	}
 
 	logrus.Infof("start dfdaemon param: %+v", opt)
 
