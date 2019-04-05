@@ -26,6 +26,7 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/cmd/dfdaemon/app/options"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/initializer"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/proxy"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -52,6 +53,17 @@ func init() {
 // start to run dfdaemon server.
 func runDaemon() error {
 	initOption(opt)
+
+	s := http.Server{
+		Addr: ":65002",
+		Handler: proxy.New([]proxy.Rule{
+			{
+				Match: "/blobs/sha256/",
+			},
+		}),
+	}
+	fmt.Println(s.Addr)
+	go fmt.Println(s.ListenAndServe())
 
 	logrus.Infof("start dfdaemon param: %+v", opt)
 

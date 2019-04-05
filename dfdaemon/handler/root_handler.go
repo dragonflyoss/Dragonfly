@@ -38,7 +38,7 @@ func Proxy(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err = amendRequest(r); err != nil {
-		sendResponse(w, http.StatusForbidden, err.Error())
+		http.Error(w, err.Error(), http.StatusForbidden)
 		logrus.Errorf("%v", err)
 		return
 	}
@@ -47,7 +47,7 @@ func Proxy(w http.ResponseWriter, r *http.Request) {
 
 	hostIP := util.ExtractHost(r.URL.Host)
 	if reg, err = matchRegistry(hostIP, global.Properties.Registries); err != nil {
-		sendResponse(w, http.StatusForbidden, err.Error())
+		http.Error(w, err.Error(), http.StatusForbidden)
 		logrus.Warnf("%v", err)
 		return
 	}
@@ -112,9 +112,4 @@ func amendRequest(r *http.Request) error {
 		r.URL.Scheme = "http"
 	}
 	return nil
-}
-
-func sendResponse(w http.ResponseWriter, code int, resp string) {
-	w.WriteHeader(code)
-	fmt.Fprintf(w, "%s", resp)
 }

@@ -20,7 +20,6 @@ import (
 	"crypto/tls"
 	"net"
 	"net/http"
-	"os"
 	"regexp"
 	"time"
 
@@ -42,10 +41,10 @@ var (
 // It uses http.fileTransport to serve requests that need to use dfget,
 // and uses http.Transport to serve the other requests.
 type DFRoundTripper struct {
-	Round  *http.Transport
-	Round2 http.RoundTripper
-
-	Downloader downloader.Interface
+	Round          *http.Transport
+	Round2         http.RoundTripper
+	ShouldUseDfget func(req *http.Request) bool
+	Downloader     downloader.Interface
 }
 
 // NewDFRoundTripper return the default DFRoundTripper.
@@ -68,6 +67,8 @@ func NewDFRoundTripper(cfg *tls.Config) *DFRoundTripper {
 		},
 		Round2: http.NewFileTransport(http.Dir("/")),
 
+		ShouldUseDfget: needUseGetter,
+
 		Downloader: dfget.NewDFGetter(
 			global.CommandLine.DFRepo,
 			global.CommandLine.CallSystem,
@@ -82,10 +83,8 @@ func NewDFRoundTripper(cfg *tls.Config) *DFRoundTripper {
 // RoundTrip only process first redirect at present
 // fix resource release
 func (roundTripper *DFRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	urlString := req.URL.String()
-
-	if roundTripper.needUseGetter(req, urlString) {
-		if res, err := roundTripper.download(req, urlString); err == nil || !exception.IsNotAuth(err) {
+	if roundTripper.ShouldUseDfget(req) {
+		if res, err := roundTripper.download(req, req.URL.String()); err == nil || !exception.IsNotAuth(err) {
 			return res, err
 		}
 	}
@@ -98,12 +97,14 @@ func (roundTripper *DFRoundTripper) RoundTrip(req *http.Request) (*http.Response
 // download uses dfget to download
 func (roundTripper *DFRoundTripper) download(req *http.Request, urlString string) (*http.Response, error) {
 	dstPath, err := roundTripper.downloadByGetter(urlString, req.Header, uuid.New())
+	// dstPath, err := roundTripper.downloadByGetter(urlString, req.Header, urlString)
 	if err != nil {
 		logrus.Errorf("download fail: %v", err)
 		return nil, err
 	}
-	defer os.Remove(dstPath)
+	// defer os.Remove(dstPath)
 
+	logrus.Debugln(dstPath)
 	fileReq, err := http.NewRequest("GET", "file:///"+dstPath, nil)
 	if err != nil {
 		return nil, err
@@ -125,7 +126,7 @@ func (roundTripper *DFRoundTripper) downloadByGetter(url string, header map[stri
 }
 
 // needUseGetter whether to download by DFGetter
-func (roundTripper *DFRoundTripper) needUseGetter(req *http.Request, location string) bool {
+func needUseGetter(req *http.Request) bool {
 	if req.Method != http.MethodGet {
 		return false
 	}
@@ -133,8 +134,8 @@ func (roundTripper *DFRoundTripper) needUseGetter(req *http.Request, location st
 	if compiler.MatchString(req.URL.Path) {
 		return true
 	}
-	if location != "" {
-		return global.MatchDfPattern(location)
+	if req.URL.String() != "" {
+		return global.MatchDfPattern(req.URL.String())
 	}
 
 	return false
