@@ -30,6 +30,12 @@ public final class Constants {
     public static final int DEFAULT_SCHEDULER_CORE_POOL_SIZE = 10;
 
     //-------------------------------------------------------------------------
+    // cdn
+
+    public static final boolean DEFAULT_DISABLE_CDN = false;
+    public static final int DEFAULT_DOWNLOAD_CLIENT_NUMBER_PER_PIECE = 2;
+
+    //-------------------------------------------------------------------------
     // dfget
 
     public static final String DFGET_PATH = "/usr/local/bin/dfget";

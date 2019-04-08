@@ -79,6 +79,24 @@ public class SupernodeProperties {
      */
     private String advertiseIp;
 
+    /**
+     * 	disables the cdn feature of supernode when the value is true.
+     * 	Supernode just constructs the p2p-network and schedules the data transmission
+     * 	among the peers, it doesn't download files from source file server even the
+     * 	files are not cached by supernode.
+     * 	And dfget will download files from source file server if they're not available
+     * 	on other peer nodes.
+     * 	The default value is false.
+     */
+    private boolean disableCDN = Constants.DEFAULT_DISABLE_CDN;
+
+    /**
+     * the number of clients which can download one piece from remote server when
+     * {@link SupernodeProperties#disableCDN} is true.
+     * The default value is 2(backup for each other).
+     */
+    private int downloadClientNumberPerPiece = Constants.DEFAULT_DOWNLOAD_CLIENT_NUMBER_PER_PIECE;
+
     @PostConstruct
     public void init() {
         String cdnHome = baseHome + "/repo";

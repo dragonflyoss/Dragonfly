@@ -17,8 +17,8 @@ You have started your Docker container.
 
     **Note:** Choose one of the images we provide according to your geo-location, and replace `${imageName}` with it:
 
-    - China: `registry.cn-hangzhou.aliyuncs.com/alidragonfly/supernode:0.2.0`
-    - US: `registry.us-west-1.aliyuncs.com/alidragonfly/supernode:0.2.0`
+    - China: `registry.cn-hangzhou.aliyuncs.com/alidragonfly/supernode:0.3.0`
+    - US: `registry.us-west-1.aliyuncs.com/alidragonfly/supernode:0.3.0`
 
 2. Start a SuperNode.
 
@@ -32,9 +32,9 @@ You have started your Docker container.
 For example, if you're in China, run the following commands:
 
 ```bash
-docker pull registry.cn-hangzhou.aliyuncs.com/alidragonfly/supernode:0.2.0
+docker pull registry.cn-hangzhou.aliyuncs.com/alidragonfly/supernode:0.3.0
 
-docker run -d -p 8001:8001 -p 8002:8002 registry.cn-hangzhou.aliyuncs.com/alidragonfly/supernode:0.2.0
+docker run -d -p 8001:8001 -p 8002:8002 registry.cn-hangzhou.aliyuncs.com/alidragonfly/supernode:0.3.0
 ```
 
 ## Step 2: Installing Dragonfly Client
@@ -55,15 +55,15 @@ You have two options of installing Dragonfly client: installing from source code
 
     - If you're in China:
 
-        - [Linux 64-bit](http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_linux_amd64.tar.gz): `http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_linux_amd64.tar.gz`
+        - [Linux 64-bit](http://dragonflyoss.oss-cn-hangzhou.aliyuncs.com/df-client_0.3.0_linux_amd64.tar.gz): `http://dragonflyoss.oss-cn-hangzhou.aliyuncs.com/df-client_0.3.0_linux_amd64.tar.gz`
 
-        - [MacOS 64-bit](http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_darwin_amd64.tar.gz): `http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_darwin_amd64.tar.gz`
+        - [MacOS 64-bit](http://dragonflyoss.oss-cn-hangzhou.aliyuncs.com/df-client_0.3.0_darwin_amd64.tar.gz): `http://dragonflyoss.oss-cn-hangzhou.aliyuncs.com/df-client_0.3.0_darwin_amd64.tar.gz`
 
     - If you're not in China:
 
-        - [Linux 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_linux_amd64.tar.gz`
+        - [Linux 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.3.0/df-client_0.3.0_linux_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.3.0/df-client_0.3.0_linux_amd64.tar.gz`
 
-        - [MacOS 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_darwin_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.2.0/df-client_0.2.0_darwin_amd64.tar.gz`
+        - [MacOS 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.3.0/df-client_0.3.0_darwin_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.3.0/df-client_0.3.0_darwin_amd64.tar.gz`
 
 2. Unzip the package.
 
@@ -83,8 +83,8 @@ For example, if you're in China and using Linux, run the following commands:
 
 ```bash
 cd $HOME
-wget http://dragonfly-os.oss-cn-beijing.aliyuncs.com/df-client_0.2.0_linux_amd64.tar.gz
-tar -zxf df-client_0.2.0_linux_amd64.tar.gz
+wget http://dragonflyoss.oss-cn-hangzhou.aliyuncs.com/df-client_0.3.0_linux_amd64.tar.gz
+tar -zxf df-client_0.3.0_linux_amd64.tar.gz
 # execute or add this line to ~/.bashrc
 export PATH=$PATH:$HOME/df-client/
 ```

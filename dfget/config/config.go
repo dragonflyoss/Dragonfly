@@ -70,6 +70,16 @@ type Properties struct {
 	// It is only useful when the Pattern equals "source".
 	// The default value is 6.
 	ClientQueueSize int `yaml:"clientQueueSize"`
+
+	// DisableCDN disables the cdn feature of supernode when the value is true.
+	// Supernode just constructs the p2p-network and schedules the data transmission
+	// among the peers, it doesn't download files from source file server even the
+	// files are not cached by supernode.
+	// And dfget will download files from source file server if they're not available
+	// on other peer nodes.
+	// It is only useful when the Pattern is "p2p".
+	// The default value is false.
+	DisableCDN bool `yaml:"disableCDN"`
 }
 
 // NewProperties create a new properties with default values.
@@ -78,6 +88,7 @@ func NewProperties() *Properties {
 		Nodes:           []string{DefaultNode},
 		LocalLimit:      DefaultLocalLimit,
 		ClientQueueSize: DefaultClientQueueSize,
+		DisableCDN:      DefaultDisableCDN,
 	}
 }
 
@@ -171,6 +182,9 @@ type Config struct {
 	// Pattern download pattern, must be 'p2p' or 'cdn' or 'source',
 	// default:`p2p`.
 	Pattern string `json:"pattern,omitempty"`
+
+	// DisableCDN disable the cdn feature of supernode.
+	DisableCDN bool `json:"disableCDN,omitempty"`
 
 	// Filter filter some query params of url, use char '&' to separate different params.
 	// eg: -f 'key&sign' will filter 'key' and 'sign' query param.
