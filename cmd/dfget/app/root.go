@@ -134,6 +134,10 @@ func initProperties() {
 	if cfg.ClientQueueSize == 0 {
 		cfg.ClientQueueSize = properties.ClientQueueSize
 	}
+
+	if !util.ContainsString(os.Args, "--disablecdn") {
+		cfg.DisableCDN = properties.DisableCDN
+	}
 }
 
 // transParams trans the user-friendly parameter formats
@@ -193,10 +197,13 @@ func initFlags() {
 	flagSet.StringVarP(&cfg.Identifier, "identifier", "i", "",
 		"The usage of identifier is making different downloading tasks generate different downloading task IDs even if they have the same URLs. conflict with --md5.")
 
-	flagSet.StringVar(&cfg.CallSystem, "callsystem", "",
-		"The name of dfget caller which is for debugging. Once set, it will be passed to all components around the request to make debugging easy")
 	flagSet.StringVarP(&cfg.Pattern, "pattern", "p", "p2p",
 		"download pattern, must be p2p/cdn/source, cdn and source do not support flag --totallimit")
+	flagSet.BoolVar(&cfg.DisableCDN, "disablecdn", config.DefaultDisableCDN,
+		"disable cdn feature of supernode, dfget will download pieces from remote server if they're not available on other peers")
+
+	flagSet.StringVar(&cfg.CallSystem, "callsystem", "",
+		"The name of dfget caller which is for debugging. Once set, it will be passed to all components around the request to make debugging easy")
 	flagSet.StringVarP(&filter, "filter", "f", "",
 		"filter some query params of URL, use char '&' to separate different params"+
 			"\neg: -f 'key&sign' will filter 'key' and 'sign' query param"+

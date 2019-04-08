@@ -85,6 +85,7 @@ const (
 	DefaultNode            = "127.0.0.1"
 	DefaultLocalLimit      = 20 * 1024 * 1024
 	DefaultClientQueueSize = 6
+	DefaultDisableCDN      = false
 )
 
 /* http headers */
