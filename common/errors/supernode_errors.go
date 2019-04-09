@@ -20,9 +20,25 @@ package errors
 var (
 	// ErrSystemError represents the error is a system error..
 	ErrSystemError = DfError{codeSystemError, "system error"}
+
+	// ErrCDNFail represents the cdn status is fail.
+	ErrCDNFail = DfError{codeCDNFail, "cdn status is fail"}
+
+	// ErrCDNWait represents the cdn status is wait.
+	ErrCDNWait = DfError{codeCDNWait, "cdn status is wait"}
 )
 
 // IsSystemError check the error is a system error or not.
 func IsSystemError(err error) bool {
 	return checkError(err, codeSystemError)
+}
+
+// IsCDNFail check the error is CDNFail or not.
+func IsCDNFail(err error) bool {
+	return checkError(err, codeCDNFail)
+}
+
+// IsCDNWait check the error is CDNWait or not.
+func IsCDNWait(err error) bool {
+	return checkError(err, codeCDNWait)
 }

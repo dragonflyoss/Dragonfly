@@ -19,4 +19,27 @@ package config
 const (
 	// DefaultSupernodeConfigFilePath the default supernode config path.
 	DefaultSupernodeConfigFilePath = "/etc/dragonfly/supernode.yml"
+
+	// SuperNodeCIdPrefix is a string as the prefix of the supernode.
+	SuperNodeCIdPrefix = "cdnnode:"
+)
+
+// PieceStatus code
+const (
+	PieceSEMISUC = -3
+	PieceWAITING = -1
+	PieceRUNNING = 0
+	PieceSUCCESS = 1
+	PieceFAILED  = 2
+)
+
+const (
+	// FailCountLimit indicates the limit of fail count as a client.
+	FailCountLimit = 5
+
+	// EliminationLimit indicates limit of fail count as a server.
+	EliminationLimit = 5
+
+	// PeerUpLimit indicates the limit of the load count as a server.
+	PeerUpLimit = 5
 )

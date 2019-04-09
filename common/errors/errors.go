@@ -53,6 +53,8 @@ const (
 
 	// supernode
 	codeSystemError
+	codeCDNFail
+	codeCDNWait
 )
 
 // DfError represents a Dragonfly error.
