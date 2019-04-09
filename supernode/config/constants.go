@@ -42,4 +42,7 @@ const (
 
 	// PeerUpLimit indicates the limit of the load count as a server.
 	PeerUpLimit = 5
+
+	// PeerDownLimit indicates the limit of the download task count as a client.
+	PeerDownLimit = 4
 )
