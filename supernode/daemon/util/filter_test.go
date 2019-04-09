@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package mgr
+package util
 
 import (
 	"net/http"
@@ -47,10 +47,10 @@ func (f *FilterTestSuite) TestParseFilter(c *check.C) {
 				},
 			},
 			excepted: &PageFilter{
-				pageNum:    1,
-				pageSize:   10,
-				sortDirect: "ASC",
-				sortKey:    []string{"aaa"},
+				PageNum:    1,
+				PageSize:   10,
+				SortDirect: "ASC",
+				SortKey:    []string{"aaa"},
 			},
 			errNil: true,
 		},
@@ -128,7 +128,7 @@ func (f *FilterTestSuite) TestIsDESC(c *check.C) {
 	}
 
 	for _, v := range cases {
-		result := isDESC(v.str)
+		result := IsDESC(v.str)
 		c.Check(result, check.Equals, v.excepted)
 	}
 }
