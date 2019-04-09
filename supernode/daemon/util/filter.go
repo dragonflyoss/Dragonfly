@@ -1,4 +1,4 @@
-package mgr
+package util
 
 import (
 	"net/http"
@@ -43,10 +43,10 @@ var sortDirectMap = map[string]bool{
 
 // PageFilter is a struct.
 type PageFilter struct {
-	pageNum    int
-	pageSize   int
-	sortKey    []string
-	sortDirect string
+	PageNum    int
+	PageSize   int
+	SortKey    []string
+	SortDirect string
 }
 
 // ParseFilter gets filter params from request and returns a map[string][]string.
@@ -59,28 +59,28 @@ func ParseFilter(req *http.Request, sortKeyMap map[string]bool) (pageFilter *Pag
 	if err != nil {
 		return nil, errors.Wrapf(errorType.ErrInvalidValue, "pageNum %s is not a number: %v", pageNum, err)
 	}
-	pageFilter.pageNum = pageNum
+	pageFilter.PageNum = pageNum
 
 	// pageSize
 	pageSize, err := stoi(v.Get(PAGESIZE))
 	if err != nil {
 		return nil, errors.Wrapf(errorType.ErrInvalidValue, "pageSize %s is not a number: %v", pageSize, err)
 	}
-	pageFilter.pageSize = pageSize
+	pageFilter.PageSize = pageSize
 
 	// sortDirect
 	sortDirect := v.Get(SORTDIRECT)
 	if sortDirect == "" {
 		sortDirect = ASCDIRECT
 	}
-	pageFilter.sortDirect = sortDirect
+	pageFilter.SortDirect = sortDirect
 
 	// sortKey
 	if sortKey, ok := v[SORTKEY]; ok {
-		pageFilter.sortKey = sortKey
+		pageFilter.SortKey = sortKey
 	}
 
-	err = validateFilter(pageFilter, sortKeyMap)
+	err = ValidateFilter(pageFilter, sortKeyMap)
 	if err != nil {
 		return nil, err
 	}
@@ -100,27 +100,29 @@ func stoi(str string) (int, error) {
 	return result, nil
 }
 
-func validateFilter(pageFilter *PageFilter, sortKeyMap map[string]bool) error {
+// ValidateFilter validates the param of filter.
+// The caller should  customize the sortKeyMap which specifies the sort keys it supports.
+func ValidateFilter(pageFilter *PageFilter, sortKeyMap map[string]bool) error {
 	// pageNum
-	if pageFilter.pageNum < 0 {
-		return errors.Wrapf(errorType.ErrInvalidValue, "pageNum %s is not a natural number: %v", pageFilter.pageNum)
+	if pageFilter.PageNum < 0 {
+		return errors.Wrapf(errorType.ErrInvalidValue, "pageNum %s is not a natural number: %v", pageFilter.PageNum)
 	}
 
 	// pageSize
-	if pageFilter.pageSize < 0 {
-		return errors.Wrapf(errorType.ErrInvalidValue, "pageSize %s is not a natural number: %v", pageFilter.pageSize)
+	if pageFilter.PageSize < 0 {
+		return errors.Wrapf(errorType.ErrInvalidValue, "pageSize %s is not a natural number: %v", pageFilter.PageSize)
 	}
 
 	// sortDirect
-	if _, ok := sortDirectMap[strings.ToUpper(pageFilter.sortDirect)]; !ok {
-		return errors.Wrapf(errorType.ErrInvalidValue, "unexpected sortDirect %s", pageFilter.sortDirect)
+	if _, ok := sortDirectMap[strings.ToUpper(pageFilter.SortDirect)]; !ok {
+		return errors.Wrapf(errorType.ErrInvalidValue, "unexpected sortDirect %s", pageFilter.SortDirect)
 	}
 
 	// sortKey
-	if len(pageFilter.sortKey) == 0 || sortKeyMap == nil {
+	if len(pageFilter.SortKey) == 0 || sortKeyMap == nil {
 		return nil
 	}
-	for _, value := range pageFilter.sortKey {
+	for _, value := range pageFilter.SortKey {
 		if v, ok := sortKeyMap[value]; !ok || !v {
 			return errors.Wrapf(errorType.ErrInvalidValue, "unexpected sortKey %s", value)
 		}
@@ -129,7 +131,7 @@ func validateFilter(pageFilter *PageFilter, sortKeyMap map[string]bool) error {
 	return nil
 }
 
-// getPageValues get some pages of metaSlice after ordering it.
+// GetPageValues gets some pages of metaSlice after ordering it.
 // The less is a function that reports whether the element with
 // index i should sort before the element with index j.
 //
@@ -147,7 +149,7 @@ func validateFilter(pageFilter *PageFilter, sortKeyMap map[string]bool) error {
 // If you want to sort it by age, and the less function should be defined as follows:
 //
 // less := func(i, j int) bool { return people[i].Age < people[j].Age }
-func getPageValues(metaSlice []interface{}, pageNum, pageSize int,
+func GetPageValues(metaSlice []interface{}, pageNum, pageSize int,
 	less func(i, j int) bool) []interface{} {
 
 	if metaSlice == nil {
@@ -177,7 +179,7 @@ func getPageValues(metaSlice []interface{}, pageNum, pageSize int,
 	return metaSlice[start:end]
 }
 
-// isDESC returns whether the sortDirect is desc.
-func isDESC(str string) bool {
+// IsDESC returns whether the sortDirect is desc.
+func IsDESC(str string) bool {
 	return strings.ToUpper(str) == DESCDIRECT
 }

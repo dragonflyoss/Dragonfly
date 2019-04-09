@@ -14,16 +14,21 @@
  * limitations under the License.
  */
 
-package mgr
+package dfgettask
 
 import (
 	"context"
+	"testing"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/common/errors"
 
 	"github.com/go-check/check"
 )
+
+func Test(t *testing.T) {
+	check.TestingT(t)
+}
 
 func init() {
 	check.Suite(&DfgetTaskMgrTestSuite{})
@@ -33,7 +38,7 @@ type DfgetTaskMgrTestSuite struct {
 }
 
 func (s *DfgetTaskMgrTestSuite) TestDfgetTaskMgr(c *check.C) {
-	dfgetTaskManager, _ := NewDfgetTaskManager()
+	dfgetTaskManager, _ := NewManager()
 	clientID := "foo"
 	taskID := "00c4e7b174af7ed61c414b36ef82810ac0c98142c03e5748c00e1d1113f3c882"
 
