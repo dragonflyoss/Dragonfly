@@ -55,6 +55,7 @@ const (
 	codeSystemError
 	codeCDNFail
 	codeCDNWait
+	codePeerWait
 )
 
 // DfError represents a Dragonfly error.
