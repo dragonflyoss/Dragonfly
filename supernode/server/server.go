@@ -8,6 +8,7 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
+	peer "github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/peer"
 
 	"github.com/sirupsen/logrus"
 )
@@ -20,7 +21,7 @@ type Server struct {
 
 // New creates a brand new server instance.
 func New(cfg *config.Config) (*Server, error) {
-	peerMgr, err := mgr.NewPeerManager()
+	peerMgr, err := peer.NewManager()
 	if err != nil {
 		return nil, err
 	}

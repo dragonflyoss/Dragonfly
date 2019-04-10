@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package mgr
+package util
 
 import (
 	"testing"
@@ -61,7 +61,7 @@ func (s *StoreTestSuite) TestStore(c *check.C) {
 	}
 
 	result := store.List()
-	pageResult := getPageValues(result, 0, 0, func(i, j int) bool {
+	pageResult := GetPageValues(result, 0, 0, func(i, j int) bool {
 		tempA := result[i].(SortStruct)
 		tempB := result[j].(SortStruct)
 		return tempA.intField < tempB.intField
@@ -72,7 +72,7 @@ func (s *StoreTestSuite) TestStore(c *check.C) {
 		SortStruct{3, "a"},
 	})
 
-	pageResult = getPageValues(result, 0, 0, func(i, j int) bool {
+	pageResult = GetPageValues(result, 0, 0, func(i, j int) bool {
 		tempA := result[i].(SortStruct)
 		tempB := result[j].(SortStruct)
 		return tempA.stringField < tempB.stringField
@@ -83,7 +83,7 @@ func (s *StoreTestSuite) TestStore(c *check.C) {
 		SortStruct{1, "c"},
 	})
 
-	pageResult = getPageValues(result, 0, 2, func(i, j int) bool {
+	pageResult = GetPageValues(result, 0, 2, func(i, j int) bool {
 		tempA := result[i].(SortStruct)
 		tempB := result[j].(SortStruct)
 		return tempA.intField < tempB.intField
@@ -93,7 +93,7 @@ func (s *StoreTestSuite) TestStore(c *check.C) {
 		SortStruct{2, "b"},
 	})
 
-	pageResult = getPageValues(result, 1, 2, func(i, j int) bool {
+	pageResult = GetPageValues(result, 1, 2, func(i, j int) bool {
 		tempA := result[i].(SortStruct)
 		tempB := result[j].(SortStruct)
 		return tempA.intField < tempB.intField
