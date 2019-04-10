@@ -17,17 +17,12 @@
 package progress
 
 import (
-	"testing"
-
+	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 
 	"github.com/go-check/check"
 	"github.com/willf/bitset"
 )
-
-func Test(t *testing.T) {
-	check.TestingT(t)
-}
 
 func init() {
 	check.Suite(&ProgressUtilTestSuite{})
@@ -53,7 +48,7 @@ func (s *ProgressUtilTestSuite) TestUpdatePieceBitset(c *check.C) {
 			pieceBitSet: bitset.New(8),
 
 			updateResult:   true,
-			expectedBitSet: bitset.New(8).SetTo(1, true),
+			expectedBitSet: bitset.New(8).Set(1),
 		},
 		{
 			desc:        "update piece status to PieceSEMISUC",
@@ -62,13 +57,13 @@ func (s *ProgressUtilTestSuite) TestUpdatePieceBitset(c *check.C) {
 			pieceBitSet: bitset.New(16),
 
 			updateResult:   true,
-			expectedBitSet: bitset.New(16).SetTo(9, true),
+			expectedBitSet: bitset.New(16).Set(9),
 		},
 		{
 			desc:        "update piece status to PieceWAITING",
 			pieceNum:    1,
 			pieceStatus: config.PieceWAITING,
-			pieceBitSet: bitset.New(16).SetTo(8, true),
+			pieceBitSet: bitset.New(16).Set(8),
 
 			updateResult:   true,
 			expectedBitSet: bitset.New(16),
@@ -78,10 +73,10 @@ func (s *ProgressUtilTestSuite) TestUpdatePieceBitset(c *check.C) {
 		    and the result should be false`,
 			pieceNum:    1,
 			pieceStatus: config.PieceFAILED,
-			pieceBitSet: bitset.New(16).SetTo(9, true),
+			pieceBitSet: bitset.New(16).Set(9),
 
 			updateResult:   false,
-			expectedBitSet: bitset.New(16).SetTo(9, true),
+			expectedBitSet: bitset.New(16).Set(9),
 		},
 	}
 
@@ -90,4 +85,26 @@ func (s *ProgressUtilTestSuite) TestUpdatePieceBitset(c *check.C) {
 		c.Check(result, check.Equals, v.updateResult)
 		c.Check(v.pieceBitSet, check.DeepEquals, v.expectedBitSet)
 	}
+}
+
+func (s *ProgressUtilTestSuite) TestUpdateBlackInfo(c *check.C) {
+	pm, _ := NewManager()
+
+	updateAndCheckBlackInfo(pm, "src0", "dst0", 1, c)
+
+	updateAndCheckBlackInfo(pm, "src0", "dst0", 2, c)
+
+	updateAndCheckBlackInfo(pm, "src0", "dst1", 1, c)
+
+	updateAndCheckBlackInfo(pm, "src1", "dst1", 1, c)
+}
+
+func updateAndCheckBlackInfo(pm *Manager, srcPID, dstPID string, expected int32, c *check.C) {
+	err := pm.updateBlackInfo(srcPID, dstPID)
+	c.Check(err, check.IsNil)
+	dstPIDMap, err := pm.clientBlackInfo.GetAsMap(srcPID)
+	c.Check(err, check.IsNil)
+	count, err := dstPIDMap.GetAsAtomicInt(dstPID)
+	c.Check(err, check.IsNil)
+	c.Check(count.Get(), check.Equals, cutil.NewAtomicInt(expected).Get())
 }
