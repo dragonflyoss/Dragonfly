@@ -7,7 +7,7 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	errTypes "github.com/dragonflyoss/Dragonfly/common/errors"
-	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
+	dutil "github.com/dragonflyoss/Dragonfly/supernode/daemon/util"
 
 	"github.com/go-openapi/strfmt"
 	"github.com/gorilla/mux"
@@ -57,7 +57,7 @@ func (s *Server) getPeer(ctx context.Context, rw http.ResponseWriter, req *http.
 
 // TODO: parse filter
 func (s *Server) listPeers(ctx context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
-	filter, err := mgr.ParseFilter(req, nil)
+	filter, err := dutil.ParseFilter(req, nil)
 	if err != nil {
 		return err
 	}

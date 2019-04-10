@@ -1,4 +1,4 @@
-package mgr
+package util
 
 import (
 	"sync"
