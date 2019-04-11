@@ -55,7 +55,7 @@ func (tc *testCase) Test(t *testing.T) {
 		if !a.Nil(err) {
 			continue
 		}
-		if !a.Equal(tp.ShouldUseDfget(req), !item.Direct) {
+		if !a.Equal(tp.shouldUseDfget(req), !item.Direct) {
 			fmt.Println(item.URL)
 		}
 		if item.UseHTTPS {

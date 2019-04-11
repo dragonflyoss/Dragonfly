@@ -203,6 +203,7 @@ type Proxy struct {
 	match *regexp.Regexp
 }
 
+// NewProxy returns a new proxy rule with given attributes
 func NewProxy(regx string, useHTTPS bool, direct bool) (*Proxy, error) {
 	p := &Proxy{
 		Regx:     regx,
@@ -220,6 +221,7 @@ func (r *Proxy) init() (err error) {
 	return err
 }
 
+// Match checks if the given url matches the rule
 func (r *Proxy) Match(url string) bool {
 	return r.match != nil && r.match.MatchString(url)
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/handler"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -21,6 +22,8 @@ func New(rules []*config.Proxy) (*TransparentProxy, error) {
 	return proxy, nil
 }
 
+// TransparentProxy is an http proxy handler. It proxies requests with dfget
+// if any defined proxy rules is matched
 type TransparentProxy struct {
 	rules []*config.Proxy
 }
@@ -34,7 +37,7 @@ func (proxy *TransparentProxy) SetRules(rules []*config.Proxy) error {
 // ServeHTTP implements http.Handler.ServeHTTP
 func (proxy *TransparentProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodConnect {
-		HandleHTTPS(w, r)
+		handleHTTPS(w, r)
 	} else {
 		proxy.handleHTTP(w, r)
 	}
@@ -42,7 +45,7 @@ func (proxy *TransparentProxy) ServeHTTP(w http.ResponseWriter, r *http.Request)
 
 func (proxy *TransparentProxy) handleHTTP(w http.ResponseWriter, req *http.Request) {
 	rt := handler.NewDFRoundTripper(nil)
-	rt.ShouldUseDfget = proxy.ShouldUseDfget
+	rt.ShouldUseDfget = proxy.shouldUseDfget
 	// delete the Accept-Encoding header to avoid returning the same cached
 	// result for different requests
 	req.Header.Del("Accept-Encoding")
@@ -57,10 +60,10 @@ func (proxy *TransparentProxy) handleHTTP(w http.ResponseWriter, req *http.Reque
 	io.Copy(w, resp.Body)
 }
 
-// ShouldUseDfget returns whether we should use dfget to proxy a request. It
+// shouldUseDfget returns whether we should use dfget to proxy a request. It
 // also change the scheme of the given request if the matched rule has
 // UseHTTPS = true
-func (proxy *TransparentProxy) ShouldUseDfget(req *http.Request) bool {
+func (proxy *TransparentProxy) shouldUseDfget(req *http.Request) bool {
 	if req.Method != http.MethodGet {
 		return false
 	}
@@ -76,9 +79,9 @@ func (proxy *TransparentProxy) ShouldUseDfget(req *http.Request) bool {
 	return false
 }
 
-// HandleHTTPS handles a CONNECT request and proxy an https request through an
+// handleHTTPS handles a CONNECT request and proxy an https request through an
 // http tunnel.
-func HandleHTTPS(w http.ResponseWriter, r *http.Request) {
+func handleHTTPS(w http.ResponseWriter, r *http.Request) {
 	logrus.Debugf("Tunneling https request %s", r.URL.String())
 	dst, err := net.DialTimeout("tcp", r.Host, 10*time.Second)
 	if err != nil {
@@ -91,13 +94,13 @@ func HandleHTTPS(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Hijacking not supported", http.StatusInternalServerError)
 		return
 	}
-	client_conn, _, err := hijacker.Hijack()
+	clientConn, _, err := hijacker.Hijack()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 	}
 
-	go copyAndClose(dst, client_conn)
-	go copyAndClose(client_conn, dst)
+	go copyAndClose(dst, clientConn)
+	go copyAndClose(clientConn, dst)
 }
 
 func copyAndClose(dst io.WriteCloser, src io.ReadCloser) {

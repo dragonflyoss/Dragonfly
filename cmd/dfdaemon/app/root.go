@@ -61,7 +61,9 @@ func runTransparentProxy(opt *options.Options) error {
 		Handler: tp,
 	}
 	logrus.Infof("launch dfdaemon transparent proxy on %s:%d", opt.HostIP, opt.ProxyPort)
-	go logrus.Fatalf("Transparent proxy stopped: %v", s.ListenAndServe())
+	go func() {
+		logrus.Fatalf("Transparent proxy stopped: %v", s.ListenAndServe())
+	}()
 	return nil
 }
 
