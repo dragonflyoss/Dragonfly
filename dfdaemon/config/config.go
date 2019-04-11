@@ -49,11 +49,25 @@ func NewProperties() *Properties {
 //           schema: https
 //           host: reg.com
 //           certs: ['/etc/ssl/reg.com/server.crt']
+//     proxies:
+//     # proxy all http image layer download requests with dfget
+//     - regx: blob/sha256/.*
+//     # change http requests to some-registry to https and proxy them with dfget
+//     - regx: some-registry/
+//       use_https: true
+//     # proxy requests directly, without dfget
+//     - regx: no-proxy-reg
+//       direct: true
 type Properties struct {
 	// Registries the more front the position, the higher priority.
 	// You could add an empty Registry at the end to proxy all other requests
 	// with those origin schema and host.
 	Registries []*Registry `yaml:"registries"`
+	// Proxies is the list of rules for the transparent proxy. If no rules
+	// are provided, all requests will be proxied directly. Currently
+	// a request must go through all the rules to determine whether it
+	// should be proxied with dfget.
+	Proxies []*Proxy `yaml:"proxies"`
 }
 
 // Load loads properties from config file.
@@ -61,6 +75,7 @@ func (p *Properties) Load(path string) error {
 	if err := util.LoadYaml(path, p); err != nil {
 		return err
 	}
+
 	var tmp []*Registry
 	for _, v := range p.Registries {
 		if v != nil {
@@ -71,6 +86,18 @@ func (p *Properties) Load(path string) error {
 		}
 	}
 	p.Registries = tmp
+
+	var tmpProxies []*Proxy
+	for _, v := range p.Proxies {
+		if v != nil {
+			if err := v.init(); err != nil {
+				return err
+			}
+			tmpProxies = append(tmpProxies, v)
+		}
+	}
+	p.Proxies = tmpProxies
+
 	return nil
 }
 
@@ -166,4 +193,22 @@ func (r *Registry) initTLSConfig() error {
 	}
 	r.tlsConfig = &tls.Config{RootCAs: roots}
 	return nil
+}
+
+// Proxy describe a regular expression matching rule for how to proxy a request
+type Proxy struct {
+	Regx     string `yaml:"regx"`
+	UseHTTPS bool   `yaml:"use_https"`
+	Direct   bool   `yaml:"direct"`
+
+	match *regexp.Regexp
+}
+
+func (r *Proxy) init() (err error) {
+	r.match, err = regexp.Compile(r.Regx)
+	return err
+}
+
+func (r *Proxy) Match(url string) bool {
+	return r.match != nil && r.match.MatchString(url)
 }

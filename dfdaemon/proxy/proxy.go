@@ -5,51 +5,36 @@ import (
 	"io"
 	"net"
 	"net/http"
-	"regexp"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/handler"
 	"github.com/sirupsen/logrus"
 )
 
-func New(rules []Rule) *TransparentProxy {
+// New returns a new transparent proxy with the given rules
+func New(rules []*config.Proxy) (*TransparentProxy, error) {
 	proxy := &TransparentProxy{}
-	proxy.SetRules(rules)
-	return proxy
-}
-
-type Rule struct {
-	Match    string
-	match    *regexp.Regexp
-	UseHTTPS bool
-	Direct   bool
+	if err := proxy.SetRules(rules); err != nil {
+		return nil, fmt.Errorf("invalid rules: %v", err)
+	}
+	return proxy, nil
 }
 
 type TransparentProxy struct {
-	rules []Rule
+	rules []*config.Proxy
 }
 
-func (proxy *TransparentProxy) SetRules(rules []Rule) error {
-	compiled := []Rule{}
-	for i, r := range rules {
-		reg, err := regexp.Compile(r.Match)
-		if err != nil {
-			return fmt.Errorf("rule %d is invalid: %s", i, err.Error())
-		}
-		compiled = append(compiled, Rule{
-			Match:    r.Match,
-			match:    reg,
-			UseHTTPS: r.UseHTTPS,
-			Direct:   r.Direct,
-		})
-	}
-	proxy.rules = compiled
+// SetRules change the rule lists of the proxy to the given rules
+func (proxy *TransparentProxy) SetRules(rules []*config.Proxy) error {
+	proxy.rules = rules
 	return nil
 }
 
+// ServeHTTP implements http.Handler.ServeHTTP
 func (proxy *TransparentProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodConnect {
-		handleHTTPS(w, r)
+		HandleHTTPS(w, r)
 	} else {
 		proxy.handleHTTP(w, r)
 	}
@@ -75,6 +60,7 @@ func (proxy *TransparentProxy) handleHTTP(w http.ResponseWriter, req *http.Reque
 	io.Copy(w, resp.Body)
 }
 
+// ShouldUseDfget returns whether we should use dfget to proxy a request
 func (proxy *TransparentProxy) ShouldUseDfget(req *http.Request) bool {
 	if req.Method != http.MethodGet {
 		return false
@@ -82,7 +68,7 @@ func (proxy *TransparentProxy) ShouldUseDfget(req *http.Request) bool {
 
 	useDfget := false
 	for _, rule := range proxy.rules {
-		if rule.match.MatchString(req.URL.String()) {
+		if rule.Match(req.URL.String()) {
 			if rule.Direct {
 				return false
 			}
@@ -95,7 +81,9 @@ func (proxy *TransparentProxy) ShouldUseDfget(req *http.Request) bool {
 	return useDfget
 }
 
-func handleHTTPS(w http.ResponseWriter, r *http.Request) {
+// HandleHTTPS handles a CONNECT request and proxy an https request through an
+// http tunnel.
+func HandleHTTPS(w http.ResponseWriter, r *http.Request) {
 	logrus.Debugf("Tunneling https request %s", r.URL.String())
 	dst, err := net.DialTimeout("tcp", r.Host, 10*time.Second)
 	if err != nil {
