@@ -20,6 +20,7 @@ import (
 	"crypto/tls"
 	"net"
 	"net/http"
+	"os"
 	"regexp"
 	"time"
 
@@ -99,14 +100,12 @@ func (roundTripper *DFRoundTripper) RoundTrip(req *http.Request) (*http.Response
 // download uses dfget to download
 func (roundTripper *DFRoundTripper) download(req *http.Request, urlString string) (*http.Response, error) {
 	dstPath, err := roundTripper.downloadByGetter(urlString, req.Header, uuid.New())
-	// dstPath, err := roundTripper.downloadByGetter(urlString, req.Header, urlString)
 	if err != nil {
 		logrus.Errorf("download fail: %v", err)
 		return nil, err
 	}
-	// defer os.Remove(dstPath)
+	defer os.Remove(dstPath)
 
-	logrus.Debugln(dstPath)
 	fileReq, err := http.NewRequest("GET", "file:///"+dstPath, nil)
 	if err != nil {
 		return nil, err
