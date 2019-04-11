@@ -315,7 +315,7 @@ type RuntimeVariable struct {
 	SystemDataDir string
 
 	// DataDir specify a directory to store temporary files.
-	// For now, the value of `DataDir` always euqals `SystemDataDir`,
+	// For now, the value of `DataDir` always equals `SystemDataDir`,
 	// and there is no difference between them.
 	// TODO: If there is insufficient disk space, we should set it to the `TargetDir`.
 	DataDir string
