@@ -58,7 +58,7 @@ type ClientWriter struct {
 	// If that, the value is true. And vice versa.
 	// We judge this by trying to make a hard link.
 	acrossWrite bool
-	// p2pPattern records whether the pattern euqals "p2p".
+	// p2pPattern records whether the pattern equals "p2p".
 	p2pPattern bool
 
 	// targetQueue maintains a queue of tasks that need to be written to target path.
