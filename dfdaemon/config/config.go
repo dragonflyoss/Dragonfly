@@ -64,9 +64,8 @@ type Properties struct {
 	// with those origin schema and host.
 	Registries []*Registry `yaml:"registries"`
 	// Proxies is the list of rules for the transparent proxy. If no rules
-	// are provided, all requests will be proxied directly. Currently
-	// a request must go through all the rules to determine whether it
-	// should be proxied with dfget.
+	// are provided, all requests will be proxied directly. Request will be
+	// proxied with the first matching rule.
 	Proxies []*Proxy `yaml:"proxies"`
 }
 
@@ -202,6 +201,18 @@ type Proxy struct {
 	Direct   bool   `yaml:"direct"`
 
 	match *regexp.Regexp
+}
+
+func NewProxy(regx string, useHTTPS bool, direct bool) (*Proxy, error) {
+	p := &Proxy{
+		Regx:     regx,
+		UseHTTPS: useHTTPS,
+		Direct:   direct,
+	}
+	if err := p.init(); err != nil {
+		return nil, err
+	}
+	return p, nil
 }
 
 func (r *Proxy) init() (err error) {

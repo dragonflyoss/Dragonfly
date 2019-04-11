@@ -43,11 +43,8 @@ func (proxy *TransparentProxy) ServeHTTP(w http.ResponseWriter, r *http.Request)
 func (proxy *TransparentProxy) handleHTTP(w http.ResponseWriter, req *http.Request) {
 	rt := handler.NewDFRoundTripper(nil)
 	rt.ShouldUseDfget = proxy.ShouldUseDfget
-	if proxy.ShouldUseDfget(req) {
-		logrus.Debugf("Dfget proxy: %s", req.URL.String())
-	} else {
-		logrus.Debugf("Direct proxy: %s %s", req.Method, req.URL.String())
-	}
+	// delete the Accept-Encoding header to avoid returning the same cached
+	// result for different requests
 	req.Header.Del("Accept-Encoding")
 	resp, err := rt.RoundTrip(req)
 	if err != nil {
@@ -60,25 +57,23 @@ func (proxy *TransparentProxy) handleHTTP(w http.ResponseWriter, req *http.Reque
 	io.Copy(w, resp.Body)
 }
 
-// ShouldUseDfget returns whether we should use dfget to proxy a request
+// ShouldUseDfget returns whether we should use dfget to proxy a request. It
+// also change the scheme of the given request if the matched rule has
+// UseHTTPS = true
 func (proxy *TransparentProxy) ShouldUseDfget(req *http.Request) bool {
 	if req.Method != http.MethodGet {
 		return false
 	}
 
-	useDfget := false
 	for _, rule := range proxy.rules {
 		if rule.Match(req.URL.String()) {
-			if rule.Direct {
-				return false
-			}
-			useDfget = true
 			if rule.UseHTTPS {
 				req.URL.Scheme = "https"
 			}
+			return !rule.Direct
 		}
 	}
-	return useDfget
+	return false
 }
 
 // HandleHTTPS handles a CONNECT request and proxy an https request through an

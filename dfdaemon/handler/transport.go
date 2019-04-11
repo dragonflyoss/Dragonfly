@@ -84,10 +84,12 @@ func NewDFRoundTripper(cfg *tls.Config) *DFRoundTripper {
 // fix resource release
 func (roundTripper *DFRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	if roundTripper.ShouldUseDfget(req) {
+		logrus.Debugf("round trip with dfget: %s", req.URL.String())
 		if res, err := roundTripper.download(req, req.URL.String()); err == nil || !exception.IsNotAuth(err) {
 			return res, err
 		}
 	}
+	logrus.Debugf("round trip directly: %s %s", req.Method, req.URL.String())
 	req.Host = req.URL.Host
 	req.Header.Set("Host", req.Host)
 	res, err := roundTripper.Round.RoundTrip(req)
