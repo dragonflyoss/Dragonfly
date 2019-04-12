@@ -34,16 +34,16 @@ Dragonfly is an open source intelligent P2P based image and file distribution sy
 - **Intelligent**: host level speed limit, intelligent flow control due to host dection;
 - **Secure**: block transmission encrytion, HTTPS connection support.
 
-Dragonfly is now hosted by the [Cloud Native Computing Foundation](https://cncf.io) (CNCF) as a Sandbox Level Project. Originally it is born to solve all kinds of distribution at very large scales, such as application distribution, cache distribution, log distribution, image distribution and so on.
+Dragonfly is now hosted by the [Cloud Native Computing Foundation](https://cncf.io) (CNCF) as a Sandbox Level Project. Originally it was born to solve all kinds of distribution at very large scales, such as application distribution, cache distribution, log distribution, image distribution, and so on.
 
-Dragonfly is written in Java with the previous versions(< 0.3.0), and now is being refactored with Go.
+Dragonfly was written in Java with the previous versions(< 0.3.0), and now is being refactored with Go.
 
 ## Features
 
 In details, Dragonfly has the following features:
 
 - **P2P based file distribution**: Using P2P technology for file transmission, which can make full use of the bandwidth resources of each peer to improve download efficiency,  saves a lot of cross-IDC bandwidth, especially costly cross-board bandwidth
-- **Non-invasive support all kinds of container technologies**: Dragonfly can seamlessly support various containers for distributing images.
+- **Non-invasive support for all kinds of container technologies**: Dragonfly can seamlessly support various containers for distributing images.
 - **Host level speed limit**: Many downloading tools(wget/curl) only have rate limit for the current download task, but dragonfly also provides rate limit for the entire host.
 - **Passive CDN**: The CDN mechanism can avoid repetitive remote downloads.
 - **Strong consistency**: Dragonfly can guarantee that all downloaded files must be consistent even if users do not provide any check code(MD5).
@@ -61,7 +61,7 @@ For Dragonfly, no matter how many clients start the file downloading, the averag
 
 And for wget, the downloading time keeps increasing when you have more clients. As the amount of wget clients reaches 1200 (in following experiment), the file source will crash, then it can not serve any client.
 
-The following table shows the testing environment and the graph shows the comprison result.
+The following table shows the testing environment and the graph shows the comparison result.
 
 |Test Environment |Statistics|
 |--------------------|-------------------|
