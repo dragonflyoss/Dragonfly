@@ -143,36 +143,7 @@ In addition, with `HTTP_PROXY` enabled, Dragonfly only supports protocol scheme 
 
 ## Do we support HA of supernode in Dragonfly
 
-Currently no. In the later release, we will try to realise the HA of Dragonfly.
-
-In fact, you can [provide multiple supernodes for dfget](https://github.com/dragonflyoss/Dragonfly/blob/master/FAQ.md#how-to-config-multiple-supernodes-for-dfget) as an alternative. When a peer started to download a task, it will register to one of the supernode list randomly. And when the supernode suffers failure, the task being downloaded on it will automatically migrate to the other supdernodes in the supernode list.
-
-## How to config multiple supernodes for dfget
-
-There are two ways to config multiple supernodes for dfget:
-
-1. config it with config file
-
-```
-cat <<EOD > /etc/dragonfly/dfget.yml
-nodes:
-    - supernode01
-    - supernode02
-    - supernode03
-EOD
-```
-
-2. config it with cli
-
- ```
- dfget --node supernode01 --node supernode02 --node supernode03
- 
- or
- 
- dfget --node supernode01,supernode02,supernode03
- ```
- 
- NOTE: If you use dfdaemon to call dfget, you can also pass this parameter to dfget via `dfdaemon --node`.
+Currently no. Supernode in Dragonfly suffers the single node of failure. In the later release, we will try to realise the HA of Dragonfly.
 
 ## How to use Dragonfly in Kubernetes
 
