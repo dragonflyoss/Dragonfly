@@ -696,6 +696,7 @@ definitions:
           that contains a peerIP. This peerIP represents the IP of this dfget's target peer. 
       peerPort:
         type: "integer"
+        format: "int32"
         description: |
           When dfget needs to download a piece from another peer. Supernode will return a PieceInfo
           that contains a peerPort. This peerPort represents the port of this dfget's target peer's uploader.
