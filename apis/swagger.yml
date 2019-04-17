@@ -278,6 +278,13 @@ paths:
           required: true
           description:
             When dfget needs to get pieces of specific task, it must mark which peer it plays role of.
+        - name: PiecePullRequest
+          in: body
+          required: true
+          description: |
+            request body which contains the information of pieces that have been downloaded or being downloaded.
+          schema:
+            $ref: "#/definitions/PiecePullRequest"
       responses:
         200:
           description: "no error"
@@ -670,9 +677,9 @@ definitions:
     type: "object"
     description: "Peer's detailed information in supernode."
     properties:
-      cID:
+      pID:
         type: "string"
-        description: "ID of the downloading task from dfget"
+        description: "the peerID that dfget task should download from"
       pieceRange:
         type: "string"
         description: |
@@ -709,25 +716,43 @@ definitions:
     type: "object"
     description: "request used to update piece attributes."
     properties:
-      srcCid:
+      clientID:
         type: "string"
         description: |
           the downloader clientID
-      dstCid: 
+      dstPID: 
         type: "string"
         description: |
-          the uploader clientID
-      status:
+          the uploader peerID
+      pieceStatus:
         type: "string"
         description: |
-          status indicates whether the peer task is running.
+          pieceStatus indicates whether the peer task successfully download the piece. 
+        enum: ["FAILED", "SUCCESS", "INVALID", "SEMISUC"]
+
+  PiecePullRequest:
+    type: "object"
+    description: "request used to pull pieces that have not been downloaded."
+    properties:
+      dstPID: 
+        type: "string"
+        description: |
+          the uploader peerID
+      dfgetTaskStatus:
+        type: "string"
+        description: |
+          dfgetTaskStatus indicates whether the dfgetTask is running.
         enum: ["STARTED", "RUNNING", "FINISHED"]
-      result:
+      pieceResult:
         type: "string"
         description: |
-          result It indicates whether the peer task successfully download the piece. 
+          pieceResult It indicates whether the dfgetTask successfully download the piece. 
           It's only useful when `status` is `RUNNING`.
         enum: ["FAILED", "SUCCESS", "INVALID", "SEMISUC"]
+      pieceRange:
+        type: "string"
+        description: |
+          the range of specific piece in the task, example "0-45565".
 
   PreheatInfo:
     type: "object"
