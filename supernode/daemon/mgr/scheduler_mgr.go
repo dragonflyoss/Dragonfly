@@ -2,12 +2,18 @@ package mgr
 
 import (
 	"context"
-
-	"github.com/dragonflyoss/Dragonfly/apis/types"
 )
+
+// PieceResult contains the information about which piece to download from which node.
+type PieceResult struct {
+	TaskID    string
+	PieceNum  int
+	PieceSize int32
+	DstPID    string
+}
 
 // SchedulerMgr is responsible for calculating scheduling results according to certain rules.
 type SchedulerMgr interface {
-	// Schedule get scheduler result with specified taskID, clientID through some rules.
-	Schedule(ctx context.Context, taskID, clientID string) ([]*types.PieceInfo, error)
+	// Schedule gets scheduler result with specified taskID, clientID and peerID through some rules.
+	Schedule(ctx context.Context, taskID, clientID, peerID string) ([]*PieceResult, error)
 }
