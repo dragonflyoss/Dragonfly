@@ -1,0 +1,103 @@
+# github.com/PuerkitoBio/purell v0.0.0-20170829232023-f619812e3caf
+github.com/PuerkitoBio/purell
+# github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
+github.com/PuerkitoBio/urlesc
+# github.com/asaskevich/govalidator v0.0.0-20170903095215-73945b6115bf
+github.com/asaskevich/govalidator
+# github.com/cpuguy83/go-md2man v1.0.7
+github.com/cpuguy83/go-md2man/md2man
+# github.com/davecgh/go-spew v0.0.0-20180830191138-d8f796af33cc
+github.com/davecgh/go-spew/spew
+# github.com/go-check/check v0.0.0-20161208181325-20d25e280405
+github.com/go-check/check
+# github.com/go-openapi/analysis v0.0.0-20170813233457-8ed83f2ea9f0
+github.com/go-openapi/analysis
+# github.com/go-openapi/errors v0.0.0-20170426151106-03cfca65330d
+github.com/go-openapi/errors
+# github.com/go-openapi/jsonpointer v0.0.0-20170102174223-779f45308c19
+github.com/go-openapi/jsonpointer
+# github.com/go-openapi/jsonreference v0.0.0-20161105162150-36d33bfe519e
+github.com/go-openapi/jsonreference
+# github.com/go-openapi/loads v0.0.0-20170520182102-a80dea3052f0
+github.com/go-openapi/loads
+# github.com/go-openapi/runtime v0.0.0-20170901133030-bf2ff8f71507
+github.com/go-openapi/runtime
+# github.com/go-openapi/spec v0.0.0-20170811033243-3faa0055dbbf
+github.com/go-openapi/spec
+# github.com/go-openapi/strfmt v0.0.0-20171222154016-4dd3d302e100
+github.com/go-openapi/strfmt
+# github.com/go-openapi/swag v0.0.0-20170606142751-f3f9494671f9
+github.com/go-openapi/swag
+# github.com/go-openapi/validate v0.0.0-20170705144413-8a82927c942c
+github.com/go-openapi/validate
+# github.com/gorilla/context v1.1.1
+github.com/gorilla/context
+# github.com/gorilla/mux v1.5.0
+github.com/gorilla/mux
+# github.com/inconshreveable/mousetrap v1.0.0
+github.com/inconshreveable/mousetrap
+# github.com/klauspost/compress v1.4.0
+github.com/klauspost/compress/flate
+github.com/klauspost/compress/gzip
+github.com/klauspost/compress/zlib
+# github.com/klauspost/cpuid v1.2.0
+github.com/klauspost/cpuid
+# github.com/mailru/easyjson v0.0.0-20170902151237-2a92e673c9a6
+github.com/mailru/easyjson/jlexer
+github.com/mailru/easyjson/jwriter
+github.com/mailru/easyjson/buffer
+# github.com/mitchellh/mapstructure v0.0.0-20170523030023-d0303fe80992
+github.com/mitchellh/mapstructure
+# github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
+github.com/pborman/uuid
+# github.com/pkg/errors v0.0.0-20190109061628-ffb6e22f0193
+github.com/pkg/errors
+# github.com/pmezard/go-difflib v1.0.0
+github.com/pmezard/go-difflib/difflib
+# github.com/russross/blackfriday v0.0.0-20171011182219-6d1ef893fcb0
+github.com/russross/blackfriday
+# github.com/sirupsen/logrus v0.0.0-20180712201618-92052687f8ec
+github.com/sirupsen/logrus
+# github.com/spf13/cobra v0.0.0-20181021141114-fe5e611709b0
+github.com/spf13/cobra
+github.com/spf13/cobra/doc
+# github.com/spf13/pflag v0.0.0-20180601132542-3ebe029320b2
+github.com/spf13/pflag
+# github.com/stretchr/testify v0.0.0-20181211170617-199de5f3a493
+github.com/stretchr/testify/assert
+github.com/stretchr/testify/suite
+github.com/stretchr/testify/require
+# github.com/valyala/bytebufferpool v1.0.0
+github.com/valyala/bytebufferpool
+# github.com/valyala/fasthttp v0.0.0-20171207120941-e5f51c11919d
+github.com/valyala/fasthttp
+github.com/valyala/fasthttp/fasthttputil
+github.com/valyala/fasthttp/stackless
+# github.com/willf/bitset v0.0.0-20190228212526-18bd95f470f9
+github.com/willf/bitset
+# golang.org/x/crypto v0.0.0-20180621125126-a49355c7e3f8
+golang.org/x/crypto/ssh/terminal
+# golang.org/x/net v0.0.0-20180906233101-161cd47e91fd
+golang.org/x/net/context
+golang.org/x/net/idna
+# golang.org/x/sys v0.0.0-20180909124046-d0be0721c37e
+golang.org/x/sys/unix
+golang.org/x/sys/windows
+# golang.org/x/text v0.3.0
+golang.org/x/text/unicode/norm
+golang.org/x/text/width
+golang.org/x/text/secure/bidirule
+golang.org/x/text/unicode/bidi
+golang.org/x/text/transform
+# gopkg.in/gcfg.v1 v1.2.3
+gopkg.in/gcfg.v1
+gopkg.in/gcfg.v1/scanner
+gopkg.in/gcfg.v1/token
+gopkg.in/gcfg.v1/types
+# gopkg.in/mgo.v2 v2.0.0-20160818020120-3f83fa500528
+gopkg.in/mgo.v2/bson
+gopkg.in/mgo.v2/internal/json
+# gopkg.in/warnings.v0 v0.1.2
+gopkg.in/warnings.v0
+# gopkg.in/yaml.v2 v2.2.1
+gopkg.in/yaml.v2
