@@ -135,11 +135,9 @@ With updating the configuration, request `docker pull mysql:5.6` will be sent to
 
 > Note: please remember restarting container engine after updating configuration.
 
-## Can I set HTTP_PROXY to be dfdaemon address?
+## Can I set dfdaemon as HTTP_PROXY?
 
-Yes, HTTP_PROXY is used to proxy every request from docker engine, including requests `docker login`, `docker pull` and `docker push`. Once it is configured, the influenced parts could be expanded much more widely. Dragonfly's feature is only taking effect on `docker pull`. Thus every `docker pull` request will be sent to dfdaemon, no matter it is an official image from docker hub or from a third-party registry. However, everyone should keep in mind one point that even if user wish to pull image `a.b.com/mysql:5.6` from registry `a.b.com`, dfdaemon will pull the image `mysql:5.6` from the configured registry address of dfdaemon, such as `c.d.com`. As a result, user pulled image `mysql:5.6` from `c.d.com` rather than `a.b.com`.
-
-In addition, with `HTTP_PROXY` enabled, Dragonfly only supports protocol scheme `HTTP`. `HTTPs` will never be supported then.
+Yes, please refer to the [proxy guide](./docs/user_guide/proxy.md).
 
 ## Do we support HA of supernode in Dragonfly
 
