@@ -14,8 +14,8 @@ import (
 // swagger:model PieceInfo
 type PieceInfo struct {
 
-	// ID of the downloading task from dfget
-	CID string `json:"cID,omitempty"`
+	// the peerID that dfget task should download from
+	PID string `json:"pID,omitempty"`
 
 	// The URL path to download the specific piece from the target peer's uploader.
 	//

@@ -18,35 +18,25 @@ import (
 // swagger:model PieceUpdateRequest
 type PieceUpdateRequest struct {
 
-	// the uploader clientID
-	//
-	DstCid string `json:"dstCid,omitempty"`
-
-	// result It indicates whether the peer task successfully download the piece.
-	// It's only useful when `status` is `RUNNING`.
-	//
-	// Enum: [FAILED SUCCESS INVALID SEMISUC]
-	Result string `json:"result,omitempty"`
-
 	// the downloader clientID
 	//
-	SrcCid string `json:"srcCid,omitempty"`
+	ClientID string `json:"clientID,omitempty"`
 
-	// status indicates whether the peer task is running.
+	// the uploader peerID
 	//
-	// Enum: [STARTED RUNNING FINISHED]
-	Status string `json:"status,omitempty"`
+	DstPID string `json:"dstPID,omitempty"`
+
+	// pieceStatus indicates whether the peer task successfully download the piece.
+	//
+	// Enum: [FAILED SUCCESS INVALID SEMISUC]
+	PieceStatus string `json:"pieceStatus,omitempty"`
 }
 
 // Validate validates this piece update request
 func (m *PieceUpdateRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateResult(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateStatus(formats); err != nil {
+	if err := m.validatePieceStatus(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -56,7 +46,7 @@ func (m *PieceUpdateRequest) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-var pieceUpdateRequestTypeResultPropEnum []interface{}
+var pieceUpdateRequestTypePieceStatusPropEnum []interface{}
 
 func init() {
 	var res []string
@@ -64,87 +54,41 @@ func init() {
 		panic(err)
 	}
 	for _, v := range res {
-		pieceUpdateRequestTypeResultPropEnum = append(pieceUpdateRequestTypeResultPropEnum, v)
+		pieceUpdateRequestTypePieceStatusPropEnum = append(pieceUpdateRequestTypePieceStatusPropEnum, v)
 	}
 }
 
 const (
 
-	// PieceUpdateRequestResultFAILED captures enum value "FAILED"
-	PieceUpdateRequestResultFAILED string = "FAILED"
+	// PieceUpdateRequestPieceStatusFAILED captures enum value "FAILED"
+	PieceUpdateRequestPieceStatusFAILED string = "FAILED"
 
-	// PieceUpdateRequestResultSUCCESS captures enum value "SUCCESS"
-	PieceUpdateRequestResultSUCCESS string = "SUCCESS"
+	// PieceUpdateRequestPieceStatusSUCCESS captures enum value "SUCCESS"
+	PieceUpdateRequestPieceStatusSUCCESS string = "SUCCESS"
 
-	// PieceUpdateRequestResultINVALID captures enum value "INVALID"
-	PieceUpdateRequestResultINVALID string = "INVALID"
+	// PieceUpdateRequestPieceStatusINVALID captures enum value "INVALID"
+	PieceUpdateRequestPieceStatusINVALID string = "INVALID"
 
-	// PieceUpdateRequestResultSEMISUC captures enum value "SEMISUC"
-	PieceUpdateRequestResultSEMISUC string = "SEMISUC"
+	// PieceUpdateRequestPieceStatusSEMISUC captures enum value "SEMISUC"
+	PieceUpdateRequestPieceStatusSEMISUC string = "SEMISUC"
 )
 
 // prop value enum
-func (m *PieceUpdateRequest) validateResultEnum(path, location string, value string) error {
-	if err := validate.Enum(path, location, value, pieceUpdateRequestTypeResultPropEnum); err != nil {
+func (m *PieceUpdateRequest) validatePieceStatusEnum(path, location string, value string) error {
+	if err := validate.Enum(path, location, value, pieceUpdateRequestTypePieceStatusPropEnum); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (m *PieceUpdateRequest) validateResult(formats strfmt.Registry) error {
+func (m *PieceUpdateRequest) validatePieceStatus(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.Result) { // not required
+	if swag.IsZero(m.PieceStatus) { // not required
 		return nil
 	}
 
 	// value enum
-	if err := m.validateResultEnum("result", "body", m.Result); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-var pieceUpdateRequestTypeStatusPropEnum []interface{}
-
-func init() {
-	var res []string
-	if err := json.Unmarshal([]byte(`["STARTED","RUNNING","FINISHED"]`), &res); err != nil {
-		panic(err)
-	}
-	for _, v := range res {
-		pieceUpdateRequestTypeStatusPropEnum = append(pieceUpdateRequestTypeStatusPropEnum, v)
-	}
-}
-
-const (
-
-	// PieceUpdateRequestStatusSTARTED captures enum value "STARTED"
-	PieceUpdateRequestStatusSTARTED string = "STARTED"
-
-	// PieceUpdateRequestStatusRUNNING captures enum value "RUNNING"
-	PieceUpdateRequestStatusRUNNING string = "RUNNING"
-
-	// PieceUpdateRequestStatusFINISHED captures enum value "FINISHED"
-	PieceUpdateRequestStatusFINISHED string = "FINISHED"
-)
-
-// prop value enum
-func (m *PieceUpdateRequest) validateStatusEnum(path, location string, value string) error {
-	if err := validate.Enum(path, location, value, pieceUpdateRequestTypeStatusPropEnum); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (m *PieceUpdateRequest) validateStatus(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.Status) { // not required
-		return nil
-	}
-
-	// value enum
-	if err := m.validateStatusEnum("status", "body", m.Status); err != nil {
+	if err := m.validatePieceStatusEnum("pieceStatus", "body", m.PieceStatus); err != nil {
 		return err
 	}
 
