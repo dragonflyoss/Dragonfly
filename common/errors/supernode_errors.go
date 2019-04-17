@@ -26,6 +26,9 @@ var (
 
 	// ErrCDNWait represents the cdn status is wait.
 	ErrCDNWait = DfError{codeCDNWait, "cdn status is wait"}
+
+	// ErrPeerWait represents the peer should wait.
+	ErrPeerWait = DfError{codePeerWait, "peer should wait"}
 )
 
 // IsSystemError check the error is a system error or not.
@@ -41,4 +44,9 @@ func IsCDNFail(err error) bool {
 // IsCDNWait check the error is CDNWait or not.
 func IsCDNWait(err error) bool {
 	return checkError(err, codeCDNWait)
+}
+
+// IsPeerWait check the error is PeerWait or not.
+func IsPeerWait(err error) bool {
+	return checkError(err, codePeerWait)
 }

@@ -18,7 +18,7 @@ type clientState struct {
 	pieceBitSet *bitset.BitSet
 
 	// runningPiece maintains the pieces currently being downloaded from dstCID to srcCID.
-	// key:pieceNum,value:dstCID
+	// key:pieceNum,value:dstPID
 	runningPiece *cutil.SyncMap
 }
 
@@ -59,6 +59,8 @@ func newClientState() *clientState {
 
 func newPeerState() *peerState {
 	return &peerState{
-		producerLoad: cutil.NewAtomicInt(0),
+		producerLoad:      cutil.NewAtomicInt(0),
+		clientErrorCount:  cutil.NewAtomicInt(0),
+		serviceErrorCount: cutil.NewAtomicInt(0),
 	}
 }

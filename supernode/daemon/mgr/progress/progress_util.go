@@ -43,7 +43,8 @@ func (pm *Manager) updatePieceProgress(taskID, srcPID string, pieceNum int) erro
 
 // updateClientProgress update the client progress when clientID is not a supernode,
 // otherwise update the super progress.
-func (pm *Manager) updateClientProgress(taskID, srcCID, dstCID string, pieceNum, pieceStatus int) (bool, error) {
+func (pm *Manager) updateClientProgress(taskID, srcCID, dstPID string, pieceNum, pieceStatus int) (bool, error) {
+	// update piece bitSet
 	if isSuperCID(srcCID) {
 		ss, err := pm.superProgress.getAsSuperState(taskID)
 		if err != nil {
@@ -57,7 +58,8 @@ func (pm *Manager) updateClientProgress(taskID, srcCID, dstCID string, pieceNum,
 		return false, err
 	}
 
-	err = updateRunningPiece(cs.runningPiece, srcCID, dstCID, pieceNum, pieceStatus)
+	// update running piece
+	err = updateRunningPiece(cs.runningPiece, srcCID, dstPID, pieceNum, pieceStatus)
 	if err != nil {
 		return false, err
 	}
@@ -65,29 +67,29 @@ func (pm *Manager) updateClientProgress(taskID, srcCID, dstCID string, pieceNum,
 	return updatePieceBitSet(cs.pieceBitSet, pieceNum, pieceStatus), nil
 }
 
-// updateRunningPiece update the relationship between the running piece and srcCID and dstCID,
-// which means the info that records the pieces being downloaded from dstCID to srcCID.
-func updateRunningPiece(dstCIDMap *cutil.SyncMap, srcCID, dstCID string, pieceNum, pieceStatus int) error {
+// updateRunningPiece update the relationship between the running piece and srcCID and dstPID,
+// which means the info that records the pieces being downloaded from dstPID to srcCID.
+func updateRunningPiece(dstPIDMap *cutil.SyncMap, srcCID, dstPID string, pieceNum, pieceStatus int) error {
 	pieceNumString := strconv.Itoa(pieceNum)
-	if pieceStatus == config.PieceRUNNING && !cutil.IsEmptyStr(dstCID) {
-		return dstCIDMap.Add(pieceNumString, dstCID)
+	if pieceStatus == config.PieceRUNNING && !cutil.IsEmptyStr(dstPID) {
+		return dstPIDMap.Add(pieceNumString, dstPID)
 	}
 
-	if _, err := dstCIDMap.Get(pieceNumString); err != nil {
+	if _, err := dstPIDMap.Get(pieceNumString); err != nil {
 		return err
 	}
 
-	return dstCIDMap.Remove(pieceNumString)
+	return dstPIDMap.Remove(pieceNumString)
 }
 
 // updatePieceBitSet adds a new piece for srcCID when it successfully downloads the piece.
 func updatePieceBitSet(pieceBitSet *bitset.BitSet, pieceNum, pieceStatus int) bool {
-	if pieceBitSet.Test(uint(pieceNum*8 + config.PieceSUCCESS)) {
+	if pieceBitSet.Test(uint(getStartIndexByPieceNum(pieceNum) + config.PieceSUCCESS)) {
 		return false
 	}
 
 	// clear the bits from pieceNum * 8 to (pieceNum+1)*8 at first.
-	for i := pieceNum * 8; i < (pieceNum+1)*8; i++ {
+	for i := getStartIndexByPieceNum(pieceNum); i < getStartIndexByPieceNum(pieceNum+1); i++ {
 		pieceBitSet.Clear(uint(i))
 	}
 	// if the pieceStatus equals waiting,
@@ -103,34 +105,36 @@ func updatePieceBitSet(pieceBitSet *bitset.BitSet, pieceNum, pieceStatus int) bo
 }
 
 // updatePeerProgress update the peer progress.
-func (pm *Manager) updatePeerProgress(taskID, srcPID, dstPID, pieceRange string, pieceStatus int) error {
+func (pm *Manager) updatePeerProgress(taskID, srcPID, dstPID string, pieceNum, pieceStatus int) error {
+	var dstPeerState *peerState
+
 	// update producerLoad of dstPID
-	if cutil.IsEmptyStr(dstPID) {
-		ps, err := pm.peerProgress.getAsPeerState(srcPID)
+	if !cutil.IsEmptyStr(dstPID) {
+		dstPeerState, err := pm.peerProgress.getAsPeerState(dstPID)
 		if err != nil {
 			return err
 		}
-		updateProducerLoad(ps.producerLoad, taskID, dstPID, pieceRange)
+		updateProducerLoad(dstPeerState.producerLoad, taskID, dstPID, pieceNum, pieceStatus)
 	}
 
-	ps, err := pm.peerProgress.getAsPeerState(srcPID)
+	if !needUpdatePeerInfo(srcPID, dstPID) {
+		return nil
+	}
+
+	srcPeerState, err := pm.peerProgress.getAsPeerState(srcPID)
 	if err != nil {
 		return err
 	}
 
-	if !needDoPeerInfo(srcPID, dstPID) {
-		return nil
-	}
-
-	// update ClientErrorInfo/serviceErrorInfo and ClientBlackInfo
+	// update ClientErrorInfo/serviceErrorInfo
 	if pieceStatus == config.PieceSUCCESS || pieceStatus == config.PieceSEMISUC {
-		processPeerSucInfo(ps.clientErrorCount, ps.serviceErrorCount, srcPID, dstPID)
+		processPeerSucInfo(srcPeerState, dstPeerState)
 	}
 	if pieceStatus == config.PieceFAILED {
 		if err := pm.updateBlackInfo(srcPID, dstPID); err != nil {
 			return err
 		}
-		processPeerFailInfo(ps, srcPID, dstPID)
+		processPeerFailInfo(srcPeerState, dstPeerState)
 	}
 	return nil
 }
@@ -138,77 +142,92 @@ func (pm *Manager) updatePeerProgress(taskID, srcPID, dstPID, pieceRange string,
 func (pm *Manager) updateBlackInfo(srcPID, dstPID string) error {
 	// update black List
 	blackList, err := pm.clientBlackInfo.GetAsMap(srcPID)
-	if err != nil && errorType.IsDataNotFound(err) {
+	if err != nil {
+		if !errorType.IsDataNotFound(err) {
+			return err
+		}
+
 		blackList = cutil.NewSyncMap()
 		if err := pm.clientBlackInfo.Add(srcPID, blackList); err != nil {
 			return err
 		}
 	}
-	if _, err := blackList.Get(dstPID); err != nil &&
-		errorType.IsDataNotFound(err) {
-		if err := blackList.Add(dstPID, true); err != nil {
-			return err
-		}
+
+	v, err := blackList.GetAsAtomicInt(dstPID)
+	if err == nil {
+		v.Add(1)
+		return nil
 	}
-	return nil
+	if errorType.IsDataNotFound(err) {
+		return blackList.Add(dstPID, cutil.NewAtomicInt(1))
+	}
+
+	return err
 }
 
 // processPeerSucInfo sets the count of errors to 0
-// when srcCID successfully downloads a piece from dstCID.
-func processPeerSucInfo(clientErrorCount, serviceErrorCount *cutil.AtomicInt, srcPID, dstPID string) error {
+// when srcCID successfully downloads a piece from dstPID.
+func processPeerSucInfo(srcPeerState, dstPeerState *peerState) {
 	// update ClientErrorInfo
-	if clientErrorCount != nil {
-		clientErrorCount.Set(0)
+	if srcPeerState != nil && srcPeerState.clientErrorCount != nil {
+		srcPeerState.clientErrorCount.Set(0)
 	}
 
 	// update ServiceErrorInfo
-	if serviceErrorCount != nil {
-		serviceErrorCount.Set(0)
+	if dstPeerState != nil && dstPeerState.serviceErrorCount != nil {
+		dstPeerState.serviceErrorCount.Set(0)
 	}
-
-	return nil
 }
 
 // processPeerFailInfo adds one to the count of errors
-// when srcCID failed to download a piece from dstCID.
-// And add the dstCID to the blacklist of the srcCID.
-func processPeerFailInfo(ps *peerState, srcCID, dstCID string) (err error) {
-
+// when srcCID failed to download a piece from dstPID.
+func processPeerFailInfo(srcPeerState, dstPeerState *peerState) {
 	// update clientErrorInfo
-	if ps.clientErrorCount != nil {
-		ps.clientErrorCount.Add(1)
-	} else {
-		ps.clientErrorCount = cutil.NewAtomicInt(1)
+	if srcPeerState != nil {
+		if srcPeerState.clientErrorCount != nil {
+			srcPeerState.clientErrorCount.Add(1)
+		} else {
+			srcPeerState.clientErrorCount = cutil.NewAtomicInt(1)
+		}
 	}
 
 	// update serviceErrorInfo
-	if ps.serviceErrorCount != nil {
-		ps.serviceErrorCount.Add(1)
-	} else {
-		ps.serviceErrorCount = cutil.NewAtomicInt(1)
+	if dstPeerState != nil {
+		if dstPeerState.serviceErrorCount != nil {
+			dstPeerState.serviceErrorCount.Add(1)
+		} else {
+			dstPeerState.serviceErrorCount = cutil.NewAtomicInt(1)
+		}
 	}
-
-	return nil
 }
 
 // updateProducerLoad update the load of the clientID.
-func updateProducerLoad(load *cutil.AtomicInt, taskID, peerID, pieceRange string) error {
+// TODO: avoid multiple calls
+func updateProducerLoad(load *cutil.AtomicInt, taskID, peerID string, pieceNum, pieceStatus int) {
 	if load == nil {
-		return nil
+		logrus.Warnf("client load maybe not initialized,taskID: %s,peerID: %s,pieceNum: %d",
+			taskID, peerID, pieceNum)
+		load = cutil.NewAtomicInt(0)
 	}
+
+	// increase the load of peerID when pieceStatus equals PieceRUNNING
+	if pieceStatus == config.PieceRUNNING {
+		load.Add(1)
+		return
+	}
+
+	// decrease the load of peerID when pieceStatus not equals PieceRUNNING
 	loadNew := load.Add(-1)
 	if loadNew < 0 {
-		logrus.Warnf("client load maybe illegal,taskID: %s,peerID: %s,pieceRange: %s,load: %d",
-			taskID, peerID, pieceRange, loadNew)
+		logrus.Warnf("client load maybe illegal,taskID: %s,peerID: %s,pieceNum: %d,load: %d",
+			taskID, peerID, pieceNum, loadNew)
 		load.Add(1)
 	}
-
-	return nil
 }
 
-// needDoPeerInfo returns whether we should update the peer related info.
+// needUpdatePeerInfo returns whether we should update the peer related info.
 // It returns false when the PeerID is empty or represents a supernode.
-func needDoPeerInfo(srcPID, dstPID string) bool {
+func needUpdatePeerInfo(srcPID, dstPID string) bool {
 	if cutil.IsEmptyStr(srcPID) || cutil.IsEmptyStr(dstPID) ||
 		isSuperPID(srcPID) || isSuperPID(dstPID) {
 		return false
@@ -234,4 +253,16 @@ func generatePieceProgressKey(taskID string, pieceNum int) (string, error) {
 			"failed to make piece progress key with taskID: %s and pieceNum: %d", taskID, pieceNum)
 	}
 	return fmt.Sprintf("%d@%s", pieceNum, taskID), nil
+}
+
+func getStartIndexByPieceNum(pieceNum int) int {
+	return pieceNum * 8
+}
+
+func getPieceNumByIndex(index uint) int {
+	return int(index / 8)
+}
+
+func getPieceStatusByIndex(index uint) int {
+	return int(index % 8)
 }
