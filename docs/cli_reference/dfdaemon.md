@@ -25,6 +25,7 @@ dfdaemon [flags]
       --node strings          specify the addresses(IP:port) of supnernodes that will be passed to dfget.
       --notbs                 not try back source to download if throw exception (default true)
       --port uint             dfdaemon will listen the port (default 65001)
+      --proxyPort uint        the port dfdaemon proxy listens on (default 65002)
       --ratelimit string      net speed limit,format:xxxM/K
       --registry string       registry addr(https://abc.xx.x or http://abc.xx.x) and must exist if dfdaemon is used to mirror mode (default "https://index.docker.io")
       --rule string           download the url by P2P if url matches the specified pattern,format:reg1,reg2,reg3
