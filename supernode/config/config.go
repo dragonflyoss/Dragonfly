@@ -46,6 +46,16 @@ func (c *Config) GetSuperCID(taskID string) string {
 	return fmt.Sprintf("%s%s", c.cIDPrefix, taskID)
 }
 
+// SetSuperPID sets the value of supernode PID.
+func (c *Config) SetSuperPID(pid string) {
+	c.superNodePID = pid
+}
+
+// GetSuperPID returns the pid string for supernode.
+func (c *Config) GetSuperPID() string {
+	return c.superNodePID
+}
+
 // NewBaseProperties create a instant with default values.
 func NewBaseProperties() *BaseProperties {
 	home := filepath.Join(string(filepath.Separator), "home", "admin", "supernode")
@@ -143,4 +153,7 @@ type BaseProperties struct {
 
 	// cIDPrefix s a prefix string used to indicate that the CID is supernode.
 	cIDPrefix string
+
+	// superNodePID is the ID of supernode, which is the same as peer ID of dfget.
+	superNodePID string
 }
