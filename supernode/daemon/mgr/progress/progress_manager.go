@@ -161,22 +161,13 @@ func (pm *Manager) GetPieceProgressByCID(ctx context.Context, taskID, clientID, 
 	clientBitset := cs.pieceBitSet.Clone()
 	cdnBitset := ss.pieceBitSet.Clone()
 
+	// get successful pieces
 	if pieceStatus == PieceSuccess {
 		return getSuccessfulPieces(clientBitset, cdnBitset)
 	}
 
-	availablePieces, err := getAvailablePieces(clientBitset, cdnBitset, runningPieces)
-	if err != nil {
-		if errorType.IsCDNFail(err) {
-			return nil, errors.Wrapf(err, "failed to get cdn piece for taskID: %s", taskID)
-		}
-		if errorType.IsPeerWait(err) {
-			return nil, errors.Wrapf(err, "taskID: %s", taskID)
-		}
-		return nil, err
-	}
-
-	return availablePieces, nil
+	// get available pieces
+	return getAvailablePieces(clientBitset, cdnBitset, runningPieces)
 }
 
 // DeletePieceProgressByCID delete the pieces progress with specified clientID.
@@ -279,7 +270,7 @@ func getAvailablePieces(clientBitset, cdnBitset *bitset.BitSet, runningPieceNums
 	}
 
 	if len(availablePieces) == 0 {
-		return nil, errorType.ErrPeerWait
+		return nil, nil
 	}
 
 	for _, v := range runningPieceNums {
