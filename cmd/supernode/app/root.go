@@ -130,11 +130,13 @@ func runSuperNode() error {
 		return err
 	}
 
-	if err = d.Run(); err != nil {
-		logrus.Errorf("failed to run daemon: %v", err)
+	// register supernode
+	if err := d.RegisterSuperNode(); err != nil {
+		logrus.Errorf("failed to register super node: %v", err)
 		return err
 	}
-	return nil
+
+	return d.Run()
 }
 
 // initLog initializes log Level and log format of daemon.
