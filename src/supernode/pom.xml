@@ -21,7 +21,7 @@
         <commons-codec.version>1.10</commons-codec.version>
         <commons-collections.version>3.2.2</commons-collections.version>
         <fastjson.version>1.2.49</fastjson.version>
-        <tomcat.version>9.0.12</tomcat.version>
+        <tomcat.version>9.0.17</tomcat.version>
 
     </properties>
 
