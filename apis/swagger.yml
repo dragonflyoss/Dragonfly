@@ -593,7 +593,13 @@ definitions:
       fileLength:
         type: "integer"
         description: |
-          The length of the file dfget requests to download in bytes.
+          The length of the file dfget requests to download in bytes
+          which including the header and the trailer of each piece.
+        format: "int64"
+      httpFileLength:
+        type: "integer"
+        description: |
+          The length of the source file in bytes.
         format: "int64"
       pieceSize:
         type: "integer"
