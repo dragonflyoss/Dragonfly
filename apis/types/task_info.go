@@ -39,7 +39,8 @@ type TaskInfo struct {
 	//
 	Dfdaemon bool `json:"dfdaemon,omitempty"`
 
-	// The length of the file dfget requests to download in bytes.
+	// The length of the file dfget requests to download in bytes
+	// which including the header and the trailer of each piece.
 	//
 	FileLength int64 `json:"fileLength,omitempty"`
 
@@ -49,6 +50,10 @@ type TaskInfo struct {
 	// from source server as user's wish.
 	//
 	Headers map[string]string `json:"headers,omitempty"`
+
+	// The length of the source file in bytes.
+	//
+	HTTPFileLength int64 `json:"httpFileLength,omitempty"`
 
 	// special attribute of remote source file. This field is used with taskURL to generate new taskID to
 	// identify different downloading task of remote source file. For example, if user A and user B uses
