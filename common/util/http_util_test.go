@@ -23,6 +23,8 @@ import (
 	"net"
 	"time"
 
+	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
+
 	"github.com/go-check/check"
 	"github.com/valyala/fasthttp"
 )
@@ -111,6 +113,97 @@ func (s *HTTPUtilTestSuite) TestCheckConnect(c *check.C) {
 	ip, e := CheckConnect("127.0.0.1", s.port, 0)
 	c.Assert(e, check.IsNil)
 	c.Assert(ip, check.Equals, "127.0.0.1")
+}
+
+func (s *HTTPUtilTestSuite) TestGetRangeSE(c *check.C) {
+	var cases = []struct {
+		rangeHTTPHeader string
+		length          int64
+		expected        []*RangeStruct
+		errCheck        func(error) bool
+	}{
+		{
+			rangeHTTPHeader: "bytes=0-65575",
+			length:          65576,
+			expected: []*RangeStruct{
+				{
+					StartIndex: 0,
+					EndIndex:   65575,
+				},
+			},
+			errCheck: errorType.IsNilError,
+		},
+		{
+			rangeHTTPHeader: "bytes=2-2",
+			length:          65576,
+			expected: []*RangeStruct{
+				{
+					StartIndex: 2,
+					EndIndex:   2,
+				},
+			},
+			errCheck: errorType.IsNilError,
+		},
+		{
+			rangeHTTPHeader: "bytes=2-",
+			length:          65576,
+			expected: []*RangeStruct{
+				{
+					StartIndex: 2,
+					EndIndex:   65575,
+				},
+			},
+			errCheck: errorType.IsNilError,
+		},
+		{
+			rangeHTTPHeader: "bytes=-100",
+			length:          65576,
+			expected: []*RangeStruct{
+				{
+					StartIndex: 65476,
+					EndIndex:   65575,
+				},
+			},
+			errCheck: errorType.IsNilError,
+		},
+		{
+			rangeHTTPHeader: "bytes=0-66575",
+			length:          65576,
+			expected:        nil,
+			errCheck:        errorType.IsRangeNotSatisfiable,
+		},
+		{
+			rangeHTTPHeader: "bytes=0-65-575",
+			length:          65576,
+			expected:        nil,
+			errCheck:        errorType.IsInvalidValue,
+		},
+		{
+			rangeHTTPHeader: "bytes=0-hello",
+			length:          65576,
+			expected:        nil,
+			errCheck:        errorType.IsInvalidValue,
+		},
+		{
+			rangeHTTPHeader: "bytes=65575-0",
+			length:          65576,
+			expected:        nil,
+			errCheck:        errorType.IsInvalidValue,
+		},
+		{
+			rangeHTTPHeader: "bytes=-1-8",
+			length:          65576,
+			expected:        nil,
+			errCheck:        errorType.IsInvalidValue,
+		},
+	}
+
+	for _, v := range cases {
+		result, err := GetRangeSE(v.rangeHTTPHeader, v.length)
+		c.Check(v.errCheck(err), check.Equals, true)
+		fmt.Println(v.rangeHTTPHeader)
+		c.Check(result, check.DeepEquals, v.expected)
+	}
 }
 
 // ----------------------------------------------------------------------------
