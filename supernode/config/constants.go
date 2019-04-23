@@ -46,3 +46,11 @@ const (
 	// PeerDownLimit indicates the limit of the download task count as a client.
 	PeerDownLimit = 4
 )
+
+const (
+	// PieceHeadSize 4 bytes
+	PieceHeadSize = 4
+
+	// PieceWrapSize 4 bytes head and 1 byte tail
+	PieceWrapSize = PieceHeadSize + 1
+)
