@@ -19,6 +19,7 @@ type Manager struct {
 	cfg             *config.Config
 	cacheStore      *store.Store
 	metaDataManager *fileMetaDataManager
+	detector        *cacheDetector
 }
 
 // NewManager returns a new Manager.
@@ -28,6 +29,7 @@ func NewManager(cfg *config.Config, cacheStore *store.Store) (*Manager, error) {
 		cfg:             cfg,
 		cacheStore:      cacheStore,
 		metaDataManager: metaDataManager,
+		detector:        newCacheDetector(cacheStore, metaDataManager),
 	}, nil
 }
 
@@ -39,11 +41,11 @@ func (cm *Manager) TriggerCDN(ctx context.Context, taskInfo *types.TaskInfo) err
 	}
 
 	// detect Cache
-	cacheResult, err := cm.detectCache(ctx, taskInfo)
+	startPieceNum, _, err := cm.detector.detectCache(ctx, taskInfo)
 	if err != nil {
 		return err
 	}
-	if cacheResult.startPieceNum == -1 {
+	if startPieceNum == -1 {
 		logrus.Infof("cache full hit for taskId:%s on local", taskInfo.ID)
 		return nil
 	}
@@ -52,7 +54,7 @@ func (cm *Manager) TriggerCDN(ctx context.Context, taskInfo *types.TaskInfo) err
 	pieceContSize := taskInfo.PieceSize - config.PieceWrapSize
 
 	// start to download the source file
-	resp, err := cm.download(ctx, taskInfo.ID, taskInfo.TaskURL, taskInfo.Headers, cacheResult.startPieceNum, httpFileLength, pieceContSize)
+	resp, err := cm.download(ctx, taskInfo.ID, taskInfo.TaskURL, taskInfo.Headers, startPieceNum, httpFileLength, pieceContSize)
 	if err != nil {
 		return err
 	}
@@ -61,7 +63,7 @@ func (cm *Manager) TriggerCDN(ctx context.Context, taskInfo *types.TaskInfo) err
 	// TODO: update the LastModified And ETag for taskID.
 	reader := cutil.NewLimitReader(resp.Body, cm.cfg.LinkLimit, true)
 
-	return cm.startWriter(ctx, cm.cfg, reader, taskInfo, cacheResult.startPieceNum, httpFileLength, pieceContSize)
+	return cm.startWriter(ctx, cm.cfg, reader, taskInfo, startPieceNum, httpFileLength, pieceContSize)
 }
 
 // GetStatus get the status of the file.
