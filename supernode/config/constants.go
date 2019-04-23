@@ -48,6 +48,12 @@ const (
 )
 
 const (
+	// DefaultPieceSize 4M
+	DefaultPieceSize = 4 * 1024 * 1024
+
+	// DefaultPieceSizeLimit 15M
+	DefaultPieceSizeLimit = 15 * 1024 * 1024
+
 	// PieceHeadSize 4 bytes
 	PieceHeadSize = 4
 

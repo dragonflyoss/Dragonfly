@@ -16,15 +16,18 @@ var _ mgr.CDNMgr = &Manager{}
 
 // Manager is an implementation of the interface of CDNMgr.
 type Manager struct {
-	cfg        *config.Config
-	cacheStore *store.Store
+	cfg             *config.Config
+	cacheStore      *store.Store
+	metaDataManager *fileMetaDataManager
 }
 
 // NewManager returns a new Manager.
 func NewManager(cfg *config.Config, cacheStore *store.Store) (*Manager, error) {
+	metaDataManager := newFileMetaDataManager(cacheStore)
 	return &Manager{
-		cfg:        cfg,
-		cacheStore: cacheStore,
+		cfg:             cfg,
+		cacheStore:      cacheStore,
+		metaDataManager: metaDataManager,
 	}, nil
 }
 
