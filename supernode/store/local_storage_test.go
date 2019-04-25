@@ -88,25 +88,25 @@ func (s *LocalStorageSuite) TestGetPutBytes(c *check.C) {
 	}{
 		{
 			raw: &Raw{
-				key: "foo1",
+				Key: "foo1",
 			},
 			data:     []byte("hello foo"),
 			expected: "hello foo",
 		},
 		{
 			raw: &Raw{
-				key:    "foo2",
-				offset: 0,
-				length: 5,
+				Key:    "foo2",
+				Offset: 0,
+				Length: 5,
 			},
 			data:     []byte("hello foo"),
 			expected: "hello",
 		},
 		{
 			raw: &Raw{
-				key:    "foo3",
-				offset: 2,
-				length: -1,
+				Key:    "foo3",
+				Offset: 2,
+				Length: -1,
 			},
 			data:     []byte("hello foo"),
 			expected: "hello foo",
@@ -139,25 +139,25 @@ func (s *LocalStorageSuite) TestGetPut(c *check.C) {
 	}{
 		{
 			raw: &Raw{
-				key: "foo1.meta",
+				Key: "foo1.meta",
 			},
 			data:     strings.NewReader("hello meta file"),
 			expected: "hello meta file",
 		},
 		{
 			raw: &Raw{
-				key:    "foo2.meta",
-				offset: 2,
-				length: 5,
+				Key:    "foo2.meta",
+				Offset: 2,
+				Length: 5,
 			},
 			data:     strings.NewReader("hello meta file"),
 			expected: "hello",
 		},
 		{
 			raw: &Raw{
-				key:    "foo3.meta",
-				offset: 2,
-				length: -1,
+				Key:    "foo3.meta",
+				Offset: 2,
+				Length: -1,
 			},
 			data:     strings.NewReader("hello meta file"),
 			expected: "hello meta file",
@@ -206,7 +206,7 @@ func (s *LocalStorageSuite) checkStat(raw *Raw, c *check.C) {
 	c.Assert(err, check.IsNil)
 
 	driver := s.storeLocal.driver.(*localStorage)
-	pathTemp := path.Join(driver.BaseDir, getPrefix(raw.key), raw.key)
+	pathTemp := path.Join(driver.BaseDir, getPrefix(raw.Key), raw.Key)
 	f, _ := os.Stat(pathTemp)
 	sys, _ := util.GetSys(f)
 

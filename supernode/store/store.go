@@ -66,7 +66,7 @@ func (s *Store) Name() string {
 
 // Get the data from the storage driver in io stream.
 func (s *Store) Get(ctx context.Context, raw *Raw, writer io.Writer) error {
-	if err := isEmptyKey(raw.key); err != nil {
+	if err := isEmptyKey(raw.Key); err != nil {
 		return err
 	}
 	return s.driver.Get(ctx, raw, writer)
@@ -74,7 +74,7 @@ func (s *Store) Get(ctx context.Context, raw *Raw, writer io.Writer) error {
 
 // GetBytes gets the data from the storage driver in bytes.
 func (s *Store) GetBytes(ctx context.Context, raw *Raw) ([]byte, error) {
-	if err := isEmptyKey(raw.key); err != nil {
+	if err := isEmptyKey(raw.Key); err != nil {
 		return nil, err
 	}
 	return s.driver.GetBytes(ctx, raw)
@@ -82,7 +82,7 @@ func (s *Store) GetBytes(ctx context.Context, raw *Raw) ([]byte, error) {
 
 // Put puts data into the storage in io stream.
 func (s *Store) Put(ctx context.Context, raw *Raw, data io.Reader) error {
-	if err := isEmptyKey(raw.key); err != nil {
+	if err := isEmptyKey(raw.Key); err != nil {
 		return err
 	}
 	return s.driver.Put(ctx, raw, data)
@@ -90,7 +90,7 @@ func (s *Store) Put(ctx context.Context, raw *Raw, data io.Reader) error {
 
 // PutBytes puts data into the storage in bytes.
 func (s *Store) PutBytes(ctx context.Context, raw *Raw, data []byte) error {
-	if err := isEmptyKey(raw.key); err != nil {
+	if err := isEmptyKey(raw.Key); err != nil {
 		return err
 	}
 	return s.driver.PutBytes(ctx, raw, data)
@@ -98,7 +98,7 @@ func (s *Store) PutBytes(ctx context.Context, raw *Raw, data []byte) error {
 
 // Remove the data from the storage based on raw information.
 func (s *Store) Remove(ctx context.Context, raw *Raw) error {
-	if err := isEmptyKey(raw.key); err != nil {
+	if err := isEmptyKey(raw.Key); err != nil {
 		return err
 	}
 	return s.driver.Remove(ctx, raw)
@@ -108,7 +108,7 @@ func (s *Store) Remove(ctx context.Context, raw *Raw) error {
 // If that, and return some info that in the form of struct StorageInfo.
 // If not, return the ErrNotFound.
 func (s *Store) Stat(ctx context.Context, raw *Raw) (*StorageInfo, error) {
-	if err := isEmptyKey(raw.key); err != nil {
+	if err := isEmptyKey(raw.Key); err != nil {
 		return nil, err
 	}
 	return s.driver.Stat(ctx, raw)

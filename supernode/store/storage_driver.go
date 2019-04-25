@@ -73,10 +73,10 @@ type StorageDriver interface {
 // Raw identifies a piece of data uniquely.
 // If the length<=0, it represents all data.
 type Raw struct {
-	bucket string
-	key    string
-	offset int64
-	length int64
+	Bucket string
+	Key    string
+	Offset int64
+	Length int64
 }
 
 // StorageInfo includes partial meta information of the data.
