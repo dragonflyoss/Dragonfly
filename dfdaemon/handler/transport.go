@@ -17,7 +17,9 @@
 package handler
 
 import (
+	"context"
 	"crypto/tls"
+	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -54,9 +56,17 @@ func NewDFRoundTripper(cfg *tls.Config) *DFRoundTripper {
 		cfg = &tls.Config{InsecureSkipVerify: true}
 	}
 
+	var resolver = net.DefaultResolver
+	if global.CommandLine.Resolver != "" {
+		resolver = &net.Resolver{PreferGo: true, Dial: func(ctx context.Context, network, address string) (conn net.Conn, e error) {
+			dialer := &net.Dialer{}
+			return dialer.DialContext(ctx, "udp", fmt.Sprintf("%s:53", global.CommandLine.Resolver))
+		}}
+	}
 	return &DFRoundTripper{
 		Round: &http.Transport{
 			DialContext: (&net.Dialer{
+				Resolver:  resolver,
 				Timeout:   10 * time.Second,
 				KeepAlive: 30 * time.Second,
 			}).DialContext,

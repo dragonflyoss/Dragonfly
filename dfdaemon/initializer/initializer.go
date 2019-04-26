@@ -248,6 +248,7 @@ func initParam(options *options.Options) {
 		HostIP:     options.HostIP,
 		Registry:   options.Registry,
 		TrustHosts: parsedTrustHosts,
+		Resolver:   options.Resolver,
 	}
 
 	initProperties(options)
