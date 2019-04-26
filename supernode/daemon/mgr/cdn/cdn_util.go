@@ -14,3 +14,7 @@ func getCurrentTimeMillis() int64 {
 func getContentLengthByHeader(pieceHeader uint32) int32 {
 	return int32(pieceHeader & 0xffffff)
 }
+
+func getPieceHeader(dataSize, pieceSize int32) uint32 {
+	return uint32(dataSize | (pieceSize << 4))
+}

@@ -2,6 +2,8 @@ package cdn
 
 import (
 	"context"
+	"crypto/md5"
+	"strconv"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	cutil "github.com/dragonflyoss/Dragonfly/common/util"
@@ -24,6 +26,7 @@ type Manager struct {
 	cdnReporter     *reporter
 	detector        *cacheDetector
 	pieceMD5Manager *pieceMD5Mgr
+	writer          *superWriter
 }
 
 // NewManager returns a new Manager.
@@ -39,45 +42,56 @@ func NewManager(cfg *config.Config, cacheStore *store.Store, progressManager mgr
 		pieceMD5Manager: pieceMD5Manager,
 		cdnReporter:     cdnReporter,
 		detector:        newCacheDetector(cacheStore, metaDataManager),
+		writer:          newSuperWriter(cacheStore, cdnReporter),
 	}, nil
 }
 
 // TriggerCDN will trigger CDN to download the file from sourceUrl.
-func (cm *Manager) TriggerCDN(ctx context.Context, taskInfo *types.TaskInfo) error {
-	httpFileLength := taskInfo.HTTPFileLength
+func (cm *Manager) TriggerCDN(ctx context.Context, task *types.TaskInfo) error {
+	httpFileLength := task.HTTPFileLength
 	if httpFileLength == 0 {
 		httpFileLength = -1
 	}
 
 	// detect Cache
-	startPieceNum, metaData, err := cm.detector.detectCache(ctx, taskInfo)
+	startPieceNum, metaData, err := cm.detector.detectCache(ctx, task)
 	if err != nil {
-		return err
+		logrus.Errorf("failed to detect cache for task %s: %v", task.ID, err)
 	}
-	if _, err := cm.cdnReporter.reportCache(ctx, taskInfo.ID, metaData, startPieceNum); err != nil {
-		logrus.Errorf("failed to report cache for taskId: %s : %v", taskInfo.ID, err)
-		return err
+	fileMD5, err := cm.cdnReporter.reportCache(ctx, task.ID, metaData, startPieceNum)
+	if err != nil {
+		logrus.Errorf("failed to report cache for taskId: %s : %v", task.ID, err)
 	}
 
 	if startPieceNum == -1 {
-		logrus.Infof("cache full hit for taskId:%s on local", taskInfo.ID)
+		logrus.Infof("cache full hit for taskId:%s on local", task.ID)
 		return nil
 	}
 
+	if fileMD5 == nil {
+		fileMD5 = md5.New()
+	}
+
 	// get piece content size which not including the piece header and trailer
-	pieceContSize := taskInfo.PieceSize - config.PieceWrapSize
+	pieceContSize := task.PieceSize - config.PieceWrapSize
 
 	// start to download the source file
-	resp, err := cm.download(ctx, taskInfo.ID, taskInfo.TaskURL, taskInfo.Headers, startPieceNum, httpFileLength, pieceContSize)
+	resp, err := cm.download(ctx, task.ID, task.TaskURL, task.Headers, startPieceNum, httpFileLength, pieceContSize)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-	// TODO: update the LastModified And ETag for taskID.
-	reader := cutil.NewLimitReader(resp.Body, cm.cfg.LinkLimit, true)
+	cm.updateLastModifiedAndETag(ctx, task.ID, resp.Header.Get("Last-Modified"), resp.Header.Get("Etag"))
+	// TODO: calculate the limit dynamically
+	reader := cutil.NewLimitReaderWithMD5Sum(resp.Body, config.TransLimit(cm.cfg.MaxBandwidth), fileMD5)
+	realFileLength, err := cm.writer.startWriter(ctx, cm.cfg, reader, task, startPieceNum, httpFileLength, pieceContSize)
+	if err != nil {
+		logrus.Errorf("failed to write for task %s: %v", task.ID, err)
+		return err
+	}
 
-	return cm.startWriter(ctx, cm.cfg, reader, taskInfo, startPieceNum, httpFileLength, pieceContSize)
+	return cm.handleCDNResult(ctx, task, reader.Md5(), httpFileLength, realFileLength)
 }
 
 // GetStatus get the status of the file.
@@ -88,4 +102,49 @@ func (cm *Manager) GetStatus(ctx context.Context, taskID string) (cdnStatus stri
 // Delete the file from disk with specified taskID.
 func (cm *Manager) Delete(ctx context.Context, taskID string) error {
 	return nil
+}
+
+func (cm *Manager) handleCDNResult(ctx context.Context, task *types.TaskInfo, realMd5 string, httpFileLength, realFileLength int64) error {
+	var isSuccess = true
+	if !cutil.IsEmptyStr(task.Md5) && task.Md5 != realMd5 {
+		logrus.Errorf("taskId:%s url:%s file md5 not match expected:%s real:%s", task.ID, task.TaskURL, task.Md5, realMd5)
+		isSuccess = false
+	}
+	if isSuccess && httpFileLength >= 0 && httpFileLength != realFileLength {
+		logrus.Errorf("taskId:%s url:%s file length not match expected:%d real:%d", task.ID, task.TaskURL, httpFileLength, realFileLength)
+		isSuccess = false
+	}
+
+	if !isSuccess {
+		realFileLength = 0
+	}
+	if err := cm.metaDataManager.updateStatusAndResult(ctx, task.ID, &fileMetaData{
+		Finish:     true,
+		Success:    isSuccess,
+		RealMd5:    realMd5,
+		FileLength: realFileLength,
+	}); err != nil {
+		return err
+	}
+
+	if !isSuccess {
+		return nil
+	}
+
+	logrus.Infof("success to get taskID: %s fileLength: %d realMd5: %s", task.ID, realFileLength, realMd5)
+
+	pieceMD5s, err := cm.pieceMD5Manager.getPieceMD5sByTaskID(task.ID)
+	if err != nil {
+		return err
+	}
+
+	return cm.metaDataManager.writePieceMD5s(ctx, task.ID, realMd5, pieceMD5s)
+}
+
+func (cm *Manager) updateLastModifiedAndETag(ctx context.Context, taskID, lastModified, eTag string) {
+	lastModifiedInt, _ := strconv.ParseInt(lastModified, 10, 64)
+	if err := cm.metaDataManager.updateLastModifiedAndETag(ctx, taskID, lastModifiedInt, eTag); err != nil {
+		logrus.Errorf("failed to update LastModified(%s) and ETag(%s) for taskID %s: %v", lastModified, eTag, taskID, err)
+	}
+	logrus.Infof("success to update LastModified(%s) and ETag(%s) for taskID: %s", lastModified, eTag, taskID)
 }

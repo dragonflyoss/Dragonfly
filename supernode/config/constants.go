@@ -63,3 +63,8 @@ const (
 	// PieceTailChar the value of piece tail
 	PieceTailChar = byte(0x7f)
 )
+
+const (
+	// CDNWriterRoutineLimit 4
+	CDNWriterRoutineLimit = 4
+)
