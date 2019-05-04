@@ -18,17 +18,26 @@ var _ mgr.CDNMgr = &Manager{}
 type Manager struct {
 	cfg             *config.Config
 	cacheStore      *store.Store
+	progressManager mgr.ProgressMgr
+
 	metaDataManager *fileMetaDataManager
+	cdnReporter     *reporter
 	detector        *cacheDetector
+	pieceMD5Manager *pieceMD5Mgr
 }
 
 // NewManager returns a new Manager.
-func NewManager(cfg *config.Config, cacheStore *store.Store) (*Manager, error) {
+func NewManager(cfg *config.Config, cacheStore *store.Store, progressManager mgr.ProgressMgr) (*Manager, error) {
 	metaDataManager := newFileMetaDataManager(cacheStore)
+	pieceMD5Manager := newpieceMD5Mgr()
+	cdnReporter := newReporter(cfg, cacheStore, progressManager, metaDataManager, pieceMD5Manager)
 	return &Manager{
 		cfg:             cfg,
 		cacheStore:      cacheStore,
+		progressManager: progressManager,
 		metaDataManager: metaDataManager,
+		pieceMD5Manager: pieceMD5Manager,
+		cdnReporter:     cdnReporter,
 		detector:        newCacheDetector(cacheStore, metaDataManager),
 	}, nil
 }
@@ -41,10 +50,15 @@ func (cm *Manager) TriggerCDN(ctx context.Context, taskInfo *types.TaskInfo) err
 	}
 
 	// detect Cache
-	startPieceNum, _, err := cm.detector.detectCache(ctx, taskInfo)
+	startPieceNum, metaData, err := cm.detector.detectCache(ctx, taskInfo)
 	if err != nil {
 		return err
 	}
+	if _, err := cm.cdnReporter.reportCache(ctx, taskInfo.ID, metaData, startPieceNum); err != nil {
+		logrus.Errorf("failed to report cache for taskId: %s : %v", taskInfo.ID, err)
+		return err
+	}
+
 	if startPieceNum == -1 {
 		logrus.Infof("cache full hit for taskId:%s on local", taskInfo.ID)
 		return nil

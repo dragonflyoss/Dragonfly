@@ -42,7 +42,7 @@ func init() {
 }
 
 func (s *CDNDownloadTestSuite) TestDownload(c *check.C) {
-	cm, _ := NewManager(nil, nil)
+	cm, _ := NewManager(nil, nil, nil)
 	bytes := []byte("hello world")
 	bytesLength := int64(len(bytes))
 
