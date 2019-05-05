@@ -43,4 +43,14 @@ type TaskMgr interface {
 	// We use a sting called pieceRange to identify a piece.
 	// A pieceRange separated by a dash, like this: 0-45565, etc.
 	UpdatePieceStatus(ctx context.Context, taskID, pieceRange string, pieceUpdateRequest *types.PieceUpdateRequest) error
+
+	// GetPieceMD5 returns the md5 of pieceNum for taskID.
+	GetPieceMD5(ctx context.Context, taskID string, pieceNum int) (pieceMD5 string, err error)
+
+	// SetPieceMD5 set the md5 for pieceNum of taskID.
+	SetPieceMD5(ctx context.Context, taskID string, pieceNum int, pieceMD5 string) (err error)
+
+	// GetPieceMD5sByTaskID returns all pieceMD5s as a string slice.
+	// All pieceMD5s are returned only if the CDN status is successful.
+	GetPieceMD5sByTaskID(ctx context.Context, taskID string) (pieceMD5s []string, err error)
 }
