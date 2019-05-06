@@ -59,4 +59,7 @@ const (
 
 	// PieceWrapSize 4 bytes head and 1 byte tail
 	PieceWrapSize = PieceHeadSize + 1
+
+	// PieceTailChar the value of piece tail
+	PieceTailChar = byte(0x7f)
 )
