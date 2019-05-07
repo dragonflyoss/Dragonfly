@@ -23,6 +23,7 @@ import (
 	"net"
 	"net/http"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -190,7 +191,12 @@ func Do(url string, headers map[string]string, timeout time.Duration) (string, e
 
 // HTTPGetWithHeaders send an HTTP GET request with headers.
 func HTTPGetWithHeaders(url string, headers map[string]string) (*http.Response, error) {
-	req, err := http.NewRequest("GET", url, nil)
+	return HTTPWithHeaders("GET", url, headers)
+}
+
+// HTTPWithHeaders send an HTTP request with headers and specified method.
+func HTTPWithHeaders(method, url string, headers map[string]string) (*http.Response, error) {
+	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -252,4 +258,31 @@ func CheckConnect(ip string, port int, timeout int) (localIP string, e error) {
 		}
 	}
 	return
+}
+
+// IsExpired checks if a resource received or stored is the same.
+func IsExpired(url string, headers map[string]string, lastModified int64, eTag string) (bool, error) {
+	if lastModified <= 0 && IsEmptyStr(eTag) {
+		return true, nil
+	}
+
+	// set headers
+	if headers == nil {
+		headers = make(map[string]string)
+	}
+	if lastModified > 0 {
+		headers["If-Modified-Since"] = strconv.FormatInt(lastModified, 10)
+	}
+	if !IsEmptyStr(eTag) {
+		headers["If-None-Match"] = eTag
+	}
+
+	// send request
+	resp, err := HTTPWithHeaders("HEAD", url, headers)
+	if err != nil {
+		return false, err
+	}
+	resp.Body.Close()
+
+	return resp.StatusCode != http.StatusNotModified, nil
 }
