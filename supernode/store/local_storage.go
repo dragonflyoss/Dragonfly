@@ -241,10 +241,7 @@ func (ls *localStorage) Remove(ctx context.Context, raw *Raw) error {
 	lock(getLockKey(path, raw.Offset), false)
 	defer releaseLock(getLockKey(path, raw.Offset), false)
 
-	if err := os.RemoveAll(path); err != nil {
-		return err
-	}
-	return nil
+	return os.RemoveAll(path)
 }
 
 // helper function
