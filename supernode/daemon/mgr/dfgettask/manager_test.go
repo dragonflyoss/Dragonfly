@@ -85,6 +85,6 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskMgr(c *check.C) {
 	err = dfgetTaskManager.Delete(context.Background(), clientID, taskID)
 	c.Check(err, check.IsNil)
 
-	dt, err = dfgetTaskManager.Get(context.Background(), clientID, taskID)
+	_, err = dfgetTaskManager.Get(context.Background(), clientID, taskID)
 	c.Check(errors.IsDataNotFound(err), check.Equals, true)
 }

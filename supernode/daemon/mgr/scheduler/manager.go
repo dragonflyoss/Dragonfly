@@ -194,6 +194,10 @@ func (sm *Manager) tryGetPID(ctx context.Context, taskID string, pieceNum int, p
 
 		// if the v is in the blackList, try the next one.
 		blackInfo, err := sm.progressMgr.GetBlackInfoByPeerID(ctx, peerIDs[i])
+		if err != nil && !errorType.IsDataNotFound(err) {
+			logrus.Errorf("failed to get blackInfo for peerID %s: %v", peerIDs[i], err)
+			continue
+		}
 		if blackInfo != nil && isExistInMap(blackInfo, peerIDs[i]) {
 			continue
 		}
