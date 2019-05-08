@@ -129,8 +129,10 @@ func (s *PeerMgrTestSuite) TestList(c *check.C) {
 		Version:  "v0.3.0",
 	}
 	resp, err := manager.Register(context.Background(), request)
+	c.Check(err, check.IsNil)
 	id := resp.ID
 	info, err := manager.Get(context.Background(), id)
+	c.Check(err, check.IsNil)
 
 	// the second data
 	request = &types.PeerCreateRequest{
@@ -140,8 +142,10 @@ func (s *PeerMgrTestSuite) TestList(c *check.C) {
 		Version:  "v0.3.0",
 	}
 	resp, err = manager.Register(context.Background(), request)
+	c.Check(err, check.IsNil)
 	id = resp.ID
 	info2, err := manager.Get(context.Background(), id)
+	c.Check(err, check.IsNil)
 
 	// get all
 	infoList, err := manager.List(context.Background(), nil)

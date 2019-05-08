@@ -138,8 +138,9 @@ func Do(url string, headers map[string]string, timeout time.Duration) (string, e
 	var err error
 	if timeout > 0 {
 		err = fasthttp.DoTimeout(req, resp, timeout)
+	} else {
+		err = fasthttp.Do(req, resp)
 	}
-	err = fasthttp.Do(req, resp)
 	if err != nil {
 		return "", err
 	}
