@@ -19,12 +19,15 @@ package config
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"regexp"
 	"strings"
 
 	"gopkg.in/yaml.v2"
+
+	"github.com/pkg/errors"
 )
 
 // -----------------------------------------------------------------------------
@@ -49,6 +52,7 @@ func NewProperties() *Properties {
 //           schema: https
 //           host: reg.com
 //           certs: ['/etc/ssl/reg.com/server.crt']
+//
 //     proxies:
 //     # proxy all http image layer download requests with dfget
 //     - regx: blob/sha256/.*
@@ -58,6 +62,14 @@ func NewProperties() *Properties {
 //     # proxy requests directly, without dfget
 //     - regx: no-proxy-reg
 //       direct: true
+//
+//     hijack_https:
+//	 # key pair used to hijack https requests
+//       cert: df.crt
+//       key: df.key
+//	 hosts:
+//       - regx: mirror.aliyuncs.com:443
+//	   certs:
 type Properties struct {
 	// Registries the more front the position, the higher priority.
 	// You could add an empty Registry at the end to proxy all other requests
@@ -67,6 +79,116 @@ type Properties struct {
 	// are provided, all requests will be proxied directly. Request will be
 	// proxied with the first matching rule.
 	Proxies []*Proxy `yaml:"proxies"`
+
+	// HijackHTTPS is the list of hosts whose https requests should be hijacked
+	// by dfdaemon. Dfdaemon will be able to proxy requests from them with dfget
+	// if the url matches the proxy rules
+	HijackHTTPS *HijackConfig `yaml:"hijack_https"`
+}
+
+// HijackConfig represents how dfdaemon hijacks http requests
+type HijackConfig struct {
+	Cert  string        `yaml:"cert"`
+	Key   string        `yaml:"key"`
+	Hosts []*HijackHost `yaml:"hosts"`
+}
+
+// HijackHost is a hijack rule for the hosts that matches Regx
+type HijackHost struct {
+	Regx  *Regexp   `yaml:"regx"`
+	Certs *CertPool `yaml:"certs"`
+}
+
+// CertPool is a wrapper around x509.CertPool, which can be unmarshalled and
+// constructed from a list of filenames
+type CertPool struct {
+	files []string
+	*x509.CertPool
+}
+
+// UnmarshalYAML implements yaml.Unmarshaller
+func (cp *CertPool) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return cp.unmarshal(unmarshal)
+}
+
+// UnmarshalJSON implements json.Unmarshaller
+func (cp *CertPool) UnmarshalJSON(b []byte) error {
+	return cp.unmarshal(func(v interface{}) error { return json.Unmarshal(b, v) })
+}
+
+func (cp *CertPool) unmarshal(unmarshal func(interface{}) error) error {
+	if err := unmarshal(&cp.files); err != nil {
+		return err
+	}
+
+	pool, err := certPoolFromFiles(cp.files...)
+	if err != nil {
+		return err
+	}
+
+	cp.CertPool = pool
+	return nil
+}
+
+// Regexp is simple wrapper around regexp.Regexp to make it unmarshallable from a string
+type Regexp struct {
+	*regexp.Regexp
+}
+
+// NewRegexp returns new Regexp instance compiled from the given string
+func NewRegexp(exp string) (*Regexp, error) {
+	r, err := regexp.Compile(exp)
+	if err != nil {
+		return nil, err
+	}
+	return &Regexp{r}, nil
+}
+
+// UnmarshalYAML implements yaml.Unmarshaller
+func (r *Regexp) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	return r.unmarshal(unmarshal)
+}
+
+// UnmarshalJSON implements json.Unmarshaller
+func (r *Regexp) UnmarshalJSON(b []byte) error {
+	return r.unmarshal(func(v interface{}) error { return json.Unmarshal(b, v) })
+}
+
+func (r *Regexp) unmarshal(unmarshal func(interface{}) error) error {
+	var s string
+	if err := unmarshal(&s); err != nil {
+		return err
+	}
+	exp, err := regexp.Compile(s)
+	if err == nil {
+		r.Regexp = exp
+	}
+	return err
+}
+
+// MarshalJSON implements json.Marshaller to print the regexp
+func (r *Regexp) MarshalJSON() ([]byte, error) {
+	return json.Marshal(r.String())
+}
+
+// certPoolFromFiles returns an *x509.CertPool constructed from the given files.
+// If no files are given, (nil, nil) will be returned.
+func certPoolFromFiles(files ...string) (*x509.CertPool, error) {
+	if len(files) == 0 {
+		return nil, nil
+	}
+
+	roots := x509.NewCertPool()
+	for _, f := range files {
+		cert, err := ioutil.ReadFile(f)
+		if err != nil {
+			return nil, errors.Wrapf(err, "read cert file %s", f)
+		}
+		if !roots.AppendCertsFromPEM(cert) {
+			return nil, errors.Errorf("invalid cert: %s", f)
+		}
+	}
+	return roots, nil
 }
 
 // Load loads properties from config file.
@@ -85,17 +207,6 @@ func (p *Properties) Load(path string) error {
 		}
 	}
 	p.Registries = tmp
-
-	var tmpProxies []*Proxy
-	for _, v := range p.Proxies {
-		if v != nil {
-			if err := v.init(); err != nil {
-				return err
-			}
-			tmpProxies = append(tmpProxies, v)
-		}
-	}
-	p.Proxies = tmpProxies
 
 	return nil
 }
@@ -208,32 +319,26 @@ func (r *Registry) initTLSConfig() error {
 
 // Proxy describe a regular expression matching rule for how to proxy a request
 type Proxy struct {
-	Regx     string `yaml:"regx"`
-	UseHTTPS bool   `yaml:"use_https"`
-	Direct   bool   `yaml:"direct"`
-
-	match *regexp.Regexp
+	Regx     *Regexp `yaml:"regx"`
+	UseHTTPS bool    `yaml:"use_https"`
+	Direct   bool    `yaml:"direct"`
 }
 
 // NewProxy returns a new proxy rule with given attributes
 func NewProxy(regx string, useHTTPS bool, direct bool) (*Proxy, error) {
-	p := &Proxy{
-		Regx:     regx,
+	exp, err := NewRegexp(regx)
+	if err != nil {
+		return nil, errors.Wrap(err, "invalid regexp")
+	}
+
+	return &Proxy{
+		Regx:     exp,
 		UseHTTPS: useHTTPS,
 		Direct:   direct,
-	}
-	if err := p.init(); err != nil {
-		return nil, err
-	}
-	return p, nil
-}
-
-func (r *Proxy) init() (err error) {
-	r.match, err = regexp.Compile(r.Regx)
-	return err
+	}, nil
 }
 
 // Match checks if the given url matches the rule
 func (r *Proxy) Match(url string) bool {
-	return r.match != nil && r.match.MatchString(url)
+	return r.Regx != nil && r.Regx.MatchString(url)
 }
