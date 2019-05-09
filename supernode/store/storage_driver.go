@@ -18,18 +18,8 @@ package store
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"time"
-)
-
-var (
-	// ErrNotFound is an error which will be returned
-	// when the key can not be found.
-	ErrNotFound = fmt.Errorf("the key not found")
-
-	// ErrEmptyKey is an error when the key is empty.
-	ErrEmptyKey = fmt.Errorf("the key is empty")
 )
 
 // StorageDriver defines an interface to manage the data stored in the driver.
@@ -40,10 +30,9 @@ var (
 // the different pieces of the same file concurrently.
 type StorageDriver interface {
 	// Get data from the storage based on raw information.
-	// The data should be written into the writer as io stream.
 	// If the length<=0, the driver should return all data from the raw.offest.
 	// Otherwise, just return the data which starts from raw.offset and the length is raw.length.
-	Get(ctx context.Context, raw *Raw, writer io.Writer) error
+	Get(ctx context.Context, raw *Raw) (io.Reader, error)
 
 	// Get data from the storage based on raw information.
 	// The data should be returned in bytes.

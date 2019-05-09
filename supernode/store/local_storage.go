@@ -26,9 +26,10 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"gopkg.in/yaml.v2"
-
 	"github.com/dragonflyoss/Dragonfly/common/util"
+
+	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 )
 
 // LocalStorageDriver is a const of local storage driver.
@@ -45,27 +46,41 @@ type fileMutex struct {
 	sync.RWMutex
 }
 
-func lock(key string, ro bool) {
+func lock(path string, offset int64, ro bool) {
+	if offset != -1 {
+		getLock(getLockKey(path, -1), true)
+	}
+
+	getLock(getLockKey(path, offset), ro)
+}
+
+func unLock(path string, offset int64, ro bool) {
+	if offset != -1 {
+		releaseLock(getLockKey(path, -1), true)
+	}
+
+	releaseLock(getLockKey(path, offset), ro)
+}
+
+func getLock(key string, ro bool) {
 	v, _ := fileMutexLocker.LoadOrStore(key, &fileMutex{})
 	f := v.(*fileMutex)
+
+	atomic.AddInt32(&f.count, 1)
 
 	if ro {
 		f.RLock()
 	} else {
 		f.Lock()
 	}
-
-	atomic.AddInt32(&f.count, 1)
 }
 
 func releaseLock(key string, ro bool) {
 	v, ok := fileMutexLocker.Load(key)
 	if !ok {
-		// return fmt.Errorf("panic error")
+		return
 	}
 	f := v.(*fileMutex)
-
-	atomic.AddInt32(&f.count, -1)
 
 	if ro {
 		f.RUnlock()
@@ -73,7 +88,7 @@ func releaseLock(key string, ro bool) {
 		f.Unlock()
 	}
 
-	if f.count < 1 {
+	if atomic.AddInt32(&f.count, -1) < 1 {
 		fileMutexLocker.Delete(key)
 	}
 }
@@ -106,43 +121,56 @@ func NewLocalStorage(conf string) (StorageDriver, error) {
 }
 
 // Get the content of key from storage and return in io stream.
-func (ls *localStorage) Get(ctx context.Context, raw *Raw, writer io.Writer) error {
-	path, _, err := ls.statPath(raw.Key)
-	if err != nil {
-		return err
-	}
-
-	lock(getLockKey(path, raw.Offset), true)
-	defer releaseLock(getLockKey(path, raw.Offset), true)
-
-	f, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	f.Seek(raw.Offset, 0)
-	if raw.Length <= 0 {
-		_, err = io.Copy(writer, f)
-	} else {
-		_, err = io.CopyN(writer, f, raw.Length)
-	}
-
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// GetBytes gets the content of key from storage and return in bytes.
-func (ls *localStorage) GetBytes(ctx context.Context, raw *Raw) (data []byte, err error) {
-	path, _, err := ls.statPath(raw.Key)
+func (ls *localStorage) Get(ctx context.Context, raw *Raw) (io.Reader, error) {
+	path, info, err := ls.statPath(raw.Key)
 	if err != nil {
 		return nil, err
 	}
 
-	lock(getLockKey(path, raw.Offset), true)
-	defer releaseLock(getLockKey(path, raw.Offset), true)
+	if err := checkGetRaw(raw, info.Size()); err != nil {
+		return nil, err
+	}
+
+	r, w := io.Pipe()
+	go func() {
+		defer w.Close()
+
+		lock(path, raw.Offset, true)
+		defer unLock(path, raw.Offset, true)
+
+		f, err := os.Open(path)
+		if err != nil {
+			return
+		}
+		defer f.Close()
+
+		f.Seek(raw.Offset, 0)
+		var reader io.Reader
+		reader = f
+		if raw.Length > 0 {
+			reader = io.LimitReader(f, raw.Length)
+		}
+
+		buf := make([]byte, 256*1024)
+		io.CopyBuffer(w, reader, buf)
+	}()
+
+	return r, nil
+}
+
+// GetBytes gets the content of key from storage and return in bytes.
+func (ls *localStorage) GetBytes(ctx context.Context, raw *Raw) (data []byte, err error) {
+	path, info, err := ls.statPath(raw.Key)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := checkGetRaw(raw, info.Size()); err != nil {
+		return nil, err
+	}
+
+	lock(path, raw.Offset, true)
+	defer unLock(path, raw.Offset, true)
 
 	f, err := os.Open(path)
 	if err != nil {
@@ -171,17 +199,22 @@ func (ls *localStorage) Put(ctx context.Context, raw *Raw, data io.Reader) error
 		return err
 	}
 
-	lock(getLockKey(path, raw.Offset), false)
-	defer releaseLock(getLockKey(path, raw.Offset), false)
+	if data == nil {
+		return nil
+	}
 
-	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC|os.O_SYNC, 0644)
+	lock(path, raw.Offset, false)
+	defer unLock(path, raw.Offset, false)
+
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0644)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
 	f.Seek(raw.Offset, 0)
-	if _, err = io.Copy(f, data); err != nil {
+	buf := make([]byte, 256*1024)
+	if _, err = io.CopyBuffer(f, data, buf); err != nil {
 		return err
 	}
 
@@ -195,10 +228,10 @@ func (ls *localStorage) PutBytes(ctx context.Context, raw *Raw, data []byte) err
 		return err
 	}
 
-	lock(getLockKey(path, raw.Offset), false)
-	defer releaseLock(getLockKey(path, raw.Offset), false)
+	lock(path, raw.Offset, false)
+	defer unLock(path, raw.Offset, false)
 
-	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC|os.O_SYNC, 0644)
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0644)
 	if err != nil {
 		return err
 	}
@@ -238,8 +271,8 @@ func (ls *localStorage) Remove(ctx context.Context, raw *Raw) error {
 		return err
 	}
 
-	lock(getLockKey(path, raw.Offset), false)
-	defer releaseLock(getLockKey(path, raw.Offset), false)
+	lock(path, -1, false)
+	defer unLock(path, -1, false)
 
 	return os.RemoveAll(path)
 }
@@ -264,7 +297,7 @@ func (ls *localStorage) statPath(key string) (string, os.FileInfo, error) {
 	f, err := os.Stat(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return "", nil, ErrNotFound
+			return "", nil, errors.Wrapf(ErrKeyNotFound, "key: %s", key)
 		}
 		return "", nil, err
 	}
@@ -281,4 +314,19 @@ func getPrefix(str string) string {
 		return string([]byte(str)[:3])
 	}
 	return str
+}
+
+func checkGetRaw(raw *Raw, fileLength int64) error {
+	if fileLength < raw.Offset {
+		return errors.Wrapf(ErrRangeNotSatisfiable, "the offset: %d is lager than the file length: %d", raw.Offset, fileLength)
+	}
+
+	if raw.Length < 0 {
+		return errors.Wrapf(ErrInvalidValue, "the length: %d is not a positive integer", raw.Length)
+	}
+
+	if fileLength < (raw.Offset + raw.Length) {
+		return errors.Wrapf(ErrRangeNotSatisfiable, "the offset: %d and length: %d is lager than the file length: %d", raw.Offset, raw.Length, fileLength)
+	}
+	return nil
 }

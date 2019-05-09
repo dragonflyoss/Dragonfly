@@ -17,7 +17,6 @@
 package store
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -25,6 +24,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/dragonflyoss/Dragonfly/common/util"
@@ -82,105 +82,199 @@ func (s *LocalStorageSuite) TearDownSuite(c *check.C) {
 
 func (s *LocalStorageSuite) TestGetPutBytes(c *check.C) {
 	var cases = []struct {
-		raw      *Raw
-		data     []byte
-		expected string
+		putRaw      *Raw
+		getRaw      *Raw
+		data        []byte
+		getErrCheck func(error) bool
+		expected    string
 	}{
 		{
-			raw: &Raw{
+			putRaw: &Raw{
 				Key: "foo1",
 			},
-			data:     []byte("hello foo"),
-			expected: "hello foo",
+			getRaw: &Raw{
+				Key: "foo1",
+			},
+			data:        []byte("hello foo"),
+			getErrCheck: IsNilError,
+			expected:    "hello foo",
 		},
 		{
-			raw: &Raw{
+			putRaw: &Raw{
+				Key: "foo2",
+			},
+			getRaw: &Raw{
 				Key:    "foo2",
 				Offset: 0,
 				Length: 5,
 			},
-			data:     []byte("hello foo"),
-			expected: "hello",
+			getErrCheck: IsNilError,
+			data:        []byte("hello foo"),
+			expected:    "hello",
 		},
 		{
-			raw: &Raw{
+			putRaw: &Raw{
+				Key: "foo3",
+			},
+			getRaw: &Raw{
 				Key:    "foo3",
-				Offset: 2,
+				Offset: 0,
 				Length: -1,
 			},
-			data:     []byte("hello foo"),
-			expected: "hello foo",
+			getErrCheck: IsInvalidValue,
+			data:        []byte("hello foo"),
+			expected:    "",
 		},
 	}
 
 	for _, v := range cases {
 		// put
-		s.storeLocal.PutBytes(context.Background(), v.raw, v.data)
+		s.storeLocal.PutBytes(context.Background(), v.putRaw, v.data)
 
 		// get
-		result, err := s.storeLocal.GetBytes(context.Background(), v.raw)
-		c.Assert(err, check.IsNil)
-		c.Assert(string(result), check.Equals, v.expected)
+		result, err := s.storeLocal.GetBytes(context.Background(), v.getRaw)
+		c.Assert(v.getErrCheck(err), check.Equals, true)
+		if err == nil {
+			c.Assert(string(result), check.Equals, v.expected)
+		}
 
 		// stat
-		s.checkStat(v.raw, c)
+		s.checkStat(v.putRaw, c)
 
 		// remove
-		s.checkRemove(v.raw, c)
+		s.checkRemove(v.putRaw, c)
 	}
 
 }
 
 func (s *LocalStorageSuite) TestGetPut(c *check.C) {
 	var cases = []struct {
-		raw      *Raw
-		data     io.Reader
-		expected string
+		putRaw      *Raw
+		getRaw      *Raw
+		data        io.Reader
+		getErrCheck func(error) bool
+		expected    string
 	}{
 		{
-			raw: &Raw{
+			putRaw: &Raw{
 				Key: "foo1.meta",
 			},
-			data:     strings.NewReader("hello meta file"),
-			expected: "hello meta file",
+			getRaw: &Raw{
+				Key: "foo1.meta",
+			},
+			data:        strings.NewReader("hello meta file"),
+			getErrCheck: IsNilError,
+			expected:    "hello meta file",
 		},
 		{
-			raw: &Raw{
+			putRaw: &Raw{
+				Key: "foo2.meta",
+			},
+			getRaw: &Raw{
 				Key:    "foo2.meta",
 				Offset: 2,
 				Length: 5,
 			},
-			data:     strings.NewReader("hello meta file"),
-			expected: "hello",
+			data:        strings.NewReader("hello meta file"),
+			getErrCheck: IsNilError,
+			expected:    "llo m",
 		},
 		{
-			raw: &Raw{
+			putRaw: &Raw{
+				Key: "foo3.meta",
+			},
+			getRaw: &Raw{
 				Key:    "foo3.meta",
 				Offset: 2,
 				Length: -1,
 			},
-			data:     strings.NewReader("hello meta file"),
-			expected: "hello meta file",
+			getErrCheck: IsInvalidValue,
+			data:        strings.NewReader("hello meta file"),
+			expected:    "llo meta file",
+		},
+		{
+			putRaw: &Raw{
+				Key: "foo4.meta",
+			},
+			getRaw: &Raw{
+				Key:    "foo4.meta",
+				Offset: 30,
+				Length: 5,
+			},
+			getErrCheck: IsRangeNotSatisfiable,
+			data:        strings.NewReader("hello meta file"),
+			expected:    "",
 		},
 	}
 
 	for _, v := range cases {
 		// put
-		s.storeLocal.Put(context.Background(), v.raw, v.data)
+		s.storeLocal.Put(context.Background(), v.putRaw, v.data)
 
 		// get
-		buf1 := new(bytes.Buffer)
-		err := s.storeLocal.Get(context.Background(), v.raw, buf1)
-		c.Assert(err, check.IsNil)
-		c.Assert(buf1.String(), check.Equals, v.expected)
+		r, err := s.storeLocal.Get(context.Background(), v.getRaw)
+		c.Check(v.getErrCheck(err), check.Equals, true)
+		if err == nil {
+			result, err := ioutil.ReadAll(r)
+			c.Assert(err, check.IsNil)
+			c.Assert(string(result[:]), check.Equals, v.expected)
+		}
 
 		// stat
-		s.checkStat(v.raw, c)
+		s.checkStat(v.putRaw, c)
 
 		// remove
-		s.checkRemove(v.raw, c)
+		s.checkRemove(v.putRaw, c)
 	}
 
+}
+
+func (s *LocalStorageSuite) TestPutParallel(c *check.C) {
+	var key = "fooPutParallel"
+	var routineCount = 4
+	var testStr = "hello"
+	var testStrLength = len(testStr)
+
+	var wg sync.WaitGroup
+	for k := 0; k < routineCount; k++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			s.storeLocal.Put(context.TODO(), &Raw{
+				Key:    key,
+				Offset: int64(i) * int64(testStrLength),
+			}, strings.NewReader(testStr))
+		}(k)
+	}
+	wg.Wait()
+
+	info, err := s.storeLocal.Stat(context.TODO(), &Raw{Key: key})
+	c.Check(err, check.IsNil)
+	c.Check(info.Size, check.Equals, int64(routineCount)*int64(testStrLength))
+}
+
+func (s *LocalStorageSuite) BenchmarkPutParallel(c *check.C) {
+	var wg sync.WaitGroup
+	for k := 0; k < c.N; k++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			s.storeLocal.Put(context.Background(), &Raw{
+				Key:    "foo.bech",
+				Offset: int64(i) * 5,
+			}, strings.NewReader("hello"))
+		}(k)
+	}
+	wg.Wait()
+}
+
+func (s *LocalStorageSuite) BenchmarkPutSerial(c *check.C) {
+	for k := 0; k < c.N; k++ {
+		s.storeLocal.Put(context.Background(), &Raw{
+			Key:    "foo1.bech",
+			Offset: int64(k) * 5,
+		}, strings.NewReader("hello"))
+	}
 }
 
 func (s *LocalStorageSuite) TestGetPrefix(c *check.C) {
@@ -203,7 +297,7 @@ func (s *LocalStorageSuite) TestGetPrefix(c *check.C) {
 
 func (s *LocalStorageSuite) checkStat(raw *Raw, c *check.C) {
 	info, err := s.storeLocal.Stat(context.Background(), raw)
-	c.Assert(err, check.IsNil)
+	c.Assert(IsNilError(err), check.Equals, true)
 
 	driver := s.storeLocal.driver.(*localStorage)
 	pathTemp := path.Join(driver.BaseDir, getPrefix(raw.Key), raw.Key)
@@ -220,8 +314,8 @@ func (s *LocalStorageSuite) checkStat(raw *Raw, c *check.C) {
 
 func (s *LocalStorageSuite) checkRemove(raw *Raw, c *check.C) {
 	err := s.storeLocal.Remove(context.Background(), raw)
-	c.Assert(err, check.IsNil)
+	c.Assert(IsNilError(err), check.Equals, true)
 
 	_, err = s.storeLocal.Stat(context.Background(), raw)
-	c.Assert(err, check.DeepEquals, ErrNotFound)
+	c.Assert(IsKeyNotFound(err), check.Equals, true)
 }
