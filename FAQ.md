@@ -27,9 +27,9 @@ No, Dragonfly can be used to distribute all kinds of files, not only container i
 
 ## What is the sequence of P2P distribution
 
-Supernode will maintain a bitmap which records the correspondence between peers and pieces. When dfget starts to download, supernode will return several pieces info (4 in default）according to the scheduler.
+Supernode will maintain a bitmap which records the correspondence between peers and pieces. When dfget starts to download, supernode will return several pieces info (4 by default）according to the scheduler.
 
-**NOTE**: The scheduler will decide whether to download from the supernode or other peers. As for the details of the scheduler, please refer to [scheduler algorithm](#what-is-the-peer-scheduling-algorithm-in-default)
+**NOTE**: The scheduler will decide whether to download from the supernode or other peers. As for the details of the scheduler, please refer to [scheduler algorithm](#what-is-the-peer-scheduling-algorithm-by-default)
 
 ## How do supernode and peers manage file cache which is ready for other peer's pulling
 
@@ -65,7 +65,7 @@ In addition, supernode does not have to wait for all the piece downloadings fini
 
 If a file on the peer is deleted manually or by GC, the supernode won't know that. And in the subsequent scheduling, if multiple download tasks fail from this peer, the scheduler will add it to blacklist. So do with that if the server process be killed or other abnormal conditions.
 
-## What is the peer scheduling algorithm in default
+## What is the peer scheduling algorithm by default
 
 - Distribute the number of pieces evenly. Select the piece with the smallest number in the entire P2P network so that the distribution of each piece in the P2P network is balanced to avoid "Nervous resources".
 
@@ -88,7 +88,7 @@ The size of pieces which is calculated as per the following strategy:
 
 ## What is the difference between Dragonfly's P2P algorithm and bit-torrent(BT)
 
-Dragonfly's P2P algorithm and bit-torrent(BT) are both the implementation of peer-to-peer protocol. For the difference between them, we describe them in the following table
+Dragonfly's P2P algorithm and bit-torrent(BT) are both the implementation of peer-to-peer protocol. For the difference between them, we describe them in the following table:
 
 |Aspect|Dragonfly|Bit-Torrent(BT)|
 |:-:|:-:|:-:|
@@ -108,7 +108,7 @@ For peer node itself, Dragonfly can set network bandwidth limit for two parts:
 
 For supernode, Dragonfly allows user to limit both the input and output network bandwidth.
 
-You can also config it with config files, refer to [link](./docs/cli_reference/dfget.md#etcdragonflyconf)
+You can also config it with config files, refer to [link](./docs/cli_reference/dfget.md#etcdragonflyconf).
 
 ## Why does dfget still keep running after file/image distribution finished
 
