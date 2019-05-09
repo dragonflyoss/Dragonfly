@@ -68,7 +68,7 @@ func (s *HTTPUtilTestSuite) TestPostJson(c *check.C) {
 	code, body, e := PostJSON("http://"+s.host, req(1, 2), 60*time.Millisecond)
 	checkOk(c, code, body, e, 3)
 
-	code, body, e = PostJSON("http://"+s.host, req(1, 2), 50*time.Millisecond)
+	_, _, e = PostJSON("http://"+s.host, req(1, 2), 50*time.Millisecond)
 	c.Assert(e, check.NotNil)
 	c.Assert(e.Error(), check.Equals, "timeout")
 
@@ -83,7 +83,7 @@ func (s *HTTPUtilTestSuite) TestGet(c *check.C) {
 	code, body, e := Get("http://"+s.host, 0)
 	checkOk(c, code, body, e, 0)
 
-	code, body, e = Get("http://"+s.host, 50*time.Millisecond)
+	_, _, e = Get("http://"+s.host, 50*time.Millisecond)
 	c.Assert(e, check.NotNil)
 	c.Assert(e.Error(), check.Equals, "timeout")
 }
