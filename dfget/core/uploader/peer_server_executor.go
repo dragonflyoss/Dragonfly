@@ -103,18 +103,15 @@ func (pe *peerServerExecutor) readPort(r io.Reader) (int, error) {
 	var port int32
 
 	go func() {
-		var n = 0
-		var portValue = 0
-		var err error
 		buf := make([]byte, 256)
 
-		n, err = r.Read(buf)
+		n, err := r.Read(buf)
 		if err != nil {
 			done <- err
 		}
 
 		content := strings.TrimSpace(string(buf[:n]))
-		portValue, err = strconv.Atoi(content)
+		portValue, err := strconv.Atoi(content)
 		// avoid data race
 		atomic.StoreInt32(&port, int32(portValue))
 		done <- err

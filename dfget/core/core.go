@@ -115,8 +115,7 @@ func prepare(cfg *config.Config) (err error) {
 }
 
 func launchPeerServer(cfg *config.Config) (err error) {
-	var port = 0
-	port, err = uploader.StartPeerServerProcess(cfg)
+	port, err := uploader.StartPeerServerProcess(cfg)
 	if err == nil && port > 0 {
 		cfg.RV.PeerPort = port
 	}
