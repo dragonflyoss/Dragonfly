@@ -85,6 +85,9 @@ func NewDFRoundTripper(cfg *tls.Config) *DFRoundTripper {
 // fix resource release
 func (roundTripper *DFRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	if roundTripper.ShouldUseDfget(req) {
+		// delete the Accept-Encoding header to avoid returning the same cached
+		// result for different requests
+		req.Header.Del("Accept-Encoding")
 		logrus.Debugf("round trip with dfget: %s", req.URL.String())
 		if res, err := roundTripper.download(req, req.URL.String()); err == nil || !exception.IsNotAuth(err) {
 			return res, err
@@ -126,7 +129,8 @@ func (roundTripper *DFRoundTripper) downloadByGetter(url string, header map[stri
 	return roundTripper.Downloader.Download(url, header, name)
 }
 
-// needUseGetter whether to download by DFGetter
+// needUseGetter is the default value for ShouldUseDfget, which downloads all
+// images layers with dfget.
 func needUseGetter(req *http.Request) bool {
 	if req.Method != http.MethodGet {
 		return false

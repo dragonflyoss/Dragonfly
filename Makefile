@@ -80,3 +80,12 @@ release:
 	./hack/package.sh
 .PHONY: release
 
+df.key:
+	openssl genrsa -des3 -passout pass:x -out df.pass.key 2048
+	openssl rsa -passin pass:x -in df.pass.key -out df.key
+	rm df.pass.key
+
+df.crt: df.key
+	openssl req -new -key df.key -out df.csr
+	openssl x509 -req -sha256 -days 365 -in df.csr -signkey df.key -out df.crt
+	rm df.csr
