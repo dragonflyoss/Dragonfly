@@ -46,7 +46,7 @@ func (tc *testCase) Test(t *testing.T) {
 	if !a.Nil(tc.Error) {
 		return
 	}
-	tp, err := New(tc.Rules)
+	tp, err := New(WithRules(tc.Rules))
 	if !a.Nil(err) {
 		return
 	}
