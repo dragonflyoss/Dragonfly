@@ -29,6 +29,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/initializer"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/proxy"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -52,9 +53,19 @@ func init() {
 }
 
 func runTransparentProxy(opt *options.Options) error {
-	tp, err := proxy.New(g.Properties.Proxies)
+	opts := []proxy.Option{
+		proxy.WithRules(g.Properties.Proxies),
+		proxy.WithHTTPSHosts(g.Properties.HijackHTTPS.Hosts...),
+	}
+	if g.Properties.HijackHTTPS.Cert != "" && g.Properties.HijackHTTPS.Key != "" {
+		opts = append(opts, proxy.WithCertFromFile(
+			g.Properties.HijackHTTPS.Cert,
+			g.Properties.HijackHTTPS.Key,
+		))
+	}
+	tp, err := proxy.New(opts...)
 	if err != nil {
-		return fmt.Errorf("failed to create transparent proxy: %v", err)
+		return errors.Wrap(err, "failed to create transparent proxy")
 	}
 	s := http.Server{
 		Addr:    fmt.Sprintf(":%d", opt.ProxyPort),
