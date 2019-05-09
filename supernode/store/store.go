@@ -20,8 +20,8 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strings"
 
+	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 )
 
@@ -65,16 +65,16 @@ func (s *Store) Name() string {
 }
 
 // Get the data from the storage driver in io stream.
-func (s *Store) Get(ctx context.Context, raw *Raw, writer io.Writer) error {
-	if err := isEmptyKey(raw.Key); err != nil {
-		return err
+func (s *Store) Get(ctx context.Context, raw *Raw) (io.Reader, error) {
+	if err := checkEmptyKey(raw); err != nil {
+		return nil, err
 	}
-	return s.driver.Get(ctx, raw, writer)
+	return s.driver.Get(ctx, raw)
 }
 
 // GetBytes gets the data from the storage driver in bytes.
 func (s *Store) GetBytes(ctx context.Context, raw *Raw) ([]byte, error) {
-	if err := isEmptyKey(raw.Key); err != nil {
+	if err := checkEmptyKey(raw); err != nil {
 		return nil, err
 	}
 	return s.driver.GetBytes(ctx, raw)
@@ -82,7 +82,7 @@ func (s *Store) GetBytes(ctx context.Context, raw *Raw) ([]byte, error) {
 
 // Put puts data into the storage in io stream.
 func (s *Store) Put(ctx context.Context, raw *Raw, data io.Reader) error {
-	if err := isEmptyKey(raw.Key); err != nil {
+	if err := checkEmptyKey(raw); err != nil {
 		return err
 	}
 	return s.driver.Put(ctx, raw, data)
@@ -90,7 +90,7 @@ func (s *Store) Put(ctx context.Context, raw *Raw, data io.Reader) error {
 
 // PutBytes puts data into the storage in bytes.
 func (s *Store) PutBytes(ctx context.Context, raw *Raw, data []byte) error {
-	if err := isEmptyKey(raw.Key); err != nil {
+	if err := checkEmptyKey(raw); err != nil {
 		return err
 	}
 	return s.driver.PutBytes(ctx, raw, data)
@@ -98,7 +98,7 @@ func (s *Store) PutBytes(ctx context.Context, raw *Raw, data []byte) error {
 
 // Remove the data from the storage based on raw information.
 func (s *Store) Remove(ctx context.Context, raw *Raw) error {
-	if err := isEmptyKey(raw.Key); err != nil {
+	if err := checkEmptyKey(raw); err != nil {
 		return err
 	}
 	return s.driver.Remove(ctx, raw)
@@ -108,15 +108,16 @@ func (s *Store) Remove(ctx context.Context, raw *Raw) error {
 // If that, and return some info that in the form of struct StorageInfo.
 // If not, return the ErrNotFound.
 func (s *Store) Stat(ctx context.Context, raw *Raw) (*StorageInfo, error) {
-	if err := isEmptyKey(raw.Key); err != nil {
+	if err := checkEmptyKey(raw); err != nil {
 		return nil, err
 	}
 	return s.driver.Stat(ctx, raw)
 }
 
-func isEmptyKey(str string) error {
-	if strings.TrimSpace(str) == "" {
+func checkEmptyKey(raw *Raw) error {
+	if raw == nil || cutil.IsEmptyStr(raw.Key) {
 		return ErrEmptyKey
 	}
+
 	return nil
 }
