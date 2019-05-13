@@ -286,3 +286,25 @@ func IsExpired(url string, headers map[string]string, lastModified int64, eTag s
 
 	return resp.StatusCode != http.StatusNotModified, nil
 }
+
+// IsSupportRange checks if the source url support partial requests.
+func IsSupportRange(url string, headers map[string]string) (bool, error) {
+	// set headers
+	if headers == nil {
+		headers = make(map[string]string)
+	}
+	headers["Range"] = "bytes=0-0"
+
+	// send request
+	resp, err := HTTPWithHeaders("HEAD", url, headers)
+	if err != nil {
+		return false, err
+	}
+	resp.Body.Close()
+
+	acceptRanges := resp.Header.Get("Accept-Ranges")
+	if acceptRanges == "none" && resp.StatusCode == http.StatusPartialContent {
+		return true, nil
+	}
+	return false, nil
+}
