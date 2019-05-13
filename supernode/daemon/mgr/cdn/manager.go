@@ -47,7 +47,7 @@ func NewManager(cfg *config.Config, cacheStore *store.Store, progressManager mgr
 }
 
 // TriggerCDN will trigger CDN to download the file from sourceUrl.
-func (cm *Manager) TriggerCDN(ctx context.Context, task *types.TaskInfo) error {
+func (cm *Manager) TriggerCDN(ctx context.Context, task *types.TaskInfo) (*types.TaskInfo, error) {
 	httpFileLength := task.HTTPFileLength
 	if httpFileLength == 0 {
 		httpFileLength = -1
@@ -58,14 +58,14 @@ func (cm *Manager) TriggerCDN(ctx context.Context, task *types.TaskInfo) error {
 	if err != nil {
 		logrus.Errorf("failed to detect cache for task %s: %v", task.ID, err)
 	}
-	fileMD5, err := cm.cdnReporter.reportCache(ctx, task.ID, metaData, startPieceNum)
+	fileMD5, updateTaskInfo, err := cm.cdnReporter.reportCache(ctx, task.ID, metaData, startPieceNum)
 	if err != nil {
 		logrus.Errorf("failed to report cache for taskId: %s : %v", task.ID, err)
 	}
 
 	if startPieceNum == -1 {
 		logrus.Infof("cache full hit for taskId:%s on local", task.ID)
-		return nil
+		return updateTaskInfo, nil
 	}
 
 	if fileMD5 == nil {
@@ -78,7 +78,7 @@ func (cm *Manager) TriggerCDN(ctx context.Context, task *types.TaskInfo) error {
 	// start to download the source file
 	resp, err := cm.download(ctx, task.ID, task.TaskURL, task.Headers, startPieceNum, httpFileLength, pieceContSize)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
@@ -88,10 +88,22 @@ func (cm *Manager) TriggerCDN(ctx context.Context, task *types.TaskInfo) error {
 	realFileLength, err := cm.writer.startWriter(ctx, cm.cfg, reader, task, startPieceNum, httpFileLength, pieceContSize)
 	if err != nil {
 		logrus.Errorf("failed to write for task %s: %v", task.ID, err)
-		return err
+		return nil, err
 	}
 
-	return cm.handleCDNResult(ctx, task, reader.Md5(), httpFileLength, realFileLength)
+	realMD5 := reader.Md5()
+	success, err := cm.handleCDNResult(ctx, task, realMD5, httpFileLength, realFileLength)
+	if err != nil || success == false {
+		return &types.TaskInfo{
+			CdnStatus: types.TaskInfoCdnStatusFAILED,
+		}, err
+	}
+
+	return &types.TaskInfo{
+		CdnStatus:  types.TaskInfoCdnStatusSUCCESS,
+		FileLength: realFileLength,
+		RealMd5:    realMD5,
+	}, nil
 }
 
 // GetStatus get the status of the file.
@@ -104,7 +116,7 @@ func (cm *Manager) Delete(ctx context.Context, taskID string) error {
 	return nil
 }
 
-func (cm *Manager) handleCDNResult(ctx context.Context, task *types.TaskInfo, realMd5 string, httpFileLength, realFileLength int64) error {
+func (cm *Manager) handleCDNResult(ctx context.Context, task *types.TaskInfo, realMd5 string, httpFileLength, realFileLength int64) (bool, error) {
 	var isSuccess = true
 	if !cutil.IsEmptyStr(task.Md5) && task.Md5 != realMd5 {
 		logrus.Errorf("taskId:%s url:%s file md5 not match expected:%s real:%s", task.ID, task.TaskURL, task.Md5, realMd5)
@@ -124,21 +136,24 @@ func (cm *Manager) handleCDNResult(ctx context.Context, task *types.TaskInfo, re
 		RealMd5:    realMd5,
 		FileLength: realFileLength,
 	}); err != nil {
-		return err
+		return false, err
 	}
 
 	if !isSuccess {
-		return nil
+		return false, nil
 	}
 
 	logrus.Infof("success to get taskID: %s fileLength: %d realMd5: %s", task.ID, realFileLength, realMd5)
 
 	pieceMD5s, err := cm.pieceMD5Manager.getPieceMD5sByTaskID(task.ID)
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	return cm.metaDataManager.writePieceMD5s(ctx, task.ID, realMd5, pieceMD5s)
+	if err := cm.metaDataManager.writePieceMD5s(ctx, task.ID, realMd5, pieceMD5s); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func (cm *Manager) updateLastModifiedAndETag(ctx context.Context, taskID, lastModified, eTag string) {

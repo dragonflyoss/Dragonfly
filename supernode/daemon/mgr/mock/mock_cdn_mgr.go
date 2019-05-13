@@ -37,11 +37,12 @@ func (m *MockCDNMgr) EXPECT() *MockCDNMgrMockRecorder {
 }
 
 // TriggerCDN mocks base method
-func (m *MockCDNMgr) TriggerCDN(ctx context.Context, taskInfo *types.TaskInfo) error {
+func (m *MockCDNMgr) TriggerCDN(ctx context.Context, taskInfo *types.TaskInfo) (*types.TaskInfo, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TriggerCDN", ctx, taskInfo)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*types.TaskInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // TriggerCDN indicates an expected call of TriggerCDN
