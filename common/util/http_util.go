@@ -308,3 +308,15 @@ func IsSupportRange(url string, headers map[string]string) (bool, error) {
 	}
 	return false, nil
 }
+
+// GetContentLength send a head request to get file length.
+func GetContentLength(url string, headers map[string]string) (int64, int, error) {
+	// send request
+	resp, err := HTTPWithHeaders("HEAD", url, headers)
+	if err != nil {
+		return 0, 0, err
+	}
+	resp.Body.Close()
+
+	return resp.ContentLength, resp.StatusCode, nil
+}
