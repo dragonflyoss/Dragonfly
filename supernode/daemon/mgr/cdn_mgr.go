@@ -14,7 +14,7 @@ type CDNMgr interface {
 	// 1). download the source file
 	// 2). update the taskInfo
 	// 3). write the file to disk
-	TriggerCDN(ctx context.Context, taskInfo *types.TaskInfo) error
+	TriggerCDN(ctx context.Context, taskInfo *types.TaskInfo) (*types.TaskInfo, error)
 
 	// GetStatus get the status of the file.
 	GetStatus(ctx context.Context, taskID string) (cdnStatus string, err error)

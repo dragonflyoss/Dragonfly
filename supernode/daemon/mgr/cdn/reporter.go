@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"hash"
 
+	"github.com/dragonflyoss/Dragonfly/apis/types"
 	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
@@ -33,16 +34,17 @@ func newReporter(cfg *config.Config, cacheStore *store.Store, progressManager mg
 	}
 }
 
-func (re *reporter) reportCache(ctx context.Context, taskID string, metaData *fileMetaData, breakNum int) (fileMD5 hash.Hash, err error) {
+func (re *reporter) reportCache(ctx context.Context, taskID string, metaData *fileMetaData,
+	breakNum int) (hash.Hash, *types.TaskInfo, error) {
 	// cache not hit
 	if breakNum == 0 {
-		return nil, nil
+		return nil, nil, nil
 	}
 
-	success, err := re.processCacheByQuick(ctx, taskID, metaData, breakNum)
+	success, updateTaskInfo, err := re.processCacheByQuick(ctx, taskID, metaData, breakNum)
 	if err == nil && success == true {
 		// it is possible to succeed only if breakNum equals -1
-		return nil, nil
+		return nil, updateTaskInfo, nil
 	}
 	logrus.Errorf("failed to process cache by quick taskID(%s): %v", taskID, err)
 
@@ -51,16 +53,16 @@ func (re *reporter) reportCache(ctx context.Context, taskID string, metaData *fi
 	return re.processCacheByReadFile(ctx, taskID, metaData, breakNum)
 }
 
-func (re *reporter) processCacheByQuick(ctx context.Context, taskID string, metaData *fileMetaData, breakNum int) (bool, error) {
+func (re *reporter) processCacheByQuick(ctx context.Context, taskID string, metaData *fileMetaData, breakNum int) (bool, *types.TaskInfo, error) {
 	if breakNum != -1 {
 		logrus.Debugf("failed to processCacheByQuick: breakNum not equals -1 for taskID %s", taskID)
-		return false, nil
+		return false, nil, nil
 	}
 
 	// validate the file md5
 	if cutil.IsEmptyStr(metaData.RealMd5) {
 		logrus.Debugf("failed to processCacheByQuick: empty RealMd5 for taskID %s", taskID)
-		return false, nil
+		return false, nil, nil
 	}
 
 	// validate the piece md5s
@@ -68,23 +70,27 @@ func (re *reporter) processCacheByQuick(ctx context.Context, taskID string, meta
 	var err error
 	if pieceMd5s, err = re.pieceMD5Manager.getPieceMD5sByTaskID(taskID); err != nil {
 		logrus.Debugf("failed to processCacheByQuick: failed to get pieceMd5s taskID %s: %v", taskID, err)
-		return false, err
+		return false, nil, err
 	}
 	if cutil.IsEmptySlice(pieceMd5s) {
 		if pieceMd5s, err = re.metaDataManager.readPieceMD5s(ctx, taskID, metaData.RealMd5); err != nil {
 			logrus.Debugf("failed to processCacheByQuick: failed to read pieceMd5s taskID %s: %v", taskID, err)
-			return false, err
+			return false, nil, err
 		}
 	}
 	if cutil.IsEmptySlice(pieceMd5s) {
 		logrus.Debugf("failed to processCacheByQuick: empty pieceMd5s taskID %s: %v", taskID, err)
-		return false, nil
+		return false, nil, nil
 	}
 
-	return true, re.reportPiecesStatus(ctx, taskID, pieceMd5s)
+	return true, &types.TaskInfo{
+		CdnStatus:  types.TaskInfoCdnStatusSUCCESS,
+		FileLength: metaData.FileLength,
+		RealMd5:    metaData.Md5,
+	}, re.reportPiecesStatus(ctx, taskID, pieceMd5s)
 }
 
-func (re *reporter) processCacheByReadFile(ctx context.Context, taskID string, metaData *fileMetaData, breakNum int) (hash.Hash, error) {
+func (re *reporter) processCacheByReadFile(ctx context.Context, taskID string, metaData *fileMetaData, breakNum int) (hash.Hash, *types.TaskInfo, error) {
 	var calculateFileMd5 = true
 	if breakNum == -1 && !cutil.IsEmptyStr(metaData.RealMd5) {
 		calculateFileMd5 = false
@@ -94,21 +100,21 @@ func (re *reporter) processCacheByReadFile(ctx context.Context, taskID string, m
 	reader, err := re.cacheStore.Get(ctx, getDownloadRawFunc(taskID))
 	if err != nil {
 		logrus.Errorf("failed to read key file taskID(%s): %v", taskID, err)
-		return nil, err
+		return nil, nil, err
 	}
 	result, err := cacheReader.readFile(ctx, reader, true, calculateFileMd5)
 	if err != nil {
 		logrus.Errorf("failed to read cache file taskID(%s): %v", taskID, err)
-		return nil, err
+		return nil, nil, err
 	}
 	logrus.Infof("success to get cache result: %+v by read file", result)
 
 	if err := re.reportPiecesStatus(ctx, taskID, result.pieceMd5s); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if breakNum != -1 {
-		return result.fileMd5, nil
+		return result.fileMd5, nil, nil
 	}
 
 	fileMd5Value := metaData.RealMd5
@@ -124,11 +130,15 @@ func (re *reporter) processCacheByReadFile(ctx context.Context, taskID string, m
 	}
 	if err := re.metaDataManager.updateStatusAndResult(ctx, taskID, fmd); err != nil {
 		logrus.Infof("failed to update status and result fileMetaData(%+v) for taskID(%s): %v", fmd, taskID, err)
-		return nil, err
+		return nil, nil, err
 	}
 	logrus.Infof("success to update status and result fileMetaData(%+v) for taskID(%s)", fmd, taskID)
 
-	return nil, re.metaDataManager.writePieceMD5s(ctx, taskID, fileMd5Value, result.pieceMd5s)
+	return nil, &types.TaskInfo{
+		CdnStatus:  types.TaskInfoCdnStatusSUCCESS,
+		FileLength: result.fileLength,
+		RealMd5:    fileMd5Value,
+	}, re.metaDataManager.writePieceMD5s(ctx, taskID, fileMd5Value, result.pieceMd5s)
 }
 
 func (re *reporter) reportPiecesStatus(ctx context.Context, taskID string, pieceMd5s []string) error {
