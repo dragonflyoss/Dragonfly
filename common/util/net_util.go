@@ -170,6 +170,25 @@ func IsValidIP(ip string) bool {
 	return result
 }
 
+// GetAllIPs returns all non-loopback addresses.
+func GetAllIPs() (ipList []string, err error) {
+	// get all system's unicast interface addresses.
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return nil, err
+	}
+
+	// filter all loopback addresses.
+	for _, v := range addrs {
+		if ipNet, ok := v.(*net.IPNet); ok {
+			if !ipNet.IP.IsLoopback() {
+				ipList = append(ipList, ipNet.IP.String())
+			}
+		}
+	}
+	return
+}
+
 // slice2Map translate a slice to a map with
 // the value in slice as the key and true as the value.
 func slice2Map(value []string) map[string]bool {
