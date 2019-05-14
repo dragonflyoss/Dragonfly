@@ -88,7 +88,7 @@ func (s *ProgressUtilTestSuite) TestUpdatePieceBitset(c *check.C) {
 }
 
 func (s *ProgressUtilTestSuite) TestUpdateBlackInfo(c *check.C) {
-	pm, _ := NewManager()
+	pm, _ := NewManager(nil)
 
 	updateAndCheckBlackInfo(pm, "src0", "dst0", 1, c)
 
