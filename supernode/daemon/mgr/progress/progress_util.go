@@ -3,7 +3,6 @@ package progress
 import (
 	"fmt"
 	"strconv"
-	"strings"
 
 	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
 	cutil "github.com/dragonflyoss/Dragonfly/common/util"
@@ -45,7 +44,7 @@ func (pm *Manager) updatePieceProgress(taskID, srcPID string, pieceNum int) erro
 // otherwise update the super progress.
 func (pm *Manager) updateClientProgress(taskID, srcCID, dstPID string, pieceNum, pieceStatus int) (bool, error) {
 	// update piece bitSet
-	if isSuperCID(srcCID) {
+	if pm.cfg.IsSuperCID(srcCID) {
 		ss, err := pm.superProgress.getAsSuperState(taskID)
 		if err != nil {
 			return false, err
@@ -117,7 +116,7 @@ func (pm *Manager) updatePeerProgress(taskID, srcPID, dstPID string, pieceNum, p
 		updateProducerLoad(dstPeerState.producerLoad, taskID, dstPID, pieceNum, pieceStatus)
 	}
 
-	if !needUpdatePeerInfo(srcPID, dstPID) {
+	if !pm.needUpdatePeerInfo(srcPID, dstPID) {
 		return nil
 	}
 
@@ -227,23 +226,12 @@ func updateProducerLoad(load *cutil.AtomicInt, taskID, peerID string, pieceNum, 
 
 // needUpdatePeerInfo returns whether we should update the peer related info.
 // It returns false when the PeerID is empty or represents a supernode.
-func needUpdatePeerInfo(srcPID, dstPID string) bool {
+func (pm *Manager) needUpdatePeerInfo(srcPID, dstPID string) bool {
 	if cutil.IsEmptyStr(srcPID) || cutil.IsEmptyStr(dstPID) ||
-		isSuperPID(srcPID) || isSuperPID(dstPID) {
+		pm.cfg.IsSuperPID(srcPID) || pm.cfg.IsSuperPID(dstPID) {
 		return false
 	}
 	return true
-}
-
-// TODO: implement it.
-var isSuperPID = func(PeerID string) bool {
-	return true
-}
-
-// isSuperCID returns whether the clientID represents supernode.
-// TODO: implement it.
-var isSuperCID = func(clientID string) bool {
-	return strings.HasPrefix(clientID, config.SuperNodeCIdPrefix)
 }
 
 // generatePieceProgressKey returns a string as the key of PieceProgress.
