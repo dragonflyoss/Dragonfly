@@ -1,18 +1,20 @@
 package daemon
 
 import (
+	"context"
+	"os"
+
+	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/plugins"
 	"github.com/dragonflyoss/Dragonfly/supernode/server"
 
+	"github.com/go-openapi/strfmt"
 	"github.com/sirupsen/logrus"
 )
 
 // Daemon is a struct to identify main instance of supernode.
 type Daemon struct {
-	// SupernodeID is the ID of supernode, which is the same as Client ID of dfget.
-	SupernodeID string
-
 	Name string
 
 	config *config.Config
@@ -38,6 +40,26 @@ func New(cfg *config.Config) (*Daemon, error) {
 		config: cfg,
 		server: s,
 	}, nil
+}
+
+// RegisterSuperNode register the supernode as a peer.
+func (d *Daemon) RegisterSuperNode() error {
+	// construct the PeerCreateRequest for supernode.
+	// TODO: add supernode version
+	hostname, _ := os.Hostname()
+	req := &types.PeerCreateRequest{
+		IP:       strfmt.IPv4(d.config.AdvertiseIP),
+		HostName: strfmt.Hostname(hostname),
+		Port:     int32(d.config.ListenPort),
+	}
+
+	resp, err := d.server.PeerMgr.Register(context.Background(), req)
+	if err != nil {
+		return err
+	}
+
+	d.config.SetSuperPID(resp.ID)
+	return nil
 }
 
 // Run runs the daemon.
