@@ -97,7 +97,7 @@ func setupFlags(cmd *cobra.Command, opt *Options) {
 	flagSet.IntVar(&opt.PeerDownLimit, "down-limit", opt.PeerDownLimit,
 		"download limit for supernode to serve download tasks")
 
-	flagSet.StringVar(&cfg.AdvertiseIP, "advertise-ip", "",
+	flagSet.StringVar(&opt.AdvertiseIP, "advertise-ip", "",
 		"the supernode ip that we advertise to other peer in the p2p-network")
 }
 
@@ -118,6 +118,7 @@ func runSuperNode() error {
 			return err
 		}
 	}
+	logrus.Infof("success to init local ip of supernode, use ip: %s", cfg.AdvertiseIP)
 
 	// set up the CIDPrefix
 	cfg.SetCIDPrefix(cfg.AdvertiseIP)
@@ -174,11 +175,13 @@ func setAdvertiseIP() error {
 	if err != nil {
 		return errors.Wrapf(errorType.ErrSystemError, "failed to get ip list: %v", err)
 	}
-	if len(ipList) != 0 {
-		cfg.AdvertiseIP = ipList[0]
+	if len(ipList) == 0 {
+		logrus.Debugf("get empty system's unicast interface addresses")
+		return nil
 	}
 
-	logrus.Infof("success to init local ip of supernode, use ip: %s", cfg.AdvertiseIP)
+	cfg.AdvertiseIP = ipList[0]
+
 	return nil
 }
 
