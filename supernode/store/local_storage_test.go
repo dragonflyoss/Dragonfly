@@ -54,7 +54,7 @@ func (s *LocalStorageSuite) SetUpSuite(c *check.C) {
 			&config.PluginProperties{
 				Name:    LocalStorageDriver,
 				Enabled: true,
-				Config:  "baseDir: " + path.Join(s.workHome, "download"),
+				Config:  "baseDir: " + path.Join(s.workHome, "repo"),
 			},
 		},
 	}
@@ -125,11 +125,25 @@ func (s *LocalStorageSuite) TestGetPutBytes(c *check.C) {
 			data:        []byte("hello foo"),
 			expected:    "",
 		},
+		{
+			putRaw: &Raw{
+				Bucket: "download",
+				Key:    "foo0/foo.txt",
+			},
+			getRaw: &Raw{
+				Bucket: "download",
+				Key:    "foo0/foo.txt",
+			},
+			data:        []byte("hello foo"),
+			getErrCheck: IsNilError,
+			expected:    "hello foo",
+		},
 	}
 
 	for _, v := range cases {
 		// put
-		s.storeLocal.PutBytes(context.Background(), v.putRaw, v.data)
+		err := s.storeLocal.PutBytes(context.Background(), v.putRaw, v.data)
+		c.Assert(err, check.IsNil)
 
 		// get
 		result, err := s.storeLocal.GetBytes(context.Background(), v.getRaw)
@@ -277,22 +291,6 @@ func (s *LocalStorageSuite) BenchmarkPutSerial(c *check.C) {
 	}
 }
 
-func (s *LocalStorageSuite) TestGetPrefix(c *check.C) {
-	var cases = []struct {
-		str      string
-		expected string
-	}{
-		{"foo", "foo"},
-		{"footest", "foo"},
-		{"fo", "fo"},
-	}
-
-	for _, v := range cases {
-		result := getPrefix(v.str)
-		c.Check(result, check.Equals, v.expected)
-	}
-}
-
 // helper function
 
 func (s *LocalStorageSuite) checkStat(raw *Raw, c *check.C) {
@@ -300,7 +298,7 @@ func (s *LocalStorageSuite) checkStat(raw *Raw, c *check.C) {
 	c.Assert(IsNilError(err), check.Equals, true)
 
 	driver := s.storeLocal.driver.(*localStorage)
-	pathTemp := path.Join(driver.BaseDir, getPrefix(raw.Key), raw.Key)
+	pathTemp := path.Join(driver.BaseDir, raw.Bucket, raw.Key)
 	f, _ := os.Stat(pathTemp)
 	sys, _ := util.GetSys(f)
 
