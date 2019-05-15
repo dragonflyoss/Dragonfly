@@ -23,6 +23,8 @@ import (
 
 	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
+
+	"github.com/pkg/errors"
 )
 
 // Store is a wrapper of the storage which implements the interface of StorageDriver.
@@ -98,8 +100,9 @@ func (s *Store) PutBytes(ctx context.Context, raw *Raw, data []byte) error {
 
 // Remove the data from the storage based on raw information.
 func (s *Store) Remove(ctx context.Context, raw *Raw) error {
-	if err := checkEmptyKey(raw); err != nil {
-		return err
+	if raw == nil || (cutil.IsEmptyStr(raw.Key) &&
+		cutil.IsEmptyStr(raw.Bucket)) {
+		return errors.Wrapf(ErrEmptyKey, "cannot set both key and bucket empty at the same time")
 	}
 	return s.driver.Remove(ctx, raw)
 }
