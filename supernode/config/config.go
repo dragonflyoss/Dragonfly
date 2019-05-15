@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 
@@ -46,6 +47,11 @@ func (c *Config) GetSuperCID(taskID string) string {
 	return fmt.Sprintf("%s%s", c.cIDPrefix, taskID)
 }
 
+// IsSuperCID returns whether the clientID represents supernode.
+func (c *Config) IsSuperCID(clientID string) bool {
+	return strings.HasPrefix(clientID, c.cIDPrefix)
+}
+
 // SetSuperPID sets the value of supernode PID.
 func (c *Config) SetSuperPID(pid string) {
 	c.superNodePID = pid
@@ -54,6 +60,11 @@ func (c *Config) SetSuperPID(pid string) {
 // GetSuperPID returns the pid string for supernode.
 func (c *Config) GetSuperPID() string {
 	return c.superNodePID
+}
+
+// IsSuperPID returns whether the peerID represents supernode.
+func (c *Config) IsSuperPID(peerID string) bool {
+	return peerID == c.superNodePID
 }
 
 // NewBaseProperties create a instant with default values.
