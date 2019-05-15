@@ -51,11 +51,14 @@ type Manager struct {
 	// clientBlackInfo maintains the blacklist of the PID.
 	// key:srcPID,value:map[dstPID]*Atomic
 	clientBlackInfo *cutil.SyncMap
+
+	cfg *config.Config
 }
 
 // NewManager returns a new Manager.
-func NewManager() (*Manager, error) {
+func NewManager(cfg *config.Config) (*Manager, error) {
 	return &Manager{
+		cfg:             cfg,
 		superProgress:   newStateSyncMap(),
 		clientProgress:  newStateSyncMap(),
 		peerProgress:    newStateSyncMap(),
@@ -65,7 +68,7 @@ func NewManager() (*Manager, error) {
 }
 
 // InitProgress init the correlation information between peers and pieces, etc.
-func (pm *Manager) InitProgress(ctx context.Context, taskID, peerID, clientID string) error {
+func (pm *Manager) InitProgress(ctx context.Context, taskID, peerID, clientID string) (err error) {
 	// validate the param
 	if cutil.IsEmptyStr(taskID) {
 		return errors.Wrap(errorType.ErrEmptyValue, "taskID")
@@ -78,22 +81,19 @@ func (pm *Manager) InitProgress(ctx context.Context, taskID, peerID, clientID st
 	}
 
 	// init cdn node if the clientID represents a supernode.
-	if isSuperCID(clientID) {
+	if pm.cfg.IsSuperCID(clientID) {
 		return pm.superProgress.add(taskID, newSuperState())
 	}
-	defer func() {
-		if err := pm.superProgress.remove(taskID); err != nil {
-			logrus.Errorf("failed to delete superProgress for taskID: %s", taskID)
-		}
-	}()
 
 	// init peer node if the clientID represents a ordinary peer node.
 	if err := pm.clientProgress.add(clientID, newClientState()); err != nil {
 		return err
 	}
 	defer func() {
-		if err := pm.clientProgress.remove(clientID); err != nil {
-			logrus.Errorf("failed to delete clientProgress for clientID: %s", clientID)
+		if err != nil {
+			if err := pm.clientProgress.remove(clientID); err != nil {
+				logrus.Errorf("failed to delete clientProgress for clientID: %s", clientID)
+			}
 		}
 	}()
 
@@ -172,7 +172,7 @@ func (pm *Manager) GetPieceProgressByCID(ctx context.Context, taskID, clientID, 
 
 // DeletePieceProgressByCID delete the pieces progress with specified clientID.
 func (pm *Manager) DeletePieceProgressByCID(ctx context.Context, taskID, clientID string) (err error) {
-	if isSuperCID(clientID) {
+	if pm.cfg.IsSuperCID(clientID) {
 		return pm.superProgress.remove(taskID)
 	}
 
