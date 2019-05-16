@@ -28,7 +28,7 @@ var (
 	ErrKeyNotFound = StorageError{codeKeyNotFound, "the key not found"}
 
 	// ErrEmptyKey is an error when the key is empty.
-	ErrEmptyKey = StorageError{codeKeyNotFound, "the key is empty"}
+	ErrEmptyKey = StorageError{codeEmptyKey, "the key is empty"}
 
 	// ErrInvalidValue represents the value is invalid.
 	ErrInvalidValue = StorageError{codeInvalidValue, "invalid value"}
