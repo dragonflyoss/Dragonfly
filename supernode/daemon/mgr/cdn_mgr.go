@@ -10,10 +10,13 @@ import (
 // operates on the underlying files stored on the local disk, etc.
 type CDNMgr interface {
 	// TriggerCDN will trigger CDN to download the file from sourceUrl.
-	// In common, it will including the following steps:
+	// It will including the following steps:
 	// 1). download the source file
-	// 2). update the taskInfo
-	// 3). write the file to disk
+	// 2). write the file to disk
+	//
+	// In fact, it's a very time consuming operation.
+	// So if not necessary, it should usually be executed concurrently.
+	// In addition, it's not thread-safe.
 	TriggerCDN(ctx context.Context, taskInfo *types.TaskInfo) (*types.TaskInfo, error)
 
 	// GetStatus get the status of the file.
