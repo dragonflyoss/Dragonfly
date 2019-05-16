@@ -90,6 +90,12 @@ type TaskInfo struct {
 	//
 	RawURL string `json:"rawURL,omitempty"`
 
+	// when supernode finishes downloading file/image from the source location,
+	// the md5 sum of the source file will be calculated as the value of the realMd5.
+	// And it will be used to compare with md5 value to check whether this is a valid file.
+	//
+	RealMd5 string `json:"realMd5,omitempty"`
+
 	// taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via
 	// --filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.
 	//

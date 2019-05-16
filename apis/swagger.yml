@@ -634,6 +634,12 @@ definitions:
           md5 checksum for the resource to distribute. dfget catches this parameter from dfget's CLI
           and passes it to supernode. When supernode finishes downloading file/image from the source location,
           it will validate the source file with this md5 value to check whether this is a valid file.
+      realMd5:
+        type: "string"
+        description: |
+          when supernode finishes downloading file/image from the source location,
+          the md5 sum of the source file will be calculated as the value of the realMd5.
+          And it will be used to compare with md5 value to check whether this is a valid file.
       identifier:
         type: "string"
         description: |
