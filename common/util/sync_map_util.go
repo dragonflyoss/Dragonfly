@@ -87,6 +87,20 @@ func (mmap *SyncMap) GetAsInt(key string) (int, error) {
 	return 0, errors.Wrapf(errorType.ErrConvertFailed, "key %s: %v", key, v)
 }
 
+// GetAsString returns result as string.
+// The ErrConvertFailed error will be returned if the assertion fails.
+func (mmap *SyncMap) GetAsString(key string) (string, error) {
+	v, err := mmap.Get(key)
+	if err != nil {
+		return "", errors.Wrapf(err, "key: %s", key)
+	}
+
+	if value, ok := v.(string); ok {
+		return value, nil
+	}
+	return "", errors.Wrapf(errorType.ErrConvertFailed, "key %s: %v", key, v)
+}
+
 // GetAsBool returns result as bool.
 // The ErrConvertFailed error will be returned if the assertion fails.
 func (mmap *SyncMap) GetAsBool(key string) (bool, error) {
