@@ -122,7 +122,7 @@ func NewLocalStorage(conf string) (StorageDriver, error) {
 
 // Get the content of key from storage and return in io stream.
 func (ls *localStorage) Get(ctx context.Context, raw *Raw) (io.Reader, error) {
-	path, info, err := ls.statPath(raw.Key)
+	path, info, err := ls.statPath(raw.Bucket, raw.Key)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +160,7 @@ func (ls *localStorage) Get(ctx context.Context, raw *Raw) (io.Reader, error) {
 
 // GetBytes gets the content of key from storage and return in bytes.
 func (ls *localStorage) GetBytes(ctx context.Context, raw *Raw) (data []byte, err error) {
-	path, info, err := ls.statPath(raw.Key)
+	path, info, err := ls.statPath(raw.Bucket, raw.Key)
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +194,7 @@ func (ls *localStorage) GetBytes(ctx context.Context, raw *Raw) (data []byte, er
 
 // Put reads the content from reader and put it into storage.
 func (ls *localStorage) Put(ctx context.Context, raw *Raw, data io.Reader) error {
-	path, err := ls.preparePath(raw.Key)
+	path, err := ls.preparePath(raw.Bucket, raw.Key)
 	if err != nil {
 		return err
 	}
@@ -206,7 +206,7 @@ func (ls *localStorage) Put(ctx context.Context, raw *Raw, data io.Reader) error
 	lock(path, raw.Offset, false)
 	defer unLock(path, raw.Offset, false)
 
-	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0644)
+	f, err := util.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0644)
 	if err != nil {
 		return err
 	}
@@ -223,7 +223,7 @@ func (ls *localStorage) Put(ctx context.Context, raw *Raw, data io.Reader) error
 
 // PutBytes puts the content of key from storage with bytes.
 func (ls *localStorage) PutBytes(ctx context.Context, raw *Raw, data []byte) error {
-	path, err := ls.preparePath(raw.Key)
+	path, err := ls.preparePath(raw.Bucket, raw.Key)
 	if err != nil {
 		return err
 	}
@@ -231,7 +231,7 @@ func (ls *localStorage) PutBytes(ctx context.Context, raw *Raw, data []byte) err
 	lock(path, raw.Offset, false)
 	defer unLock(path, raw.Offset, false)
 
-	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0644)
+	f, err := util.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0644)
 	if err != nil {
 		return err
 	}
@@ -247,7 +247,7 @@ func (ls *localStorage) PutBytes(ctx context.Context, raw *Raw, data []byte) err
 
 // Stat determine whether the file exists.
 func (ls *localStorage) Stat(ctx context.Context, raw *Raw) (*StorageInfo, error) {
-	path, fileInfo, err := ls.statPath(raw.Key)
+	path, fileInfo, err := ls.statPath(raw.Bucket, raw.Key)
 	if err != nil {
 		return nil, err
 	}
@@ -266,7 +266,7 @@ func (ls *localStorage) Stat(ctx context.Context, raw *Raw) (*StorageInfo, error
 
 // Remove deletes a file or dir.
 func (ls *localStorage) Remove(ctx context.Context, raw *Raw) error {
-	path, _, err := ls.statPath(raw.Key)
+	path, _, err := ls.statPath(raw.Bucket, raw.Key)
 	if err != nil {
 		return err
 	}
@@ -280,8 +280,8 @@ func (ls *localStorage) Remove(ctx context.Context, raw *Raw) error {
 // helper function
 
 // preparePath gets the target path and creates the upper directory if it does not exist.
-func (ls *localStorage) preparePath(key string) (string, error) {
-	dir := path.Join(ls.BaseDir, getPrefix(key))
+func (ls *localStorage) preparePath(bucket, key string) (string, error) {
+	dir := path.Join(ls.BaseDir, bucket)
 
 	if err := util.CreateDirectory(dir); err != nil {
 		return "", err
@@ -292,8 +292,8 @@ func (ls *localStorage) preparePath(key string) (string, error) {
 }
 
 // statPath determines whether the target file exists and returns an fileMutex if so.
-func (ls *localStorage) statPath(key string) (string, os.FileInfo, error) {
-	filePath := path.Join(ls.BaseDir, getPrefix(key), key)
+func (ls *localStorage) statPath(bucket, key string) (string, os.FileInfo, error) {
+	filePath := path.Join(ls.BaseDir, bucket, key)
 	f, err := os.Stat(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -307,13 +307,6 @@ func (ls *localStorage) statPath(key string) (string, os.FileInfo, error) {
 
 func getLockKey(path string, offset int64) string {
 	return fmt.Sprintf("%s%d", path, offset)
-}
-
-func getPrefix(str string) string {
-	if len(str) > 3 {
-		return string([]byte(str)[:3])
-	}
-	return str
 }
 
 func checkGetRaw(raw *Raw, fileLength int64) error {
