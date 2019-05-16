@@ -29,14 +29,12 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
 
 	"github.com/go-check/check"
-	"github.com/prashantv/gostub"
 )
 
 type SuperWriterTestSuite struct {
-	workHome         string
-	config           string
-	writer           *superWriter
-	downloadPathStub *gostub.Stubs
+	workHome string
+	config   string
+	writer   *superWriter
 }
 
 func init() {
@@ -49,13 +47,9 @@ func (s *SuperWriterTestSuite) SetUpSuite(c *check.C) {
 	fileStore, err := store.NewStore(store.LocalStorageDriver, store.NewLocalStorage, s.config)
 	c.Check(err, check.IsNil)
 	s.writer = newSuperWriter(fileStore, nil)
-
-	s.downloadPathStub = gostub.Stub(&getDownloadKeyFunc, getDownloadKeyFuncMock)
 }
 
 func (s *SuperWriterTestSuite) TearDownSuite(c *check.C) {
-	s.downloadPathStub.Reset()
-
 	if s.workHome != "" {
 		if err := os.RemoveAll(s.workHome); err != nil {
 			fmt.Printf("remove path: %s error", s.workHome)
@@ -107,12 +101,8 @@ func (s *SuperWriterTestSuite) TestWriteToFile(c *check.C) {
 func checkFileSize(cdnStore *store.Store, taskID string, expectedSize int64, c *check.C) {
 	storageInfo, err := cdnStore.Stat(context.TODO(), &store.Raw{
 		Bucket: config.DownloadHome,
-		Key:    getDownloadKeyFuncMock(taskID),
+		Key:    getDownloadKey(taskID),
 	})
 	c.Check(err, check.IsNil)
 	c.Check(storageInfo.Size, check.Equals, expectedSize)
-}
-
-func getDownloadKeyFuncMock(taskID string) string {
-	return taskID
 }

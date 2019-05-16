@@ -25,14 +25,9 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
 )
 
-var getDownloadKeyFunc = getDownloadKey
-var getMetaDataKeyFunc = getMetaDataKey
-var getMd5DataKeyFunc = getMd5DataKey
-var getUploadKeyFunc = getUploadKey
 var getDownloadRawFunc = getDownloadRaw
 var getMetaDataRawFunc = getMetaDataRaw
 var getMd5DataRawFunc = getMd5DataRaw
-var getUploadRawFunc = getUploadRaw
 
 func getDownloadKey(taskID string) string {
 	return path.Join(cutil.SubString(taskID, 0, 3), taskID)

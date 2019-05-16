@@ -103,7 +103,7 @@ func (cw *superWriter) writeToFile(ctx context.Context, bytesBuffer *bytes.Buffe
 	// write to the storage
 	return cw.cdnStore.Put(ctx, &store.Raw{
 		Bucket: config.DownloadHome,
-		Key:    getDownloadKeyFunc(taskID),
+		Key:    getDownloadKey(taskID),
 		Offset: int64(pieceNum) * int64(PieceSize),
 	}, resultBuf)
 }
