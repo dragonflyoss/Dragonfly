@@ -23,8 +23,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// GetArgs returns all the arguments of command-line except the program name.
-func GetArgs(w http.ResponseWriter, r *http.Request) {
+// getArgs returns all the arguments of command-line except the program name.
+func getArgs(w http.ResponseWriter, r *http.Request) {
 	logrus.Debugf("access:%s", r.URL.String())
 
 	w.WriteHeader(http.StatusOK)

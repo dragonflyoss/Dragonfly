@@ -17,11 +17,9 @@
 package config
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/go-check/check"
@@ -64,134 +62,5 @@ func (s *ConfigTestSuite) SetUpSuite(c *check.C) {
 func (s *ConfigTestSuite) TearDownSuite(c *check.C) {
 	if s.workHome != "" {
 		os.RemoveAll(s.workHome)
-	}
-}
-
-func (s *ConfigTestSuite) TestProperties_Load(c *check.C) {
-	var f = func(schema ...string) *Properties {
-		var tmp []*Registry
-		for _, s := range schema {
-			r := &Registry{Schema: s}
-			r.init()
-			tmp = append(tmp, r)
-		}
-		return &Properties{Registries: tmp}
-	}
-	var cases = []struct {
-		create   bool
-		content  string
-		errMsg   string
-		expected *Properties
-	}{
-		{create: false, content: "", errMsg: "no such file or directory", expected: nil},
-		{create: true, content: "-", errMsg: "unmarshal yaml", expected: nil},
-		{create: true, content: "registries:\n - regx: '^['",
-			errMsg: "missing closing", expected: nil},
-		{create: true, content: "registries:\n  -", errMsg: "", expected: f()},
-		{
-			create:   true,
-			content:  "registries:\n  - schema: http",
-			errMsg:   "",
-			expected: f("http"),
-		},
-	}
-	for idx, v := range cases {
-		filename := filepath.Join(s.workHome, fmt.Sprintf("test-%d", idx))
-		if v.create {
-			ioutil.WriteFile(filename, []byte(v.content), os.ModePerm)
-		}
-		p := &Properties{}
-		err := p.Load(filename)
-		if v.expected != nil {
-			c.Assert(err, check.IsNil)
-			c.Assert(len(p.Registries), check.Equals, len(v.expected.Registries))
-			for i := 0; i < len(v.expected.Registries); i++ {
-				c.Assert(p.Registries[i], check.DeepEquals, v.expected.Registries[i])
-			}
-		} else {
-			c.Assert(err, check.NotNil)
-			c.Assert(strings.Contains(err.Error(), v.errMsg), check.Equals, true,
-				check.Commentf("error:%v expected:%s", err, v.errMsg))
-		}
-	}
-}
-
-func (s *ConfigTestSuite) TestRegistry_Match(c *check.C) {
-	var cases = []struct {
-		regx      string
-		str       string
-		errNotNil bool
-		matched   bool
-	}{
-		{regx: "[a.com", str: "a.com", errNotNil: true, matched: false},
-		{regx: "a.com", str: "a.com", matched: true},
-		{regx: "a.com", str: "ba.com", matched: true},
-		{regx: "a.com", str: "a.comm", matched: true},
-		{regx: "^a.com", str: "ba.com", matched: false},
-		{regx: "^a.com$", str: "ba.com", matched: false},
-		{regx: "^a.com$", str: "a.comm", matched: false},
-		{regx: "^a.com$", str: "a.com", matched: true},
-		{regx: "", str: "a.com", matched: true},
-	}
-
-	for _, v := range cases {
-		reg, err := NewRegistry("", "", v.regx, nil)
-		if v.errNotNil {
-			c.Assert(err, check.NotNil)
-		} else {
-			c.Assert(err, check.IsNil)
-			c.Assert(reg.Match(v.str), check.Equals, v.matched,
-				check.Commentf("%v", v))
-		}
-	}
-}
-
-func (s *ConfigTestSuite) TestRegistry_validate(c *check.C) {
-	var cases = []struct {
-		schema string
-		err    string
-	}{
-		{schema: "http", err: ""},
-		{schema: "https", err: ""},
-		{schema: "", err: ""},
-		{schema: "x", err: "invalid schema.*"},
-	}
-
-	for _, v := range cases {
-		reg := Registry{Schema: v.schema}
-		err := reg.init()
-		if v.err == "" {
-			c.Assert(err, check.IsNil)
-		} else {
-			c.Assert(err, check.NotNil)
-			c.Assert(err, check.ErrorMatches, v.err)
-		}
-	}
-}
-
-func (s *ConfigTestSuite) TestRegistry_initTLSConfig(c *check.C) {
-	invalidCrt := filepath.Join(s.workHome, "invalid.crt")
-	ioutil.WriteFile(invalidCrt, nil, os.ModePerm)
-
-	var cases = []struct {
-		crt string
-		err string
-	}{
-		{s.workHome, "read.*"},
-		{s.crtPath, ""},
-		{invalidCrt, "invalid cert.*"},
-	}
-
-	for _, v := range cases {
-		reg := Registry{Certs: []string{v.crt}}
-		err := reg.initTLSConfig()
-		if v.err == "" {
-			c.Assert(err, check.IsNil)
-			c.Assert(reg.TLSConfig(), check.NotNil)
-		} else {
-			c.Assert(reg.TLSConfig(), check.IsNil)
-			c.Assert(err, check.NotNil)
-			c.Assert(err, check.ErrorMatches, v.err)
-		}
 	}
 }

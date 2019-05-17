@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package handler
+package transport
 
 import (
 	"crypto/tls"
@@ -48,8 +48,8 @@ type DFRoundTripper struct {
 	Downloader     downloader.Interface
 }
 
-// NewDFRoundTripper return the default DFRoundTripper.
-func NewDFRoundTripper(cfg *tls.Config) *DFRoundTripper {
+// New return the default DFRoundTripper.
+func New(cfg *tls.Config) *DFRoundTripper {
 	if cfg == nil {
 		cfg = &tls.Config{InsecureSkipVerify: true}
 	}
@@ -66,10 +66,8 @@ func NewDFRoundTripper(cfg *tls.Config) *DFRoundTripper {
 			ExpectContinueTimeout: 1 * time.Second,
 			TLSClientConfig:       cfg,
 		},
-		Round2: http.NewFileTransport(http.Dir("/")),
-
+		Round2:         http.NewFileTransport(http.Dir("/")),
 		ShouldUseDfget: needUseGetter,
-
 		Downloader: dfget.NewDFGetter(
 			global.CommandLine.DFRepo,
 			global.CommandLine.CallSystem,

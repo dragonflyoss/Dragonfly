@@ -63,9 +63,6 @@ type Options struct {
 	// Port that dfdaemon will listen, default: 65001.
 	Port uint
 
-	// ProxyPort is the port used by the dfdaemon transparent proxy
-	ProxyPort uint
-
 	// Registry addr and must exist if dfdaemon is used to mirror mode,
 	// format: https://xxx.xx.x:port or http://xxx.xx.x:port.
 	Registry string
@@ -115,7 +112,6 @@ func (o *Options) AddFlags(fs *flag.FlagSet) {
 	// http server config
 	fs.StringVar(&o.HostIP, "hostIp", "127.0.0.1", "dfdaemon host ip, default: 127.0.0.1")
 	fs.UintVar(&o.Port, "port", 65001, "dfdaemon will listen the port")
-	fs.UintVar(&o.ProxyPort, "proxyPort", 65002, "the port dfdaemon proxy listens on")
 	fs.StringVar(&o.CertFile, "certpem", "", "cert.pem file path")
 	fs.StringVar(&o.KeyFile, "keypem", "", "key.pem file path")
 
@@ -125,7 +121,7 @@ func (o *Options) AddFlags(fs *flag.FlagSet) {
 	fs.StringVar(&o.DfPath, "dfpath", o.DfPath, "dfget path")
 	fs.StringVar(&o.RateLimit, "ratelimit", "", "net speed limit,format:xxxM/K")
 	fs.StringVar(&o.URLFilter, "urlfilter", "Signature&Expires&OSSAccessKeyId", "filter specified url fields")
-	fs.StringVar(&o.Registry, "registry", "https://index.docker.io", "registry addr(https://abc.xx.x or http://abc.xx.x) and must exist if dfdaemon is used to mirror mode")
+	fs.StringVar(&o.Registry, "registry", "", "registry mirror url, which will override the registry mirror settings in the config file if presented (if not configured through config file or the cli, https://index.docker.io is the default)")
 	fs.StringVar(&o.DownRule, "rule", "", "download the url by P2P if url matches the specified pattern,format:reg1,reg2,reg3")
 	fs.BoolVar(&o.Notbs, "notbs", true, "not try back source to download if throw exception")
 	fs.StringSliceVar(&o.TrustHosts, "trust-hosts", o.TrustHosts, "list of trusted hosts which dfdaemon forward their requests directly, comma separated.")

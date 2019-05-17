@@ -10,18 +10,18 @@ import (
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
-	"github.com/dragonflyoss/Dragonfly/dfdaemon/handler"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/transport"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
 // Option is a functional option for configuring the proxy
-type Option func(p *TransparentProxy) error
+type Option func(p *Proxy) error
 
 // WithCert sets the certificate to
 func WithCert(cert *tls.Certificate) Option {
-	return func(p *TransparentProxy) error {
+	return func(p *Proxy) error {
 		p.cert = cert
 		return nil
 	}
@@ -29,8 +29,16 @@ func WithCert(cert *tls.Certificate) Option {
 
 // WithHTTPSHosts sets the rules for hijacking https requests
 func WithHTTPSHosts(hosts ...*config.HijackHost) Option {
-	return func(p *TransparentProxy) error {
+	return func(p *Proxy) error {
 		p.httpsHosts = hosts
+		return nil
+	}
+}
+
+// WithRegistryMirror sets the registry mirror for the proxy
+func WithRegistryMirror(r *config.RegistryMirror) Option {
+	return func(p *Proxy) error {
+		p.registry = r
 		return nil
 	}
 }
@@ -38,24 +46,38 @@ func WithHTTPSHosts(hosts ...*config.HijackHost) Option {
 // WithCertFromFile is a convenient wrapper for WithCert, to read certificate from
 // the given file
 func WithCertFromFile(certFile, keyFile string) Option {
-	return func(p *TransparentProxy) error {
+	return func(p *Proxy) error {
 		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 		if err != nil {
 			return errors.Wrap(err, "load cert")
 		}
+		logrus.Infof("use self-signed certificate (%s, %s) for https hijacking", certFile, keyFile)
 		p.cert = &cert
+		return nil
+	}
+}
+
+// WithDirectHandler sets the handler for non-proxy requests
+func WithDirectHandler(h *http.ServeMux) Option {
+	return func(p *Proxy) error {
+		// Make sure the root handler of the given server mux is the
+		// registry mirror reverse proxy
+		h.HandleFunc("/", p.mirrorRegistry)
+		p.directHandler = h
 		return nil
 	}
 }
 
 // WithRules sets the proxy rules
 func WithRules(rules []*config.Proxy) Option {
-	return func(p *TransparentProxy) error { return p.SetRules(rules) }
+	return func(p *Proxy) error { return p.SetRules(rules) }
 }
 
 // New returns a new transparent proxy with the given rules
-func New(opts ...Option) (*TransparentProxy, error) {
-	proxy := &TransparentProxy{}
+func New(opts ...Option) (*Proxy, error) {
+	proxy := &Proxy{
+		directHandler: http.NewServeMux(),
+	}
 
 	for _, opt := range opts {
 		if err := opt(proxy); err != nil {
@@ -66,20 +88,46 @@ func New(opts ...Option) (*TransparentProxy, error) {
 	return proxy, nil
 }
 
-// TransparentProxy is an http proxy handler. It proxies requests with dfget
-// if any defined proxy rules is matched
-type TransparentProxy struct {
-	rules []*config.Proxy
+// NewFromConfig returns a new transparent proxy from the given properties
+func NewFromConfig(c config.Properties) (*Proxy, error) {
+	opts := []Option{
+		WithRules(c.Proxies),
+		WithRegistryMirror(c.RegistryMirror),
+	}
 
+	if c.HijackHTTPS != nil {
+		opts = append(opts, WithHTTPSHosts(c.HijackHTTPS.Hosts...))
+		if c.HijackHTTPS.Cert != "" && c.HijackHTTPS.Key != "" {
+			opts = append(opts, WithCertFromFile(c.HijackHTTPS.Cert, c.HijackHTTPS.Key))
+		}
+	}
+	return New(opts...)
+}
+
+// Proxy is an http proxy handler. It proxies requests with dfget
+// if any defined proxy rules is matched
+type Proxy struct {
+	// reverse proxy upstream url for the default registry
+	registry *config.RegistryMirror
+	// proxy rules
+	rules []*config.Proxy
 	// httpsHosts is the list of hosts whose https requests will be hijacked
 	httpsHosts []*config.HijackHost
-
+	// cert is the certificate used to hijack https proxy requests
 	cert *tls.Certificate
+	// directHandler are used to handle non proxy requests
+	directHandler http.Handler
+}
+
+func (proxy *Proxy) mirrorRegistry(w http.ResponseWriter, r *http.Request) {
+	reverseProxy := httputil.NewSingleHostReverseProxy(proxy.registry.Remote.URL)
+	reverseProxy.Transport = transport.New(proxy.registry.TLSConfig())
+	reverseProxy.ServeHTTP(w, r)
 }
 
 // remoteConfig returns the tls.Config used to connect to the given remote host.
 // If the host should not be hijacked, nil will be returned.
-func (proxy *TransparentProxy) remoteConfig(host string) *tls.Config {
+func (proxy *Proxy) remoteConfig(host string) *tls.Config {
 	for _, h := range proxy.httpsHosts {
 		if h.Regx.MatchString(host) {
 			config := &tls.Config{}
@@ -93,21 +141,26 @@ func (proxy *TransparentProxy) remoteConfig(host string) *tls.Config {
 }
 
 // SetRules change the rule lists of the proxy to the given rules
-func (proxy *TransparentProxy) SetRules(rules []*config.Proxy) error {
+func (proxy *Proxy) SetRules(rules []*config.Proxy) error {
 	proxy.rules = rules
 	return nil
 }
 
 // ServeHTTP implements http.Handler.ServeHTTP
-func (proxy *TransparentProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (proxy *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodConnect {
+		// handle https proxy requests
 		proxy.handleHTTPS(w, r)
+	} else if r.URL.Scheme == "" {
+		// handle direct requests
+		proxy.directHandler.ServeHTTP(w, r)
 	} else {
+		// handle http proxy requests
 		proxy.handleHTTP(w, r)
 	}
 }
 
-func (proxy *TransparentProxy) handleHTTP(w http.ResponseWriter, req *http.Request) {
+func (proxy *Proxy) handleHTTP(w http.ResponseWriter, req *http.Request) {
 	resp, err := proxy.roundTripper(nil).RoundTrip(req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
@@ -116,11 +169,13 @@ func (proxy *TransparentProxy) handleHTTP(w http.ResponseWriter, req *http.Reque
 	defer resp.Body.Close()
 	copyHeader(w.Header(), resp.Header)
 	w.WriteHeader(resp.StatusCode)
-	io.Copy(w, resp.Body)
+	if _, err := io.Copy(w, resp.Body); err != nil {
+		logrus.Errorf("failed to write http body")
+	}
 }
 
-func (proxy *TransparentProxy) roundTripper(tlsConfig *tls.Config) http.RoundTripper {
-	rt := handler.NewDFRoundTripper(tlsConfig)
+func (proxy *Proxy) roundTripper(tlsConfig *tls.Config) http.RoundTripper {
+	rt := transport.New(tlsConfig)
 	rt.ShouldUseDfget = proxy.shouldUseDfget
 	return rt
 }
@@ -128,7 +183,7 @@ func (proxy *TransparentProxy) roundTripper(tlsConfig *tls.Config) http.RoundTri
 // shouldUseDfget returns whether we should use dfget to proxy a request. It
 // also change the scheme of the given request if the matched rule has
 // UseHTTPS = true
-func (proxy *TransparentProxy) shouldUseDfget(req *http.Request) bool {
+func (proxy *Proxy) shouldUseDfget(req *http.Request) bool {
 	if req.Method != http.MethodGet {
 		return false
 	}
@@ -168,7 +223,7 @@ func tunnelHTTPS(w http.ResponseWriter, r *http.Request) {
 	go copyAndClose(clientConn, dst)
 }
 
-func (proxy *TransparentProxy) handleHTTPS(w http.ResponseWriter, r *http.Request) {
+func (proxy *Proxy) handleHTTPS(w http.ResponseWriter, r *http.Request) {
 	if proxy.cert == nil {
 		tunnelHTTPS(w, r)
 		return
