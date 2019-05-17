@@ -25,8 +25,8 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/global"
 )
 
-// GetEnv returns the environments of dfdaemon
-func GetEnv(w http.ResponseWriter, r *http.Request) {
+// getEnv returns the environments of dfdaemon
+func getEnv(w http.ResponseWriter, r *http.Request) {
 	logrus.Debugf("access:%s", r.URL.String())
 
 	env := make(map[string]interface{})

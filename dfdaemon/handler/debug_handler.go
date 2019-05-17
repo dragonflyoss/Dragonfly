@@ -18,27 +18,12 @@ package handler
 
 import (
 	"net/http"
-	"net/http/pprof"
-	"strings"
 
 	"github.com/dragonflyoss/Dragonfly/version"
-	"github.com/sirupsen/logrus"
 )
 
-// DebugInfo responds the inner http server running information.
-func DebugInfo(w http.ResponseWriter, req *http.Request) {
-	logrus.Debugf("access:%s", req.URL.String())
-
-	if strings.HasPrefix(req.URL.Path, "/debug/pprof") {
-		if req.URL.Path == "/debug/pprof/symbol" {
-			pprof.Symbol(w, req)
-		} else {
-			pprof.Index(w, req)
-		}
-	} else if strings.HasPrefix(req.URL.Path, "/debug/version") {
-		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "text/plain;charset=utf-8")
-		w.Write([]byte(version.DFDaemonVersion))
-	}
-
+func getVersion(w http.ResponseWriter, req *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "text/plain;charset=utf-8")
+	w.Write([]byte(version.DFDaemonVersion))
 }
