@@ -46,7 +46,7 @@ download SUCCESS(0) cost:0.026s length:141898 reason:0
   -i, --identifier string     The usage of identifier is making different downloading tasks generate different downloading task IDs even if they have the same URLs. conflict with --md5.
   -s, --locallimit string     network bandwidth rate limit for single download task, in format of 20M/m/K/k
   -m, --md5 string            md5 value input from user for the requested downloading file to enhance security
-  -n, --node strings          specify the addresses(IP:port) of supnernodes
+  -n, --node strings          specify the addresses(IP:port) of supernodes
       --notbs                 disable back source downloading for requested file when p2p fails to download it
   -o, --output string         Destination path which is used to store the requested downloading file. It must contain detailed directory and specific filename, for example, '/tmp/file.mp4'
   -p, --pattern string        download pattern, must be p2p/cdn/source, cdn and source do not support flag --totallimit (default "p2p")
