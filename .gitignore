@@ -1,0 +1,54 @@
+#root
+.project
+.settings
+target
+.classpath
+.idea/
+.vscode/
+*.iml
+.akconfig
+.DS_Store
+**/.DS_Store
+*.swo
+*.swp
+.cache/
+.go/
+release/
+bin/
+
+#df-daemon
+
+out
+gen### Go template
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Test binary, build with `go test -c`
+*.test
+coverage.txt
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
+.glide/
+
+#dfget
+*.pyc
+getter.log*
+.pydevproject
+
+#supernode
+.factorypath
+
+# docs
+
+docs/.build/themes/
+docs/.build/content/
+docs/.build/static/images/
+
+*.key
+*.crt
