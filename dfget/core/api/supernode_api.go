@@ -23,6 +23,8 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
+	"strings"
+	"strconv"
 )
 
 /* the url paths of supernode APIs*/
@@ -45,10 +47,10 @@ func NewSupernodeAPI() SupernodeAPI {
 
 // SupernodeAPI defines the communication methods between supernode and dfget.
 type SupernodeAPI interface {
-	Register(ip string, req *types.RegisterRequest) (resp *types.RegisterResponse, e error)
-	PullPieceTask(ip string, req *types.PullPieceTaskRequest) (resp *types.PullPieceTaskResponse, e error)
-	ReportPiece(ip string, req *types.ReportPieceRequest) (resp *types.BaseResponse, e error)
-	ServiceDown(ip string, taskID string, cid string) (resp *types.BaseResponse, e error)
+	Register(node string, req *types.RegisterRequest) (resp *types.RegisterResponse, e error)
+	PullPieceTask(node string, req *types.PullPieceTaskRequest) (resp *types.PullPieceTaskResponse, e error)
+	ReportPiece(node string, req *types.ReportPieceRequest) (resp *types.BaseResponse, e error)
+	ServiceDown(node string, taskID string, cid string) (resp *types.BaseResponse, e error)
 }
 
 type supernodeAPI struct {
@@ -60,16 +62,36 @@ type supernodeAPI struct {
 
 var _ SupernodeAPI = &supernodeAPI{}
 
+//dfget --node ends with ":port" or not
+func (api *supernodeAPI) nodeToIPAndPort( node string) (ip string, port int ){
+
+	strs := strings.Split(node, ":")
+	switch len(strs) {
+	case 0:
+		return node, api.ServicePort
+	case 1:
+		return strs[0], api.ServicePort
+	default:
+		p , err := strconv.Atoi(strs[1])
+		if err != nil {
+			return strs[0], api.ServicePort
+		}
+		return strs[0], p
+	}
+
+}
+
 // Register sends a request to the supernode to register itself as a peer
 // and create downloading task.
-func (api *supernodeAPI) Register(ip string, req *types.RegisterRequest) (
+func (api *supernodeAPI) Register(node string, req *types.RegisterRequest) (
 	resp *types.RegisterResponse, e error) {
 	var (
 		code int
 		body []byte
 	)
+	ip, port := api.nodeToIPAndPort(node)
 	url := fmt.Sprintf("%s://%s:%d%s",
-		api.Scheme, ip, api.ServicePort, peerRegisterPath)
+		api.Scheme, ip, port, peerRegisterPath)
 	if code, body, e = api.HTTPClient.PostJSON(url, req, api.Timeout); e != nil {
 		return nil, e
 	}
@@ -83,11 +105,13 @@ func (api *supernodeAPI) Register(ip string, req *types.RegisterRequest) (
 
 // PullPieceTask pull a piece downloading task from supernode, and get a
 // response that describes from which peer to download.
-func (api *supernodeAPI) PullPieceTask(ip string, req *types.PullPieceTaskRequest) (
+func (api *supernodeAPI) PullPieceTask(node string, req *types.PullPieceTaskRequest) (
 	resp *types.PullPieceTaskResponse, e error) {
 
+	ip, port := api.nodeToIPAndPort(node)
+
 	url := fmt.Sprintf("%s://%s:%d%s?%s",
-		api.Scheme, ip, api.ServicePort, peerPullPieceTaskPath, util.ParseQuery(req))
+		api.Scheme, ip, port, peerPullPieceTaskPath, util.ParseQuery(req))
 
 	resp = new(types.PullPieceTaskResponse)
 	e = api.get(url, resp)
@@ -95,11 +119,12 @@ func (api *supernodeAPI) PullPieceTask(ip string, req *types.PullPieceTaskReques
 }
 
 // ReportPiece reports the status of piece downloading task to supernode.
-func (api *supernodeAPI) ReportPiece(ip string, req *types.ReportPieceRequest) (
+func (api *supernodeAPI) ReportPiece(node string, req *types.ReportPieceRequest) (
 	resp *types.BaseResponse, e error) {
 
+	ip, port := api.nodeToIPAndPort(node)
 	url := fmt.Sprintf("%s://%s:%d%s?%s",
-		api.Scheme, ip, api.ServicePort, peerReportPiecePath, util.ParseQuery(req))
+		api.Scheme, ip, port, peerReportPiecePath, util.ParseQuery(req))
 
 	resp = new(types.BaseResponse)
 	e = api.get(url, resp)
@@ -107,11 +132,12 @@ func (api *supernodeAPI) ReportPiece(ip string, req *types.ReportPieceRequest) (
 }
 
 // ServiceDown reports the status of the local peer to supernode.
-func (api *supernodeAPI) ServiceDown(ip string, taskID string, cid string) (
+func (api *supernodeAPI) ServiceDown(node string, taskID string, cid string) (
 	resp *types.BaseResponse, e error) {
 
+	ip, port := api.nodeToIPAndPort(node)
 	url := fmt.Sprintf("%s://%s:%d%s?taskId=%s&cid=%s",
-		api.Scheme, ip, api.ServicePort, peerServiceDownPath, taskID, cid)
+		api.Scheme, ip, port, peerServiceDownPath, taskID, cid)
 
 	resp = new(types.BaseResponse)
 	e = api.get(url, resp)

@@ -205,7 +205,7 @@ func initFlags() {
 	flagSet.StringSliceVar(&cfg.Header, "header", nil,
 		"http header, eg: --header='Accept: *' --header='Host: abc'")
 	flagSet.StringSliceVarP(&cfg.Node, "node", "n", nil,
-		"specify the addresses(IP:port) of supernodes")
+		"specify the addresses(IP or IP:port) of supernodes")
 	flagSet.BoolVar(&cfg.Notbs, "notbs", false,
 		"disable back source downloading for requested file when p2p fails to download it")
 	flagSet.BoolVar(&cfg.DFDaemon, "dfdaemon", false,
