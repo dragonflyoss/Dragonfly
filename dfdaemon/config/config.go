@@ -55,7 +55,7 @@ func NewProperties() *Properties {
 //
 //     proxies:
 //     # proxy all http image layer download requests with dfget
-//     - regx: blob/sha256/.*
+//     - regx: blobs/sha256:.*
 //     # change http requests to some-registry to https and proxy them with dfget
 //     - regx: some-registry/
 //       use_https: true
@@ -64,12 +64,13 @@ func NewProperties() *Properties {
 //       direct: true
 //
 //     hijack_https:
-//	 # key pair used to hijack https requests
+//     # key pair used to hijack https requests
 //       cert: df.crt
 //       key: df.key
-//	 hosts:
+//       hosts:
 //       - regx: mirror.aliyuncs.com:443
-//	   certs:
+//         insecure: true
+//         certs:
 type Properties struct {
 	// Registries the more front the position, the higher priority.
 	// You could add an empty Registry at the end to proxy all other requests
@@ -95,8 +96,9 @@ type HijackConfig struct {
 
 // HijackHost is a hijack rule for the hosts that matches Regx
 type HijackHost struct {
-	Regx  *Regexp   `yaml:"regx"`
-	Certs *CertPool `yaml:"certs"`
+	Regx     *Regexp   `yaml:"regx"`
+	Insecure bool      `yaml:"insecure"`
+	Certs    *CertPool `yaml:"certs"`
 }
 
 // CertPool is a wrapper around x509.CertPool, which can be unmarshalled and
