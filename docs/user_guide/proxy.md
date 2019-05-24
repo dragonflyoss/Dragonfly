@@ -20,7 +20,7 @@ proxies:
 - regx: no-proxy-reg
   direct: true
 # proxy all http image layer download requests with dfget
-- regx: blob/sha256/.*
+- regx: blobs/sha256:.*
 # change http requests to some-registry to https, and proxy them with dfget
 - regx: some-registry/
   use_https: true
@@ -33,7 +33,7 @@ Add the following content to `/etc/dragonfly/dfdaemon.yml`.
 ```yaml
 proxies:
 # proxy all http image layer download requests with dfget
-- regx: blob/sha256/.*
+- regx: blobs/sha256:.*
 ```
 
 Set HTTP_PROXY for docker daemon in `/etc/systemd/system/docker.service.d/http-proxy.conf`.
