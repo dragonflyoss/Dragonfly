@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/mock"
 
 	"github.com/go-check/check"
@@ -48,7 +49,10 @@ func (s *SchedulerMgrTestSuite) SetUpSuite(c *check.C) {
 	s.mockCtl = gomock.NewController(c)
 	s.mockProgressMgr = mock.NewMockProgressMgr(s.mockCtl)
 	s.mockProgressMgr.EXPECT().GetPeerIDsByPieceNum(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"peerID"}, nil).AnyTimes()
-	s.manager, _ = NewManager(s.mockProgressMgr)
+
+	cfg := config.NewConfig()
+	cfg.SetSuperPID("fooPid")
+	s.manager, _ = NewManager(cfg, s.mockProgressMgr)
 }
 
 func (s *SchedulerMgrTestSuite) TearDownSuite(c *check.C) {
