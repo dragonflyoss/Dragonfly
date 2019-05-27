@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package mgr
+package peer
 
 import (
 	"context"
