@@ -74,7 +74,7 @@ func updateRunningPiece(dstPIDMap *cutil.SyncMap, srcCID, dstPID string, pieceNu
 		return dstPIDMap.Add(pieceNumString, dstPID)
 	}
 
-	if _, err := dstPIDMap.Get(pieceNumString); err != nil {
+	if _, err := dstPIDMap.Get(pieceNumString); err != nil && errorType.IsDataNotFound(err) {
 		return err
 	}
 
@@ -110,10 +110,12 @@ func (pm *Manager) updatePeerProgress(taskID, srcPID, dstPID string, pieceNum, p
 	// update producerLoad of dstPID
 	if !cutil.IsEmptyStr(dstPID) {
 		dstPeerState, err := pm.peerProgress.getAsPeerState(dstPID)
-		if err != nil {
+		if err != nil && !errorType.IsDataNotFound(err) {
 			return err
 		}
-		updateProducerLoad(dstPeerState.producerLoad, taskID, dstPID, pieceNum, pieceStatus)
+		if err == nil {
+			updateProducerLoad(dstPeerState.producerLoad, taskID, dstPID, pieceNum, pieceStatus)
+		}
 	}
 
 	if !pm.needUpdatePeerInfo(srcPID, dstPID) {
