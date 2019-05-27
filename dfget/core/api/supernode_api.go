@@ -23,8 +23,8 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 /* the url paths of supernode APIs*/
