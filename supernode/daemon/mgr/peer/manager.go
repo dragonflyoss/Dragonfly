@@ -1,4 +1,4 @@
-package mgr
+package peer
 
 import (
 	"context"

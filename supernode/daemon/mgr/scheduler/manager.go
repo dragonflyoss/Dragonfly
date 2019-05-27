@@ -23,12 +23,14 @@ var _ mgr.SchedulerMgr = &Manager{}
 
 // Manager is an implement of the interface of SchedulerMgr.
 type Manager struct {
+	cfg         *config.Config
 	progressMgr mgr.ProgressMgr
 }
 
 // NewManager returns a new Manager.
-func NewManager(progressMgr mgr.ProgressMgr) (*Manager, error) {
+func NewManager(cfg *config.Config, progressMgr mgr.ProgressMgr) (*Manager, error) {
 	return &Manager{
+		cfg:         cfg,
 		progressMgr: progressMgr,
 	}, nil
 }
@@ -43,14 +45,16 @@ func (sm *Manager) Schedule(ctx context.Context, taskID, clientID, peerID string
 	if len(pieceAvailable) == 0 {
 		return nil, errors.Wrapf(errorType.ErrPeerWait, "taskID: %s", taskID)
 	}
+	logrus.Debugf("scheduler get available pieces %v for taskID(%s)", pieceAvailable, taskID)
 
 	// get runnning pieces
 	pieceRunning, err := sm.progressMgr.GetPieceProgressByCID(ctx, taskID, clientID, "running")
 	if err != nil {
 		return nil, err
 	}
+	logrus.Debugf("scheduler get running pieces %v for taskID(%s)", pieceRunning, taskID)
 	runningCount := len(pieceRunning)
-	if runningCount > config.PeerDownLimit {
+	if runningCount >= config.PeerDownLimit {
 		return nil, errors.Wrapf(errorType.PeerContinue, "taskID: %s,clientID: %s", taskID, clientID)
 	}
 
@@ -59,6 +63,7 @@ func (sm *Manager) Schedule(ctx context.Context, taskID, clientID, peerID string
 	if err != nil {
 		return nil, err
 	}
+	logrus.Debugf("scheduler get pieces %v with prioritize for taskID(%s)", pieceNums, taskID)
 
 	return sm.getPieceResults(ctx, taskID, peerID, pieceNums, runningCount)
 }
@@ -127,7 +132,7 @@ func (sm *Manager) getPieceResults(ctx context.Context, taskID, peerID string, p
 		return nil, err
 	}
 	if srcPeerState.ClientErrorCount > config.FailCountLimit {
-		logrus.Warnf("peerID: %s got errors for %d times which reaches error limit: %d", peerID, srcPeerState.ClientErrorCount, config.FailCountLimit)
+		logrus.Warnf("peerID: %s got errors for %d times which reaches error limit: %d for taskID(%s)", peerID, srcPeerState.ClientErrorCount, config.FailCountLimit, taskID)
 		useSupernode = true
 	}
 
@@ -135,7 +140,7 @@ func (sm *Manager) getPieceResults(ctx context.Context, taskID, peerID string, p
 	for i := 0; i < len(pieceNums); i++ {
 		var dstPID string
 		if useSupernode {
-			dstPID = getSupernodePID()
+			dstPID = sm.cfg.GetSuperPID()
 		} else {
 			// get peerIDs by pieceNum
 			peerIDs, err := sm.progressMgr.GetPeerIDsByPieceNum(ctx, taskID, pieceNums[i])
@@ -168,7 +173,7 @@ func (sm *Manager) getPieceResults(ctx context.Context, taskID, peerID string, p
 func (sm *Manager) tryGetPID(ctx context.Context, taskID string, pieceNum int, peerIDs []string) (dstPID string) {
 	defer func() {
 		if dstPID == "" {
-			dstPID = getSupernodePID()
+			dstPID = sm.cfg.GetSuperPID()
 		}
 	}()
 
@@ -235,11 +240,6 @@ func getCenterNum(runningPieces []int) int {
 		totalDistance += runningPieces[i]
 	}
 	return totalDistance / (len(runningPieces))
-}
-
-// TODO: return supernode peerID
-func getSupernodePID() string {
-	return ""
 }
 
 func abs(i int) int {

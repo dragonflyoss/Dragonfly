@@ -6,10 +6,9 @@ import (
 
 // PieceResult contains the information about which piece to download from which node.
 type PieceResult struct {
-	TaskID    string
-	PieceNum  int
-	PieceSize int32
-	DstPID    string
+	TaskID   string
+	PieceNum int
+	DstPID   string
 }
 
 // SchedulerMgr is responsible for calculating scheduling results according to certain rules.
