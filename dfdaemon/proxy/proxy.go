@@ -86,6 +86,10 @@ func (proxy *TransparentProxy) remoteConfig(host string) *tls.Config {
 			if h.Certs != nil {
 				config.RootCAs = h.Certs.CertPool
 			}
+
+			if h.Insecure {
+				config.InsecureSkipVerify = true
+			}
 			return config
 		}
 	}
