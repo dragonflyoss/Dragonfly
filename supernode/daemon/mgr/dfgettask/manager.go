@@ -18,12 +18,14 @@ var _ mgr.DfgetTaskMgr = &Manager{}
 // Manager is an implementation of the interface of DfgetTaskMgr.
 type Manager struct {
 	dfgetTaskStore *dutil.Store
+	ptoc           *cutil.SyncMap
 }
 
 // NewManager returns a new Manager.
 func NewManager() (*Manager, error) {
 	return &Manager{
 		dfgetTaskStore: dutil.NewStore(),
+		ptoc:           cutil.NewSyncMap(),
 	}, nil
 }
 
@@ -52,6 +54,7 @@ func (dtm *Manager) Add(ctx context.Context, dfgetTask *types.DfGetTask) error {
 
 	// TODO: should we verify that the peerID is valid here.
 
+	dtm.ptoc.Add(generatePeerKey(dfgetTask.PeerID, dfgetTask.TaskID), dfgetTask.CID)
 	dtm.dfgetTaskStore.Put(key, dfgetTask)
 	return nil
 }
@@ -59,6 +62,11 @@ func (dtm *Manager) Add(ctx context.Context, dfgetTask *types.DfGetTask) error {
 // Get a dfgetTask info with specified clientID and taskID.
 func (dtm *Manager) Get(ctx context.Context, clientID, taskID string) (dfgetTask *types.DfGetTask, err error) {
 	return dtm.getDfgetTask(clientID, taskID)
+}
+
+// GetCIDByPeerIDAndTaskID returns cid with specified peerID and taskID.
+func (dtm *Manager) GetCIDByPeerIDAndTaskID(ctx context.Context, peerID, taskID string) (string, error) {
+	return dtm.ptoc.GetAsString(generatePeerKey(peerID, taskID))
 }
 
 // List returns the list of dfgetTask.
@@ -72,6 +80,12 @@ func (dtm *Manager) Delete(ctx context.Context, clientID, taskID string) error {
 	if err != nil {
 		return err
 	}
+
+	dfgetTask, err := dtm.getDfgetTask(clientID, taskID)
+	if err != nil {
+		return err
+	}
+	dtm.ptoc.Delete(generatePeerKey(dfgetTask.PeerID, dfgetTask.TaskID))
 
 	return dtm.dfgetTaskStore.Delete(key)
 }
@@ -119,4 +133,8 @@ func generateKey(cID, taskID string) (string, error) {
 	}
 
 	return fmt.Sprintf("%s%s%s", cID, "@", taskID), nil
+}
+
+func generatePeerKey(peerID, taskID string) string {
+	return fmt.Sprintf("%s@%s", peerID, taskID)
 }
