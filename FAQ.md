@@ -259,3 +259,23 @@ User can get dfget's log from file `$HOME/.small-dragonfly/logs/dfclient.log`, a
 # download from other dfget peer
 2019-02-13 15:22:40.062 INFO sign:32047-1550042560.044 : downloading piece:{"taskID":"b4b0f175f7aef583ff6ff8da6b00024d7772b165caa66ff8ef3a9dce6701b690","superNode":"127.0.0.1","dstCid":"127.0.0.1-31923-1550042443.708","range":"0-4194303","result":503,"status":701,"pieceSize":4194304,"pieceNum":0}
 ```
+
+## How to view all the dfget logs of a task
+
+You can follow the steps:
+
+- find a failed task: `grep 'download FAIL' dfclient.log`, such as:
+
+  ```
+  2019-05-22 05:40:58.120 INFO sign:38923-1558496382.915 : download FAIL cost:75.208s length:4120442 reason:0
+  ```
+
+- get all the logs of this task through the sign `38923-1558496382.915`: `grep 38923-1558496382.915 dfclient.log`, such as:
+
+  ```
+  2019-05-22 05:39:42.919 INFO sign:38923-1558496382.915 : get cmd params:["dfget" "-u" "https://xxx" "-o" "./a.test"]
+  ...
+  ...
+  2019-05-22 05:40:58.120 INFO sign:38923-1558496382.915 : download FAIL cost:75.208s length:4120442 reason:0
+  ```
+
