@@ -158,8 +158,6 @@ func createRegisterRequest() (req *types.RegisterRequest) {
 	return req
 }
 
-
-
 func (s *SupernodeAPITestSuite) TestSupernodeAPI_nodeToIPAndPort(c *check.C) {
 	node1 := "10.47.231.22"
 	node2 := "10.47.231.25:8005"
