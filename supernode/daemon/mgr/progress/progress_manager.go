@@ -117,15 +117,23 @@ func (pm *Manager) UpdateProgress(ctx context.Context, taskID, srcCID, srcPID, d
 	// Add one more peer for this piece when the srcPID successfully downloads the piece.
 	if pieceStatus == config.PieceSUCCESS {
 		if err := pm.updatePieceProgress(taskID, srcPID, pieceNum); err != nil {
+			logrus.Errorf("failed to update PieceProgress taskID(%s) srcPID(%s) pieceNum(%d): %v",
+				taskID, srcPID, pieceNum, err)
 			return err
 		}
+		logrus.Debugf("success to update PieceProgress taskID(%s) srcPID(%s) pieceNum(%d)",
+			taskID, srcPID, pieceNum)
 	}
 
 	// Step2: update the clientProgress and superProgress
 	result, err := pm.updateClientProgress(taskID, srcCID, dstPID, pieceNum, pieceStatus)
 	if err != nil {
+		logrus.Errorf("failed to update ClientProgress taskID(%s) srcCID(%s) dstPID(%s) pieceNum(%d) pieceStatus(%d): %v",
+			taskID, srcCID, dstPID, pieceNum, pieceStatus, err)
 		return err
 	}
+	logrus.Debugf("success to update ClientProgress taskID(%s) srcCID(%s) dstPID(%s) pieceNum(%d) pieceStatus(%d) with result: %t",
+		taskID, srcCID, dstPID, pieceNum, pieceStatus, result)
 	// It means that it's already successful and
 	// there is no need to perform subsequent updates
 	// when err==nil and result ==false.
@@ -134,7 +142,14 @@ func (pm *Manager) UpdateProgress(ctx context.Context, taskID, srcCID, srcPID, d
 	}
 
 	// Step3: update the peerProgress
-	return pm.updatePeerProgress(taskID, srcPID, dstPID, pieceNum, pieceStatus)
+	if err := pm.updatePeerProgress(taskID, srcPID, dstPID, pieceNum, pieceStatus); err != nil {
+		logrus.Errorf("failed to update PeerProgress taskID(%s) srcCID(%s) dstPID(%s) pieceNum(%d) pieceStatus(%d): %v",
+			taskID, srcCID, dstPID, pieceNum, pieceStatus, err)
+		return err
+	}
+	logrus.Debugf("success to update PeerProgress taskID(%s) srcCID(%s) dstPID(%s) pieceNum(%d) pieceStatus(%d)",
+		taskID, srcCID, dstPID, pieceNum, pieceStatus)
+	return nil
 }
 
 // GetPieceProgressByCID get all pieces with specified clientID.
