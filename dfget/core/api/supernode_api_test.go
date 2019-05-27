@@ -157,3 +157,24 @@ func createRegisterRequest() (req *types.RegisterRequest) {
 	req = &types.RegisterRequest{}
 	return req
 }
+
+
+
+func (s *SupernodeAPITestSuite) TestSupernodeAPI_nodeToIPAndPort(c *check.C) {
+	node1 := "10.47.231.22"
+	node2 := "10.47.231.25:8005"
+	node3 := "10.47.231.25:abcd"
+
+	ip,port := s.api.(*supernodeAPI).nodeToIPAndPort(node1)
+	c.Assert( ip, check.Equals, "10.47.231.22")
+	c.Assert( port, check.Equals, s.api.(*supernodeAPI).ServicePort)
+
+	ip,port = s.api.(*supernodeAPI).nodeToIPAndPort(node2)
+	c.Assert( ip, check.Equals, "10.47.231.25")
+	c.Assert( port, check.Equals, int(8005))
+
+	ip,port = s.api.(*supernodeAPI).nodeToIPAndPort(node3)
+	c.Assert( ip, check.Equals, "10.47.231.25")
+	c.Assert( port, check.Equals, int(8002))
+
+}
