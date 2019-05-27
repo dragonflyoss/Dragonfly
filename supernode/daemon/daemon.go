@@ -50,7 +50,7 @@ func (d *Daemon) RegisterSuperNode() error {
 	req := &types.PeerCreateRequest{
 		IP:       strfmt.IPv4(d.config.AdvertiseIP),
 		HostName: strfmt.Hostname(hostname),
-		Port:     int32(d.config.ListenPort),
+		Port:     int32(d.config.DownloadPort),
 	}
 
 	resp, err := d.server.PeerMgr.Register(context.Background(), req)
