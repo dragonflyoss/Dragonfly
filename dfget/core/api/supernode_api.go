@@ -64,7 +64,6 @@ var _ SupernodeAPI = &supernodeAPI{}
 
 //dfget --node ends with ":port" or not
 func (api *supernodeAPI) nodeToIPAndPort(node string) (ip string, port int) {
-
 	strs := strings.Split(node, ":")
 	switch len(strs) {
 	case 0:
@@ -78,7 +77,6 @@ func (api *supernodeAPI) nodeToIPAndPort(node string) (ip string, port int) {
 		}
 		return strs[0], p
 	}
-
 }
 
 // Register sends a request to the supernode to register itself as a peer
@@ -109,7 +107,6 @@ func (api *supernodeAPI) PullPieceTask(node string, req *types.PullPieceTaskRequ
 	resp *types.PullPieceTaskResponse, e error) {
 
 	ip, port := api.nodeToIPAndPort(node)
-
 	url := fmt.Sprintf("%s://%s:%d%s?%s",
 		api.Scheme, ip, port, peerPullPieceTaskPath, util.ParseQuery(req))
 

@@ -174,5 +174,4 @@ func (s *SupernodeAPITestSuite) TestSupernodeAPI_nodeToIPAndPort(c *check.C) {
 	ip, port = s.api.(*supernodeAPI).nodeToIPAndPort(node3)
 	c.Assert(ip, check.Equals, "10.47.231.25")
 	c.Assert(port, check.Equals, int(8002))
-
 }
