@@ -51,6 +51,21 @@ func (mr *MockCDNMgrMockRecorder) TriggerCDN(ctx, taskInfo interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TriggerCDN", reflect.TypeOf((*MockCDNMgr)(nil).TriggerCDN), ctx, taskInfo)
 }
 
+// GetHTTPPath mocks base method
+func (m *MockCDNMgr) GetHTTPPath(ctx context.Context, taskID string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetHTTPPath", ctx, taskID)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetHTTPPath indicates an expected call of GetHTTPPath
+func (mr *MockCDNMgrMockRecorder) GetHTTPPath(ctx, taskID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHTTPPath", reflect.TypeOf((*MockCDNMgr)(nil).GetHTTPPath), ctx, taskID)
+}
+
 // GetStatus mocks base method
 func (m *MockCDNMgr) GetStatus(ctx context.Context, taskID string) (string, error) {
 	m.ctrl.T.Helper()
