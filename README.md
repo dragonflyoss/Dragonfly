@@ -87,9 +87,9 @@ Other active channels:
 - Twitter: [@dragonfly_oss](https://twitter.com/dragonfly_oss)
 - Dingtalk Group(钉钉群)
 
-<p align="center">
-<img src=https://user-images.githubusercontent.com/9465626/50591975-2ac2ba00-0ecd-11e9-9e53-4c4d6a7dfc7d.jpg width="250">
-</p>
+<div align="center">
+  <img src="docs/images/df-dev-dingtalk.png" width="250" title="dingtalk">
+</div>
 
 ## Contributing
 
