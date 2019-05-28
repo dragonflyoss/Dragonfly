@@ -19,3 +19,6 @@ Below are the adoptors of project Dragonfly. If you are using to Dragonfly to im
 <a href="https://www.huya.com/" border="0" target="_blank"><img alt="huya" src="docs/images/adoptor_logo/huya.png" height="70"></a>&nbsp; &nbsp; &nbsp;
 <a href="https://www.qunar.com/" border="0" target="_blank"><img alt="qunar" src="docs/images/adoptor_logo/qunar.png" height="70"></a>&nbsp; &nbsp; &nbsp;<br/><br/>
 <a href="https://www.shunnengnet.com" border="0" target="_blank"><img alt="sunus" src="docs/images/adoptor_logo/sunus.png" height="70"></a>&nbsp; &nbsp; &nbsp;
+<a href="http://wise2c.com/" border="0" target="_blank"><img alt="wise2c" src="docs/images/adoptor_logo/wise2c.png" height="70"></a>&nbsp; &nbsp; &nbsp;
+<a href="http://www.mys4s.cn/#/index" border="0" target="_blank"><img alt="qichedasheng" src="docs/images/adoptor_logo/qichedasheng.png" height="70"></a>&nbsp; &nbsp; &nbsp;<br/><br/>
+<a href="https://www.autohome.com.cn/beijing/" border="0" target="_blank"><img alt="autohome" src="docs/images/adoptor_logo/autohome.png" height="70"></a>&nbsp; &nbsp; &nbsp;
