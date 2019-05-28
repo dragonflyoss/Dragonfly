@@ -597,8 +597,7 @@ definitions:
          format: "ipv4"
       hostName:
         type: "string"
-        description: "host name of peer client node, as a valid RFC 1123 hostname."
-        format: "hostname"
+        description: "host name of peer client node."
         minLength: 1
       port:
         type: "integer"

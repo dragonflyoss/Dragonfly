@@ -1,17 +1,24 @@
 package environment
 
 import (
+	"fmt"
 	"runtime"
 
 	"github.com/dragonflyoss/Dragonfly/client"
 )
 
+// UseJavaVersion whether to run integration test with java version supernode
+var UseJavaVersion bool
+
 var (
+	// SupernodeListenPort is the port that supernode will listen.
+	SupernodeListenPort = 8002
+
 	// DragonflySupernodeBinary is default binary
 	DragonflySupernodeBinary = "/usr/local/bin/supernode"
 
 	// DragonflyAddress is default address dragonfly supernode listens on.
-	DragonflyAddress = "tcp://127.0.0.1:8080"
+	DragonflyAddress = fmt.Sprintf("tcp://127.0.0.1:%d", SupernodeListenPort)
 
 	// TLSConfig is default tls config
 	TLSConfig = client.TLSConfig{}

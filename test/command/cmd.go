@@ -26,17 +26,20 @@ import (
 	"os/exec"
 	fp "path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/test/environment"
 )
 
 var (
-	dfgetPath     string
-	dfdaemonPath  string
-	supernodePath string
+	dfgetPath       string
+	dfdaemonPath    string
+	supernodePath   string
+	supernodeGoPath string
 )
 
 func init() {
@@ -56,6 +59,7 @@ func init() {
 	dfgetPath = fp.Join(binDir, "dfget")
 	dfdaemonPath = fp.Join(binDir, "dfdaemon")
 	supernodePath = fp.Join(sourceDir, "src", "supernode", "target", "supernode.jar")
+	supernodeGoPath = fp.Join(binDir, "supernode")
 }
 
 func checkExist(s string) {
@@ -71,7 +75,11 @@ func checkExist(s string) {
 func NewStarter(name string) *Starter {
 	checkExist(dfgetPath)
 	checkExist(dfdaemonPath)
-	checkExist(supernodePath)
+	if environment.UseJavaVersion {
+		checkExist(supernodePath)
+	} else {
+		checkExist(supernodeGoPath)
+	}
 
 	home, err := ioutil.TempDir("/tmp", "df-"+name+"-")
 	if err != nil {
@@ -123,20 +131,40 @@ type Starter struct {
 	lock sync.Mutex
 }
 
+func (s *Starter) getCmdGo(dir string, running time.Duration, args ...string) (cmd *exec.Cmd, err error) {
+	args = append([]string{
+		"--home-dir=" + dir,
+		"--port=" + strconv.Itoa(environment.SupernodeListenPort),
+		"--debug",
+	}, args...)
+
+	return s.execCmd(running, supernodeGoPath, args...)
+}
+
+func (s *Starter) getCmdJava(dir string, running time.Duration, args ...string) (cmd *exec.Cmd, err error) {
+	args = append([]string{
+		"-Dsupernode.baseHome=" + dir,
+		"-Dserver.port=" + strconv.Itoa(environment.SupernodeListenPort),
+		"-jar", supernodePath,
+	}, args...)
+
+	return s.execCmd(running, "java", args...)
+}
+
 // Supernode starts supernode.
 func (s *Starter) Supernode(running time.Duration, args ...string) (
 	cmd *exec.Cmd, err error) {
 	dir := fp.Join(s.Home, "supernode")
-	args = append([]string{
-		"-Dsupernode.baseHome=" + dir,
-		"-Dserver.port=8002",
-		"-jar", supernodePath,
-	}, args...)
-
-	if cmd, err = s.execCmd(running, "java", args...); err != nil {
+	if environment.UseJavaVersion {
+		cmd, err = s.getCmdJava(dir, running, args...)
+	} else {
+		cmd, err = s.getCmdGo(dir, running, args...)
+	}
+	if err != nil {
 		return nil, err
 	}
-	if err = check("localhost", 8002, 5*time.Second); err != nil {
+
+	if err = check("localhost", environment.SupernodeListenPort, 10*time.Second); err != nil {
 		s.Kill(cmd)
 		return nil, err
 	}
@@ -249,7 +277,7 @@ func (s *Starter) fileServer(cmd *exec.Cmd, root string) (*http.Server, error) {
 		Addr:    ":8001",
 		Handler: http.FileServer(http.Dir(root)),
 	}
-	var err chan error
+	err := make(chan error)
 	go func() {
 		if e := server.ListenAndServe(); err != nil {
 			err <- e
@@ -270,7 +298,7 @@ func (s *Starter) fileServer(cmd *exec.Cmd, root string) (*http.Server, error) {
 func check(ip string, port int, timeout time.Duration) (err error) {
 	ticker := time.NewTicker(200 * time.Millisecond)
 	defer ticker.Stop()
-	var end chan error
+	end := make(chan error)
 	time.AfterFunc(timeout, func() {
 		end <- fmt.Errorf("wait timeout:%v", timeout)
 	})
