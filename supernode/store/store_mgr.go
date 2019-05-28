@@ -18,6 +18,8 @@ package store
 
 import (
 	"fmt"
+	"path"
+	"sync"
 
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/plugins"
@@ -38,21 +40,55 @@ func Register(name string, builder StorageBuilder) {
 
 // Manager manage stores.
 type Manager struct {
+	cfg *config.Config
+
+	defaultStorage *Store
+	mutex          sync.Mutex
 }
 
 // NewManager create a store manager.
-func NewManager() (*Manager, error) {
-	return &Manager{}, nil
+func NewManager(cfg *config.Config) (*Manager, error) {
+	return &Manager{
+		cfg: cfg,
+	}, nil
 }
 
 // Get a store from manager with specified name.
 func (sm *Manager) Get(name string) (*Store, error) {
 	v := plugins.GetPlugin(config.StoragePlugin, name)
 	if v == nil {
+		if name == LocalStorageDriver {
+			return sm.getDefaultStorage()
+		}
 		return nil, fmt.Errorf("not existed storage: %s", name)
 	}
 	if store, ok := v.(*Store); ok {
 		return store, nil
 	}
 	return nil, fmt.Errorf("get store error: unknown reason")
+}
+
+func (sm *Manager) getDefaultStorage() (*Store, error) {
+	if sm.defaultStorage != nil {
+		return sm.defaultStorage, nil
+	}
+
+	sm.mutex.Lock()
+	defer sm.mutex.Unlock()
+
+	// check again to avoid initializing repeatedly
+	if sm.defaultStorage != nil {
+		return sm.defaultStorage, nil
+	}
+
+	if sm.cfg == nil {
+		return nil, fmt.Errorf("cannot init local storage without home path")
+	}
+	cfg := fmt.Sprintf("baseDir: %s", path.Join(sm.cfg.HomeDir, "repo"))
+	s, err := NewStore(LocalStorageDriver, NewLocalStorage, cfg)
+	if err != nil {
+		return nil, err
+	}
+	sm.defaultStorage = s
+	return sm.defaultStorage, nil
 }
