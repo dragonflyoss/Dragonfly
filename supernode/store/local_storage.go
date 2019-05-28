@@ -247,7 +247,7 @@ func (ls *localStorage) PutBytes(ctx context.Context, raw *Raw, data []byte) err
 
 // Stat determine whether the file exists.
 func (ls *localStorage) Stat(ctx context.Context, raw *Raw) (*StorageInfo, error) {
-	path, fileInfo, err := ls.statPath(raw.Bucket, raw.Key)
+	_, fileInfo, err := ls.statPath(raw.Bucket, raw.Key)
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +257,7 @@ func (ls *localStorage) Stat(ctx context.Context, raw *Raw) (*StorageInfo, error
 		return nil, fmt.Errorf("get create time error")
 	}
 	return &StorageInfo{
-		Path:       path,
+		Path:       path.Join(raw.Bucket, raw.Key),
 		Size:       fileInfo.Size(),
 		CreateTime: util.Ctime(sys),
 		ModTime:    fileInfo.ModTime(),

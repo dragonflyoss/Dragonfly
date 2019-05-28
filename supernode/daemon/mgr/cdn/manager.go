@@ -106,6 +106,15 @@ func (cm *Manager) TriggerCDN(ctx context.Context, task *types.TaskInfo) (*types
 	}, nil
 }
 
+// GetHTTPPath returns the http download path of taskID.
+func (cm *Manager) GetHTTPPath(ctx context.Context, taskID string) (string, error) {
+	info, err := cm.cacheStore.Stat(ctx, getDownloadRawFunc(taskID))
+	if err != nil {
+		return "", err
+	}
+	return info.Path, nil
+}
+
 // GetStatus get the status of the file.
 func (cm *Manager) GetStatus(ctx context.Context, taskID string) (cdnStatus string, err error) {
 	return "", nil
