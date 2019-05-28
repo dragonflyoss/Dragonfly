@@ -2,6 +2,7 @@
 BIN_DIR="../bin"
 DFDAEMON_BINARY_NAME=dfdaemon
 DFGET_BINARY_NAME=dfget
+SUPERNODE_BINARY_NAME=supernode
 
 curDir=$(cd "$(dirname "$0")" && pwd)
 cd "${curDir}" || return
@@ -9,14 +10,19 @@ cd "${curDir}" || return
 . ./env.sh
 
 install() {
-    installDir="${INSTALL_HOME}/${INSTALL_CLIENT_PATH}"
-    echo "install: ${installDir}"
-    createDir "${installDir}"
-    cp "${BIN_DIR}/${GOOS}_${GOARCH}/${DFDAEMON_BINARY_NAME}"   "${installDir}"
-    cp "${BIN_DIR}/${GOOS}_${GOARCH}/${DFGET_BINARY_NAME}"      "${installDir}"
+    installClientDir="${INSTALL_HOME}/${INSTALL_CLIENT_PATH}"
+    installSuperDir="${INSTALL_HOME}/${INSTALL_SUPERNODE_PATH}"
+    echo "install: ${INSTALL_HOME}"
+    createDir "${installClientDir}"
+    createDir "${installSuperDir}"
 
-    createLink "${installDir}/${DFDAEMON_BINARY_NAME}" /usr/local/bin/dfdaemon
-    createLink "${installDir}/${DFGET_BINARY_NAME}" /usr/local/bin/dfget
+    cp "${BIN_DIR}/${GOOS}_${GOARCH}/${DFDAEMON_BINARY_NAME}"   "${installClientDir}"
+    cp "${BIN_DIR}/${GOOS}_${GOARCH}/${DFGET_BINARY_NAME}"      "${installClientDir}"
+    cp "${BIN_DIR}/${GOOS}_${GOARCH}/${SUPERNODE_BINARY_NAME}"  "${installSuperDir}"
+
+    createLink "${installClientDir}/${DFDAEMON_BINARY_NAME}" /usr/local/bin/dfdaemon
+    createLink "${installClientDir}/${DFGET_BINARY_NAME}" /usr/local/bin/dfget
+    createLink "${installSuperDir}/${SUPERNODE_BINARY_NAME}" /usr/local/bin/supernode
 }
 
 uninstall() {
@@ -24,6 +30,8 @@ uninstall() {
     test -e /usr/local/bin/dfdaemon && unlink /usr/local/bin/dfdaemon
     echo "unlink /usr/local/bin/dfget"
     test -e /usr/local/bin/dfget && unlink /usr/local/bin/dfget
+    echo "unlink /usr/local/bin/supernode"
+    test -e /usr/local/bin/supernode && unlink /usr/local/bin/supernode
 
     echo "uninstall dragonfly: ${INSTALL_HOME}"
     test -d "${INSTALL_HOME}" && rm -rf "${INSTALL_HOME}"
