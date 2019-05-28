@@ -27,29 +27,29 @@ build-dirs:
 .PHONY: build-dirs
 
 build: build-dirs
-	@echo "Begin to build dfget and dfdaemon and supernode."
-	./hack/build-supernode.sh 
-	./hack/build-client.sh
+	@echo "Begin to build dfget and dfdaemon and supernode." 
+	./hack/build.sh
 .PHONY: build
 
 build-client: build-dirs
 	@echo "Begin to build dfget and dfdaemon."
-	./hack/build-client.sh
+	./hack/build.sh dfget
+	./hack/build.sh dfdaemon
 .PHONY: build-client
 
 build-supernode: build-dirs
 	@echo "Begin to build supernode."
-	./hack/build-supernode.sh 
+	./hack/build.sh supernode
 .PHONY: build-supernode
 
 install:
-	@echo "Begin to install dfget and dfdaemon."
-	./hack/install-client.sh install
+	@echo "Begin to install dfget and dfdaemon and supernode."
+	./hack/install.sh install
 .PHONY: install
 
 uninstall:
-	@echo "Begin to uninstall dfget and dfdaemon."
-	./hack/install-client.sh uninstall
+	@echo "Begin to uninstall dfget and dfdaemon and supernode."
+	./hack/install.sh uninstall
 .PHONY: uninstall
 
 unit-test: build-dirs
@@ -57,10 +57,8 @@ unit-test: build-dirs
 .PHONY: unit-test
 
 check:
-	@echo "Begin to check client code formats."
-	./hack/check-client.sh	
-	@echo "Begin to check supernode code formats."
-	./hack/check-supernode.sh
+	@echo "Begin to check code formats."
+	./hack/check.sh	
 .PHONY: check
 
 docs:

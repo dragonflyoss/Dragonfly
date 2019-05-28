@@ -11,7 +11,7 @@ var (
 	DragonflySupernodeBinary = "/usr/local/bin/supernode"
 
 	// DragonflyAddress is default address dragonfly supernode listens on.
-	DragonflyAddress = "tcp://127.0.0.1:8080"
+	DragonflyAddress = "tcp://127.0.0.1:8002"
 
 	// TLSConfig is default tls config
 	TLSConfig = client.TLSConfig{}

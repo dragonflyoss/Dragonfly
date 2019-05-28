@@ -68,6 +68,8 @@ jobs:
             cd dfget && go build
             cd ..
             cd dfdaemon && go build
+            cd ..
+            cd supernode && go build
       - run:
           name: unit test
           command: make unit-test
@@ -87,15 +89,10 @@ jobs:
       - run:
           name: start supernode daemon background & run all integration test cases in test
           command: |
-            echo "install maven and jdk8"
-            sudo apt-get update > /dev/null 2>&1
-            sudo apt-get install openjdk-8-jdk maven > /dev/null 2>&1
             echo "building..."
             make build > /dev/null
-            cd cmd
-            cd supernode && go build
-            ./supernode --home-dir /tmp/dragonfly --port 8080 &
-            go test ../../test
+            echo "start integration test..."
+            go test ./test
 
 workflows:
   version: 2

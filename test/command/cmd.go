@@ -55,7 +55,7 @@ func init() {
 
 	dfgetPath = fp.Join(binDir, "dfget")
 	dfdaemonPath = fp.Join(binDir, "dfdaemon")
-	supernodePath = fp.Join(sourceDir, "src", "supernode", "target", "supernode.jar")
+	supernodePath = fp.Join(binDir, "supernode")
 }
 
 func checkExist(s string) {
@@ -128,12 +128,11 @@ func (s *Starter) Supernode(running time.Duration, args ...string) (
 	cmd *exec.Cmd, err error) {
 	dir := fp.Join(s.Home, "supernode")
 	args = append([]string{
-		"-Dsupernode.baseHome=" + dir,
-		"-Dserver.port=8002",
-		"-jar", supernodePath,
+		"--home-dir=" + dir,
+		"--debug",
 	}, args...)
 
-	if cmd, err = s.execCmd(running, "java", args...); err != nil {
+	if cmd, err = s.execCmd(running, supernodePath, args...); err != nil {
 		return nil, err
 	}
 	if err = check("localhost", 8002, 5*time.Second); err != nil {
@@ -249,7 +248,7 @@ func (s *Starter) fileServer(cmd *exec.Cmd, root string) (*http.Server, error) {
 		Addr:    ":8001",
 		Handler: http.FileServer(http.Dir(root)),
 	}
-	var err chan error
+	err := make(chan error)
 	go func() {
 		if e := server.ListenAndServe(); err != nil {
 			err <- e
@@ -270,7 +269,7 @@ func (s *Starter) fileServer(cmd *exec.Cmd, root string) (*http.Server, error) {
 func check(ip string, port int, timeout time.Duration) (err error) {
 	ticker := time.NewTicker(200 * time.Millisecond)
 	defer ticker.Stop()
-	var end chan error
+	end := make(chan error)
 	time.AfterFunc(timeout, func() {
 		end <- fmt.Errorf("wait timeout:%v", timeout)
 	})

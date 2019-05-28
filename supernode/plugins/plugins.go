@@ -59,6 +59,7 @@ func Initialize(cfg *config.Config) error {
 // RegisterPlugin register a plugin builder that will be called to create a new
 // plugin instant when supernode starts.
 func RegisterPlugin(pt config.PluginType, name string, builder Builder) {
+	logrus.Infof("success to add builder %v %s %v", pt, name, builder)
 	mgr.AddBuilder(pt, name, builder)
 }
 

@@ -49,6 +49,7 @@ func (s *DFGetP2PTestSuite) TearDownSuite(c *check.C) {
 }
 
 func (s *DFGetP2PTestSuite) TestDownload(c *check.C) {
+	c.Skip("unfinished supernode")
 	cmd, err := s.starter.DFGet(5*time.Second,
 		"-u", "https://lowzj.com",
 		"-o", Join(s.starter.Home, "a.test"),
