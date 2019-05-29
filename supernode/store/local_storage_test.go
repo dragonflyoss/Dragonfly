@@ -64,7 +64,7 @@ func (s *LocalStorageSuite) SetUpSuite(c *check.C) {
 	plugins.Initialize(cfg)
 
 	// init StorageManager
-	sm, err := NewManager()
+	sm, err := NewManager(nil)
 	c.Assert(err, check.IsNil)
 
 	// init store with local storage
@@ -291,6 +291,26 @@ func (s *LocalStorageSuite) BenchmarkPutSerial(c *check.C) {
 	}
 }
 
+func (s *LocalStorageSuite) TestManager_Get(c *check.C) {
+	cfg := &config.Config{
+		BaseProperties: &config.BaseProperties{
+			HomeDir: path.Join(s.workHome, "test_mgr"),
+		},
+	}
+	mgr, _ := NewManager(cfg)
+
+	st, err := mgr.Get(LocalStorageDriver)
+	c.Check(err, check.IsNil)
+	c.Check(st, check.NotNil)
+	_, ok := st.driver.(*localStorage)
+	c.Check(ok, check.Equals, true)
+
+	st, err = mgr.Get("testMgr")
+	c.Check(err, check.NotNil)
+	c.Check(st, check.IsNil)
+}
+
+// -----------------------------------------------------------------------------
 // helper function
 
 func (s *LocalStorageSuite) checkStat(raw *Raw, c *check.C) {
