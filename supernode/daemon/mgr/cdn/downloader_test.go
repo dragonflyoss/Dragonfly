@@ -26,6 +26,7 @@ import (
 
 	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
 	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
 
 	"github.com/go-check/check"
 )
@@ -42,7 +43,7 @@ func init() {
 }
 
 func (s *CDNDownloadTestSuite) TestDownload(c *check.C) {
-	cm, _ := NewManager(nil, nil, nil)
+	cm, _ := NewManager(config.NewConfig(), nil, nil)
 	bytes := []byte("hello world")
 	bytesLength := int64(len(bytes))
 
