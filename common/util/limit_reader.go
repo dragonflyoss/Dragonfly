@@ -27,8 +27,7 @@ import (
 // src: reader
 // rate: bytes/second
 func NewLimitReader(src io.Reader, rate int, calculateMd5 bool) *LimitReader {
-	limiter := NewRateLimiter(TransRate(rate), 2)
-	return NewLimitReaderWithLimiter(limiter, src, calculateMd5)
+	return NewLimitReaderWithLimiter(newRateLimiterWithDefaultWindow(rate), src, calculateMd5)
 }
 
 // NewLimitReaderWithLimiter create LimitReader with a rateLimiter.
@@ -44,6 +43,21 @@ func NewLimitReaderWithLimiter(rateLimiter *RateLimiter, src io.Reader, calculat
 		Limiter: rateLimiter,
 		md5sum:  md5sum,
 	}
+}
+
+// NewLimitReaderWithMD5Sum create LimitReader with a md5 sum.
+// src: reader
+// rate: bytes/second
+func NewLimitReaderWithMD5Sum(src io.Reader, rate int, md5sum hash.Hash) *LimitReader {
+	return &LimitReader{
+		Src:     src,
+		Limiter: newRateLimiterWithDefaultWindow(rate),
+		md5sum:  md5sum,
+	}
+}
+
+func newRateLimiterWithDefaultWindow(rate int) *RateLimiter {
+	return NewRateLimiter(TransRate(rate), 2)
 }
 
 // LimitReader read stream with RateLimiter.
