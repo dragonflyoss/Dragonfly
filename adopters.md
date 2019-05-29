@@ -22,3 +22,4 @@ Below are the adoptors of project Dragonfly. If you are using to Dragonfly to im
 <a href="http://wise2c.com/" border="0" target="_blank"><img alt="wise2c" src="docs/images/adoptor_logo/wise2c.png" height="70"></a>&nbsp; &nbsp; &nbsp;
 <a href="http://www.mys4s.cn/#/index" border="0" target="_blank"><img alt="qichedasheng" src="docs/images/adoptor_logo/qichedasheng.png" height="70"></a>&nbsp; &nbsp; &nbsp;<br/><br/>
 <a href="https://www.autohome.com.cn/beijing/" border="0" target="_blank"><img alt="autohome" src="docs/images/adoptor_logo/autohome.png" height="70"></a>&nbsp; &nbsp; &nbsp;
+<a href="https://shopee.com/" border="0" target="_blank"><img alt="shopee" src="docs/images/adoptor_logo/shopee.svg" height="70"></a>&nbsp; &nbsp; &nbsp;
