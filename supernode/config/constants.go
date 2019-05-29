@@ -46,3 +46,25 @@ const (
 	// PeerDownLimit indicates the limit of the download task count as a client.
 	PeerDownLimit = 4
 )
+
+const (
+	// DefaultPieceSize 4M
+	DefaultPieceSize = 4 * 1024 * 1024
+
+	// DefaultPieceSizeLimit 15M
+	DefaultPieceSizeLimit = 15 * 1024 * 1024
+
+	// PieceHeadSize 4 bytes
+	PieceHeadSize = 4
+
+	// PieceWrapSize 4 bytes head and 1 byte tail
+	PieceWrapSize = PieceHeadSize + 1
+
+	// PieceTailChar the value of piece tail
+	PieceTailChar = byte(0x7f)
+)
+
+const (
+	// CDNWriterRoutineLimit 4
+	CDNWriterRoutineLimit = 4
+)

@@ -183,6 +183,12 @@
 			"revisionTime": "2016-01-10T10:55:54Z"
 		},
 		{
+			"checksumSHA1": "q+P79yv4TovIqKRdiC06nd//gqc=",
+			"path": "github.com/prashantv/gostub",
+			"revision": "24ed9cdea43de1d52ea20cab2b7a38e7ed6886b3",
+			"revisionTime": "2018-11-09T19:37:01Z"
+		},
+		{
 			"checksumSHA1": "1KVewmQICPa+IH1gYJUKDgNbKpY=",
 			"path": "github.com/russross/blackfriday",
 			"revision": "6d1ef893fcb01b4f50cb6e57ed7df3e2e627b6b2",

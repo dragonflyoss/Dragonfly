@@ -168,3 +168,8 @@ type BaseProperties struct {
 	// superNodePID is the ID of supernode, which is the same as peer ID of dfget.
 	superNodePID string
 }
+
+// TransLimit trans rateLimit from MB/s to B/s.
+func TransLimit(rateLimit int) int {
+	return rateLimit * 1024 * 1024
+}
