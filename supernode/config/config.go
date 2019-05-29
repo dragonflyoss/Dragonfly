@@ -72,6 +72,7 @@ func NewBaseProperties() *BaseProperties {
 	home := filepath.Join(string(filepath.Separator), "home", "admin", "supernode")
 	return &BaseProperties{
 		ListenPort:              8002,
+		DownloadPort:            8001,
 		HomeDir:                 home,
 		SchedulerCorePoolSize:   10,
 		DownloadPath:            filepath.Join(home, "repo", "download"),
@@ -90,8 +91,12 @@ func NewBaseProperties() *BaseProperties {
 // BaseProperties contains all basic properties of supernode.
 type BaseProperties struct {
 	// ListenPort is the port supernode server listens on.
-	// default:
+	// default: 8002
 	ListenPort int `yaml:"listenPort"`
+
+	// DownloadPort is the port for download files from supernode.
+	// default: 8001
+	DownloadPort int `yaml:"downloadPort"`
 
 	// HomeDir is working directory of supernode.
 	// default: /home/admin/supernode
