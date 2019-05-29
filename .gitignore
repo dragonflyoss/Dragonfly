@@ -49,3 +49,6 @@ getter.log*
 docs/.build/themes/
 docs/.build/content/
 docs/.build/static/images/
+
+*.key
+*.crt

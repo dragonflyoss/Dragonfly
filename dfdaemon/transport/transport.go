@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package handler
+package transport
 
 import (
 	"crypto/tls"
@@ -42,14 +42,14 @@ var (
 // It uses http.fileTransport to serve requests that need to use dfget,
 // and uses http.Transport to serve the other requests.
 type DFRoundTripper struct {
-	Round  *http.Transport
-	Round2 http.RoundTripper
-
-	Downloader downloader.Interface
+	Round          *http.Transport
+	Round2         http.RoundTripper
+	ShouldUseDfget func(req *http.Request) bool
+	Downloader     downloader.Interface
 }
 
-// NewDFRoundTripper return the default DFRoundTripper.
-func NewDFRoundTripper(cfg *tls.Config) *DFRoundTripper {
+// New return the default DFRoundTripper.
+func New(cfg *tls.Config) *DFRoundTripper {
 	if cfg == nil {
 		cfg = &tls.Config{InsecureSkipVerify: true}
 	}
@@ -66,8 +66,8 @@ func NewDFRoundTripper(cfg *tls.Config) *DFRoundTripper {
 			ExpectContinueTimeout: 1 * time.Second,
 			TLSClientConfig:       cfg,
 		},
-		Round2: http.NewFileTransport(http.Dir("/")),
-
+		Round2:         http.NewFileTransport(http.Dir("/")),
+		ShouldUseDfget: needUseGetter,
 		Downloader: dfget.NewDFGetter(
 			global.CommandLine.DFRepo,
 			global.CommandLine.CallSystem,
@@ -81,13 +81,16 @@ func NewDFRoundTripper(cfg *tls.Config) *DFRoundTripper {
 // RoundTrip only process first redirect at present
 // fix resource release
 func (roundTripper *DFRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	urlString := req.URL.String()
-
-	if roundTripper.needUseGetter(req, urlString) {
-		if res, err := roundTripper.download(req, urlString); err == nil || !exception.IsNotAuth(err) {
+	if roundTripper.ShouldUseDfget(req) {
+		// delete the Accept-Encoding header to avoid returning the same cached
+		// result for different requests
+		req.Header.Del("Accept-Encoding")
+		logrus.Debugf("round trip with dfget: %s", req.URL.String())
+		if res, err := roundTripper.download(req, req.URL.String()); err == nil || !exception.IsNotAuth(err) {
 			return res, err
 		}
 	}
+	logrus.Debugf("round trip directly: %s %s", req.Method, req.URL.String())
 	req.Host = req.URL.Host
 	req.Header.Set("Host", req.Host)
 	res, err := roundTripper.Round.RoundTrip(req)
@@ -123,8 +126,9 @@ func (roundTripper *DFRoundTripper) downloadByGetter(url string, header map[stri
 	return roundTripper.Downloader.Download(url, header, name)
 }
 
-// needUseGetter whether to download by DFGetter
-func (roundTripper *DFRoundTripper) needUseGetter(req *http.Request, location string) bool {
+// needUseGetter is the default value for ShouldUseDfget, which downloads all
+// images layers with dfget.
+func needUseGetter(req *http.Request) bool {
 	if req.Method != http.MethodGet {
 		return false
 	}
@@ -132,8 +136,8 @@ func (roundTripper *DFRoundTripper) needUseGetter(req *http.Request, location st
 	if compiler.MatchString(req.URL.Path) {
 		return true
 	}
-	if location != "" {
-		return global.MatchDfPattern(location)
+	if req.URL.String() != "" {
+		return global.MatchDfPattern(req.URL.String())
 	}
 
 	return false
