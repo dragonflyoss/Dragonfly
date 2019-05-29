@@ -66,12 +66,12 @@ const (
 	CodePeerWait        = 602
 	CodePeerLimited     = 603
 	CodeSuperFail       = 604
-	CodeUnknownError    = 607
-	CodeTaskConflict    = 608
-	CodeURLNotReachable = 609
-	CodeNeedAuth        = 610
-	CodeWaitAuth        = 611
-	CodeSourceError     = 612
+	CodeUnknownError    = 605
+	CodeTaskConflict    = 606
+	CodeURLNotReachable = 607
+	CodeNeedAuth        = 608
+	CodeWaitAuth        = 609
+	CodeSourceError     = 610
 )
 
 /* the code of task result that dfget will report to supernode */
