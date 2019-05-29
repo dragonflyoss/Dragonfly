@@ -70,6 +70,9 @@ func setupFlags(cmd *cobra.Command, opt *Options) {
 	flagSet.IntVar(&opt.ListenPort, "port", opt.ListenPort,
 		"ListenPort is the port supernode server listens on")
 
+	flagSet.IntVar(&opt.DownloadPort, "download-port", opt.DownloadPort,
+		"DownloadPort is the port for download files from supernode")
+
 	flagSet.StringVar(&opt.HomeDir, "home-dir", opt.HomeDir,
 		"HomeDir is working directory of supernode")
 
