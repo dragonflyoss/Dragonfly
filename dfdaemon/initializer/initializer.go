@@ -38,7 +38,6 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/global"
 	g "github.com/dragonflyoss/Dragonfly/dfdaemon/global"
-	mux "github.com/dragonflyoss/Dragonfly/dfdaemon/muxconf"
 	"github.com/dragonflyoss/Dragonfly/version"
 )
 
@@ -52,9 +51,6 @@ func Init(options *options.Options) {
 
 	// init command line param
 	initParam(options)
-
-	// http handler mapper
-	mux.InitMux()
 
 	// clean local data dir
 	go cleanLocalRepo(options)
@@ -264,24 +260,17 @@ func initProperties(ops *options.Options) {
 		}
 	}
 
-	var regs []*config.Registry
+	if ops.Registry != "" {
+		u, err := config.NewURL(ops.Registry)
+		if err != nil {
+			fmt.Printf("invalid registry url from cli parameters: %v\n", err)
+			os.Exit(constant.CodeExitConfigError)
+		}
 
-	// add local host, use the default registry schema and host
-	if reg, err := config.NewRegistry(g.RegProto, g.RegDomain,
-		"(^localhost$)|(^127.0.0.1$)|(^"+g.CommandLine.HostIP+"$)",
-		nil); err == nil {
-		regs = append(regs, reg)
-	}
-	// add trust hosts, use request's origin schema and host
-	for _, v := range g.CommandLine.TrustHosts {
-		if reg, err := config.NewRegistry("", "",
-			"^"+v+"$",
-			nil); err == nil {
-			regs = append(regs, reg)
+		props.RegistryMirror = &config.RegistryMirror{
+			Remote: u,
 		}
 	}
-	// registries in config file have lower priority
-	props.Registries = append(regs, props.Registries...)
 
 	g.Properties = props
 	str, _ := json.Marshal(props)
