@@ -100,3 +100,18 @@ func (s *BackDownloaderTestSuite) TestBackDownloader_Run(c *check.C) {
 	bd.Md5 = testFileMd5
 	c.Assert(bd.Run(), check.IsNil)
 }
+
+func (s *BackDownloaderTestSuite) TestBackDownloader_Run_NotExist(c *check.C) {
+	dst := path.Join(s.workHome, "back.test")
+
+	cfg := helper.CreateConfig(nil, s.workHome)
+	bd := &BackDownloader{
+		cfg:    cfg,
+		URL:    "http://" + s.host + "/download1.test",
+		Target: dst,
+	}
+
+	err := bd.Run()
+	c.Check(err, check.NotNil)
+	c.Check(err, check.ErrorMatches, ".*404")
+}
