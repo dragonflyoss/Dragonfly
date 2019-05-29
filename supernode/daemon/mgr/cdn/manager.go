@@ -11,6 +11,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
+	"github.com/dragonflyoss/Dragonfly/supernode/util"
 
 	"github.com/sirupsen/logrus"
 )
@@ -22,6 +23,7 @@ type Manager struct {
 	cfg             *config.Config
 	cacheStore      *store.Store
 	limiter         *cutil.RateLimiter
+	cdnLocker       *util.LockerPool
 	progressManager mgr.ProgressMgr
 
 	metaDataManager *fileMetaDataManager
@@ -41,6 +43,7 @@ func NewManager(cfg *config.Config, cacheStore *store.Store, progressManager mgr
 		cfg:             cfg,
 		cacheStore:      cacheStore,
 		limiter:         rateLimiter,
+		cdnLocker:       util.NewLockerPool(),
 		progressManager: progressManager,
 		metaDataManager: metaDataManager,
 		pieceMD5Manager: pieceMD5Manager,
@@ -57,6 +60,8 @@ func (cm *Manager) TriggerCDN(ctx context.Context, task *types.TaskInfo) (*types
 		httpFileLength = -1
 	}
 
+	cm.cdnLocker.GetLock(task.ID, false)
+	defer cm.cdnLocker.ReleaseLock(task.ID, false)
 	// detect Cache
 	startPieceNum, metaData, err := cm.detector.detectCache(ctx, task)
 	if err != nil {
