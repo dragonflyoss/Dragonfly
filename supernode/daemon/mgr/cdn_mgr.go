@@ -19,6 +19,9 @@ type CDNMgr interface {
 	// In addition, it's not thread-safe.
 	TriggerCDN(ctx context.Context, taskInfo *types.TaskInfo) (*types.TaskInfo, error)
 
+	// GetHTTPPath returns the http download path of taskID.
+	GetHTTPPath(ctx context.Context, taskID string) (path string, err error)
+
 	// GetStatus get the status of the file.
 	GetStatus(ctx context.Context, taskID string) (cdnStatus string, err error)
 

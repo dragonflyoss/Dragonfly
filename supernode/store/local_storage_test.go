@@ -323,7 +323,7 @@ func (s *LocalStorageSuite) checkStat(raw *Raw, c *check.C) {
 	sys, _ := util.GetSys(f)
 
 	c.Assert(info, check.DeepEquals, &StorageInfo{
-		Path:       pathTemp,
+		Path:       path.Join(raw.Bucket, raw.Key),
 		Size:       f.Size(),
 		ModTime:    f.ModTime(),
 		CreateTime: util.Ctime(sys),
