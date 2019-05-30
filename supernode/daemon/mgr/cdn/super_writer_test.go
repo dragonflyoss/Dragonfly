@@ -73,9 +73,9 @@ func (s *SuperWriterTestSuite) TestStartWriter(c *check.C) {
 	pieceCount := (httpFileLen + int64(pieceContSize-1)) / int64(pieceContSize)
 	expectedSize := httpFileLen + pieceCount*int64(config.PieceWrapSize)
 
-	realFileLength, err := s.writer.startWriter(context.TODO(), nil, f, task, 0, httpFileLen, pieceContSize)
+	downloadMetadata, err := s.writer.startWriter(context.TODO(), nil, f, task, 0, httpFileLen, pieceContSize)
 	c.Check(err, check.IsNil)
-	c.Check(realFileLength, check.Equals, expectedSize)
+	c.Check(downloadMetadata.realFileLength, check.Equals, expectedSize)
 	checkFileSize(s.writer.cdnStore, task.ID, expectedSize, c)
 }
 
