@@ -20,6 +20,7 @@ var _ mgr.CDNMgr = &Manager{}
 type Manager struct {
 	cfg             *config.Config
 	cacheStore      *store.Store
+	limiter         *cutil.RateLimiter
 	progressManager mgr.ProgressMgr
 
 	metaDataManager *fileMetaDataManager
@@ -31,12 +32,14 @@ type Manager struct {
 
 // NewManager returns a new Manager.
 func NewManager(cfg *config.Config, cacheStore *store.Store, progressManager mgr.ProgressMgr) (*Manager, error) {
+	rateLimiter := cutil.NewRateLimiter(cutil.TransRate(cfg.MaxBandwidth-cfg.SystemReservedBandwidth), 2)
 	metaDataManager := newFileMetaDataManager(cacheStore)
 	pieceMD5Manager := newpieceMD5Mgr()
 	cdnReporter := newReporter(cfg, cacheStore, progressManager, metaDataManager, pieceMD5Manager)
 	return &Manager{
 		cfg:             cfg,
 		cacheStore:      cacheStore,
+		limiter:         rateLimiter,
 		progressManager: progressManager,
 		metaDataManager: metaDataManager,
 		pieceMD5Manager: pieceMD5Manager,
@@ -83,8 +86,7 @@ func (cm *Manager) TriggerCDN(ctx context.Context, task *types.TaskInfo) (*types
 	defer resp.Body.Close()
 
 	cm.updateLastModifiedAndETag(ctx, task.ID, resp.Header.Get("Last-Modified"), resp.Header.Get("Etag"))
-	// TODO: calculate the limit dynamically
-	reader := cutil.NewLimitReaderWithMD5Sum(resp.Body, config.TransLimit(cm.cfg.MaxBandwidth), fileMD5)
+	reader := cutil.NewLimitReaderWithLimiterAndMD5Sum(resp.Body, cm.limiter, fileMD5)
 	realFileLength, err := cm.writer.startWriter(ctx, cm.cfg, reader, task, startPieceNum, httpFileLength, pieceContSize)
 	if err != nil {
 		logrus.Errorf("failed to write for task %s: %v", task.ID, err)

@@ -49,9 +49,16 @@ func NewLimitReaderWithLimiter(rateLimiter *RateLimiter, src io.Reader, calculat
 // src: reader
 // rate: bytes/second
 func NewLimitReaderWithMD5Sum(src io.Reader, rate int, md5sum hash.Hash) *LimitReader {
+	return NewLimitReaderWithLimiterAndMD5Sum(src, newRateLimiterWithDefaultWindow(rate), md5sum)
+}
+
+// NewLimitReaderWithLimiterAndMD5Sum create LimitReader with rateLimiter and md5 sum.
+// src: reader
+// rate: bytes/second
+func NewLimitReaderWithLimiterAndMD5Sum(src io.Reader, rateLimiter *RateLimiter, md5sum hash.Hash) *LimitReader {
 	return &LimitReader{
 		Src:     src,
-		Limiter: newRateLimiterWithDefaultWindow(rate),
+		Limiter: rateLimiter,
 		md5sum:  md5sum,
 	}
 }
