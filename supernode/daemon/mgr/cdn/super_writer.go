@@ -21,6 +21,12 @@ type protocolContent struct {
 	pieceContent     *bytes.Buffer
 }
 
+type downloadMetadata struct {
+	realFileLength     int64
+	realHTTPFileLength int64
+	pieceCount         int
+}
+
 type superWriter struct {
 	cdnStore    *store.Store
 	cdnReporter *reporter
@@ -35,9 +41,11 @@ func newSuperWriter(cdnStore *store.Store, cdnReporter *reporter) *superWriter {
 
 // startWriter writes the stream data from the reader to the underlying storage.
 func (cw *superWriter) startWriter(ctx context.Context, cfg *config.Config, reader io.Reader,
-	task *types.TaskInfo, startPieceNum int, httpFileLength int64, pieceContSize int32) (int64, error) {
+	task *types.TaskInfo, startPieceNum int, httpFileLength int64, pieceContSize int32) (*downloadMetadata, error) {
 	// realFileLength is used to caculate the file Length dynamically
-	realFileLength := int64(startPieceNum) * int64(pieceContSize)
+	realFileLength := int64(startPieceNum) * int64(task.PieceSize)
+	// realHTTPFileLength is used to caculate the http file Length dynamically
+	realHTTPFileLength := int64(startPieceNum) * int64(pieceContSize)
 	// the left size of data for a complete piece
 	pieceContLeft := pieceContSize
 	// the pieceNum currently processed
@@ -57,6 +65,7 @@ func (cw *superWriter) startWriter(ctx context.Context, cfg *config.Config, read
 		if n > 0 {
 			logrus.Debugf("success to read content with length: %d", n)
 			realFileLength += int64(n)
+			realHTTPFileLength += int64(n)
 			if int(pieceContLeft) <= n {
 				bb.Write(buf[:pieceContLeft])
 				pc := &protocolContent{
@@ -104,11 +113,15 @@ func (cw *superWriter) startWriter(ctx context.Context, cfg *config.Config, read
 		}
 		if e != nil {
 			close(jobCh)
-			return 0, e
+			return nil, e
 		}
 	}
 
 	close(jobCh)
 	wg.Wait()
-	return realFileLength, nil
+	return &downloadMetadata{
+		realFileLength:     realFileLength,
+		realHTTPFileLength: realHTTPFileLength,
+		pieceCount:         curPieceNum,
+	}, nil
 }

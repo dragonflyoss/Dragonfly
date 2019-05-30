@@ -3,6 +3,7 @@ package cdn
 import (
 	"context"
 	"crypto/md5"
+	"path"
 	"strconv"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
@@ -32,7 +33,7 @@ type Manager struct {
 
 // NewManager returns a new Manager.
 func NewManager(cfg *config.Config, cacheStore *store.Store, progressManager mgr.ProgressMgr) (*Manager, error) {
-	rateLimiter := cutil.NewRateLimiter(cutil.TransRate(cfg.MaxBandwidth-cfg.SystemReservedBandwidth), 2)
+	rateLimiter := cutil.NewRateLimiter(cutil.TransRate(config.TransLimit(cfg.MaxBandwidth-cfg.SystemReservedBandwidth)), 2)
 	metaDataManager := newFileMetaDataManager(cacheStore)
 	pieceMD5Manager := newpieceMD5Mgr()
 	cdnReporter := newReporter(cfg, cacheStore, progressManager, metaDataManager, pieceMD5Manager)
@@ -87,14 +88,14 @@ func (cm *Manager) TriggerCDN(ctx context.Context, task *types.TaskInfo) (*types
 
 	cm.updateLastModifiedAndETag(ctx, task.ID, resp.Header.Get("Last-Modified"), resp.Header.Get("Etag"))
 	reader := cutil.NewLimitReaderWithLimiterAndMD5Sum(resp.Body, cm.limiter, fileMD5)
-	realFileLength, err := cm.writer.startWriter(ctx, cm.cfg, reader, task, startPieceNum, httpFileLength, pieceContSize)
+	downloadMetadata, err := cm.writer.startWriter(ctx, cm.cfg, reader, task, startPieceNum, httpFileLength, pieceContSize)
 	if err != nil {
 		logrus.Errorf("failed to write for task %s: %v", task.ID, err)
 		return nil, err
 	}
 
 	realMD5 := reader.Md5()
-	success, err := cm.handleCDNResult(ctx, task, realMD5, httpFileLength, realFileLength)
+	success, err := cm.handleCDNResult(ctx, task, realMD5, httpFileLength, downloadMetadata.realHTTPFileLength)
 	if err != nil || success == false {
 		return &types.TaskInfo{
 			CdnStatus: types.TaskInfoCdnStatusFAILED,
@@ -103,18 +104,16 @@ func (cm *Manager) TriggerCDN(ctx context.Context, task *types.TaskInfo) (*types
 
 	return &types.TaskInfo{
 		CdnStatus:  types.TaskInfoCdnStatusSUCCESS,
-		FileLength: realFileLength,
+		FileLength: downloadMetadata.realFileLength,
 		RealMd5:    realMD5,
 	}, nil
 }
 
 // GetHTTPPath returns the http download path of taskID.
+// The returned path joined the DownloadRaw.Bucket and DownloadRaw.Key.
 func (cm *Manager) GetHTTPPath(ctx context.Context, taskID string) (string, error) {
-	info, err := cm.cacheStore.Stat(ctx, getDownloadRawFunc(taskID))
-	if err != nil {
-		return "", err
-	}
-	return info.Path, nil
+	raw := getDownloadRawFunc(taskID)
+	return path.Join("/", raw.Bucket, raw.Key), nil
 }
 
 // GetStatus get the status of the file.

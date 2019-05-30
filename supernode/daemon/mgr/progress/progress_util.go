@@ -74,7 +74,10 @@ func updateRunningPiece(dstPIDMap *cutil.SyncMap, srcCID, dstPID string, pieceNu
 		return dstPIDMap.Add(pieceNumString, dstPID)
 	}
 
-	if _, err := dstPIDMap.Get(pieceNumString); err != nil && errorType.IsDataNotFound(err) {
+	if _, err := dstPIDMap.Get(pieceNumString); err != nil {
+		if errorType.IsDataNotFound(err) {
+			return nil
+		}
 		return err
 	}
 
