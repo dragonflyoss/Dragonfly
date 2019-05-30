@@ -124,4 +124,4 @@ ServiceDown
 
 ![service_down.png](../images/design/service_down.png)
 
-- The peer uploader server started by Dfget will not always exist. If there is no new download request or download task for a long time (the default is 5 minutes), it will send a offline request to the suernode, shut down the server, and clean up the cache.
+- The peer uploader server started by Dfget will not always exist. If there is no new download request or download task for a long time (the default is 5 minutes), it will send a offline request to the supernode, shut down the server, and clean up the cache.
