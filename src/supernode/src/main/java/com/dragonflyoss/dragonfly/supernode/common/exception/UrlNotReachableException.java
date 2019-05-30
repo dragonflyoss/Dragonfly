@@ -22,4 +22,8 @@ public class UrlNotReachableException extends Exception {
     public UrlNotReachableException() {
         super();
     }
+
+    public UrlNotReachableException(String msg) {
+        super(msg);
+    }
 }
