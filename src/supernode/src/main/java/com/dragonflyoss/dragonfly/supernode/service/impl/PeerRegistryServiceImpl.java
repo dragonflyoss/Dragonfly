@@ -95,7 +95,7 @@ public class PeerRegistryServiceImpl implements PeerRegistryService {
         } catch (TaskIdDuplicateException e) {
             resultInfo.withCode(ResultCode.TASK_CONFLICT).withMsg(e.getMessage());
         } catch (UrlNotReachableException e) {
-            resultInfo.withCode(ResultCode.URL_NOT_REACH);
+            resultInfo.withCode(ResultCode.URL_NOT_REACH).withMsg(e.getMessage());
         } catch (AuthenticationRequiredException e) {
             resultInfo.withCode(ResultCode.NEED_AUTH);
         } catch (AuthenticationWaitedException e) {

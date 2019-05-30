@@ -61,7 +61,7 @@ type PowerClient struct {
 	// readCost records how long it took to download the piece.
 	readCost time.Duration
 
-	//downloadAPI holds an instance of DownloadAPI.
+	// downloadAPI holds an instance of DownloadAPI.
 	downloadAPI api.DownloadAPI
 }
 
@@ -120,8 +120,8 @@ func (pc *PowerClient) downloadPiece() (content *bytes.Buffer, e error) {
 	// use limitReader to limit the download speed
 	limitReader := cutil.NewLimitReaderWithLimiter(pc.rateLimiter, resp.Body, pieceMD5 != "")
 	content = &bytes.Buffer{}
-	if pc.total, e = content.ReadFrom(limitReader); err != nil {
-		return nil, err
+	if pc.total, e = content.ReadFrom(limitReader); e != nil {
+		return nil, e
 	}
 	pc.readCost = time.Now().Sub(startTime)
 
