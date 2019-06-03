@@ -8,6 +8,7 @@ import (
 	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
+	"github.com/dragonflyoss/Dragonfly/supernode/util"
 
 	"github.com/sirupsen/logrus"
 )
@@ -33,11 +34,13 @@ type fileMetaData struct {
 // fileMetaDataManager manages the meta file and md5 file of each taskID.
 type fileMetaDataManager struct {
 	fileStore *store.Store
+	locker    *util.LockerPool
 }
 
 func newFileMetaDataManager(store *store.Store) *fileMetaDataManager {
 	return &fileMetaDataManager{
 		fileStore: store,
+		locker:    util.NewLockerPool(),
 	}
 }
 
@@ -91,6 +94,9 @@ func (mm *fileMetaDataManager) readFileMetaData(ctx context.Context, taskID stri
 }
 
 func (mm *fileMetaDataManager) updateAccessTime(ctx context.Context, taskID string, accessTime int64) error {
+	mm.locker.GetLock(taskID, false)
+	defer mm.locker.ReleaseLock(taskID, false)
+
 	originMetaData, err := mm.readFileMetaData(ctx, taskID)
 	if err != nil {
 		return err
@@ -109,6 +115,9 @@ func (mm *fileMetaDataManager) updateAccessTime(ctx context.Context, taskID stri
 }
 
 func (mm *fileMetaDataManager) updateLastModifiedAndETag(ctx context.Context, taskID string, lastModified int64, eTag string) error {
+	mm.locker.GetLock(taskID, false)
+	defer mm.locker.ReleaseLock(taskID, false)
+
 	originMetaData, err := mm.readFileMetaData(ctx, taskID)
 	if err != nil {
 		return err
@@ -121,6 +130,9 @@ func (mm *fileMetaDataManager) updateLastModifiedAndETag(ctx context.Context, ta
 }
 
 func (mm *fileMetaDataManager) updateStatusAndResult(ctx context.Context, taskID string, metaData *fileMetaData) error {
+	mm.locker.GetLock(taskID, false)
+	defer mm.locker.ReleaseLock(taskID, false)
+
 	originMetaData, err := mm.readFileMetaData(ctx, taskID)
 	if err != nil {
 		return err
@@ -143,6 +155,9 @@ func (mm *fileMetaDataManager) updateStatusAndResult(ctx context.Context, taskID
 // And it should append the fileMD5 which means that the md5 of the task file
 // and the SHA-1 digest of fileMD5 at the end of the file.
 func (mm *fileMetaDataManager) writePieceMD5s(ctx context.Context, taskID, fileMD5 string, pieceMD5s []string) error {
+	mm.locker.GetLock(taskID, false)
+	defer mm.locker.ReleaseLock(taskID, false)
+
 	if cutil.IsEmptySlice(pieceMD5s) {
 		logrus.Warnf("failed to write empty pieceMD5s for taskID: %s", taskID)
 		return nil
@@ -163,6 +178,9 @@ func (mm *fileMetaDataManager) writePieceMD5s(ctx context.Context, taskID, fileM
 
 // readPieceMD5s read the md5 file of the taskID and returns the pieceMD5s.
 func (mm *fileMetaDataManager) readPieceMD5s(ctx context.Context, taskID, fileMD5 string) (pieceMD5s []string, err error) {
+	mm.locker.GetLock(taskID, true)
+	defer mm.locker.ReleaseLock(taskID, true)
+
 	bytes, err := mm.fileStore.GetBytes(ctx, getMd5DataRawFunc(taskID))
 	if err != nil {
 		return nil, err
