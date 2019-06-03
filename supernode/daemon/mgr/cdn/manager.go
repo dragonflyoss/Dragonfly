@@ -87,7 +87,7 @@ func (cm *Manager) TriggerCDN(ctx context.Context, task *types.TaskInfo) (*types
 	// start to download the source file
 	resp, err := cm.download(ctx, task.ID, task.TaskURL, task.Headers, startPieceNum, httpFileLength, pieceContSize)
 	if err != nil {
-		return nil, err
+		return getUpdateTaskInfoWithStatusOnly(types.TaskInfoCdnStatusFAILED), err
 	}
 	defer resp.Body.Close()
 
@@ -102,16 +102,10 @@ func (cm *Manager) TriggerCDN(ctx context.Context, task *types.TaskInfo) (*types
 	realMD5 := reader.Md5()
 	success, err := cm.handleCDNResult(ctx, task, realMD5, httpFileLength, downloadMetadata.realHTTPFileLength)
 	if err != nil || success == false {
-		return &types.TaskInfo{
-			CdnStatus: types.TaskInfoCdnStatusFAILED,
-		}, err
+		return getUpdateTaskInfoWithStatusOnly(types.TaskInfoCdnStatusFAILED), err
 	}
 
-	return &types.TaskInfo{
-		CdnStatus:  types.TaskInfoCdnStatusSUCCESS,
-		FileLength: downloadMetadata.realFileLength,
-		RealMd5:    realMD5,
-	}, nil
+	return getUpdateTaskInfo(types.TaskInfoCdnStatusSUCCESS, realMD5, downloadMetadata.realFileLength), nil
 }
 
 // GetHTTPPath returns the http download path of taskID.
