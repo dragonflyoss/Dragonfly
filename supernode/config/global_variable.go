@@ -16,22 +16,8 @@
 
 package config
 
-import (
-	"path"
-)
-
 var (
-	// HTTPSubPath is the name of the parent directory where the upload files are stored.
-	HTTPSubPath = "qtdown"
-
-	// DownloadSubPath is the name of the parent directory where the downloaded files are stored.
-	DownloadSubPath = "download"
-
 	// DownloadHome is the parent directory where the downloaded files are stored
 	// which is a relative path.
-	DownloadHome = path.Join("repo", DownloadSubPath)
-
-	// UploadHome is the parent directory where the upload files are stored
-	// which is a relative path.
-	UploadHome = path.Join("repo", HTTPSubPath)
+	DownloadHome = "download"
 )
