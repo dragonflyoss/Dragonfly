@@ -95,7 +95,7 @@ jobs:
             cd cmd
             cd supernode && go build
             ./supernode --home-dir /tmp/dragonfly --port 8080 &
-            go test ../../test
+            go test -v ../../test
 
 workflows:
   version: 2

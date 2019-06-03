@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -117,6 +118,7 @@ func Get(endpoint string, opts ...Option) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("Get request: %+v", req)
 	return apiClient.HTTPCli.Do(req)
 }
 
