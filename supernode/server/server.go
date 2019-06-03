@@ -8,26 +8,71 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
-	peer "github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/peer"
+	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/cdn"
+	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/dfgettask"
+	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/peer"
+	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/progress"
+	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/scheduler"
+	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/task"
+	"github.com/dragonflyoss/Dragonfly/supernode/store"
 
 	"github.com/sirupsen/logrus"
 )
 
 // Server is server instance.
 type Server struct {
-	Config  *config.Config
-	PeerMgr mgr.PeerMgr
+	Config       *config.Config
+	PeerMgr      mgr.PeerMgr
+	TaskMgr      mgr.TaskMgr
+	DfgetTaskMgr mgr.DfgetTaskMgr
 }
 
 // New creates a brand new server instance.
 func New(cfg *config.Config) (*Server, error) {
+	sm, err := store.NewManager(cfg)
+	if err != nil {
+		return nil, err
+	}
+	storeLocal, err := sm.Get(store.LocalStorageDriver)
+	if err != nil {
+		return nil, err
+	}
+
 	peerMgr, err := peer.NewManager()
 	if err != nil {
 		return nil, err
 	}
+
+	dfgetTaskMgr, err := dfgettask.NewManager()
+	if err != nil {
+		return nil, err
+	}
+
+	progressMgr, err := progress.NewManager(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	schedulerMgr, err := scheduler.NewManager(cfg, progressMgr)
+	if err != nil {
+		return nil, err
+	}
+
+	cdnMgr, err := cdn.NewManager(cfg, storeLocal, progressMgr)
+	if err != nil {
+		return nil, err
+	}
+
+	taskMgr, err := task.NewManager(cfg, peerMgr, dfgetTaskMgr, progressMgr, cdnMgr, schedulerMgr)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Server{
-		Config:  cfg,
-		PeerMgr: peerMgr,
+		Config:       cfg,
+		PeerMgr:      peerMgr,
+		TaskMgr:      taskMgr,
+		DfgetTaskMgr: dfgetTaskMgr,
 	}, nil
 }
 

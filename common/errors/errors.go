@@ -58,6 +58,9 @@ const (
 	codePeerWait
 	codeUnknowError
 	codePeerContinue
+	codeURLNotReachable
+	codeTaskIDDuplicate
+	codeAuthenticationRequired
 )
 
 // DfError represents a Dragonfly error.

@@ -71,6 +71,11 @@ type TaskCreateRequest struct {
 	//
 	Path string `json:"path,omitempty"`
 
+	// PeerID is used to uniquely identifies a peer which will be used to create a dfgetTask.
+	// The value must be the value in the response after registering a peer.
+	//
+	PeerID string `json:"peerID,omitempty"`
+
 	// The is the resource's URL which user uses dfget to download. The location of URL can be anywhere, LAN or WAN.
 	// For image distribution, this is image layer's URL in image registry.
 	// The resource url is provided by command line parameter.
