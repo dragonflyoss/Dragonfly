@@ -83,11 +83,8 @@ func (re *reporter) processCacheByQuick(ctx context.Context, taskID string, meta
 		return false, nil, nil
 	}
 
-	return true, &types.TaskInfo{
-		CdnStatus:  types.TaskInfoCdnStatusSUCCESS,
-		FileLength: metaData.FileLength,
-		RealMd5:    metaData.Md5,
-	}, re.reportPiecesStatus(ctx, taskID, pieceMd5s)
+	return true, getUpdateTaskInfo(types.TaskInfoCdnStatusSUCCESS, metaData.Md5, metaData.FileLength),
+		re.reportPiecesStatus(ctx, taskID, pieceMd5s)
 }
 
 func (re *reporter) processCacheByReadFile(ctx context.Context, taskID string, metaData *fileMetaData, breakNum int) (hash.Hash, *types.TaskInfo, error) {
@@ -134,11 +131,8 @@ func (re *reporter) processCacheByReadFile(ctx context.Context, taskID string, m
 	}
 	logrus.Infof("success to update status and result fileMetaData(%+v) for taskID(%s)", fmd, taskID)
 
-	return nil, &types.TaskInfo{
-		CdnStatus:  types.TaskInfoCdnStatusSUCCESS,
-		FileLength: result.fileLength,
-		RealMd5:    fileMd5Value,
-	}, re.metaDataManager.writePieceMD5s(ctx, taskID, fileMd5Value, result.pieceMd5s)
+	return nil, getUpdateTaskInfo(types.TaskInfoCdnStatusSUCCESS, fileMd5Value, result.fileLength),
+		re.metaDataManager.writePieceMD5s(ctx, taskID, fileMd5Value, result.pieceMd5s)
 }
 
 func (re *reporter) reportPiecesStatus(ctx context.Context, taskID string, pieceMd5s []string) error {
