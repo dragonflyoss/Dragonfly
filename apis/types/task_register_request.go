@@ -12,9 +12,13 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// TaskCreateRequest task create request
-// swagger:model TaskCreateRequest
-type TaskCreateRequest struct {
+// TaskRegisterRequest task register request
+// swagger:model TaskRegisterRequest
+type TaskRegisterRequest struct {
+
+	// IP address which peer client carries
+	// Format: ipv4
+	IP strfmt.IPv4 `json:"IP,omitempty"`
 
 	// CID means the client ID. It maps to the specific dfget process.
 	// When user wishes to download an image/file, user would start a dfget process to do this.
@@ -23,26 +27,11 @@ type TaskCreateRequest struct {
 	//
 	CID string `json:"cID,omitempty"`
 
-	// This field is for debugging. When caller of dfget is using it to files, he can pass callSystem
-	// name to dfget. When this field is passing to supernode, supernode has ability to filter them via
-	// some black/white list to guarantee security, or some other purposes.
-	//
-	// Min Length: 1
-	CallSystem string `json:"callSystem,omitempty"`
-
 	// tells whether it is a call from dfdaemon. dfdaemon is a long running
 	// process which works for container engines. It translates the image
 	// pulling request into raw requests into those dfget recognizes.
 	//
 	Dfdaemon bool `json:"dfdaemon,omitempty"`
-
-	// filter is used to filter request queries in URL.
-	// For example, when a user wants to start to download a task which has a remote URL of
-	// a.b.com/fileA?user=xxx&auth=yyy, user can add a filter parameter ["user", "auth"]
-	// to filter the url to a.b.com/fileA. Then this parameter can potentially avoid repeatable
-	// downloads, if there is already a task a.b.com/fileA.
-	//
-	Filter []string `json:"filter"`
 
 	// extra HTTP headers sent to the rawURL.
 	// This field is carried with the request to supernode.
@@ -50,6 +39,11 @@ type TaskCreateRequest struct {
 	// from source server as user's wish.
 	//
 	Headers map[string]string `json:"headers,omitempty"`
+
+	// host name of peer client node, as a valid RFC 1123 hostname.
+	// Min Length: 1
+	// Format: hostname
+	HostName strfmt.Hostname `json:"hostName,omitempty"`
 
 	// special attribute of remote source file. This field is used with taskURL to generate new taskID to
 	// identify different downloading task of remote source file. For example, if user A and user B uses
@@ -71,10 +65,13 @@ type TaskCreateRequest struct {
 	//
 	Path string `json:"path,omitempty"`
 
-	// PeerID is used to uniquely identifies a peer which will be used to create a dfgetTask.
-	// The value must be the value in the response after registering a peer.
+	// when registering, dfget will setup one uploader process.
+	// This one acts as a server for peer pulling tasks.
+	// This port is which this server listens on.
 	//
-	PeerID string `json:"peerID,omitempty"`
+	// Maximum: 65000
+	// Minimum: 15000
+	Port int32 `json:"port,omitempty"`
 
 	// The is the resource's URL which user uses dfget to download. The location of URL can be anywhere, LAN or WAN.
 	// For image distribution, this is image layer's URL in image registry.
@@ -82,17 +79,36 @@ type TaskCreateRequest struct {
 	//
 	RawURL string `json:"rawURL,omitempty"`
 
+	// IP address of supernode that the client can connect to
+	// Format: ipv4
+	SuperNodeIP strfmt.IPv4 `json:"superNodeIp,omitempty"`
+
 	// taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via
 	// --filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.
 	//
 	TaskURL string `json:"taskURL,omitempty"`
+
+	// version number of dfget binary.
+	Version string `json:"version,omitempty"`
 }
 
-// Validate validates this task create request
-func (m *TaskCreateRequest) Validate(formats strfmt.Registry) error {
+// Validate validates this task register request
+func (m *TaskRegisterRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateCallSystem(formats); err != nil {
+	if err := m.validateIP(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateHostName(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validatePort(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateSuperNodeIP(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -102,13 +118,60 @@ func (m *TaskCreateRequest) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *TaskCreateRequest) validateCallSystem(formats strfmt.Registry) error {
+func (m *TaskRegisterRequest) validateIP(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.CallSystem) { // not required
+	if swag.IsZero(m.IP) { // not required
 		return nil
 	}
 
-	if err := validate.MinLength("callSystem", "body", string(m.CallSystem), 1); err != nil {
+	if err := validate.FormatOf("IP", "body", "ipv4", m.IP.String(), formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *TaskRegisterRequest) validateHostName(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.HostName) { // not required
+		return nil
+	}
+
+	if err := validate.MinLength("hostName", "body", string(m.HostName), 1); err != nil {
+		return err
+	}
+
+	if err := validate.FormatOf("hostName", "body", "hostname", m.HostName.String(), formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *TaskRegisterRequest) validatePort(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.Port) { // not required
+		return nil
+	}
+
+	if err := validate.MinimumInt("port", "body", int64(m.Port), 15000, false); err != nil {
+		return err
+	}
+
+	if err := validate.MaximumInt("port", "body", int64(m.Port), 65000, false); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *TaskRegisterRequest) validateSuperNodeIP(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.SuperNodeIP) { // not required
+		return nil
+	}
+
+	if err := validate.FormatOf("superNodeIp", "body", "ipv4", m.SuperNodeIP.String(), formats); err != nil {
 		return err
 	}
 
@@ -116,7 +179,7 @@ func (m *TaskCreateRequest) validateCallSystem(formats strfmt.Registry) error {
 }
 
 // MarshalBinary interface implementation
-func (m *TaskCreateRequest) MarshalBinary() ([]byte, error) {
+func (m *TaskRegisterRequest) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -124,8 +187,8 @@ func (m *TaskCreateRequest) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *TaskCreateRequest) UnmarshalBinary(b []byte) error {
-	var res TaskCreateRequest
+func (m *TaskRegisterRequest) UnmarshalBinary(b []byte) error {
+	var res TaskRegisterRequest
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

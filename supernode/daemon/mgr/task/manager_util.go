@@ -18,7 +18,10 @@ import (
 
 // addOrUpdateTask adds a new task or update the exist task to taskStore.
 func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateRequest) (*types.TaskInfo, error) {
-	taskURL := cutil.FilterURLParam(req.RawURL, req.Filter)
+	taskURL := req.TaskURL
+	if cutil.IsEmptyStr(req.TaskURL) {
+		taskURL = cutil.FilterURLParam(req.RawURL, req.Filter)
+	}
 	taskID := generateTaskID(taskURL, req.Md5, req.Identifier)
 
 	// using the existing task if it already exists corresponding to taskID
