@@ -36,6 +36,15 @@ var (
 
 	// PeerContinue represents the peer should wait.
 	PeerContinue = DfError{codePeerContinue, "peer continue"}
+
+	// ErrURLNotReachable represents the url is a not reachable.
+	ErrURLNotReachable = DfError{codeURLNotReachable, "url not reachable"}
+
+	// ErrTaskIDDuplicate represents the task id is in conflict.
+	ErrTaskIDDuplicate = DfError{codeTaskIDDuplicate, "taskId conflict"}
+
+	// ErrAuthenticationRequired represents the authentication is required.
+	ErrAuthenticationRequired = DfError{codeAuthenticationRequired, "authentication required"}
 )
 
 // IsSystemError check the error is a system error or not.
@@ -66,4 +75,19 @@ func IsUnknowError(err error) bool {
 // IsPeerContinue check the error is PeerContinue or not.
 func IsPeerContinue(err error) bool {
 	return checkError(err, codePeerContinue)
+}
+
+// IsURLNotReachable check the error is a url not reachable or not.
+func IsURLNotReachable(err error) bool {
+	return checkError(err, codeURLNotReachable)
+}
+
+// IsTaskIDDuplicate check the error is a TaskIDDuplicate error or not.
+func IsTaskIDDuplicate(err error) bool {
+	return checkError(err, codeTaskIDDuplicate)
+}
+
+// IsAuthenticationRequired check the error is a AuthenticationRequired error or not.
+func IsAuthenticationRequired(err error) bool {
+	return checkError(err, codeAuthenticationRequired)
 }

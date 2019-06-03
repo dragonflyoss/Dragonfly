@@ -69,12 +69,6 @@ type TaskInfo struct {
 	//
 	Md5 string `json:"md5,omitempty"`
 
-	// path is used in one peer A for uploading functionality. When peer B hopes
-	// to get piece C from peer A, B must provide a URL for piece C.
-	// Then when creating a task in supernode, peer A must provide this URL in request.
-	//
-	Path string `json:"path,omitempty"`
-
 	// The size of pieces which is calculated as per the following strategy
 	// 1. If file's total size is less than 200MB, then the piece size is 4MB by default.
 	// 2. Otherwise, it equals to the smaller value between totalSize/100MB + 2 MB and 15MB.

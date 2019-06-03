@@ -4,7 +4,15 @@ import (
 	"context"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
 )
+
+// PieceStatusMap maintains the mapping relationship between PieceUpdateRequestResult and PieceStatus code.
+var PieceStatusMap = map[string]int{
+	types.PieceUpdateRequestPieceStatusFAILED:  config.PieceFAILED,
+	types.PieceUpdateRequestPieceStatusSEMISUC: config.PieceSEMISUC,
+	types.PieceUpdateRequestPieceStatusSUCCESS: config.PieceSUCCESS,
+}
 
 // TaskMgr as an interface defines all operations against Task.
 // A Task will store some meta info about the taskFile, pieces and something else.
@@ -13,7 +21,7 @@ type TaskMgr interface {
 	// Register a task represents that someone wants to download a file.
 	// Supernode will get the task file meta and return taskID.
 	// NOTE: If supernode cannot find the task file, the CDN download will be triggered.
-	Register(ctx context.Context, task *types.TaskInfo) (taskID string, err error)
+	Register(ctx context.Context, taskCreateRequest *types.TaskCreateRequest) (taskCreateResponse *types.TaskCreateResponse, err error)
 
 	// Get the task Info with specified taskID.
 	Get(ctx context.Context, taskID string) (*types.TaskInfo, error)
@@ -24,33 +32,24 @@ type TaskMgr interface {
 	// CheckTaskStatus check whether the taskID corresponding file exists.
 	CheckTaskStatus(ctx context.Context, taskID string) (bool, error)
 
-	// DeleteTask delete a task
+	// Delete deletes a task
 	// NOTE: delete the related peers and dfgetTask info is necessary.
-	DeleteTask(ctx context.Context, taskID string) error
+	Delete(ctx context.Context, taskID string) error
 
-	// update the task info with specified info.
+	// Update updates the task info with specified info.
 	// In common, there are several situations that we will use this method:
 	// 1. when finished to download, update task status.
 	// 2. for operation usage.
-	UpdateTaskInfo(ctx context.Context, taskID string, taskInfo *types.TaskInfo) error
+	// TODO: define a struct of TaskUpdateRequest?
+	Update(ctx context.Context, taskID string, taskInfo *types.TaskInfo) error
 
 	// GetPieces get the pieces to be downloaded based on the scheduling result,
 	// just like this: which pieces can be downloaded from which peers.
-	GetPieces(ctx context.Context, taskID, clientID string, piecePullRequest *types.PiecePullRequest) ([]*types.PieceInfo, error)
+	GetPieces(ctx context.Context, taskID, clientID string, piecePullRequest *types.PiecePullRequest) (isFinished bool, data interface{}, err error)
 
 	// UpdatePieceStatus update the piece status with specified parameters.
 	// A task file is divided into several pieces logically.
 	// We use a sting called pieceRange to identify a piece.
 	// A pieceRange separated by a dash, like this: 0-45565, etc.
 	UpdatePieceStatus(ctx context.Context, taskID, pieceRange string, pieceUpdateRequest *types.PieceUpdateRequest) error
-
-	// GetPieceMD5 returns the md5 of pieceNum for taskID.
-	GetPieceMD5(ctx context.Context, taskID string, pieceNum int) (pieceMD5 string, err error)
-
-	// SetPieceMD5 set the md5 for pieceNum of taskID.
-	SetPieceMD5(ctx context.Context, taskID string, pieceNum int, pieceMD5 string) (err error)
-
-	// GetPieceMD5sByTaskID returns all pieceMD5s as a string slice.
-	// All pieceMD5s are returned only if the CDN status is successful.
-	GetPieceMD5sByTaskID(ctx context.Context, taskID string) (pieceMD5s []string, err error)
 }

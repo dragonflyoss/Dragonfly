@@ -26,6 +26,14 @@ func NewResultInfoWithError(err error) ResultInfo {
 		return NewResultInfoWithCodeError(constants.CodeTargetNotFound, err)
 	}
 
+	if errors.IsPeerWait(err) {
+		return NewResultInfoWithCodeError(constants.CodePeerWait, err)
+	}
+
+	if errors.IsPeerContinue(err) {
+		return NewResultInfoWithCodeError(constants.CodePeerContinue, err)
+	}
+
 	// IsConvertFailed
 	return NewResultInfoWithCodeError(constants.CodeSystemError, err)
 }
@@ -47,6 +55,11 @@ func NewResultInfoWithCode(code int) ResultInfo {
 // NewResultInfoWithCodeMsg returns a new ResultInfo with code and specified msg.
 func NewResultInfoWithCodeMsg(code int, msg string) ResultInfo {
 	return NewResultInfo(code, msg, nil)
+}
+
+// NewResultInfoWithCodeData returns a new ResultInfo with code and specified data.
+func NewResultInfoWithCodeData(code int, data interface{}) ResultInfo {
+	return NewResultInfo(code, "", data)
 }
 
 // NewResultInfo returns a new ResultInfo.

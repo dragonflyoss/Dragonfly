@@ -562,6 +562,11 @@ definitions:
           downloads, if there is already a task a.b.com/fileA.
         items:
           type: "string"
+      peerID:
+        type: "string"
+        description: |
+          PeerID is used to uniquely identifies a peer which will be used to create a dfgetTask.
+          The value must be the value in the response after registering a peer.
 
   TaskCreateResponse:
     type: "object"
@@ -648,12 +653,6 @@ definitions:
           the same taskURL and taskID to download file, A and B will share the same peer network to distribute files.
           If user A additionally adds an identifier with taskURL, while user B still carries only taskURL, then A's
           generated taskID is different from B, and the result is that two users use different peer networks.
-      path:
-        type: "string"
-        description: |
-          path is used in one peer A for uploading functionality. When peer B hopes
-          to get piece C from peer A, B must provide a URL for piece C.
-          Then when creating a task in supernode, peer A must provide this URL in request.
       headers:
         type: "object"
         description: |

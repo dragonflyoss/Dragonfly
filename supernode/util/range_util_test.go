@@ -120,7 +120,7 @@ func (suite *RangeUtilSuite) TestCalculateBreakRange(c *check.C) {
 func (suite *RangeUtilSuite) TestCalculatePieceRange(c *check.C) {
 	var cases = []struct {
 		startPieceNum int
-		pieceContSize int
+		pieceContSize int32
 		expected      string
 	}{
 		{

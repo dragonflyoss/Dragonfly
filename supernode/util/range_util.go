@@ -81,7 +81,7 @@ func CalculateBreakRange(startPieceNum, pieceContSize int, rangeLength int64) (s
 // with the following formula:
 //     start = pieceNum * pieceSize
 //     end = start + pieceSize - 1
-func CalculatePieceRange(pieceNum, pieceSize int) string {
+func CalculatePieceRange(pieceNum int, pieceSize int32) string {
 	startIndex := int64(pieceNum) * int64(pieceSize)
 	endIndex := startIndex + int64(pieceSize) - 1
 	return strconv.FormatInt(startIndex, 10) + separator + strconv.FormatInt(endIndex, 10)
