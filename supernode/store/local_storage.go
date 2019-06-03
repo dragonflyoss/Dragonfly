@@ -23,10 +23,9 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"sync"
-	"sync/atomic"
 
-	"github.com/dragonflyoss/Dragonfly/common/util"
+	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/supernode/util"
 
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
@@ -35,62 +34,26 @@ import (
 // LocalStorageDriver is a const of local storage driver.
 const LocalStorageDriver = "local"
 
-var fileMutexLocker sync.Map
+var fileLocker = util.NewLockerPool()
 
 func init() {
 	Register(LocalStorageDriver, NewLocalStorage)
 }
 
-type fileMutex struct {
-	count int32
-	sync.RWMutex
-}
-
 func lock(path string, offset int64, ro bool) {
 	if offset != -1 {
-		getLock(getLockKey(path, -1), true)
+		fileLocker.GetLock(getLockKey(path, -1), true)
 	}
 
-	getLock(getLockKey(path, offset), ro)
+	fileLocker.GetLock(getLockKey(path, offset), ro)
 }
 
 func unLock(path string, offset int64, ro bool) {
 	if offset != -1 {
-		releaseLock(getLockKey(path, -1), true)
+		fileLocker.ReleaseLock(getLockKey(path, -1), true)
 	}
 
-	releaseLock(getLockKey(path, offset), ro)
-}
-
-func getLock(key string, ro bool) {
-	v, _ := fileMutexLocker.LoadOrStore(key, &fileMutex{})
-	f := v.(*fileMutex)
-
-	atomic.AddInt32(&f.count, 1)
-
-	if ro {
-		f.RLock()
-	} else {
-		f.Lock()
-	}
-}
-
-func releaseLock(key string, ro bool) {
-	v, ok := fileMutexLocker.Load(key)
-	if !ok {
-		return
-	}
-	f := v.(*fileMutex)
-
-	if ro {
-		f.RUnlock()
-	} else {
-		f.Unlock()
-	}
-
-	if atomic.AddInt32(&f.count, -1) < 1 {
-		fileMutexLocker.Delete(key)
-	}
+	fileLocker.ReleaseLock(getLockKey(path, offset), ro)
 }
 
 // localStorage is one of the implementations of StorageDriver by locally.
@@ -111,7 +74,7 @@ func NewLocalStorage(conf string) (StorageDriver, error) {
 	if !path.IsAbs(cfg.BaseDir) {
 		return nil, fmt.Errorf("not absolute path: %s", cfg.BaseDir)
 	}
-	if err := util.CreateDirectory(cfg.BaseDir); err != nil {
+	if err := cutil.CreateDirectory(cfg.BaseDir); err != nil {
 		return nil, err
 	}
 
@@ -206,7 +169,7 @@ func (ls *localStorage) Put(ctx context.Context, raw *Raw, data io.Reader) error
 	lock(path, raw.Offset, false)
 	defer unLock(path, raw.Offset, false)
 
-	f, err := util.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0644)
+	f, err := cutil.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0644)
 	if err != nil {
 		return err
 	}
@@ -231,7 +194,7 @@ func (ls *localStorage) PutBytes(ctx context.Context, raw *Raw, data []byte) err
 	lock(path, raw.Offset, false)
 	defer unLock(path, raw.Offset, false)
 
-	f, err := util.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0644)
+	f, err := cutil.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0644)
 	if err != nil {
 		return err
 	}
@@ -252,14 +215,14 @@ func (ls *localStorage) Stat(ctx context.Context, raw *Raw) (*StorageInfo, error
 		return nil, err
 	}
 
-	sys, ok := util.GetSys(fileInfo)
+	sys, ok := cutil.GetSys(fileInfo)
 	if !ok {
 		return nil, fmt.Errorf("get create time error")
 	}
 	return &StorageInfo{
 		Path:       path.Join(raw.Bucket, raw.Key),
 		Size:       fileInfo.Size(),
-		CreateTime: util.Ctime(sys),
+		CreateTime: cutil.Ctime(sys),
 		ModTime:    fileInfo.ModTime(),
 	}, nil
 }
@@ -283,7 +246,7 @@ func (ls *localStorage) Remove(ctx context.Context, raw *Raw) error {
 func (ls *localStorage) preparePath(bucket, key string) (string, error) {
 	dir := path.Join(ls.BaseDir, bucket)
 
-	if err := util.CreateDirectory(dir); err != nil {
+	if err := cutil.CreateDirectory(dir); err != nil {
 		return "", err
 	}
 
