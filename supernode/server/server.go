@@ -25,6 +25,7 @@ type Server struct {
 	PeerMgr      mgr.PeerMgr
 	TaskMgr      mgr.TaskMgr
 	DfgetTaskMgr mgr.DfgetTaskMgr
+	ProgressMgr  mgr.ProgressMgr
 }
 
 // New creates a brand new server instance.
@@ -73,6 +74,7 @@ func New(cfg *config.Config) (*Server, error) {
 		PeerMgr:      peerMgr,
 		TaskMgr:      taskMgr,
 		DfgetTaskMgr: dfgetTaskMgr,
+		ProgressMgr:  progressMgr,
 	}, nil
 }
 

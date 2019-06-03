@@ -242,6 +242,11 @@ func (pm *Manager) GetPeerStateByPeerID(ctx context.Context, peerID string) (*mg
 
 // DeletePeerStateByPeerID deletes the peerState by PeerID.
 func (pm *Manager) DeletePeerStateByPeerID(ctx context.Context, peerID string) error {
+	// delete client blackinfo
+	// TODO: delete the blackinfo that refer to peerID
+	pm.clientBlackInfo.Delete(peerID)
+
+	// delete peer progress
 	return pm.peerProgress.remove(peerID)
 }
 
