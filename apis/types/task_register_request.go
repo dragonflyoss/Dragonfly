@@ -40,10 +40,9 @@ type TaskRegisterRequest struct {
 	//
 	Headers map[string]string `json:"headers,omitempty"`
 
-	// host name of peer client node, as a valid RFC 1123 hostname.
+	// host name of peer client node.
 	// Min Length: 1
-	// Format: hostname
-	HostName strfmt.Hostname `json:"hostName,omitempty"`
+	HostName string `json:"hostName,omitempty"`
 
 	// special attribute of remote source file. This field is used with taskURL to generate new taskID to
 	// identify different downloading task of remote source file. For example, if user A and user B uses
@@ -138,10 +137,6 @@ func (m *TaskRegisterRequest) validateHostName(formats strfmt.Registry) error {
 	}
 
 	if err := validate.MinLength("hostName", "body", string(m.HostName), 1); err != nil {
-		return err
-	}
-
-	if err := validate.FormatOf("hostName", "body", "hostname", m.HostName.String(), formats); err != nil {
 		return err
 	}
 

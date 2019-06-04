@@ -63,7 +63,7 @@ func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http
 
 	peerCreateRequest := &types.PeerCreateRequest{
 		IP:       request.IP,
-		HostName: request.HostName,
+		HostName: strfmt.Hostname(request.HostName),
 		Port:     request.Port,
 		Version:  request.Version,
 	}
