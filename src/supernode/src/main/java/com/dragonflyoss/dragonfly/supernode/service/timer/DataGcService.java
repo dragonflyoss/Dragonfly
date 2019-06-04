@@ -25,6 +25,7 @@ import com.dragonflyoss.dragonfly.supernode.common.util.BeanPoolUtil;
 import com.dragonflyoss.dragonfly.supernode.repository.ProgressRepository;
 import com.dragonflyoss.dragonfly.supernode.service.PeerTaskService;
 import com.dragonflyoss.dragonfly.supernode.service.cdn.LinkPositiveGc;
+import com.dragonflyoss.dragonfly.supernode.service.cdn.util.PathUtil;
 import com.dragonflyoss.dragonfly.supernode.service.lock.LockService;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -58,6 +59,12 @@ public class DataGcService {
     public void updateAccessTime(String taskId) {
         if (StringUtils.isNotBlank(taskId)) {
             lruInfoMap.put(taskId, System.currentTimeMillis());
+        }
+    }
+
+    public void updateAccessTimeIfAbsent(String taskId) {
+        if (StringUtils.isNotBlank(taskId)) {
+            lruInfoMap.putIfAbsent(taskId, System.currentTimeMillis());
         }
     }
 
@@ -99,6 +106,28 @@ public class DataGcService {
         } catch (Exception e) {
             logger.error("E_dataGc", e);
         }
+    }
+
+    public boolean gcOneTask(String taskId) {
+        logger.info("gc one taskId:{}", taskId);
+        lockService.lockTaskOnWrite(taskId);
+        if (recyclableBeans == null) {
+            recyclableBeans = BeanPoolUtil.getBeans(Recyclable.class);
+        }
+        try {
+            if (gcTaskData(taskId, true)) {
+                lruInfoMap.remove(taskId);
+                linkPositiveGc.gc(taskId);
+                lockService.gcCdnLock(taskId);
+            }
+            PathUtil.deleteTaskFiles(taskId, true);
+            return true;
+        } catch (Exception e) {
+            logger.error("gc taskId:{} fail", taskId, e);
+        } finally {
+            lockService.unlockTaskOnWrite(taskId);
+        }
+        return false;
     }
 
     private boolean gcTaskData(String taskId, boolean isAll) {

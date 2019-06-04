@@ -93,9 +93,13 @@ public class PeerRegistryServiceImpl implements PeerRegistryService {
                 }
             }
         } catch (TaskIdDuplicateException e) {
-            resultInfo.withCode(ResultCode.TASK_CONFLICT).withMsg(e.getMessage());
+            resultInfo.withCode(ResultCode.TASK_CONFLICT)
+                .withMsg(taskId + " " + e.getMessage());
         } catch (UrlNotReachableException e) {
-            resultInfo.withCode(ResultCode.URL_NOT_REACH).withMsg(e.getMessage());
+            // delete the task after 3 minutes to avoid caching its invalid status always
+            dataGcService.updateAccessTimeIfAbsent(taskId);
+            resultInfo.withCode(ResultCode.URL_NOT_REACH)
+                .withMsg(taskId + " " + e.getMessage());
         } catch (AuthenticationRequiredException e) {
             resultInfo.withCode(ResultCode.NEED_AUTH);
         } catch (AuthenticationWaitedException e) {

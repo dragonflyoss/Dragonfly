@@ -18,6 +18,9 @@ package com.dragonflyoss.dragonfly.supernode.rest.controller;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.alibaba.fastjson.JSON;
+
+import com.dragonflyoss.dragonfly.supernode.common.domain.ClientErrorInfo;
 import com.dragonflyoss.dragonfly.supernode.common.domain.PeerInfo;
 import com.dragonflyoss.dragonfly.supernode.common.enumeration.PeerPieceStatus;
 import com.dragonflyoss.dragonfly.supernode.common.exception.ValidateException;
@@ -31,14 +34,17 @@ import com.dragonflyoss.dragonfly.supernode.rest.request.ReportServiceDownReques
 import com.dragonflyoss.dragonfly.supernode.service.PeerRegistryService;
 import com.dragonflyoss.dragonfly.supernode.service.impl.CommonPeerDispatcher;
 import com.dragonflyoss.dragonfly.supernode.service.lock.LockService;
+import com.dragonflyoss.dragonfly.supernode.service.repair.ClientErrorHandleService;
 import com.dragonflyoss.dragonfly.supernode.service.scheduler.ProgressService;
-import com.alibaba.fastjson.JSON;
+import com.dragonflyoss.dragonfly.supernode.service.timer.DataGcService;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -56,6 +62,9 @@ public class PeerController {
     private HttpServletRequest request;
 
     @Autowired
+    private ClientErrorHandleService clientErrorHandleService;
+
+    @Autowired
     private PeerRegistryService peerRegistryService;
 
     @Autowired
@@ -66,6 +75,9 @@ public class PeerController {
 
     @Autowired
     private LockService lockService;
+
+    @Autowired
+    private DataGcService dataGcService;
 
     @PostMapping(value = "/registry")
     public ResultInfo doRegistry(RegistryRequest req) {
@@ -128,7 +140,7 @@ public class PeerController {
     }
 
     @GetMapping(value = "/piece/suc")
-    public ResultInfo reportPiece(ReportPieceRequest req) {
+    public ResultInfo reportPieceSuc(ReportPieceRequest req) {
         ResultInfo res = null;
         try {
             String taskId = req.getTaskId();
@@ -160,6 +172,14 @@ public class PeerController {
         return res;
     }
 
+    @GetMapping(value = "/piece/error")
+    public ResultInfo reportPieceError(ClientErrorInfo req) {
+        clientErrorHandleService.handleClientError(req);
+        ResultInfo res = new ResultInfo(ResultCode.SUCCESS);
+        debug("reportPieceError", req, res);
+        return res;
+    }
+
     @GetMapping(value = "/service/down")
     public ResultInfo reportServiceDown(ReportServiceDownRequest req) {
         ResultInfo res = null;
@@ -178,6 +198,17 @@ public class PeerController {
             res = new ResultInfo(ResultCode.SYSTEM_ERROR, e.getMessage(), null);
         }
         debug("reportServiceDown", req, res);
+        return res;
+    }
+
+    @DeleteMapping(value = "/tasks/{taskId}")
+    public ResultInfo deleteTask(@PathVariable String taskId){
+        ResultInfo res = null;
+        if (StringUtils.isNotBlank(taskId)) {
+            boolean gc = dataGcService.gcOneTask(taskId);
+            res = new ResultInfo(gc ? ResultCode.SUCCESS : ResultCode.SYSTEM_ERROR);
+        }
+        log.info("delete task:{} result:{}", taskId, JSON.toJSONString(res));
         return res;
     }
 
