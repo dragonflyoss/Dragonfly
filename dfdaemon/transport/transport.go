@@ -25,17 +25,16 @@ import (
 	"time"
 
 	"github.com/pborman/uuid"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/downloader"
-	"github.com/dragonflyoss/Dragonfly/dfdaemon/downloader/dfget"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/exception"
-	"github.com/dragonflyoss/Dragonfly/dfdaemon/global"
 )
 
 var (
-	// compiler the regex to determine if it is an image download
-	compiler = regexp.MustCompile("^.+/blobs/sha256.*$")
+	// layerReg the regex to determine if it is an image download
+	layerReg = regexp.MustCompile("^.+/blobs/sha256.*$")
 )
 
 // DFRoundTripper implements RoundTripper for dfget.
@@ -49,33 +48,67 @@ type DFRoundTripper struct {
 }
 
 // New return the default DFRoundTripper.
-func New(cfg *tls.Config) *DFRoundTripper {
+func New(opts ...Option) (*DFRoundTripper, error) {
+	rt := &DFRoundTripper{
+		Round:          defaultHTTPTransport(nil),
+		Round2:         http.NewFileTransport(http.Dir("/")),
+		ShouldUseDfget: needUseGetter,
+	}
+
+	for _, opt := range opts {
+		if err := opt(rt); err != nil {
+			return nil, errors.Wrap(err, "apply options")
+		}
+	}
+
+	if rt.Downloader == nil {
+		return nil, errors.Errorf("nil downloader")
+	}
+
+	return rt, nil
+}
+
+// Option is functional config for DFRoundTripper
+type Option func(rt *DFRoundTripper) error
+
+// WithTLS configures tls config used for http transport
+func WithTLS(cfg *tls.Config) Option {
+	return func(rt *DFRoundTripper) error {
+		rt.Round = defaultHTTPTransport(cfg)
+		return nil
+	}
+}
+
+func defaultHTTPTransport(cfg *tls.Config) *http.Transport {
 	if cfg == nil {
 		cfg = &tls.Config{InsecureSkipVerify: true}
 	}
+	return &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout:   10 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+		TLSClientConfig:       cfg,
+	}
+}
 
-	return &DFRoundTripper{
-		Round: &http.Transport{
-			DialContext: (&net.Dialer{
-				Timeout:   10 * time.Second,
-				KeepAlive: 30 * time.Second,
-			}).DialContext,
-			MaxIdleConns:          100,
-			IdleConnTimeout:       90 * time.Second,
-			TLSHandshakeTimeout:   10 * time.Second,
-			ExpectContinueTimeout: 1 * time.Second,
-			TLSClientConfig:       cfg,
-		},
-		Round2:         http.NewFileTransport(http.Dir("/")),
-		ShouldUseDfget: needUseGetter,
-		Downloader: dfget.NewDFGetter(
-			global.CommandLine.DFRepo,
-			global.CommandLine.CallSystem,
-			global.CommandLine.Notbs,
-			global.CommandLine.RateLimit,
-			global.CommandLine.URLFilter,
-			global.CommandLine.SupernodeList,
-		),
+// WithDownloader sets the downloader for the roundTripper
+func WithDownloader(d downloader.Interface) Option {
+	return func(rt *DFRoundTripper) error {
+		rt.Downloader = d
+		return nil
+	}
+}
+
+// WithCondition configures how to decide whether to use dfget or not
+func WithCondition(c func(r *http.Request) bool) Option {
+	return func(rt *DFRoundTripper) error {
+		rt.ShouldUseDfget = c
+		return nil
 	}
 }
 
@@ -130,16 +163,5 @@ func (roundTripper *DFRoundTripper) downloadByGetter(url string, header map[stri
 // needUseGetter is the default value for ShouldUseDfget, which downloads all
 // images layers with dfget.
 func needUseGetter(req *http.Request) bool {
-	if req.Method != http.MethodGet {
-		return false
-	}
-
-	if compiler.MatchString(req.URL.Path) {
-		return true
-	}
-	if req.URL.String() != "" {
-		return global.MatchDfPattern(req.URL.String())
-	}
-
-	return false
+	return req.Method == http.MethodGet && layerReg.MatchString(req.URL.Path)
 }

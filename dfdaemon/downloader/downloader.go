@@ -22,3 +22,6 @@ type Interface interface {
 	// return dst path and download error
 	Download(url string, header map[string][]string, name string) (string, error)
 }
+
+// Factory is a function that returns a new downloader
+type Factory func() Interface

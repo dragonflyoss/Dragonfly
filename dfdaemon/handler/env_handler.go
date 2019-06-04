@@ -17,25 +17,39 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 
 	"github.com/sirupsen/logrus"
-
-	"github.com/dragonflyoss/Dragonfly/dfdaemon/global"
+	"github.com/spf13/viper"
 )
 
 // getEnv returns the environments of dfdaemon
 func getEnv(w http.ResponseWriter, r *http.Request) {
 	logrus.Debugf("access:%s", r.URL.String())
+	json.NewEncoder(w).Encode(ensureStringKey(viper.AllSettings()))
+}
 
-	env := make(map[string]interface{})
-
-	env["dfPattern"] = global.CopyDfPattern()
-
-	env["home"] = global.HomeDir
-
-	env["param"] = global.CommandLine
-
-	w.Write([]byte(fmt.Sprintf("%+v", env)))
+// ensureStringKey recursively ensures all maps in the given interface are string,
+// to make the result marshalable by json. This is meant to be used with viper
+// settings, so only maps and slices are handled.
+func ensureStringKey(obj interface{}) interface{} {
+	rt, rv := reflect.TypeOf(obj), reflect.ValueOf(obj)
+	switch rt.Kind() {
+	case reflect.Map:
+		res := make(map[string]interface{})
+		for _, k := range rv.MapKeys() {
+			res[fmt.Sprintf("%v", k.Interface())] = ensureStringKey(rv.MapIndex(k).Interface())
+		}
+		return res
+	case reflect.Slice:
+		res := make([]interface{}, rv.Len())
+		for i := 0; i < rv.Len(); i++ {
+			res[i] = ensureStringKey(rv.Index(i).Interface())
+		}
+		return res
+	}
+	return obj
 }

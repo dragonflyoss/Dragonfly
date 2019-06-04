@@ -1,0 +1,108 @@
+package app
+
+import (
+	"fmt"
+	"io/ioutil"
+	"math/rand"
+	"os"
+	"testing"
+	"time"
+
+	"github.com/pkg/errors"
+	"github.com/spf13/afero"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/suite"
+)
+
+type rootTestSuite struct {
+	suite.Suite
+}
+
+func (ts *rootTestSuite) TestConfigNotFound() {
+	r := ts.Require()
+	v := viper.New()
+	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
+
+	r.False(afero.Exists(fs, rootCmd.Flag("config").DefValue))
+	r.Nil(bindRootFlags(v))
+	r.Nil(readConfigFile(v, rootCmd))
+
+	fake := generateFakeFilename(fs)
+	r.False(afero.Exists(fs, fake))
+	rootCmd.Flags().Set("config", fake)
+	r.Equal(v.GetString("config"), fake)
+	r.True(os.IsNotExist(errors.Cause(readConfigFile(v, rootCmd))))
+}
+
+func generateFakeFilename(fs afero.Fs) string {
+	for i := 0; i < 100; i++ {
+		d := fmt.Sprintf("/dftest-%d-%d", time.Now().UnixNano(), rand.Int())
+		_, err := fs.Stat(d)
+		if os.IsNotExist(err) {
+			return d
+		}
+	}
+
+	panic("failed to generate fake dir")
+}
+
+func (ts *rootTestSuite) TestBindRootFlags() {
+	r := ts.Require()
+	v := viper.New()
+	r.Nil(bindRootFlags(v))
+	r.Equal(v.GetString("registry"), v.GetString("registry_mirror.remote"))
+}
+
+var testCrt = `-----BEGIN CERTIFICATE-----
+MIICKzCCAZQCCQDZrCsm2rX81DANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJD
+TjERMA8GA1UECAwIWmhlamlhbmcxETAPBgNVBAcMCEhhbmd6aG91MQ4wDAYDVQQK
+DAVsb3d6ajEVMBMGA1UEAwwMZGZkYWVtb24uY29tMB4XDTE5MDIyNTAyNDYwN1oX
+DTE5MDMyNzAyNDYwN1owWjELMAkGA1UEBhMCQ04xETAPBgNVBAgMCFpoZWppYW5n
+MREwDwYDVQQHDAhIYW5nemhvdTEOMAwGA1UECgwFbG93emoxFTATBgNVBAMMDGRm
+ZGFlbW9uLmNvbTCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAtX1VzZRg1tgF
+D0AFkUW2FpakkrhRzFuukWepoN0LfFSS/rNf8v1823de1SkpXBHsm2pMf94BIdmY
+NDWH1tk27i4V5xydjNqxbdjjNjGHedBAM2tRQWWQuJAEo12sWUVYwDyN7RbL6wnz
+7Egeac023FA9JhfMxaDvJHqJHVuKW3kCAwEAATANBgkqhkiG9w0BAQUFAAOBgQCT
+VrDbo4m3QkcUT8ohuAUD8OHjTwJAuoxqVdHm+SpgjBYMLQgqXAPwaTGsIvx+32h2
+J88xU3xXABE5QsNNbqLcMgQoXeMmqk1WuUhxXzTXT5h5gdW53faxV5M5Cb3zI8My
+PPpBF5Cw+khgkJcY/ezKjHIvyABJwdzW8aAqwDBFAQ==
+-----END CERTIFICATE-----`
+
+// TestDecodeWithYAML tests if config.URL and config.Regexp are decoded correctly
+func (ts *rootTestSuite) TestDecodeWithYAML() {
+	r := ts.Require()
+	v := viper.New()
+	r.Nil(bindRootFlags(v))
+	// Sets dfrepo and dfpath to pass the checks for directories
+	v.Set("dfrepo", "/tmp")
+	v.Set("dfpath", "/tmp")
+
+	mockURL := "http://xxxx"
+	v.Set("registry_mirror.remote", mockURL)
+
+	mockRegx := "test.*"
+	v.Set("proxies", []interface{}{
+		map[string]string{"regx": mockRegx},
+	})
+
+	f, err := ioutil.TempFile("", "")
+	r.Nil(err)
+	defer os.RemoveAll(f.Name())
+	f.WriteString(testCrt)
+	f.Close()
+	v.Set("registry_mirror.certs", []string{f.Name()})
+
+	cfg, err := getConfigFromViper(v)
+	r.Nil(err)
+	r.NotNil(cfg.RegistryMirror.Remote)
+	r.Equal(mockURL, cfg.RegistryMirror.Remote.String())
+	r.Len(cfg.Proxies, 1)
+	r.Equal(mockRegx, cfg.Proxies[0].Regx.String())
+	r.NotNil(cfg.RegistryMirror.Certs)
+	r.NotNil(cfg.RegistryMirror.Certs.CertPool)
+}
+
+func TestRootCommand(t *testing.T) {
+	suite.Run(t, &rootTestSuite{})
+}
