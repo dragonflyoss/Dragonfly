@@ -68,6 +68,140 @@ json :
 ```
 
 
+<a name="peer-piece-suc-get"></a>
+### report a piece has been success
+```
+GET /peer/piece/suc
+```
+
+
+#### Description
+Update some information of piece. When peer A finishes to download
+piece B, A must send request to supernode to update piece B's info
+to mark that peer A has the complete piece B. Then when other peers 
+request to download this piece B, supernode could schedule peer A
+to those peers.
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|
+|---|---|---|---|
+|**Query**|**cid**  <br>*required*|the downloader clientID|string|
+|**Query**|**dstCid**  <br>*optional*|the uploader peerID|string|
+|**Query**|**pieceRange**  <br>*required*|the range of specific piece in the task, example "0-45565".|string|
+|**Query**|**taskId**  <br>*required*|ID of task|string|
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|[ResultInfo](#resultinfo)|
+|**404**|An unexpected 404 error occurred.|[Error](#error)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
+#### Produces
+
+* `application/json`
+
+
+<a name="peer-registry-post"></a>
+### registry a task
+```
+POST /peer/registry
+```
+
+
+#### Description
+Create a peer-to-peer downloading task in supernode.
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|
+|---|---|---|---|
+|**Body**|**body**  <br>*optional*|request body which contains task creation information|[TaskRegisterRequest](#taskregisterrequest)|
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|[ResultInfo](#resultinfo)|
+|**400**|bad parameter|[Error](#error)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
+<a name="peer-service-down-get"></a>
+### report a peer service will offline
+```
+GET /peer/service/down
+```
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|
+|---|---|---|---|
+|**Query**|**cid**  <br>*required*|the downloader clientID|string|
+|**Query**|**taskId**  <br>*required*|ID of task|string|
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|[ResultInfo](#resultinfo)|
+|**404**|An unexpected 404 error occurred.|[Error](#error)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
+#### Produces
+
+* `application/json`
+
+
+<a name="peer-task-get"></a>
+### Get pieces in task
+```
+GET /peer/task
+```
+
+
+#### Description
+When dfget starts to download pieces of a task, it should get fixed
+number of pieces in a task and the use pieces information to download
+the pirces. The request piece number is set in query.
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|
+|---|---|---|---|
+|**Query**|**dstCid**  <br>*optional*|the uploader cid|string|
+|**Query**|**range**  <br>*optional*|the range of specific piece in the task, example "0-45565".|string|
+|**Query**|**result**  <br>*optional*|pieceResult It indicates whether the dfgetTask successfully download the piece. <br>It's only useful when `status` is `RUNNING`.|enum (FAILED, SUCCESS, INVALID, SEMISUC)|
+|**Query**|**srcCid**  <br>*required*|When dfget needs to get pieces of specific task, it must mark which peer it plays role of.|string|
+|**Query**|**status**  <br>*optional*|dfgetTaskStatus indicates whether the dfgetTask is running.|enum (STARTED, RUNNING, FINISHED)|
+|**Query**|**taskId**  <br>*required*|ID of task|string|
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|[ResultInfo](#resultinfo)|
+|**404**|no such task|[4ErrorResponse](#4errorresponse)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
+#### Produces
+
+* `application/json`
+
+
 <a name="peers-post"></a>
 ### register dfget in Supernode as a peer node
 ```
@@ -638,6 +772,18 @@ task because that an image may have more than one layer.
 |**status**  <br>*optional*|The status of preheat task.<br>  WAITING -----> RUNNING -----> SUCCESS<br>                           \|--> FAILED<br>The initial status of a created preheat task is WAITING.<br>It's finished when a preheat task's status is FAILED or SUCCESS.<br>A finished preheat task's information can be queried within 24 hours.|enum (WAITING, RUNNING, FAILED, SUCCESS)|
 
 
+<a name="resultinfo"></a>
+### ResultInfo
+The returned information from supernode.
+
+
+|Name|Description|Schema|
+|---|---|---|
+|**code**  <br>*optional*|the result code|integer (int32)|
+|**data**  <br>*optional*|the result data|object|
+|**msg**  <br>*optional*|the result msg|string|
+
+
 <a name="taskcreaterequest"></a>
 ### TaskCreateRequest
 
@@ -651,7 +797,9 @@ task because that an image may have more than one layer.
 |**identifier**  <br>*optional*|special attribute of remote source file. This field is used with taskURL to generate new taskID to<br>identify different downloading task of remote source file. For example, if user A and user B uses<br>the same taskURL and taskID to download file, A and B will share the same peer network to distribute files.<br>If user A additionally adds an identifier with taskURL, while user B still carries only taskURL, then A's<br>generated taskID is different from B, and the result is that two users use different peer networks.|string|
 |**md5**  <br>*optional*|md5 checksum for the resource to distribute. dfget catches this parameter from dfget's CLI<br>and passes it to supernode. When supernode finishes downloading file/image from the source location,<br>it will validate the source file with this md5 value to check whether this is a valid file.|string|
 |**path**  <br>*optional*|path is used in one peer A for uploading functionality. When peer B hopes<br>to get piece C from peer A, B must provide a URL for piece C.<br>Then when creating a task in supernode, peer A must provide this URL in request.|string|
+|**peerID**  <br>*optional*|PeerID is used to uniquely identifies a peer which will be used to create a dfgetTask.<br>The value must be the value in the response after registering a peer.|string|
 |**rawURL**  <br>*optional*|The is the resource's URL which user uses dfget to download. The location of URL can be anywhere, LAN or WAN.<br>For image distribution, this is image layer's URL in image registry.<br>The resource url is provided by command line parameter.|string|
+|**taskURL**  <br>*optional*|taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via<br>--filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.|string|
 
 
 <a name="taskcreateresponse"></a>
@@ -682,12 +830,31 @@ detailed information about task in supernode.
 |**httpFileLength**  <br>*optional*|The length of the source file in bytes.|integer (int64)|
 |**identifier**  <br>*optional*|special attribute of remote source file. This field is used with taskURL to generate new taskID to<br>identify different downloading task of remote source file. For example, if user A and user B uses<br>the same taskURL and taskID to download file, A and B will share the same peer network to distribute files.<br>If user A additionally adds an identifier with taskURL, while user B still carries only taskURL, then A's<br>generated taskID is different from B, and the result is that two users use different peer networks.|string|
 |**md5**  <br>*optional*|md5 checksum for the resource to distribute. dfget catches this parameter from dfget's CLI<br>and passes it to supernode. When supernode finishes downloading file/image from the source location,<br>it will validate the source file with this md5 value to check whether this is a valid file.|string|
-|**path**  <br>*optional*|path is used in one peer A for uploading functionality. When peer B hopes<br>to get piece C from peer A, B must provide a URL for piece C.<br>Then when creating a task in supernode, peer A must provide this URL in request.|string|
 |**pieceSize**  <br>*optional*|The size of pieces which is calculated as per the following strategy<br>1. If file's total size is less than 200MB, then the piece size is 4MB by default.<br>2. Otherwise, it equals to the smaller value between totalSize/100MB + 2 MB and 15MB.|integer (int32)|
 |**pieceTotal**  <br>*optional*||integer (int32)|
 |**rawURL**  <br>*optional*|The is the resource's URL which user uses dfget to download. The location of URL can be anywhere, LAN or WAN.<br>For image distribution, this is image layer's URL in image registry.<br>The resource url is provided by command line parameter.|string|
 |**realMd5**  <br>*optional*|when supernode finishes downloading file/image from the source location,<br>the md5 sum of the source file will be calculated as the value of the realMd5.<br>And it will be used to compare with md5 value to check whether this is a valid file.|string|
 |**taskURL**  <br>*optional*|taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via<br>--filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.|string|
+
+
+<a name="taskregisterrequest"></a>
+### TaskRegisterRequest
+
+|Name|Description|Schema|
+|---|---|---|
+|**IP**  <br>*optional*|IP address which peer client carries|string (ipv4)|
+|**cID**  <br>*optional*|CID means the client ID. It maps to the specific dfget process. <br>When user wishes to download an image/file, user would start a dfget process to do this. <br>This dfget is treated a client and carries a client ID. <br>Thus, multiple dfget processes on the same peer have different CIDs.|string|
+|**dfdaemon**  <br>*optional*|tells whether it is a call from dfdaemon. dfdaemon is a long running<br>process which works for container engines. It translates the image<br>pulling request into raw requests into those dfget recognizes.|boolean|
+|**headers**  <br>*optional*|extra HTTP headers sent to the rawURL.<br>This field is carried with the request to supernode. <br>Supernode will extract these HTTP headers, and set them in HTTP downloading requests<br>from source server as user's wish.|< string, string > map|
+|**hostName**  <br>*optional*|host name of peer client node.  <br>**Minimum length** : `1`|string|
+|**identifier**  <br>*optional*|special attribute of remote source file. This field is used with taskURL to generate new taskID to<br>identify different downloading task of remote source file. For example, if user A and user B uses<br>the same taskURL and taskID to download file, A and B will share the same peer network to distribute files.<br>If user A additionally adds an identifier with taskURL, while user B still carries only taskURL, then A's<br>generated taskID is different from B, and the result is that two users use different peer networks.|string|
+|**md5**  <br>*optional*|md5 checksum for the resource to distribute. dfget catches this parameter from dfget's CLI<br>and passes it to supernode. When supernode finishes downloading file/image from the source location,<br>it will validate the source file with this md5 value to check whether this is a valid file.|string|
+|**path**  <br>*optional*|path is used in one peer A for uploading functionality. When peer B hopes<br>to get piece C from peer A, B must provide a URL for piece C.<br>Then when creating a task in supernode, peer A must provide this URL in request.|string|
+|**port**  <br>*optional*|when registering, dfget will setup one uploader process. <br>This one acts as a server for peer pulling tasks.<br>This port is which this server listens on.  <br>**Minimum value** : `15000`  <br>**Maximum value** : `65000`|integer (int32)|
+|**rawURL**  <br>*optional*|The is the resource's URL which user uses dfget to download. The location of URL can be anywhere, LAN or WAN.<br>For image distribution, this is image layer's URL in image registry.<br>The resource url is provided by command line parameter.|string|
+|**superNodeIp**  <br>*optional*|IP address of supernode that the client can connect to|string (ipv4)|
+|**taskURL**  <br>*optional*|taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via<br>--filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.|string|
+|**version**  <br>*optional*|version number of dfget binary.|string|
 
 
 <a name="taskupdaterequest"></a>
