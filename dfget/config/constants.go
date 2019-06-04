@@ -168,3 +168,9 @@ const (
 	// CodeDownloadError represents failed to download file.
 	CodeDownloadError
 )
+
+/* the client error when downloading from supernode that dfget will report to supernode */
+const (
+	ClientErrorFileNotExist    = "FILE_NOT_EXIST"
+	ClientErrorFileMd5NotMatch = "FILE_MD5_NOT_MATCH"
+)
