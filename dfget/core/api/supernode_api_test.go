@@ -116,6 +116,15 @@ func (s *SupernodeAPITestSuite) TestSupernodeAPI_ServiceDown(c *check.C) {
 	c.Check(r.Code, check.Equals, 200)
 }
 
+func (s *SupernodeAPITestSuite) TestSupernodeAPI_ReportClientError(c *check.C) {
+	ip := "127.0.0.1"
+
+	s.mock.GetFunc = s.mock.CreateGetFunc(200, []byte(`{"Code":700}`), nil)
+	r, e := s.api.ReportClientError(ip, nil)
+	c.Check(e, check.IsNil)
+	c.Check(r.Code, check.Equals, 700)
+}
+
 func (s *SupernodeAPITestSuite) TestSupernodeAPI_get(c *check.C) {
 	type testRes struct {
 		A int

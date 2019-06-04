@@ -27,6 +27,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/common/constants"
 	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
 	"github.com/sirupsen/logrus"
 )
@@ -105,13 +106,19 @@ type ReportFuncType func(ip string, req *types.ReportPieceRequest) (*types.BaseR
 // ServiceDownFuncType function type of SupernodeAPI#ServiceDown
 type ServiceDownFuncType func(ip string, taskID string, cid string) (*types.BaseResponse, error)
 
+// ClientErrorFuncType function type of SupernodeAPI#ReportClientError
+type ClientErrorFuncType func(ip string, req *types.ClientErrorRequest) (*types.BaseResponse, error)
+
 // MockSupernodeAPI mock SupernodeAPI
 type MockSupernodeAPI struct {
 	RegisterFunc    RegisterFuncType
 	PullFunc        PullFuncType
 	ReportFunc      ReportFuncType
 	ServiceDownFunc ServiceDownFuncType
+	ClientErrorFunc ClientErrorFuncType
 }
+
+var _ api.SupernodeAPI = &MockSupernodeAPI{}
 
 // Register implements SupernodeAPI#Register
 func (m *MockSupernodeAPI) Register(ip string, req *types.RegisterRequest) (
@@ -145,6 +152,14 @@ func (m *MockSupernodeAPI) ServiceDown(ip string, taskID string, cid string) (
 	*types.BaseResponse, error) {
 	if m.ServiceDownFunc != nil {
 		return m.ServiceDownFunc(ip, taskID, cid)
+	}
+	return nil, nil
+}
+
+// ReportClientError implements SupernodeAPI#ReportClientError
+func (m *MockSupernodeAPI) ReportClientError(ip string, req *types.ClientErrorRequest) (resp *types.BaseResponse, e error) {
+	if m.ClientErrorFunc != nil {
+		return m.ClientErrorFunc(ip, req)
 	}
 	return nil, nil
 }
