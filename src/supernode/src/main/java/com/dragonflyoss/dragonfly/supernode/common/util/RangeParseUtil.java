@@ -28,16 +28,32 @@ public class RangeParseUtil {
      * @return
      */
     public static int calculatePieceNum(String range) {
+        long[] pieceRange = calculatePieceRange(range);
+        if (pieceRange == null|| pieceRange.length != 2) {
+            return -1;
+        }
+        long start = pieceRange[0];
+        long end = pieceRange[1];
+        return (int)(start / (end - start + 1));
+    }
+
+    /**
+     * @param range the string of range: start-end
+     * @return the array has 2 elements: [start,end], null if any exception happens
+     */
+    public static long[] calculatePieceRange(String range) {
         try {
             String[] rangeArr = range.split(SEPARATOR);
-            long startIndex = Long.parseLong(rangeArr[0]);
-            long endIndex = Long.parseLong(rangeArr[1]);
-            long pieceSize = endIndex - startIndex + 1;
-            return (int)(startIndex / pieceSize);
+            long start = Long.parseLong(rangeArr[0]);
+            long end = Long.parseLong(rangeArr[1]);
+            if (end < start) {
+                return null;
+            }
+            return new long[] {start, end};
         } catch (Exception e) {
-            logger.error("E_caculatePieceNum for range:{}", range, e);
+            logger.error("E_calculatePieceRange for range:{}", range, e);
         }
-        return -1;
+        return null;
     }
 
     /**
