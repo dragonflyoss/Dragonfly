@@ -15,6 +15,7 @@
 
 export INSTALL_HOME=/opt/dragonfly
 export INSTALL_CLIENT_PATH=df-client
+export INSTALL_SUPERNODE_PATH=df-supernode
 export GO_SOURCE_EXCLUDES=( \
     "test" \
 )
