@@ -12,7 +12,7 @@ var UseJavaVersion bool
 
 var (
 	// SupernodeListenPort is the port that supernode will listen.
-	SupernodeListenPort = 8002
+	SupernodeListenPort = 8008
 
 	// DragonflySupernodeBinary is default binary
 	DragonflySupernodeBinary = "/usr/local/bin/supernode"

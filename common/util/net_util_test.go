@@ -34,6 +34,25 @@ func (suite *UtilSuite) TestExtractHost(c *check.C) {
 	c.Assert(host, check.Equals, "1")
 }
 
+func (suite *UtilSuite) TestGetIPAndPortFromNode(c *check.C) {
+	var cases = []struct {
+		node         string
+		defaultPort  int
+		expectedIP   string
+		expectedPort int
+	}{
+		{"127.0.0.1", 8002, "127.0.0.1", 8002},
+		{"127.0.0.1:8001", 8002, "127.0.0.1", 8001},
+		{"127.0.0.1:abcd", 8002, "127.0.0.1", 8002},
+	}
+
+	for _, v := range cases {
+		ip, port := GetIPAndPortFromNode(v.node, v.defaultPort)
+		c.Check(ip, check.Equals, v.expectedIP)
+		c.Check(port, check.Equals, v.expectedPort)
+	}
+}
+
 func (suite *UtilSuite) TestNetLimit(c *check.C) {
 	speed := NetLimit()
 	if runtime.NumCPU() < 24 {
