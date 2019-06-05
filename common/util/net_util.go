@@ -113,6 +113,29 @@ func ExtractHost(hostAndPort string) string {
 	return fields[0]
 }
 
+// GetIPAndPortFromNode return ip and port by parsing the node value.
+// It will return defaultPort as the value of port
+// when the node is a string without port or with an illegal port.
+func GetIPAndPortFromNode(node string, defaultPort int) (string, int) {
+	if IsEmptyStr(node) {
+		return "", defaultPort
+	}
+
+	nodeFields := strings.Split(node, ":")
+	switch len(nodeFields) {
+	case 1:
+		return nodeFields[0], defaultPort
+	case 2:
+		port, err := strconv.Atoi(nodeFields[1])
+		if err != nil {
+			return nodeFields[0], defaultPort
+		}
+		return nodeFields[0], port
+	default:
+		return "", defaultPort
+	}
+}
+
 // FilterURLParam filters request queries in URL.
 // Eg:
 // If you pass parameters as follows:

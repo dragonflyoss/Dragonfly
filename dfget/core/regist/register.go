@@ -64,7 +64,7 @@ func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errors.DfE
 	nodes, nLen := s.cfg.Node, len(s.cfg.Node)
 	req := s.constructRegisterRequest(peerPort)
 	for i = 0; i < nLen; i++ {
-		req.SupernodeIP = nodes[i]
+		req.SupernodeIP = util.ExtractHost(nodes[i])
 		resp, e = s.api.Register(nodes[i], req)
 		logrus.Infof("do register to %s, res:%s error:%v", nodes[i], resp, e)
 		if e != nil {

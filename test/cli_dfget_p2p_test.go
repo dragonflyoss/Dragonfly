@@ -24,6 +24,7 @@ import (
 	"github.com/go-check/check"
 
 	"github.com/dragonflyoss/Dragonfly/test/command"
+	"github.com/dragonflyoss/Dragonfly/test/environment"
 )
 
 func init() {
@@ -52,6 +53,7 @@ func (s *DFGetP2PTestSuite) TestDownload(c *check.C) {
 	cmd, err := s.starter.DFGet(5*time.Second,
 		"-u", "https://lowzj.com",
 		"-o", Join(s.starter.Home, "a.test"),
+		"--node", fmt.Sprintf("127.0.0.1:%d", environment.SupernodeListenPort),
 		"--notbs")
 	cmd.Wait()
 
