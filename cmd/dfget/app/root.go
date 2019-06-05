@@ -81,6 +81,10 @@ func runDfget() error {
 		util.Printer.Println(err.Error())
 		return err
 	}
+	if err := handleNodes(); err != nil {
+		util.Printer.Println(err.Error())
+		return err
+	}
 
 	checkParameters()
 	logrus.Infof("get cmd params:%q", os.Args)
@@ -264,6 +268,21 @@ func transFilter(filter string) []string {
 		return nil
 	}
 	return strings.Split(filter, "&")
+}
+
+func handleNodes() error {
+	nodes := make([]string, 0)
+
+	for _, v := range cfg.Node {
+		// TODO: check the validity of v.
+		if strings.IndexByte(v, ':') > 0 {
+			nodes = append(nodes, v)
+			continue
+		}
+		nodes = append(nodes, fmt.Sprintf("%s:%d", v, config.DefaultSupernodePort))
+	}
+	cfg.Node = nodes
+	return nil
 }
 
 func resultMsg(cfg *config.Config, end time.Time, e *errors.DFGetError) string {

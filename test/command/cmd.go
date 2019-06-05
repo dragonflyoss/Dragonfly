@@ -26,11 +26,13 @@ import (
 	"os/exec"
 	fp "path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/test/environment"
 )
 
 var (
@@ -129,14 +131,14 @@ func (s *Starter) Supernode(running time.Duration, args ...string) (
 	dir := fp.Join(s.Home, "supernode")
 	args = append([]string{
 		"-Dsupernode.baseHome=" + dir,
-		"-Dserver.port=8002",
+		"-Dserver.port=" + strconv.Itoa(environment.SupernodeListenPort),
 		"-jar", supernodePath,
 	}, args...)
 
 	if cmd, err = s.execCmd(running, "java", args...); err != nil {
 		return nil, err
 	}
-	if err = check("localhost", 8002, 5*time.Second); err != nil {
+	if err = check("localhost", environment.SupernodeListenPort, 5*time.Second); err != nil {
 		s.Kill(cmd)
 		return nil, err
 	}
