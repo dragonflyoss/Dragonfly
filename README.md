@@ -23,7 +23,7 @@
 - [Documents](https://d7y.io/en-us/docs/overview/what_is_dragonfly.html)
 - [Contributing](CONTRIBUTING.md)
 - [FAQ](FAQ.md)
-- [Adoptors](./docs/README.md#who-has-adopted-dragonfly)
+- [Adoptors](./adopters.md)
 - [LICENSE](LICENSE)
 
 ## Introduction
