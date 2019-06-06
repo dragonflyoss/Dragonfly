@@ -24,3 +24,4 @@ Below are the adoptors of project Dragonfly. If you are using to Dragonfly to im
 <a href="https://www.autohome.com.cn/beijing/" border="0" target="_blank"><img alt="autohome" src="docs/images/adoptor_logo/autohome.png" height="70"></a>&nbsp; &nbsp; &nbsp;
 <a href="https://shopee.com/" border="0" target="_blank"><img alt="shopee" src="docs/images/adoptor_logo/shopee.svg" height="70"></a>&nbsp; &nbsp; &nbsp;
 <a href="https://ele.me/" border="0" target="_blank"><img alt="eleme" src="docs/images/adoptor_logo/eleme.png" height="70"></a>&nbsp; &nbsp; &nbsp;
+<a href="https://caicloud.io/" border="0" target="_blank"><img alt="caicloud" src="docs/images/adoptor_logo/caicloud.png" height="70"></a>&nbsp; &nbsp; &nbsp;
