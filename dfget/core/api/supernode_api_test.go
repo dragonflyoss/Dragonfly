@@ -20,9 +20,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/go-check/check"
+
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
-	"github.com/go-check/check"
 )
 
 type SupernodeAPITestSuite struct {
@@ -107,6 +108,15 @@ func (s *SupernodeAPITestSuite) TestSupernodeAPI_ServiceDown(c *check.C) {
 	r, e := s.api.ServiceDown(ip, "", "")
 	c.Check(e, check.IsNil)
 	c.Check(r.Code, check.Equals, 200)
+}
+
+func (s *SupernodeAPITestSuite) TestSupernodeAPI_ReportClientError(c *check.C) {
+	ip := "127.0.0.1"
+
+	s.mock.get = s.mock.createGetFunc(200, []byte(`{"Code":700}`), nil)
+	r, e := s.api.ReportClientError(ip, nil)
+	c.Check(e, check.IsNil)
+	c.Check(r.Code, check.Equals, 700)
 }
 
 func (s *SupernodeAPITestSuite) TestSupernodeAPI_get(c *check.C) {

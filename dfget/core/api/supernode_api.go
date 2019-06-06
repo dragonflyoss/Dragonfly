@@ -30,6 +30,7 @@ const (
 	peerRegisterPath      = "/peer/registry"
 	peerPullPieceTaskPath = "/peer/task"
 	peerReportPiecePath   = "/peer/piece/suc"
+	peerClientErrorPath   = "/peer/piece/error"
 	peerServiceDownPath   = "/peer/service/down"
 )
 
@@ -49,6 +50,7 @@ type SupernodeAPI interface {
 	PullPieceTask(ip string, req *types.PullPieceTaskRequest) (resp *types.PullPieceTaskResponse, e error)
 	ReportPiece(ip string, req *types.ReportPieceRequest) (resp *types.BaseResponse, e error)
 	ServiceDown(ip string, taskID string, cid string) (resp *types.BaseResponse, e error)
+	ReportClientError(ip string, req *types.ClientErrorRequest) (resp *types.BaseResponse, e error)
 }
 
 type supernodeAPI struct {
@@ -110,6 +112,18 @@ func (api *supernodeAPI) ServiceDown(ip string, taskID string, cid string) (
 
 	url := fmt.Sprintf("%s://%s:%d%s?taskId=%s&cid=%s",
 		api.Scheme, ip, api.ServicePort, peerServiceDownPath, taskID, cid)
+
+	resp = new(types.BaseResponse)
+	e = api.get(url, resp)
+	return
+}
+
+// ReportClientError reports the client error when downloading piece to supernode.
+func (api *supernodeAPI) ReportClientError(ip string, req *types.ClientErrorRequest) (
+	resp *types.BaseResponse, e error) {
+
+	url := fmt.Sprintf("%s://%s:%d%s?%s",
+		api.Scheme, ip, api.ServicePort, peerClientErrorPath, util.ParseQuery(req))
 
 	resp = new(types.BaseResponse)
 	e = api.get(url, resp)

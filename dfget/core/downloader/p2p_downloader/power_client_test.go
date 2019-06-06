@@ -24,6 +24,7 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/errors"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
@@ -159,6 +160,7 @@ func (s *PowerClientTestSuite) TestReadBody(c *check.C) {
 
 func (s *PowerClientTestSuite) reset() {
 	s.powerClient = &PowerClient{
+		cfg:         &config.Config{RV: config.RuntimeVariable{Cid: ""}},
 		node:        "127.0.0.1",
 		rateLimiter: util.NewRateLimiter(int32(5), 2),
 		downloadAPI: NewMockDownloadAPI(),
