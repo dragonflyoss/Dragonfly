@@ -78,7 +78,7 @@ func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http
 	taskCreateRequest := &types.TaskCreateRequest{
 		CID:        request.CID,
 		Dfdaemon:   request.Dfdaemon,
-		Headers:    request.Headers,
+		Headers:    cutil.ConvertHeaders(request.Headers),
 		Identifier: request.Identifier,
 		Md5:        request.Md5,
 		Path:       request.Path,

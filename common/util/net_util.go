@@ -163,6 +163,30 @@ func FilterURLParam(url string, filters []string) string {
 	return rawUrls[0]
 }
 
+// ConvertHeaders converts headers from array type to map type for http request.
+func ConvertHeaders(headers []string) map[string]string {
+	if len(headers) == 0 {
+		return nil
+	}
+	hm := make(map[string]string)
+	for _, header := range headers {
+		kv := strings.SplitN(header, ":", 2)
+		if len(kv) != 2 {
+			continue
+		}
+		k, v := strings.TrimSpace(kv[0]), strings.TrimSpace(kv[1])
+		if v == "" {
+			continue
+		}
+		if _, in := hm[k]; in {
+			hm[k] = hm[k] + "," + v
+		} else {
+			hm[k] = v
+		}
+	}
+	return hm
+}
+
 // IsValidURL returns whether the string url is a valid HTTP URL.
 func IsValidURL(url string) bool {
 	// shorter than the shortest case 'http://a.b'

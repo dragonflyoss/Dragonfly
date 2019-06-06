@@ -650,13 +650,13 @@ definitions:
           to get piece C from peer A, B must provide a URL for piece C.
           Then when creating a task in supernode, peer A must provide this URL in request.
       headers:
-        type: "object"
+        type: "array"
         description: |
           extra HTTP headers sent to the rawURL.
           This field is carried with the request to supernode. 
           Supernode will extract these HTTP headers, and set them in HTTP downloading requests
           from source server as user's wish.
-        additionalProperties:
+        items:
           type: "string"
       dfdaemon:
         type: "boolean"

@@ -38,7 +38,7 @@ type TaskRegisterRequest struct {
 	// Supernode will extract these HTTP headers, and set them in HTTP downloading requests
 	// from source server as user's wish.
 	//
-	Headers map[string]string `json:"headers,omitempty"`
+	Headers []string `json:"headers"`
 
 	// host name of peer client node.
 	// Min Length: 1
