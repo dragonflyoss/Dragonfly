@@ -23,7 +23,6 @@ package downloader
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/common/util"
@@ -56,30 +55,6 @@ func DoDownloadTimeout(downloader Downloader, timeout time.Duration) error {
 		downloader.Cleanup()
 	}
 	return err
-}
-
-// ConvertHeaders converts headers from array type to map type for http request.
-func ConvertHeaders(headers []string) map[string]string {
-	if len(headers) == 0 {
-		return nil
-	}
-	hm := make(map[string]string)
-	for _, header := range headers {
-		kv := strings.SplitN(header, ":", 2)
-		if len(kv) != 2 {
-			continue
-		}
-		k, v := strings.TrimSpace(kv[0]), strings.TrimSpace(kv[1])
-		if v == "" {
-			continue
-		}
-		if _, in := hm[k]; in {
-			hm[k] = hm[k] + "," + v
-		} else {
-			hm[k] = v
-		}
-	}
-	return hm
 }
 
 // MoveFile moves a file from src to dst and
