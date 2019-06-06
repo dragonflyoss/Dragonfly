@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.dragonflyoss.dragonfly.supernode.common.Constants;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,9 +67,7 @@ public class PathUtil {
     }
 
     public static String getHttpPath(String taskId) {
-        StringBuilder sb = new StringBuilder(Constants.HTTP_SUB_PATH);
-        sb.append(taskId.substring(0, 3)).append("/").append(taskId);
-        return sb.toString();
+        return Constants.HTTP_SUB_PATH + taskId.substring(0, 3) + "/" + taskId;
     }
 
     public static void deleteTaskFiles(String taskId, boolean deleteUploadPath) {
@@ -82,7 +81,6 @@ public class PathUtil {
 
             Files.deleteIfExists(getMetaDataPath(taskId));
             Files.deleteIfExists(getMd5DataPath(taskId));
-
         } catch (Exception e) {
             logger.error("delete files error for taskId:{}", taskId, e);
         }

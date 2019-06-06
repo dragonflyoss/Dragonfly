@@ -23,6 +23,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -89,6 +90,17 @@ public class LockService {
         gcLogger.info("****** gc lock ******");
         gcNormalLock(expire);
         gcRWLock(expire);
+    }
+
+    public void gcCdnLock(String taskId) {
+        if (StringUtils.isBlank(taskId)) {
+            return;
+        }
+        String name = getLockName(LockConstants.CDN_TRIGGER_LOCK, taskId);
+        lockOnLock.writeLock().lock();
+        lockMap.remove(name);
+        lockAccessMap.remove(name);
+        lockOnLock.writeLock().unlock();
     }
 
     private void gcNormalLock(long expire) throws InterruptedException {
@@ -171,11 +183,8 @@ public class LockService {
 
     public boolean isAccessWindow(String lockName, long windowTime) {
         Long accessTime = lockAccessMap.get(lockName);
-        if (accessTime == null
-            || System.currentTimeMillis() - accessTime >= windowTime) {
-            return true;
-        }
-        return false;
+        return accessTime == null
+            || System.currentTimeMillis() - accessTime >= windowTime;
     }
 
 }
