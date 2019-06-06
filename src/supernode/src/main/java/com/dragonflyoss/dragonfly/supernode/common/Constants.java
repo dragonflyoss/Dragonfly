@@ -21,6 +21,7 @@ package com.dragonflyoss.dragonfly.supernode.common;
 public final class Constants {
 
     public static final int PORT = 8001;
+    public static final String CDN_NODE_PREFIX = "cdnnode:";
 
     public static String localIp;
     public static String SUPER_NODE_CID = null;
@@ -80,7 +81,7 @@ public final class Constants {
     //-------------------------------------------------------------------------
 
     private static String getSuperNodeCidPrefix() {
-        return "cdnnode:" + localIp + "~";
+        return CDN_NODE_PREFIX + localIp + "~";
     }
 
     public static void generateNodeCid() {
