@@ -37,41 +37,39 @@ const (
 // NewSupernodeAPI creates a new instance of SupernodeAPI with default value.
 func NewSupernodeAPI() SupernodeAPI {
 	return &supernodeAPI{
-		Scheme:      "http",
-		ServicePort: 8002,
-		Timeout:     5 * time.Second,
-		HTTPClient:  util.DefaultHTTPClient,
+		Scheme:     "http",
+		Timeout:    5 * time.Second,
+		HTTPClient: util.DefaultHTTPClient,
 	}
 }
 
 // SupernodeAPI defines the communication methods between supernode and dfget.
 type SupernodeAPI interface {
-	Register(ip string, req *types.RegisterRequest) (resp *types.RegisterResponse, e error)
-	PullPieceTask(ip string, req *types.PullPieceTaskRequest) (resp *types.PullPieceTaskResponse, e error)
-	ReportPiece(ip string, req *types.ReportPieceRequest) (resp *types.BaseResponse, e error)
-	ServiceDown(ip string, taskID string, cid string) (resp *types.BaseResponse, e error)
-	ReportClientError(ip string, req *types.ClientErrorRequest) (resp *types.BaseResponse, e error)
+	Register(node string, req *types.RegisterRequest) (resp *types.RegisterResponse, e error)
+	PullPieceTask(node string, req *types.PullPieceTaskRequest) (resp *types.PullPieceTaskResponse, e error)
+	ReportPiece(node string, req *types.ReportPieceRequest) (resp *types.BaseResponse, e error)
+	ServiceDown(node string, taskID string, cid string) (resp *types.BaseResponse, e error)
+	ReportClientError(node string, req *types.ClientErrorRequest) (resp *types.BaseResponse, e error)
 }
 
 type supernodeAPI struct {
-	Scheme      string
-	ServicePort int
-	Timeout     time.Duration
-	HTTPClient  util.SimpleHTTPClient
+	Scheme     string
+	Timeout    time.Duration
+	HTTPClient util.SimpleHTTPClient
 }
 
 var _ SupernodeAPI = &supernodeAPI{}
 
 // Register sends a request to the supernode to register itself as a peer
 // and create downloading task.
-func (api *supernodeAPI) Register(ip string, req *types.RegisterRequest) (
+func (api *supernodeAPI) Register(node string, req *types.RegisterRequest) (
 	resp *types.RegisterResponse, e error) {
 	var (
 		code int
 		body []byte
 	)
-	url := fmt.Sprintf("%s://%s:%d%s",
-		api.Scheme, ip, api.ServicePort, peerRegisterPath)
+	url := fmt.Sprintf("%s://%s%s",
+		api.Scheme, node, peerRegisterPath)
 	if code, body, e = api.HTTPClient.PostJSON(url, req, api.Timeout); e != nil {
 		return nil, e
 	}
@@ -85,11 +83,11 @@ func (api *supernodeAPI) Register(ip string, req *types.RegisterRequest) (
 
 // PullPieceTask pull a piece downloading task from supernode, and get a
 // response that describes from which peer to download.
-func (api *supernodeAPI) PullPieceTask(ip string, req *types.PullPieceTaskRequest) (
+func (api *supernodeAPI) PullPieceTask(node string, req *types.PullPieceTaskRequest) (
 	resp *types.PullPieceTaskResponse, e error) {
 
-	url := fmt.Sprintf("%s://%s:%d%s?%s",
-		api.Scheme, ip, api.ServicePort, peerPullPieceTaskPath, util.ParseQuery(req))
+	url := fmt.Sprintf("%s://%s%s?%s",
+		api.Scheme, node, peerPullPieceTaskPath, util.ParseQuery(req))
 
 	resp = new(types.PullPieceTaskResponse)
 	e = api.get(url, resp)
@@ -97,11 +95,11 @@ func (api *supernodeAPI) PullPieceTask(ip string, req *types.PullPieceTaskReques
 }
 
 // ReportPiece reports the status of piece downloading task to supernode.
-func (api *supernodeAPI) ReportPiece(ip string, req *types.ReportPieceRequest) (
+func (api *supernodeAPI) ReportPiece(node string, req *types.ReportPieceRequest) (
 	resp *types.BaseResponse, e error) {
 
-	url := fmt.Sprintf("%s://%s:%d%s?%s",
-		api.Scheme, ip, api.ServicePort, peerReportPiecePath, util.ParseQuery(req))
+	url := fmt.Sprintf("%s://%s%s?%s",
+		api.Scheme, node, peerReportPiecePath, util.ParseQuery(req))
 
 	resp = new(types.BaseResponse)
 	e = api.get(url, resp)
@@ -109,11 +107,11 @@ func (api *supernodeAPI) ReportPiece(ip string, req *types.ReportPieceRequest) (
 }
 
 // ServiceDown reports the status of the local peer to supernode.
-func (api *supernodeAPI) ServiceDown(ip string, taskID string, cid string) (
+func (api *supernodeAPI) ServiceDown(node string, taskID string, cid string) (
 	resp *types.BaseResponse, e error) {
 
-	url := fmt.Sprintf("%s://%s:%d%s?taskId=%s&cid=%s",
-		api.Scheme, ip, api.ServicePort, peerServiceDownPath, taskID, cid)
+	url := fmt.Sprintf("%s://%s%s?taskId=%s&cid=%s",
+		api.Scheme, node, peerServiceDownPath, taskID, cid)
 
 	resp = new(types.BaseResponse)
 	e = api.get(url, resp)
@@ -121,11 +119,11 @@ func (api *supernodeAPI) ServiceDown(ip string, taskID string, cid string) (
 }
 
 // ReportClientError reports the client error when downloading piece to supernode.
-func (api *supernodeAPI) ReportClientError(ip string, req *types.ClientErrorRequest) (
+func (api *supernodeAPI) ReportClientError(node string, req *types.ClientErrorRequest) (
 	resp *types.BaseResponse, e error) {
 
-	url := fmt.Sprintf("%s://%s:%d%s?%s",
-		api.Scheme, ip, api.ServicePort, peerClientErrorPath, util.ParseQuery(req))
+	url := fmt.Sprintf("%s://%s%s?%s",
+		api.Scheme, node, peerClientErrorPath, util.ParseQuery(req))
 
 	resp = new(types.BaseResponse)
 	e = api.get(url, resp)
