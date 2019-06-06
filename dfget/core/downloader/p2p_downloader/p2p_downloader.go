@@ -244,7 +244,7 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 		logrus.Errorf("pull piece task fail:%v and will migrate", res)
 
 		var registerRes *regist.RegisterResult
-		if registerRes, err = p2p.Register.Register(p2p.cfg.RV.PeerPort); err != nil {
+		if registerRes, err = p2p.Register.Register(p2p.cfg.RV.PeerPort); !cutil.IsNil(err) {
 			return nil, err
 		}
 		p2p.pieceSizeHistory[1] = registerRes.PieceSize
@@ -308,7 +308,9 @@ func (p2p *P2PDownloader) startTask(data *types.PullPieceTaskResponseContinueDat
 		rateLimiter: p2p.rateLimiter,
 		downloadAPI: api.NewDownloadAPI(),
 	}
-	powerClient.Run()
+	if err := powerClient.Run(); err != nil && powerClient.ClientError() != nil {
+		p2p.API.ReportClientError(p2p.node, powerClient.ClientError())
+	}
 }
 
 func (p2p *P2PDownloader) getItem(latestItem *Piece) (bool, *Piece) {
