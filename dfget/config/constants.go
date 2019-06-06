@@ -113,6 +113,8 @@ const (
 
 	DataExpireTime  = 3 * time.Minute
 	ServerAliveTime = 5 * time.Minute
+
+	DefaultSupernodePort = 8002
 )
 
 /* errors code */
