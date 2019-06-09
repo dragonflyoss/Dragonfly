@@ -1,7 +1,4 @@
----
-title: "Supernode Configuration"
-weight: 15
----
+# Supernode Configuration
 
 The supernode is written in Java based on Spring Boot. You can easily set properties with command line parameters or with the configuration file.
 <!--more-->
