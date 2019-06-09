@@ -1,10 +1,6 @@
----
-title: "Downloading Files"
-weight: 10
----
+# Downloading Files
 
 Things are done differently when you download container images and download general files with Dragonfly.
-<!--more-->
 
 ## Prerequisites
 
