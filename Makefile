@@ -16,6 +16,9 @@
 # with docker.
 USE_DOCKER?=0 # Default: build components in the local environment.
 
+# Assign the Dragonfly version to DF_VERSION as the image tag.
+DF_VERSION?=latest # Default: use latest as the image tag which built by docker.
+
 clean:
 	@echo "Begin to clean redundant files."
 	@rm -rf ./bin
@@ -57,10 +60,45 @@ install:
 	./hack/install.sh install
 .PHONY: install
 
+install-client:
+	@echo "Begin to install dfget and dfdaemon."
+	./hack/install.sh install dfclient
+.PHONY: install-client
+
+install-supernode:
+	@echo "Begin to install supernode."
+	./hack/install.sh install supernode
+.PHONY: install-supernode
+
 uninstall:
 	@echo "Begin to uninstall dfget and dfdaemon and supernode."
 	./hack/install.sh uninstall
 .PHONY: uninstall
+
+uninstall-client:
+	@echo "Begin to uninstall dfget and dfdaemon."
+	./hack/install.sh uninstall-dfclient
+.PHONY: uninstall-client
+
+uninstall-supernode:
+	@echo "Begin to uninstall supernode."
+	./hack/install.sh uninstall-supernode
+.PHONY: uninstall-supernode
+
+docker-build:
+	@echo "Begin to use docker build dfcient and supernode images."
+	./hack/docker-build.sh
+.PHONY: docker-build
+
+docker-build-client:
+	@echo "Begin to use docker build dfcient image."
+	./hack/docker-build.sh dfclient 
+.PHONY: docker-build-client
+
+docker-build-supernode:
+	@echo "Begin to use docker build supernode image."
+	./hack/docker-build.sh supernode
+.PHONY: docker-build-supernode
 
 unit-test: build-dirs
 	./hack/unit-test.sh
