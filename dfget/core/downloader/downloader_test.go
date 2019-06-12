@@ -52,26 +52,6 @@ func (s *DownloaderTestSuite) TestDoDownloadTimeout(c *check.C) {
 	c.Assert(err, check.IsNil)
 }
 
-func (s *DownloaderTestSuite) TestConvertHeaders(c *check.C) {
-	cases := []struct {
-		h []string
-		e map[string]string
-	}{
-		{
-			h: []string{"a:1", "a:2", "b:", "b", "c:3"},
-			e: map[string]string{"a": "1,2", "c": "3"},
-		},
-		{
-			h: []string{},
-			e: nil,
-		},
-	}
-	for _, v := range cases {
-		headers := ConvertHeaders(v.h)
-		c.Assert(headers, check.DeepEquals, v.e)
-	}
-}
-
 func (s *DownloaderTestSuite) TestMoveFile(c *check.C) {
 	tmp, _ := ioutil.TempDir("/tmp", "dfget-TestMoveFile-")
 	defer os.RemoveAll(tmp)
