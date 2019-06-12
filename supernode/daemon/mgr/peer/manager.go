@@ -29,7 +29,7 @@ func NewManager() (*Manager, error) {
 	}, nil
 }
 
-// Register a peer and genreate a unique ID as returned.
+// Register a peer and generate a unique ID as returned.
 func (pm *Manager) Register(ctx context.Context, peerCreateRequest *types.PeerCreateRequest) (peerCreateResponse *types.PeerCreateResponse, err error) {
 	if peerCreateRequest == nil {
 		return nil, errors.Wrap(errorType.ErrEmptyValue, "peer create request")

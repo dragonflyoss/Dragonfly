@@ -228,7 +228,7 @@ func (tm *Manager) processTaskStart(ctx context.Context, srcCID string, task *ty
 	}
 	logrus.Infof("success update dfgetTask status to RUNNING with taskID: %s clientID: %s", task.ID, srcCID)
 
-	return tm.parseAvaliablePeers(ctx, srcCID, task, dfgetTask)
+	return tm.parseAvailablePeers(ctx, srcCID, task, dfgetTask)
 }
 
 // req.DstPID, req.PieceRange, req.PieceResult, req.DfgetTaskStatus
@@ -249,7 +249,7 @@ func (tm *Manager) processTaskRunning(ctx context.Context, srcCID, srcPID string
 		return false, nil, errors.Wrap(err, "failed to update progress")
 	}
 
-	return tm.parseAvaliablePeers(ctx, srcCID, task, dfgetTask)
+	return tm.parseAvailablePeers(ctx, srcCID, task, dfgetTask)
 }
 
 func (tm *Manager) processTaskFinish(ctx context.Context, taskID, clientID, dfgetTaskStatus string) error {
@@ -260,7 +260,7 @@ func (tm *Manager) processTaskFinish(ctx context.Context, taskID, clientID, dfge
 	return nil
 }
 
-func (tm *Manager) parseAvaliablePeers(ctx context.Context, clientID string, task *types.TaskInfo, dfgetTask *types.DfGetTask) (bool, interface{}, error) {
+func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, task *types.TaskInfo, dfgetTask *types.DfGetTask) (bool, interface{}, error) {
 	// Step1. validate
 	if cutil.IsEmptyStr(clientID) {
 		return false, nil, errors.Wrapf(errorType.ErrEmptyValue, "clientID")
