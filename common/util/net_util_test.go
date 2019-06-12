@@ -182,3 +182,23 @@ func (suite *UtilSuite) TestIsValidIP(c *check.C) {
 		c.Assert(result, check.Equals, v.expected)
 	}
 }
+
+func (suite *UtilSuite) TestConvertHeaders(c *check.C) {
+	cases := []struct {
+		h []string
+		e map[string]string
+	}{
+		{
+			h: []string{"a:1", "a:2", "b:", "b", "c:3"},
+			e: map[string]string{"a": "1,2", "c": "3"},
+		},
+		{
+			h: []string{},
+			e: nil,
+		},
+	}
+	for _, v := range cases {
+		headers := ConvertHeaders(v.h)
+		c.Assert(headers, check.DeepEquals, v.e)
+	}
+}
