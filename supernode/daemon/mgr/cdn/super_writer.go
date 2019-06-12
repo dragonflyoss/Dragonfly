@@ -42,9 +42,9 @@ func newSuperWriter(cdnStore *store.Store, cdnReporter *reporter) *superWriter {
 // startWriter writes the stream data from the reader to the underlying storage.
 func (cw *superWriter) startWriter(ctx context.Context, cfg *config.Config, reader io.Reader,
 	task *types.TaskInfo, startPieceNum int, httpFileLength int64, pieceContSize int32) (*downloadMetadata, error) {
-	// realFileLength is used to caculate the file Length dynamically
+	// realFileLength is used to calculate the file Length dynamically
 	realFileLength := int64(startPieceNum) * int64(task.PieceSize)
-	// realHTTPFileLength is used to caculate the http file Length dynamically
+	// realHTTPFileLength is used to calculate the http file Length dynamically
 	realHTTPFileLength := int64(startPieceNum) * int64(pieceContSize)
 	// the left size of data for a complete piece
 	pieceContLeft := pieceContSize

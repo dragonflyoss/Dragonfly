@@ -122,7 +122,7 @@ func (dtm *Manager) getDfgetTask(clientID, taskID string) (*types.DfGetTask, err
 	return nil, errors.Wrapf(errorType.ErrConvertFailed, "clientID: %s, taskID: %s: %v", clientID, taskID, v)
 }
 
-// generateKey gengerates a key for a dfgetTask.
+// generateKey generates a key for a dfgetTask.
 func generateKey(cID, taskID string) (string, error) {
 	if cutil.IsEmptyStr(cID) {
 		return "", errors.Wrapf(errorType.ErrEmptyValue, "cID")
