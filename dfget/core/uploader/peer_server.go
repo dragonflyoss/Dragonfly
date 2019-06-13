@@ -124,7 +124,7 @@ func (ps *peerServer) initRouter() *mux.Router {
 
 // uploadHandler use to upload a task file when other peers download from it.
 func (ps *peerServer) uploadHandler(w http.ResponseWriter, r *http.Request) {
-	aliveQueue.Put(true)
+	sendAlive(ps.cfg)
 
 	var (
 		up   *uploadParam
@@ -168,7 +168,7 @@ func (ps *peerServer) uploadHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ps *peerServer) parseRateHandler(w http.ResponseWriter, r *http.Request) {
-	aliveQueue.Put(true)
+	sendAlive(ps.cfg)
 
 	// get params from request
 	taskFileName := mux.Vars(r)["commonFile"]
@@ -202,7 +202,7 @@ func (ps *peerServer) parseRateHandler(w http.ResponseWriter, r *http.Request) {
 // checkHandler use to check the server status.
 // TODO: Disassemble this function for too many things done.
 func (ps *peerServer) checkHandler(w http.ResponseWriter, r *http.Request) {
-	aliveQueue.Put(true)
+	sendAlive(ps.cfg)
 	sendSuccess(w)
 
 	// handle totalLimit
