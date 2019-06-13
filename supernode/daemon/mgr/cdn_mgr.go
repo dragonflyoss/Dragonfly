@@ -10,7 +10,7 @@ import (
 // operates on the underlying files stored on the local disk, etc.
 type CDNMgr interface {
 	// TriggerCDN will trigger CDN to download the file from sourceUrl.
-	// It will including the following steps:
+	// It includes the following steps:
 	// 1). download the source file
 	// 2). write the file to disk
 	//

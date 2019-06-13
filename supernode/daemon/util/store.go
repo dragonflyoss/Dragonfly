@@ -34,7 +34,7 @@ func (s *Store) Get(key string) (interface{}, error) {
 	return v, nil
 }
 
-// Delete a key-value pair from the store with sepcified key.
+// Delete a key-value pair from the store with specified key.
 func (s *Store) Delete(key string) error {
 	_, ok := s.metaMap.Load(key)
 	if !ok {
