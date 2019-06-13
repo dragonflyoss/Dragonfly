@@ -193,6 +193,10 @@ func monitorAlive(cfg *config.Config, interval time.Duration) {
 	go serverGC(cfg, interval)
 	go captureQuitSignal()
 
+	if cfg.RV.ServerAliveTime <= 0 {
+		return
+	}
+
 	for {
 		if _, ok := aliveQueue.PollTimeout(cfg.RV.ServerAliveTime); !ok {
 			if aliveQueue.Len() > 0 {
@@ -205,6 +209,13 @@ func monitorAlive(cfg *config.Config, interval time.Duration) {
 			return
 		}
 	}
+}
+
+func sendAlive(cfg *config.Config) {
+	if cfg.RV.ServerAliveTime <= 0 {
+		return
+	}
+	aliveQueue.Put(true)
 }
 
 func isRunning() bool {
