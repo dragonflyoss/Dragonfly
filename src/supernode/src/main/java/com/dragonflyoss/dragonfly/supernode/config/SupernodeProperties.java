@@ -16,7 +16,6 @@
 
 package com.dragonflyoss.dragonfly.supernode.config;
 
-import javax.annotation.PostConstruct;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -25,10 +24,12 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import javax.annotation.PostConstruct;
 
 import com.alibaba.fastjson.JSON;
 
 import com.dragonflyoss.dragonfly.supernode.common.Constants;
+
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -96,6 +97,12 @@ public class SupernodeProperties {
      * The default value is 2(backup for each other).
      */
     private int downloadClientNumberPerPiece = Constants.DEFAULT_DOWNLOAD_CLIENT_NUMBER_PER_PIECE;
+
+    /**
+     * The downloadPort is used for clients to download file pieces from supernode.
+     * By default, the value is 8001.
+     */
+    private int downloadPort = Constants.PORT;
 
     @PostConstruct
     public void init() {

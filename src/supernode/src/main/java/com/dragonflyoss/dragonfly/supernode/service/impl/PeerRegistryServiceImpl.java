@@ -30,6 +30,7 @@ import com.dragonflyoss.dragonfly.supernode.common.util.UrlUtil;
 import com.dragonflyoss.dragonfly.supernode.common.view.ResultCode;
 import com.dragonflyoss.dragonfly.supernode.common.view.ResultInfo;
 import com.dragonflyoss.dragonfly.supernode.common.view.TaskRegistryResult;
+import com.dragonflyoss.dragonfly.supernode.config.SupernodeProperties;
 import com.dragonflyoss.dragonfly.supernode.service.PeerRegistryService;
 import com.dragonflyoss.dragonfly.supernode.service.PeerService;
 import com.dragonflyoss.dragonfly.supernode.service.PeerTaskService;
@@ -60,6 +61,8 @@ public class PeerRegistryServiceImpl implements PeerRegistryService {
     private DataGcService dataGcService;
     @Autowired
     private LockService lockService;
+    @Autowired
+    private SupernodeProperties properties;
 
     @Override
     public ResultInfo registryTask(String sourceUrl, String taskUrl, String md5, String bizId, String port,
@@ -153,7 +156,7 @@ public class PeerRegistryServiceImpl implements PeerRegistryService {
         String taskId = task.getTaskId();
 
         String cid = Constants.getSuperCid(taskId);
-        int port = Constants.PORT;
+        int port = properties.getDownloadPort();
         String path = PathUtil.getHttpPath(taskId);
         PeerInfo peerInfo = new PeerInfo();
         peerInfo.setIp(Constants.localIp);
