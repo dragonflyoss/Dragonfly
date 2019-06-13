@@ -47,7 +47,7 @@ func (sm *Manager) Schedule(ctx context.Context, taskID, clientID, peerID string
 	}
 	logrus.Debugf("scheduler get available pieces %v for taskID(%s)", pieceAvailable, taskID)
 
-	// get runnning pieces
+	// get running pieces
 	pieceRunning, err := sm.progressMgr.GetPieceProgressByCID(ctx, taskID, clientID, "running")
 	if err != nil {
 		return nil, err
