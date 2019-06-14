@@ -22,27 +22,19 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/url"
+	"os"
+	"path/filepath"
 	"regexp"
 
+	dferr "github.com/dragonflyoss/Dragonfly/common/errors"
 	"github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
 
 	"github.com/pkg/errors"
 )
 
-const officialRegistry = "https://index.docker.io"
-
 // -----------------------------------------------------------------------------
 // Properties
-
-// NewProperties create a new properties with default values.
-func NewProperties() *Properties {
-	u, _ := NewURL(officialRegistry)
-	return &Properties{
-		RegistryMirror: &RegistryMirror{
-			Remote: u,
-		},
-	}
-}
 
 // Properties holds all configurable properties of dfdaemon.
 // The default path is '/etc/dragonfly/dfdaemon.yml'
@@ -77,29 +69,105 @@ func NewProperties() *Properties {
 //         certs: []
 type Properties struct {
 	// Registry mirror settings
-	RegistryMirror *RegistryMirror `yaml:"registry_mirror"`
+	RegistryMirror *RegistryMirror `yaml:"registry_mirror" json:"registry_mirror"`
 
 	// Proxies is the list of rules for the transparent proxy. If no rules
 	// are provided, all requests will be proxied directly. Request will be
 	// proxied with the first matching rule.
-	Proxies []*Proxy `yaml:"proxies"`
+	Proxies []*Proxy `yaml:"proxies" json:"proxies"`
 
 	// HijackHTTPS is the list of hosts whose https requests should be hijacked
 	// by dfdaemon. Dfdaemon will be able to proxy requests from them with dfget
 	// if the url matches the proxy rules. The first matched rule will be used.
-	HijackHTTPS *HijackConfig `yaml:"hijack_https"`
+	HijackHTTPS *HijackConfig `yaml:"hijack_https" json:"hijack_https"`
+
+	// https options
+	Port    uint   `yaml:"port" json:"port"`
+	HostIP  string `yaml:"hostIp" json:"hostIp"`
+	CertPem string `yaml:"certpem" json:"certpem"`
+	KeyPem  string `yaml:"keypem" json:"keypem"`
+
+	// dfget config
+	SuperNodes []string `yaml:"supernodes" json:"supernodes"`
+	DFRepo     string   `yaml:"localrepo" json:"localrepo"`
+	DFPath     string   `yaml:"dfpath" json:"dfpath"`
+	RateLimit  string   `yaml:"ratelimit" json:"ratelimit"`
+	URLFilter  string   `yaml:"urlfilter" json:"urlfilter"`
+	CallSystem string   `yaml:"callsystem" json:"callsystem"`
+	Notbs      bool     `yaml:"notbs" json:"notbs"`
+
+	Verbose bool `yaml:"verbose" json:"verbose"`
+
+	MaxProcs int `yaml:"maxprocs" json:"maxprocs"`
+}
+
+// Validate validates the config
+func (p *Properties) Validate() error {
+	if p.Port <= 2000 || p.Port > 65535 {
+		return dferr.Newf(
+			constant.CodeExitPortInvalid,
+			"invalid port %d", p.Port,
+		)
+	}
+
+	if !filepath.IsAbs(p.DFRepo) {
+		return dferr.Newf(
+			constant.CodeExitPathNotAbs,
+			"local repo %s is not absolute", p.DFRepo,
+		)
+	}
+
+	if _, err := os.Stat(p.DFPath); err != nil && os.IsNotExist(err) {
+		return dferr.Newf(
+			constant.CodeExitDfgetNotFound,
+			"dfpath %s not found", p.DFPath,
+		)
+	}
+
+	if ok, _ := regexp.MatchString("^[[:digit:]]+[MK]$", p.RateLimit); !ok {
+		return dferr.Newf(
+			constant.CodeExitRateLimitInvalid,
+			"invalid rate limit %s", p.RateLimit,
+		)
+	}
+
+	return nil
+}
+
+// DFGetConfig returns config for dfget downloader
+func (p *Properties) DFGetConfig() DFGetConfig {
+	return DFGetConfig{
+		SuperNodes: p.SuperNodes,
+		DFRepo:     p.DFRepo,
+		DFPath:     p.DFPath,
+		RateLimit:  p.RateLimit,
+		URLFilter:  p.URLFilter,
+		CallSystem: p.CallSystem,
+		Notbs:      p.Notbs,
+	}
+}
+
+// DFGetConfig configures how dfdaemon calls dfget
+type DFGetConfig struct {
+	SuperNodes []string `yaml:"supernodes"`
+	DFRepo     string   `yaml:"localrepo"`
+	DFPath     string   `yaml:"dfpath"`
+	RateLimit  string   `yaml:"ratelimit"`
+	URLFilter  string   `yaml:"urlfilter"`
+	CallSystem string   `yaml:"callsystem"`
+	Notbs      bool     `yaml:"notbs"`
 }
 
 // RegistryMirror configures the mirror of the official docker registry
 type RegistryMirror struct {
 	// Remote url for the registry mirror, default is https://index.docker.io
-	Remote *URL `yaml:"remote"`
+	Remote *URL `yaml:"remote" json:"remote"`
 
 	// Optional certificates if the mirror uses self-signed certificates
-	Certs *CertPool `yaml:"certs"`
+	Certs *CertPool `yaml:"certs" json:"certs"`
 
 	// Whether to ignore certificates errors for the registry
-	Insecure bool `yaml:"insecure"`
+	Insecure bool `yaml:"insecure" json:"insecure"`
 }
 
 // TLSConfig returns the tls.Config used to communicate with the mirror
@@ -121,16 +189,16 @@ func (r *RegistryMirror) TLSConfig() *tls.Config {
 
 // HijackConfig represents how dfdaemon hijacks http requests
 type HijackConfig struct {
-	Cert  string        `yaml:"cert"`
-	Key   string        `yaml:"key"`
-	Hosts []*HijackHost `yaml:"hosts"`
+	Cert  string        `yaml:"cert" json:"cert"`
+	Key   string        `yaml:"key" json:"key"`
+	Hosts []*HijackHost `yaml:"hosts" json:"hosts"`
 }
 
 // HijackHost is a hijack rule for the hosts that matches Regx
 type HijackHost struct {
-	Regx     *Regexp   `yaml:"regx"`
-	Insecure bool      `yaml:"insecure"`
-	Certs    *CertPool `yaml:"certs"`
+	Regx     *Regexp   `yaml:"regx" json:"regx"`
+	Insecure bool      `yaml:"insecure" json:"insecure"`
+	Certs    *CertPool `yaml:"certs" json:"certs"`
 }
 
 // URL is simple wrapper around url.URL to make it unmarshallable from a string
@@ -178,6 +246,11 @@ func (u *URL) MarshalJSON() ([]byte, error) {
 	return json.Marshal(u.String())
 }
 
+// MarshalYAML implements yaml.Marshaller to print the url
+func (u *URL) MarshalYAML() (interface{}, error) {
+	return u.String(), nil
+}
+
 // CertPool is a wrapper around x509.CertPool, which can be unmarshalled and
 // constructed from a list of filenames
 type CertPool struct {
@@ -207,6 +280,16 @@ func (cp *CertPool) unmarshal(unmarshal func(interface{}) error) error {
 
 	cp.CertPool = pool
 	return nil
+}
+
+// MarshalJSON implements json.Marshaller to print the cert pool
+func (cp *CertPool) MarshalJSON() ([]byte, error) {
+	return json.Marshal(cp.files)
+}
+
+// MarshalYAML implements yaml.Marshaller to print the cert pool
+func (cp *CertPool) MarshalYAML() (interface{}, error) {
+	return cp.files, nil
 }
 
 // Regexp is simple wrapper around regexp.Regexp to make it unmarshallable from a string
@@ -250,6 +333,11 @@ func (r *Regexp) MarshalJSON() ([]byte, error) {
 	return json.Marshal(r.String())
 }
 
+// MarshalYAML implements yaml.Marshaller to print the regexp
+func (r *Regexp) MarshalYAML() (interface{}, error) {
+	return r.String(), nil
+}
+
 // certPoolFromFiles returns an *x509.CertPool constructed from the given files.
 // If no files are given, (nil, nil) will be returned.
 func certPoolFromFiles(files ...string) (*x509.CertPool, error) {
@@ -281,9 +369,9 @@ func (p *Properties) Load(path string) error {
 
 // Proxy describe a regular expression matching rule for how to proxy a request
 type Proxy struct {
-	Regx     *Regexp `yaml:"regx"`
-	UseHTTPS bool    `yaml:"use_https"`
-	Direct   bool    `yaml:"direct"`
+	Regx     *Regexp `yaml:"regx" json:"regx"`
+	UseHTTPS bool    `yaml:"use_https" json:"use_https"`
+	Direct   bool    `yaml:"direct" json:"direct"`
 }
 
 // NewProxy returns a new proxy rule with given attributes

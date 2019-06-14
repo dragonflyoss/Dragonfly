@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/dragonflyoss/Dragonfly/cmd/dfdaemon/app/options"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/handler"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/proxy"
@@ -78,7 +77,7 @@ func New(opts ...Option) (*Server, error) {
 }
 
 // NewFromConfig returns a new server instance from given configuration
-func NewFromConfig(cfg config.Properties, o options.Options) (*Server, error) {
+func NewFromConfig(cfg config.Properties) (*Server, error) {
 	p, err := proxy.NewFromConfig(cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "create proxy")
@@ -86,11 +85,11 @@ func NewFromConfig(cfg config.Properties, o options.Options) (*Server, error) {
 
 	opts := []Option{
 		WithProxy(p),
-		WithAddr(fmt.Sprintf(":%d", o.Port)),
+		WithAddr(fmt.Sprintf(":%d", cfg.Port)),
 	}
 
-	if o.CertFile != "" && o.KeyFile != "" {
-		opts = append(opts, WithTLSFromFile(o.CertFile, o.KeyFile))
+	if cfg.CertPem != "" && cfg.KeyPem != "" {
+		opts = append(opts, WithTLSFromFile(cfg.CertPem, cfg.KeyPem))
 	}
 
 	return New(opts...)

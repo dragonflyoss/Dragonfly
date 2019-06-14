@@ -19,55 +19,34 @@ package dfget
 import (
 	"fmt"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
-	"github.com/dragonflyoss/Dragonfly/dfdaemon/downloader"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/exception"
-	"github.com/dragonflyoss/Dragonfly/dfdaemon/global"
 )
 
 // DFGetter implements Downloader to download file by dragonfly
 type DFGetter struct {
-	// output dir
-	dstDir string
-	// the urlfilter param of dfget
-	urlFilter string
-	// the totallimit and locallimit(s) param of dfget
-	rateLimit string
-	// the callsystem param of dfget
-	callSystem string
-	// the notbs param of dfget
-	notbs bool
-
-	supernodes []string
+	config config.DFGetConfig
 }
 
-var _ downloader.Interface = &DFGetter{}
-
-// NewDFGetter returns the default DFGetter.
-func NewDFGetter(dstDir, callSystem string, notbs bool, rateLimit, urlFilter string, supernodes []string) *DFGetter {
-	return &DFGetter{
-		dstDir:     dstDir,
-		callSystem: callSystem,
-		notbs:      notbs,
-		rateLimit:  rateLimit,
-		urlFilter:  urlFilter,
-		supernodes: supernodes,
-	}
+// NewGetter returns a dfget downloader from the given config
+func NewGetter(cfg config.DFGetConfig) *DFGetter {
+	return &DFGetter{config: cfg}
 }
 
 // Download is the method of DFGetter to download by dragonfly.
 func (dfGetter *DFGetter) Download(url string, header map[string][]string, name string) (string, error) {
 	startTime := time.Now()
-	cmdPath, args, dstPath := dfGetter.parseCommand(url, header, name)
-	cmd := exec.Command(cmdPath, args...)
-	_, err := cmd.CombinedOutput()
-
+	dstPath := filepath.Join(dfGetter.config.DFRepo, name)
+	cmd := dfGetter.getCommand(url, header, dstPath)
+	err := cmd.Run()
 	if cmd.ProcessState.Success() {
 		log.Infof("dfget url:%s [SUCCESS] cost:%.3fs", url, time.Since(startTime).Seconds())
 		return dstPath, nil
@@ -80,50 +59,45 @@ func (dfGetter *DFGetter) Download(url string, header map[string][]string, name 
 	return "", fmt.Errorf("dfget fail(%s):%v", cmd.ProcessState.String(), err)
 }
 
-func (dfGetter *DFGetter) parseCommand(url string, header map[string][]string, name string) (
-	cmdPath string, args []string, dstPath string) {
-	args = make([]string, 0, 32)
-	args = append(append(args, "-u"), url)
-	args = append(append(args, "-o"), dfGetter.dstDir+name)
-	if dfGetter.notbs {
+// getCommand returns the command to download the given resource
+func (dfGetter *DFGetter) getCommand(
+	url string, header map[string][]string, output string,
+) (cmd *exec.Cmd) {
+	args := []string{
+		"--dfdaemon",
+		"-u", url,
+		"-o", output,
+	}
+
+	if dfGetter.config.Notbs {
 		args = append(args, "--notbs")
 	}
 
-	if strings.TrimSpace(dfGetter.callSystem) != "" {
-		args = append(append(args, "--callsystem"), strings.TrimSpace(dfGetter.callSystem))
-	}
-	if strings.TrimSpace(dfGetter.urlFilter) != "" {
-		args = append(append(args, "-f"), strings.TrimSpace(dfGetter.urlFilter))
-	}
-	if strings.TrimSpace(dfGetter.rateLimit) != "" {
-		args = append(append(args, "-s"), dfGetter.rateLimit)
-		args = append(append(args, "--totallimit"), dfGetter.rateLimit)
-	}
-	if dfGetter.supernodes != nil && len(dfGetter.supernodes) > 0 {
-		args = append(append(args, "--node"), strings.Join(dfGetter.supernodes, ","))
-	}
-
-	if header != nil {
-		for key, value := range header {
-			// discard HTTP host header for backing to source successfully
-			if strings.EqualFold(key, "host") {
-				continue
-			}
-			if value != nil && len(value) > 0 {
-				for _, oneV := range value {
-					args = append(append(args, "--header"), fmt.Sprintf("%s:%s", key, oneV))
-				}
-			} else {
-				args = append(append(args, "--header"), fmt.Sprintf("%s:%s", key, ""))
-			}
-
+	add := func(key, value string) {
+		if v := strings.TrimSpace(value); v != "" {
+			args = append(args, key, v)
 		}
 	}
 
-	args = append(args, "--dfdaemon")
+	add("--callsystem", dfGetter.config.CallSystem)
+	add("-f", dfGetter.config.URLFilter)
+	add("-s", dfGetter.config.RateLimit)
+	add("--totallimit", dfGetter.config.RateLimit)
+	add("--node", strings.Join(dfGetter.config.SuperNodes, ","))
 
-	dstPath = dfGetter.dstDir + name
-	cmdPath = global.CommandLine.DfPath
+	for key, value := range header {
+		// discard HTTP host header for backing to source successfully
+		if strings.EqualFold(key, "host") {
+			continue
+		}
+		if len(value) > 0 {
+			for _, v := range value {
+				add("--header", fmt.Sprintf("%s:%s", key, v))
+			}
+		} else {
+			add("--header", fmt.Sprintf("%s:%s", key, ""))
+		}
+	}
 
-	return
+	return exec.Command(dfGetter.config.DFPath, args...)
 }

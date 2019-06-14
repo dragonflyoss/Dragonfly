@@ -2,14 +2,18 @@ package proxy
 
 import (
 	"crypto/tls"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"net/http/httputil"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/downloader"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/downloader/dfget"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/transport"
 
 	"github.com/pkg/errors"
@@ -73,6 +77,14 @@ func WithRules(rules []*config.Proxy) Option {
 	return func(p *Proxy) error { return p.SetRules(rules) }
 }
 
+// WithDownloaderFactory sets the factory function to get a downloader
+func WithDownloaderFactory(f downloader.Factory) Option {
+	return func(p *Proxy) error {
+		p.downloadFactory = f
+		return nil
+	}
+}
+
 // New returns a new transparent proxy with the given rules
 func New(opts ...Option) (*Proxy, error) {
 	proxy := &Proxy{
@@ -93,7 +105,32 @@ func NewFromConfig(c config.Properties) (*Proxy, error) {
 	opts := []Option{
 		WithRules(c.Proxies),
 		WithRegistryMirror(c.RegistryMirror),
+		WithDownloaderFactory(func() downloader.Interface {
+			return dfget.NewGetter(c.DFGetConfig())
+		}),
 	}
+
+	logrus.Infof("registry mirror: %s", c.RegistryMirror.Remote)
+
+	if len(c.Proxies) > 0 {
+		logrus.Infof("%d proxy rules loaded", len(c.Proxies))
+		for i, r := range c.Proxies {
+			method := "with dfget"
+			if r.Direct {
+				method = "directly"
+			}
+			scheme := ""
+			if r.UseHTTPS {
+				scheme = "and force https"
+			}
+			logrus.Infof("[%d] proxy %s %s%s", i+1, r.Regx, method, scheme)
+		}
+	}
+
+	if len(c.SuperNodes) > 0 {
+		logrus.Infof("use supernodes: %s", strings.Join(c.SuperNodes, ","))
+	}
+	logrus.Infof("rate limit set to %s", c.RateLimit)
 
 	if c.HijackHTTPS != nil {
 		opts = append(opts, WithHTTPSHosts(c.HijackHTTPS.Hosts...))
@@ -117,11 +154,20 @@ type Proxy struct {
 	cert *tls.Certificate
 	// directHandler are used to handle non proxy requests
 	directHandler http.Handler
+	// downloadFactory returns the downloader used for p2p downloading
+	downloadFactory downloader.Factory
 }
 
 func (proxy *Proxy) mirrorRegistry(w http.ResponseWriter, r *http.Request) {
 	reverseProxy := httputil.NewSingleHostReverseProxy(proxy.registry.Remote.URL)
-	reverseProxy.Transport = transport.New(proxy.registry.TLSConfig())
+	t, err := transport.New(
+		transport.WithDownloader(proxy.downloadFactory()),
+		transport.WithTLS(proxy.registry.TLSConfig()),
+	)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("failed to get transport: %v", err), http.StatusInternalServerError)
+	}
+	reverseProxy.Transport = t
 	reverseProxy.ServeHTTP(w, r)
 }
 
@@ -175,8 +221,11 @@ func (proxy *Proxy) handleHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (proxy *Proxy) roundTripper(tlsConfig *tls.Config) http.RoundTripper {
-	rt := transport.New(tlsConfig)
-	rt.ShouldUseDfget = proxy.shouldUseDfget
+	rt, _ := transport.New(
+		transport.WithDownloader(proxy.downloadFactory()),
+		transport.WithTLS(tlsConfig),
+		transport.WithCondition(proxy.shouldUseDfget),
+	)
 	return rt
 }
 
