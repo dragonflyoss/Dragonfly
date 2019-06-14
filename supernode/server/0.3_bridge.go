@@ -125,7 +125,6 @@ func (s *Server) pullPieceTask(ctx context.Context, rw http.ResponseWriter, req 
 	}
 
 	isFinished, data, err := s.TaskMgr.GetPieces(ctx, taskID, srcCID, request)
-	logrus.Infof("get pieces data:%+v", data)
 	if err != nil {
 		logrus.Errorf("failed to get pieces %+v: %v", request, err)
 		resultInfo := NewResultInfoWithError(err)
