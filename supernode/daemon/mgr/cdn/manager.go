@@ -100,7 +100,7 @@ func (cm *Manager) TriggerCDN(ctx context.Context, task *types.TaskInfo) (*types
 	}
 
 	realMD5 := reader.Md5()
-	success, err := cm.handleCDNResult(ctx, task, realMD5, httpFileLength, downloadMetadata.realHTTPFileLength)
+	success, err := cm.handleCDNResult(ctx, task, realMD5, httpFileLength, downloadMetadata.realHTTPFileLength, downloadMetadata.realFileLength)
 	if err != nil || success == false {
 		return getUpdateTaskInfoWithStatusOnly(types.TaskInfoCdnStatusFAILED), err
 	}
@@ -125,14 +125,14 @@ func (cm *Manager) Delete(ctx context.Context, taskID string) error {
 	return nil
 }
 
-func (cm *Manager) handleCDNResult(ctx context.Context, task *types.TaskInfo, realMd5 string, httpFileLength, realFileLength int64) (bool, error) {
+func (cm *Manager) handleCDNResult(ctx context.Context, task *types.TaskInfo, realMd5 string, httpFileLength, realHTTPFileLength, realFileLength int64) (bool, error) {
 	var isSuccess = true
 	if !cutil.IsEmptyStr(task.Md5) && task.Md5 != realMd5 {
 		logrus.Errorf("taskId:%s url:%s file md5 not match expected:%s real:%s", task.ID, task.TaskURL, task.Md5, realMd5)
 		isSuccess = false
 	}
-	if isSuccess && httpFileLength >= 0 && httpFileLength != realFileLength {
-		logrus.Errorf("taskId:%s url:%s file length not match expected:%d real:%d", task.ID, task.TaskURL, httpFileLength, realFileLength)
+	if isSuccess && httpFileLength >= 0 && httpFileLength != realHTTPFileLength {
+		logrus.Errorf("taskId:%s url:%s file length not match expected:%d real:%d", task.ID, task.TaskURL, httpFileLength, realHTTPFileLength)
 		isSuccess = false
 	}
 
