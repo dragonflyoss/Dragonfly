@@ -20,18 +20,19 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
 
 	dferr "github.com/dragonflyoss/Dragonfly/common/errors"
-	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
 
 	"github.com/pkg/errors"
+	"github.com/spf13/afero"
 )
+
+var fs = afero.NewOsFs()
 
 // -----------------------------------------------------------------------------
 // Properties
@@ -347,7 +348,7 @@ func certPoolFromFiles(files ...string) (*x509.CertPool, error) {
 
 	roots := x509.NewCertPool()
 	for _, f := range files {
-		cert, err := ioutil.ReadFile(f)
+		cert, err := afero.ReadFile(fs, f)
 		if err != nil {
 			return nil, errors.Wrapf(err, "read cert file %s", f)
 		}
@@ -356,15 +357,6 @@ func certPoolFromFiles(files ...string) (*x509.CertPool, error) {
 		}
 	}
 	return roots, nil
-}
-
-// Load loads properties from config file.
-func (p *Properties) Load(path string) error {
-	if err := util.LoadYaml(path, p); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // Proxy describe a regular expression matching rule for how to proxy a request
