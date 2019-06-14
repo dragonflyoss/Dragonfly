@@ -238,8 +238,8 @@ func (tm *Manager) processTaskRunning(ctx context.Context, srcCID, srcPID string
 	if pieceNum == -1 {
 		return false, nil, errors.Wrapf(errorType.ErrInvalidValue, "pieceRange: %s", req.PieceRange)
 	}
-	pieceStatus := convertToPeerPieceStatus(req.PieceResult, req.DfgetTaskStatus)
-	if pieceStatus == -1 {
+	pieceStatus, success := convertToPeerPieceStatus(req.PieceResult, req.DfgetTaskStatus)
+	if !success {
 		return false, nil, errors.Wrapf(errorType.ErrInvalidValue, "failed to convert result: %s and status %s to pieceStatus", req.PieceResult, req.DfgetTaskStatus)
 	}
 
@@ -355,24 +355,24 @@ func convertToDfgetTaskStatus(result, status string) string {
 
 // convertToPeerPieceStatus convert piece result and dfgetTask status to piece status code.
 // And it should return -1 if failed to convert.
-func convertToPeerPieceStatus(result, status string) int {
+func convertToPeerPieceStatus(result, status string) (int, bool) {
 	if status == types.PiecePullRequestDfgetTaskStatusSTARTED {
-		return config.PieceWAITING
+		return config.PieceWAITING, true
 	}
 
 	if status == types.PiecePullRequestDfgetTaskStatusRUNNING {
 		if result == types.PiecePullRequestPieceResultSUCCESS {
-			return config.PieceSUCCESS
+			return config.PieceSUCCESS, true
 		}
 		if result == types.PiecePullRequestPieceResultFAILED {
-			return config.PieceFAILED
+			return config.PieceFAILED, true
 		}
 		if result == types.PiecePullRequestPieceResultSEMISUC {
-			return config.PieceSEMISUC
+			return config.PieceSEMISUC, true
 		}
 	}
 
-	return -1
+	return -1, false
 }
 
 // equalsTask determines that whether the two task objects are the same.
