@@ -86,7 +86,7 @@ func (cw *superWriter) startWriter(ctx context.Context, cfg *config.Config, read
 				bb = bytes.NewBuffer([]byte{})
 				n -= int(pieceContLeft)
 				if n > 0 {
-					bb.Write(buf[pieceContLeft:])
+					bb.Write(buf[pieceContLeft : int(pieceContLeft)+n])
 				}
 				pieceContLeft = pieceContSize
 			} else {

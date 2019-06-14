@@ -157,6 +157,10 @@ func (ls *localStorage) GetBytes(ctx context.Context, raw *Raw) (data []byte, er
 
 // Put reads the content from reader and put it into storage.
 func (ls *localStorage) Put(ctx context.Context, raw *Raw, data io.Reader) error {
+	if err := checkPutRaw(raw); err != nil {
+		return err
+	}
+
 	path, err := ls.preparePath(raw.Bucket, raw.Key)
 	if err != nil {
 		return err
@@ -176,6 +180,13 @@ func (ls *localStorage) Put(ctx context.Context, raw *Raw, data io.Reader) error
 	defer f.Close()
 
 	f.Seek(raw.Offset, 0)
+	if raw.Length > 0 {
+		if _, err = io.CopyN(f, data, raw.Length); err != nil {
+			return err
+		}
+		return nil
+	}
+
 	buf := make([]byte, 256*1024)
 	if _, err = io.CopyBuffer(f, data, buf); err != nil {
 		return err
@@ -186,6 +197,10 @@ func (ls *localStorage) Put(ctx context.Context, raw *Raw, data io.Reader) error
 
 // PutBytes puts the content of key from storage with bytes.
 func (ls *localStorage) PutBytes(ctx context.Context, raw *Raw, data []byte) error {
+	if err := checkPutRaw(raw); err != nil {
+		return err
+	}
+
 	path, err := ls.preparePath(raw.Bucket, raw.Key)
 	if err != nil {
 		return err
@@ -201,10 +216,16 @@ func (ls *localStorage) PutBytes(ctx context.Context, raw *Raw, data []byte) err
 	defer f.Close()
 
 	f.Seek(raw.Offset, 0)
-	if _, err := f.Write(data); err != nil {
-		return err
+	if raw.Length == 0 {
+		if _, err := f.Write(data); err != nil {
+			return err
+		}
+		return nil
 	}
 
+	if _, err := f.Write(data[:raw.Length]); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -269,7 +290,7 @@ func (ls *localStorage) statPath(bucket, key string) (string, os.FileInfo, error
 }
 
 func getLockKey(path string, offset int64) string {
-	return fmt.Sprintf("%s%d", path, offset)
+	return fmt.Sprintf("%s:%d", path, offset)
 }
 
 func checkGetRaw(raw *Raw, fileLength int64) error {
@@ -283,6 +304,13 @@ func checkGetRaw(raw *Raw, fileLength int64) error {
 
 	if fileLength < (raw.Offset + raw.Length) {
 		return errors.Wrapf(ErrRangeNotSatisfiable, "the offset: %d and length: %d is lager than the file length: %d", raw.Offset, raw.Length, fileLength)
+	}
+	return nil
+}
+
+func checkPutRaw(raw *Raw) error {
+	if raw.Length < 0 {
+		return errors.Wrapf(ErrInvalidValue, "the length: %d should not be a negative integer", raw.Length)
 	}
 	return nil
 }
