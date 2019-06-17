@@ -128,6 +128,20 @@ func (s *LocalStorageSuite) TestGetPutBytes(c *check.C) {
 		{
 			putRaw: &Raw{
 				Bucket: "download",
+				Key:    "foo4",
+				Length: 5,
+			},
+			getRaw: &Raw{
+				Bucket: "download",
+				Key:    "foo4",
+			},
+			getErrCheck: IsNilError,
+			data:        []byte("hello foo"),
+			expected:    "hello",
+		},
+		{
+			putRaw: &Raw{
+				Bucket: "download",
 				Key:    "foo0/foo.txt",
 			},
 			getRaw: &Raw{
@@ -169,6 +183,18 @@ func (s *LocalStorageSuite) TestGetPut(c *check.C) {
 		getErrCheck func(error) bool
 		expected    string
 	}{
+		{
+			putRaw: &Raw{
+				Key:    "foo0.meta",
+				Length: 15,
+			},
+			getRaw: &Raw{
+				Key: "foo0.meta",
+			},
+			data:        strings.NewReader("hello meta file"),
+			getErrCheck: IsNilError,
+			expected:    "hello meta file",
+		},
 		{
 			putRaw: &Raw{
 				Key: "foo1.meta",
