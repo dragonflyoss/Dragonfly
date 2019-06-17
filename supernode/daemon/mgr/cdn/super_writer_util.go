@@ -49,7 +49,8 @@ func (cw *superWriter) writerPool(ctx context.Context, wg *sync.WaitGroup, n int
 				}
 
 				// report piece status
-				pieceMd5Value := fmt.Sprintf("%x", pieceMd5.Sum(nil))
+				pieceSum := fmt.Sprintf("%x", pieceMd5.Sum(nil))
+				pieceMd5Value := getPieceMd5Value(pieceSum, job.pieceContentSize+config.PieceWrapSize)
 				if cw.cdnReporter != nil {
 					if err := cw.cdnReporter.reportPieceStatus(ctx, job.taskID, job.pieceNum, pieceMd5Value, config.PieceSUCCESS); err != nil {
 						// NOTE: should we do this job again?

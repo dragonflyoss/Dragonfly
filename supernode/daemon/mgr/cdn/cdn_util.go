@@ -1,6 +1,7 @@
 package cdn
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
@@ -31,4 +32,8 @@ func getUpdateTaskInfo(cdnStatus, realMD5 string, fileLength int64) *types.TaskI
 		FileLength: fileLength,
 		RealMd5:    realMD5,
 	}
+}
+
+func getPieceMd5Value(pieceMd5Sum string, pieceLength int32) string {
+	return fmt.Sprintf("%s:%d", pieceMd5Sum, pieceLength)
 }
