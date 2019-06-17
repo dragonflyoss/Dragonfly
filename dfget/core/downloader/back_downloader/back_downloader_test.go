@@ -68,10 +68,10 @@ func (s *BackDownloaderTestSuite) TestBackDownloader_Run(c *check.C) {
 	dst := path.Join(s.workHome, "back.test")
 
 	cfg := helper.CreateConfig(nil, s.workHome)
+	cfg.RV.RealTarget = dst
+	cfg.URL = "http://" + s.host + "/download.test"
 	bd := &BackDownloader{
-		cfg:    cfg,
-		URL:    "http://" + s.host + "/download.test",
-		Target: dst,
+		cfg: cfg,
 	}
 
 	cfg.Notbs = true
@@ -87,17 +87,17 @@ func (s *BackDownloaderTestSuite) TestBackDownloader_Run(c *check.C) {
 	c.Assert(bd.Run(), check.IsNil)
 
 	bd.cleaned = false
-	bd.Md5 = testFileMd5
+	bd.cfg.Md5 = testFileMd5
 	md5sum := util.Md5Sum(dst)
 	c.Assert(testFileMd5, check.Equals, md5sum)
 
 	// test: realMd5 doesn't equal to expectedMd5
-	bd.Md5 = "x"
+	bd.cfg.Md5 = "x"
 	c.Assert(bd.Run(), check.NotNil)
 
 	// test: realMd5 equals to expectedMd5
 	bd.cleaned = false
-	bd.Md5 = testFileMd5
+	bd.cfg.Md5 = testFileMd5
 	c.Assert(bd.Run(), check.IsNil)
 }
 
@@ -105,10 +105,10 @@ func (s *BackDownloaderTestSuite) TestBackDownloader_Run_NotExist(c *check.C) {
 	dst := path.Join(s.workHome, "back.test")
 
 	cfg := helper.CreateConfig(nil, s.workHome)
+	cfg.RV.RealTarget = dst
+	cfg.URL = "http://" + s.host + "/download1.test"
 	bd := &BackDownloader{
-		cfg:    cfg,
-		URL:    "http://" + s.host + "/download1.test",
-		Target: dst,
+		cfg: cfg,
 	}
 
 	err := bd.Run()
