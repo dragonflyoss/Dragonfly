@@ -101,7 +101,7 @@ func (tm *Manager) Register(ctx context.Context, req *types.TaskCreateRequest) (
 
 	return &types.TaskCreateResponse{
 		ID:         task.ID,
-		FileLength: task.FileLength,
+		FileLength: task.HTTPFileLength,
 		PieceSize:  task.PieceSize,
 	}, nil
 }

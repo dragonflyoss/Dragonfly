@@ -40,8 +40,8 @@ func (cw *superWriter) writerPool(ctx context.Context, wg *sync.WaitGroup, n int
 	for i := 0; i < n; i++ {
 		wg.Add(1)
 		go func(i int) {
-			var pieceMd5 = md5.New()
 			for job := range jobCh {
+				var pieceMd5 = md5.New()
 				if err := cw.writeToFile(ctx, job.pieceContent, job.taskID, job.pieceNum, job.pieceContentSize, job.pieceSize, pieceMd5); err != nil {
 					logrus.Errorf("failed to write taskID %s pieceNum %d file: %v", job.taskID, job.pieceNum, err)
 					// NOTE: should we redo the job?
@@ -65,23 +65,18 @@ func (cw *superWriter) writerPool(ctx context.Context, wg *sync.WaitGroup, n int
 
 // writeToFile wraps the piece content with piece header and tailer,
 // and then writes to the storage.
-func (cw *superWriter) writeToFile(ctx context.Context, bytesBuffer *bytes.Buffer, taskID string, pieceNum int, pieceContSize, PieceSize int32, pieceMd5 hash.Hash) error {
-	bufferLength := bytesBuffer.Len()
-	if bufferLength < 0 {
-		return nil
-	}
-
+func (cw *superWriter) writeToFile(ctx context.Context, bytesBuffer *bytes.Buffer, taskID string, pieceNum int, pieceContSize, pieceSize int32, pieceMd5 hash.Hash) error {
 	var resultBuf = &bytes.Buffer{}
 
 	// write piece header
 	var header = make([]byte, 4)
-	binary.BigEndian.PutUint32(header, getPieceHeader(pieceContSize, PieceSize))
+	binary.BigEndian.PutUint32(header, getPieceHeader(pieceContSize, pieceSize))
 	resultBuf.Write(header)
 
 	// write piece content
 	var pieceContent []byte
-	if bufferLength > 0 {
-		pieceContent = make([]byte, bufferLength)
+	if pieceContSize > 0 {
+		pieceContent = make([]byte, pieceContSize)
 		if _, err := bytesBuffer.Read(pieceContent); err != nil {
 			return err
 		}
@@ -104,6 +99,7 @@ func (cw *superWriter) writeToFile(ctx context.Context, bytesBuffer *bytes.Buffe
 	return cw.cdnStore.Put(ctx, &store.Raw{
 		Bucket: config.DownloadHome,
 		Key:    getDownloadKey(taskID),
-		Offset: int64(pieceNum) * int64(PieceSize),
+		Offset: int64(pieceNum) * int64(pieceSize),
+		Length: int64(pieceContSize) + config.PieceWrapSize,
 	}, resultBuf)
 }
