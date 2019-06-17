@@ -264,8 +264,8 @@ func CheckConnect(ip string, port int, timeout int) (localIP string, e error) {
 }
 
 // IsExpired checks if a resource received or stored is the same.
-func IsExpired(url string, headers map[string]string, lastModified int64, eTag string) (bool, error) {
-	if lastModified <= 0 && IsEmptyStr(eTag) {
+func IsExpired(url string, headers map[string]string, lastModified, eTag string) (bool, error) {
+	if IsEmptyStr(lastModified) && IsEmptyStr(eTag) {
 		return true, nil
 	}
 
@@ -273,8 +273,8 @@ func IsExpired(url string, headers map[string]string, lastModified int64, eTag s
 	if headers == nil {
 		headers = make(map[string]string)
 	}
-	if lastModified > 0 {
-		headers["If-Modified-Since"] = strconv.FormatInt(lastModified, 10)
+	if !IsEmptyStr(lastModified) {
+		headers["If-Modified-Since"] = lastModified
 	}
 	if !IsEmptyStr(eTag) {
 		headers["If-None-Match"] = eTag

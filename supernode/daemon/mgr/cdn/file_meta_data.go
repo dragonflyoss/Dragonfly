@@ -25,7 +25,7 @@ type fileMetaData struct {
 	FileLength   int64  `json:"fileLength"`
 	Md5          string `json:"md5"`
 	RealMd5      string `json:"realMd5"`
-	LastModified int64  `json:"lastModified"`
+	LastModified string `json:"lastModified"`
 	ETag         string `json:"eTag"`
 	Finish       bool   `json:"finish"`
 	Success      bool   `json:"success"`
@@ -114,7 +114,7 @@ func (mm *fileMetaDataManager) updateAccessTime(ctx context.Context, taskID stri
 	return mm.writeFileMetaData(ctx, originMetaData)
 }
 
-func (mm *fileMetaDataManager) updateLastModifiedAndETag(ctx context.Context, taskID string, lastModified int64, eTag string) error {
+func (mm *fileMetaDataManager) updateLastModifiedAndETag(ctx context.Context, taskID, lastModified, eTag string) error {
 	mm.locker.GetLock(taskID, false)
 	defer mm.locker.ReleaseLock(taskID, false)
 

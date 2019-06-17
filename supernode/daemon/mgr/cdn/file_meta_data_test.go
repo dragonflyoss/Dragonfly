@@ -110,7 +110,7 @@ func (s *CDNFileMetaDataTestSuite) TestWriteReadFileMetaData(c *check.C) {
 
 	// update updateFileMetaData
 	updatedFileMetaData := &fileMetaData{
-		LastModified: 1,
+		LastModified: "Sat, 15 Jun 2019 14:40:41 GMT",
 		ETag:         "a275d0ff02eb0e006fa365f2f725b010",
 	}
 	s.metaDataManager.updateLastModifiedAndETag(ctx, task.ID, updatedFileMetaData.LastModified, updatedFileMetaData.ETag)
