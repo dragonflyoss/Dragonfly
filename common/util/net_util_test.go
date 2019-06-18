@@ -202,3 +202,17 @@ func (suite *UtilSuite) TestConvertHeaders(c *check.C) {
 		c.Assert(headers, check.DeepEquals, v.e)
 	}
 }
+
+func (suite *UtilSuite) TestConvertTimeStringToInt(c *check.C) {
+	timeStr := "Fri, 15 Jun 2018 14:40:41 GMT"
+	result, err := ConvertTimeStringToInt(timeStr)
+	c.Check(err, check.IsNil)
+	c.Check(result, check.Equals, int64(1529073641000))
+}
+
+func (suite *UtilSuite) TestConvertTimeIntToString(c *check.C) {
+	timestamp := int64(1529073641000)
+	result, err := ConvertTimeIntToString(timestamp)
+	c.Check(err, check.IsNil)
+	c.Check(result, check.Equals, "Fri, 15 Jun 2018 14:40:41 GMT")
+}

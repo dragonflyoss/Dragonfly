@@ -124,8 +124,5 @@ func checkSameFile(task *types.TaskInfo, metaData *fileMetaData) bool {
 		return metaData.Md5 == task.Md5
 	}
 
-	if cutil.IsEmptyStr(metaData.Md5) {
-		return metaData.Identifier == task.Identifier
-	}
-	return false
+	return metaData.Identifier == task.Identifier
 }
