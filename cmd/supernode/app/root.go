@@ -147,12 +147,17 @@ func runSuperNode() error {
 
 // initLog initializes log Level and log format of daemon.
 func initLog() error {
-	logPath := path.Join(options.HomeDir, "logs", "app.log")
-	err := dflog.InitLog(options.Debug, logPath, fmt.Sprintf("%d", os.Getpid()))
-	if err != nil {
-		logrus.Errorf("failed to initialize logs: %v", err)
+	logFilePath := path.Join(options.HomeDir, "logs", "app.log")
+
+	opts := []dflog.Option{
+		dflog.WithLogFile(logFilePath),
+		dflog.WithSign(fmt.Sprintf("%d", os.Getpid())),
+		dflog.WithDebug(options.Debug),
 	}
-	return err
+
+	logrus.Debugf("use log file %s", logFilePath)
+
+	return errors.Wrap(dflog.Init(logrus.StandardLogger(), opts...), "init log")
 }
 
 // initConfig load configuration from config file.
