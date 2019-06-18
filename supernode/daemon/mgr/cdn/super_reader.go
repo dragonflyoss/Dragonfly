@@ -70,7 +70,9 @@ func (sr *superReader) readFile(ctx context.Context, reader io.Reader, calculate
 		result.pieceCount++
 
 		if calculatePieceMd5 {
-			result.pieceMd5s = append(result.pieceMd5s, fmt.Sprintf("%x", pieceMd5.Sum(nil)))
+			pieceSum := fmt.Sprintf("%x", pieceMd5.Sum(nil))
+			pieceLength := pieceLen + config.PieceWrapSize
+			result.pieceMd5s = append(result.pieceMd5s, getPieceMd5Value(pieceSum, pieceLength))
 			pieceMd5.Reset()
 		}
 	}
