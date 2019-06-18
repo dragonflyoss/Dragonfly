@@ -3,6 +3,7 @@ package cdn
 import (
 	"context"
 	"encoding/json"
+	"strings"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	cutil "github.com/dragonflyoss/Dragonfly/common/util"
@@ -168,12 +169,9 @@ func (mm *fileMetaDataManager) writePieceMD5s(ctx context.Context, taskID, fileM
 	// append the the SHA-1 checksum of pieceMD5s
 	pieceMD5s = append(pieceMD5s, cutil.Sha1(pieceMD5s))
 
-	data, err := json.Marshal(pieceMD5s)
-	if err != nil {
-		return err
-	}
+	pieceMD5Str := strings.Join(pieceMD5s, "\n")
 
-	return mm.fileStore.PutBytes(ctx, getMd5DataRawFunc(taskID), data)
+	return mm.fileStore.PutBytes(ctx, getMd5DataRawFunc(taskID), []byte(pieceMD5Str))
 }
 
 // readPieceMD5s read the md5 file of the taskID and returns the pieceMD5s.
@@ -185,9 +183,7 @@ func (mm *fileMetaDataManager) readPieceMD5s(ctx context.Context, taskID, fileMD
 	if err != nil {
 		return nil, err
 	}
-	if err := json.Unmarshal(bytes, &pieceMD5s); err != nil {
-		return nil, err
-	}
+	pieceMD5s = strings.Split(string(bytes), "\n")
 
 	if cutil.IsEmptySlice(pieceMD5s) {
 		return nil, nil
