@@ -37,6 +37,12 @@ func (pm *Manager) updatePieceProgress(taskID, srcPID string, pieceNum int) erro
 		}
 	}
 
+	// don't add the superPID to pieceState which maintains the information
+	// about which peers the piece currently exists on.
+	if pm.cfg.IsSuperPID(srcPID) {
+		return nil
+	}
+
 	return pstate.add(srcPID)
 }
 
