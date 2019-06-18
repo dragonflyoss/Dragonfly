@@ -174,13 +174,18 @@ func transParams() error {
 func initClientLog() error {
 	logFilePath := path.Join(cfg.WorkHome, "logs", "dfclient.log")
 
-	dflog.InitLog(cfg.Verbose, logFilePath, cfg.Sign)
+	opts := []dflog.Option{
+		dflog.WithLogFile(logFilePath),
+		dflog.WithSign(cfg.Sign),
+		dflog.WithDebug(cfg.Verbose),
+	}
 
 	// once cfg.Console is set, process should also output log to console
 	if cfg.Console {
-		dflog.InitConsoleLog(cfg.Verbose, cfg.Sign)
+		opts = append(opts, dflog.WithConsole())
 	}
-	return nil
+
+	return dflog.Init(logrus.StandardLogger(), opts...)
 }
 
 func initFlags() {

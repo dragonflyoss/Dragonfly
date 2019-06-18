@@ -3,14 +3,11 @@ package app
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"os/user"
 	"path/filepath"
 	"runtime"
-	"syscall"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
@@ -64,70 +61,18 @@ func initLogger(cfg config.Properties) error {
 		return errors.Wrap(err, "get current user")
 	}
 
-	// Set the log level here so the following line will be output normally
-	// to the console, before setting the log file.
-	if cfg.Verbose {
-		logrus.SetLevel(logrus.DebugLevel)
-	}
 	logFilePath := filepath.Join(current.HomeDir, ".small-dragonfly/logs/dfdaemon.log")
+
+	opts := []dflog.Option{
+		dflog.WithLogFile(logFilePath),
+		dflog.WithSign(fmt.Sprintf("%d", os.Getpid())),
+		dflog.WithDebug(cfg.Verbose),
+		dflog.WithConsole(),
+	}
+
 	logrus.Debugf("use log file %s", logFilePath)
 
-	if err := dflog.InitLog(cfg.Verbose, logFilePath, fmt.Sprintf("%d", os.Getpid())); err != nil {
-		return errors.Wrap(err, "init log file")
-	}
-
-	logFile, ok := (logrus.StandardLogger().Out).(*os.File)
-	if !ok {
-		return nil
-	}
-	go func(logFile *os.File) {
-		logrus.Infof("rotate %s every 60 seconds", logFilePath)
-		ticker := time.NewTicker(60 * time.Second)
-		for range ticker.C {
-			if err := rotateLog(logFile); err != nil {
-				logrus.Errorf("failed to rotate log %s: %v", logFile.Name(), err)
-			}
-		}
-	}(logFile)
-
-	return nil
-}
-
-// rotateLog truncates the logs file by a certain amount bytes.
-func rotateLog(logFile *os.File) error {
-	fStat, err := logFile.Stat()
-	if err != nil {
-		return err
-	}
-	logSizeLimit := int64(20 * 1024 * 1024)
-
-	if fStat.Size() <= logSizeLimit {
-		return nil
-	}
-
-	// if it exceeds the 20MB limitation
-	log.SetOutput(ioutil.Discard)
-	// make sure set the output of log back to logFile when error be raised.
-	defer log.SetOutput(logFile)
-	logFile.Sync()
-	truncateSize := logSizeLimit/2 - 1
-	mem, err := syscall.Mmap(int(logFile.Fd()), 0, int(fStat.Size()),
-		syscall.PROT_READ|syscall.PROT_WRITE, syscall.MAP_SHARED)
-	if err != nil {
-		return err
-	}
-	copy(mem[0:], mem[truncateSize:])
-	if err := syscall.Munmap(mem); err != nil {
-		return err
-	}
-	if err := logFile.Truncate(fStat.Size() - truncateSize); err != nil {
-		return err
-	}
-	if _, err := logFile.Seek(truncateSize, 0); err != nil {
-		return err
-	}
-
-	return nil
+	return errors.Wrap(dflog.Init(logrus.StandardLogger(), opts...), "init log")
 }
 
 // cleanLocalRepo checks the files at local periodically, and delete the file when

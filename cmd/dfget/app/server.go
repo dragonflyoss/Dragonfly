@@ -24,6 +24,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
 	"github.com/dragonflyoss/Dragonfly/pkg/dflog"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -77,5 +78,17 @@ func runServer() error {
 
 func initServerLog() error {
 	logFilePath := path.Join(cfg.WorkHome, "logs", "dfserver.log")
-	return dflog.InitLog(cfg.Verbose, logFilePath, cfg.Sign)
+
+	opts := []dflog.Option{
+		dflog.WithLogFile(logFilePath),
+		dflog.WithSign(cfg.Sign),
+		dflog.WithDebug(cfg.Verbose),
+	}
+
+	// once cfg.Console is set, process should also output log to console
+	if cfg.Console {
+		opts = append(opts, dflog.WithConsole())
+	}
+
+	return dflog.Init(logrus.StandardLogger(), opts...)
 }

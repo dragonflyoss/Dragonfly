@@ -20,113 +20,114 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"path"
-	"path/filepath"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 // DefaultLogTimeFormat defines the timestamp format.
 const DefaultLogTimeFormat = "2006-01-02 15:04:05.000"
 
-// InitLog initializes the file logger for process.
-// logfile is used to stored generated log in local filesystem.
-func InitLog(debug bool, logFilePath string, sign string) error {
-	// set the log level
-	logLevel := logrus.InfoLevel
-	if debug {
-		logLevel = logrus.DebugLevel
-	}
+// Option is a functional configuration for the given logrus logger
+type Option func(l *logrus.Logger) error
 
-	// create and log file
-	if err := os.MkdirAll(filepath.Dir(logFilePath), 0755); err != nil {
-		return fmt.Errorf("failed to create log file %s: %v", logFilePath, err)
+// WithDebug sets the log level to debug
+func WithDebug(debug bool) Option {
+	return func(l *logrus.Logger) error {
+		if debug {
+			l.SetLevel(logrus.DebugLevel)
+		}
+		return nil
 	}
-	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
-	if err != nil {
-		return err
-	}
-	logFile.Seek(0, 2)
+}
 
-	// create formatter for default log Logger
-	formatter := &DragonflyFormatter{
-		TimestampFormat: DefaultLogTimeFormat,
-		Sign:            sign,
+func getLumberjack(l *logrus.Logger) *lumberjack.Logger {
+	if logger, ok := l.Out.(*lumberjack.Logger); ok {
+		return logger
 	}
-
-	// set all details in log default logger
-	logrus.SetLevel(logLevel)
-	logrus.SetOutput(logFile)
-	logrus.SetFormatter(formatter)
 	return nil
 }
 
-// InitConsoleLog initializes console logger for process.
-// console log will output the dfget client's log in console/terminal for
-// debugging usage.
-func InitConsoleLog(debug bool, sign string) {
-	formatter := &DragonflyFormatter{
-		TimestampFormat: DefaultLogTimeFormat,
-		Sign:            sign,
-	}
+// WithLogFile sets the logger to output to the given file, with log rotation.
+// If the given file is empty, nothing will be done.
+func WithLogFile(f string) Option {
+	return func(l *logrus.Logger) error {
+		if f == "" {
+			return nil
+		}
 
-	logLevel := logrus.InfoLevel
-	if debug {
-		logLevel = logrus.DebugLevel
-	}
+		if logger := getLumberjack(l); logger == nil {
+			l.SetOutput(&lumberjack.Logger{
+				Filename:   f,
+				MaxSize:    20, // mb
+				MaxBackups: 1,
+			})
+		} else {
+			logger.Filename = f
+		}
 
-	consoleLog := &logrus.Logger{
-		Out:       os.Stdout,
-		Formatter: formatter,
-		Hooks:     make(logrus.LevelHooks),
-		Level:     logLevel,
+		return nil
 	}
-	hook := &ConsoleHook{
-		logger: consoleLog,
-		levels: logrus.AllLevels,
-	}
-	logrus.AddHook(hook)
 }
 
-// CreateLogger creates a Logger.
-func CreateLogger(logPath string, logName string, logLevel string, sign string) (*logrus.Logger, error) {
-	// parse log level
-	level, err := logrus.ParseLevel(logLevel)
-	if err != nil {
-		level = logrus.InfoLevel
+// WithMaxSizeMB sets the max size of log files in MB. If the logger is not configured
+// to use a log file, an error is returned.
+func WithMaxSizeMB(max uint) Option {
+	return func(l *logrus.Logger) error {
+		if logger := getLumberjack(l); logger != nil {
+			logger.MaxSize = int(max)
+			return nil
+		}
+		return errors.Errorf("lumberjack is not configured")
 	}
-
-	// create log file path
-	logFilePath := path.Join(logPath, logName)
-	if err := os.MkdirAll(filepath.Dir(logFilePath), 0755); err != nil {
-		return nil, err
-	}
-
-	// open log file
-	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-	if err != nil {
-		return nil, err
-	}
-
-	logFile.Seek(0, 2)
-	Logger := logrus.New()
-	Logger.Out = logFile
-	Logger.Formatter = &DragonflyFormatter{TimestampFormat: DefaultLogTimeFormat, Sign: sign}
-	Logger.Level = level
-	return Logger, nil
 }
 
-// AddConsoleLog will add a ConsoleLog into Logger's hooks.
-// It will output logs to console when Logger's outputting logs.
-func AddConsoleLog(Logger *logrus.Logger) {
-	consoleLog := &logrus.Logger{
-		Out:       os.Stdout,
-		Formatter: Logger.Formatter,
-		Hooks:     make(logrus.LevelHooks),
-		Level:     Logger.Level,
+// WithConsole add a hook to output logs to stdout
+func WithConsole() Option {
+	return func(l *logrus.Logger) error {
+		consoleLog := &logrus.Logger{
+			Out:       os.Stdout,
+			Formatter: l.Formatter,
+			Hooks:     make(logrus.LevelHooks),
+			Level:     l.Level,
+		}
+		hook := &ConsoleHook{
+			logger: consoleLog,
+			levels: logrus.AllLevels,
+		}
+		l.AddHook(hook)
+		return nil
 	}
-	Logger.Hooks.Add(&ConsoleHook{logger: consoleLog, levels: logrus.AllLevels})
+}
+
+// WithSign sets the sign in formatter
+func WithSign(sign string) Option {
+	return func(l *logrus.Logger) error {
+		l.Formatter = &DragonflyFormatter{
+			TimestampFormat: DefaultLogTimeFormat,
+			Sign:            sign,
+		}
+		return nil
+	}
+}
+
+// Init initializes the logger with given options. If no option is provided,
+// the logger's formatter will be set with an empty sign.
+func Init(l *logrus.Logger, opts ...Option) error {
+	opts = append([]Option{
+		WithSign(""),
+	}, opts...)
+	for _, opt := range opts {
+		if err := opt(l); err != nil {
+			return err
+		}
+	}
+	if logger, ok := l.Out.(*lumberjack.Logger); ok {
+		return logger.Rotate()
+	}
+	return nil
 }
 
 // ConsoleHook shows logs on console.
@@ -206,11 +207,4 @@ func (f *DragonflyFormatter) appendValue(b *bytes.Buffer, value interface{}, wit
 	if withSpace {
 		b.WriteByte(' ')
 	}
-}
-
-// ----------------------------------------------------------------------------
-
-// IsDebug returns the log level is debug.
-func IsDebug(level logrus.Level) bool {
-	return level >= logrus.DebugLevel
 }
