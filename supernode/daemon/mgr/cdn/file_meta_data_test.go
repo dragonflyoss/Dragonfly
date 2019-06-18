@@ -130,7 +130,7 @@ func (s *CDNFileMetaDataTestSuite) TestWriteReadFileMetaData(c *check.C) {
 
 func (s *CDNFileMetaDataTestSuite) TestWriteReadPieceMD5s(c *check.C) {
 	ctx := context.TODO()
-	pieceMD5s := []string{"91fe186ee566659663232dcd18749cce:1502"}
+	pieceMD5s := []string{"91fe186ee566659663232dcd18749cce:1502", "11fe186ee566659663232dcd18749cce:1502"}
 	fileMD5 := "7a19c32d2c75345debe9031cfa9b649a"
 
 	err := s.metaDataManager.writePieceMD5s(ctx, taskID, fileMD5, pieceMD5s)
