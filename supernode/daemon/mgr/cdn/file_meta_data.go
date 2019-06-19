@@ -19,7 +19,7 @@ type fileMetaData struct {
 	URL         string `json:"url"`
 	PieceSize   int32  `json:"pieceSize"`
 	HTTPFileLen int64  `json:"httpFileLen"`
-	Identifier  string `json:"identifier"`
+	Identifier  string `json:"bizId"`
 
 	AccessTime   int64  `json:"accessTime"`
 	Interval     int64  `json:"interval"`
@@ -183,7 +183,7 @@ func (mm *fileMetaDataManager) readPieceMD5s(ctx context.Context, taskID, fileMD
 	if err != nil {
 		return nil, err
 	}
-	pieceMD5s = strings.Split(string(bytes), "\n")
+	pieceMD5s = strings.Split(strings.TrimSpace(string(bytes)), "\n")
 
 	if cutil.IsEmptySlice(pieceMD5s) {
 		return nil, nil

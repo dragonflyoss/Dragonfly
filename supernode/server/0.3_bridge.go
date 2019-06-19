@@ -126,7 +126,9 @@ func (s *Server) pullPieceTask(ctx context.Context, rw http.ResponseWriter, req 
 
 	isFinished, data, err := s.TaskMgr.GetPieces(ctx, taskID, srcCID, request)
 	if err != nil {
-		logrus.Errorf("failed to get pieces %+v: %v", request, err)
+		if errTypes.IsCDNFail(err) {
+			logrus.Errorf("taskID:%s, failed to get pieces %+v: %v", taskID, request, err)
+		}
 		resultInfo := NewResultInfoWithError(err)
 		return EncodeResponse(rw, http.StatusOK, &types.ResultInfo{
 			Code: int32(resultInfo.code),

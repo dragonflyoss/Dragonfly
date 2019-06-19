@@ -149,7 +149,7 @@ func (re *reporter) reportPiecesStatus(ctx context.Context, taskID string, piece
 func (re *reporter) reportPieceStatus(ctx context.Context, taskID string, pieceNum int, md5 string, pieceStatus int) (err error) {
 	defer func() {
 		if err == nil {
-			logrus.Infof("success to report piece status with taskID(%s) pieceNum(%d)", taskID, pieceNum)
+			logrus.Debugf("success to report piece status with taskID(%s) pieceNum(%d)", taskID, pieceNum)
 		}
 	}()
 
