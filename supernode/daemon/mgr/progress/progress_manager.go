@@ -276,6 +276,8 @@ func getSuccessfulPieces(clientBitset, cdnBitset *bitset.BitSet) ([]int, error) 
 // getAvailablePieces gets pieces that has neither been downloaded successfully
 // nor being downloaded and supernode has downloaded it successfully.
 func getAvailablePieces(clientBitset, cdnBitset *bitset.BitSet, runningPieceNums []int) ([]int, error) {
+	clientSucCount := clientBitset.Count()
+	cdnSucCount := cdnBitset.Count()
 	cdnBitset.InPlaceDifference(clientBitset)
 	availablePieces := make(map[int]bool)
 	for i, e := cdnBitset.NextSet(0); e; i, e = cdnBitset.NextSet(i + 1) {
@@ -290,7 +292,8 @@ func getAvailablePieces(clientBitset, cdnBitset *bitset.BitSet, runningPieceNums
 	}
 
 	if len(availablePieces) == 0 {
-		return nil, nil
+		return nil, errors.Wrapf(errorType.ErrPeerWait,
+			"clientSucCount:%d,cdnSucCount:%d", clientSucCount, cdnSucCount)
 	}
 
 	for _, v := range runningPieceNums {

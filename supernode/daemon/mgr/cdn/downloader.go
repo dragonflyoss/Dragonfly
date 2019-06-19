@@ -31,7 +31,7 @@ func (cm *Manager) download(ctx context.Context, taskID, url string, headers map
 		if headers == nil {
 			headers = make(map[string]string)
 		}
-		headers["Range"] = cutil.ConstuctRangeStr(breakRange)
+		headers["Range"] = cutil.ConstructRangeStr(breakRange)
 		checkCode = http.StatusPartialContent
 	}
 
