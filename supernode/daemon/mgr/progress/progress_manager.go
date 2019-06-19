@@ -254,10 +254,10 @@ func (pm *Manager) GetPeerStateByPeerID(ctx context.Context, peerID string) (*mg
 
 	return &mgr.PeerState{
 		PeerID:            peerID,
-		ServiceDownTime:   peerState.serviceDownTime,
-		ClientErrorCount:  peerState.clientErrorCount.Get(),
-		ServiceErrorCount: peerState.serviceErrorCount.Get(),
-		ProducerLoad:      peerState.producerLoad.Get(),
+		ServiceDownTime:   &peerState.serviceDownTime,
+		ClientErrorCount:  peerState.clientErrorCount,
+		ServiceErrorCount: peerState.serviceErrorCount,
+		ProducerLoad:      peerState.producerLoad,
 	}, nil
 }
 

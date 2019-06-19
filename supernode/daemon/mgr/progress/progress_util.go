@@ -123,6 +123,9 @@ func (pm *Manager) updatePeerProgress(taskID, srcPID, dstPID string, pieceNum, p
 			return err
 		}
 		if err == nil {
+			if dstPeerState.producerLoad == nil {
+				dstPeerState.producerLoad = cutil.NewAtomicInt(0)
+			}
 			updateProducerLoad(dstPeerState.producerLoad, taskID, dstPID, pieceNum, pieceStatus)
 		}
 	}
@@ -214,12 +217,6 @@ func processPeerFailInfo(srcPeerState, dstPeerState *peerState) {
 // updateProducerLoad update the load of the clientID.
 // TODO: avoid multiple calls
 func updateProducerLoad(load *cutil.AtomicInt, taskID, peerID string, pieceNum, pieceStatus int) {
-	if load == nil {
-		logrus.Warnf("client load maybe not initialized,taskID: %s,peerID: %s,pieceNum: %d",
-			taskID, peerID, pieceNum)
-		load = cutil.NewAtomicInt(0)
-	}
-
 	// increase the load of peerID when pieceStatus equals PieceRUNNING
 	if pieceStatus == config.PieceRUNNING {
 		load.Add(1)
