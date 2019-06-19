@@ -325,8 +325,8 @@ func GetContentLength(url string, headers map[string]string) (int64, int, error)
 	return resp.ContentLength, resp.StatusCode, nil
 }
 
-// ConstuctRangeStr wrap the rangeStr as a HTTP Range header value.
-func ConstuctRangeStr(rangeStr string) string {
+// ConstructRangeStr wrap the rangeStr as a HTTP Range header value.
+func ConstructRangeStr(rangeStr string) string {
 	return fmt.Sprintf("bytes=%s", rangeStr)
 }
 
