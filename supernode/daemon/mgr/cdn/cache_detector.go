@@ -36,7 +36,7 @@ func (cd *cacheDetector) detectCache(ctx context.Context, task *types.TaskInfo) 
 		checkSameFile(task, metaData) {
 		breakNum = cd.parseBreakNum(ctx, task, metaData)
 	}
-	logrus.Infof("detect cache breakNum: %d", breakNum)
+	logrus.Infof("taskID: %s, detect cache breakNum: %d", task.ID, breakNum)
 
 	if breakNum == 0 {
 		if metaData, err = cd.resetRepo(ctx, task); err != nil {
@@ -80,12 +80,12 @@ func (cd *cacheDetector) parseBreakNumByCheckFile(ctx context.Context, taskID st
 
 	reader, err := cd.cacheStore.Get(ctx, getDownloadRawFunc(taskID))
 	if err != nil {
-		logrus.Errorf("failed to read key file: %s : %v", taskID, err)
+		logrus.Errorf("taskID: %s, failed to read key file: %v", taskID, err)
 		return 0
 	}
 	result, err := cacheReader.readFile(ctx, reader, false, false)
 	if err != nil {
-		logrus.Errorf("read file gets error: %v", err)
+		logrus.Errorf("taskID: %s, read file gets error: %v", taskID, err)
 	}
 	if result != nil {
 		return result.pieceCount

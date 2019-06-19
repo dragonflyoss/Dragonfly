@@ -8,6 +8,8 @@ import (
 	"hash"
 	"io"
 
+	"github.com/pkg/errors"
+
 	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 
@@ -39,19 +41,18 @@ func (sr *superReader) readFile(ctx context.Context, reader io.Reader, calculate
 	}
 
 	for {
-		// read header and get piece content legth
+		// read header and get piece content length
 		ret, err := readHeader(ctx, reader, pieceMd5)
 		if err != nil {
 			if err == io.EOF {
 				return result, nil
 			}
 
-			logrus.Errorf("failed to read header for count %d: %v", result.pieceCount+1, err)
-			return result, err
+			return result, errors.Wrapf(err, "failed to read header for count %d", result.pieceCount+1)
 		}
 		result.fileLength += config.PieceHeadSize
 		pieceLen := getContentLengthByHeader(ret)
-		logrus.Infof("get piece length: %d with count: %d from header", pieceLen, result.pieceCount)
+		logrus.Debugf("get piece length: %d with count: %d from header", pieceLen, result.pieceCount)
 
 		// read content
 		if err := readContent(ctx, reader, pieceLen, pieceMd5, result.fileMd5); err != nil {
@@ -62,8 +63,7 @@ func (sr *superReader) readFile(ctx context.Context, reader io.Reader, calculate
 
 		// read tailer
 		if err := readTailer(ctx, reader, pieceMd5); err != nil {
-			logrus.Errorf("failed to read tailer for count %d: %v", result.pieceCount, err)
-			return result, err
+			return result, errors.Wrapf(err, "failed to read tailer for count %d", result.pieceCount)
 		}
 		result.fileLength++
 

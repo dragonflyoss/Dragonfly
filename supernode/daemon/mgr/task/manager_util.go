@@ -243,7 +243,7 @@ func (tm *Manager) processTaskRunning(ctx context.Context, srcCID, srcPID string
 		return false, nil, errors.Wrapf(errorType.ErrInvalidValue, "failed to convert result: %s and status %s to pieceStatus", req.PieceResult, req.DfgetTaskStatus)
 	}
 
-	logrus.Infof("start to update progress taskID (%s) srcCID (%s) srcPID (%s) dstPID (%s) pieceNum (%d) pieceStatus (%d)",
+	logrus.Debugf("start to update progress taskID (%s) srcCID (%s) srcPID (%s) dstPID (%s) pieceNum (%d) pieceStatus (%d)",
 		task.ID, srcCID, srcPID, req.DstPID, pieceNum, pieceStatus)
 	if err := tm.progressMgr.UpdateProgress(ctx, task.ID, srcCID, srcPID, req.DstPID, pieceNum, pieceStatus); err != nil {
 		return false, nil, errors.Wrap(err, "failed to update progress")
@@ -275,9 +275,9 @@ func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, tas
 	}
 
 	// Step3. whether success
-	cdnSuccess := (task.CdnStatus == types.TaskInfoCdnStatusSUCCESS)
+	cdnSuccess := task.CdnStatus == types.TaskInfoCdnStatusSUCCESS
 	pieceSuccess, _ := tm.progressMgr.GetPieceProgressByCID(ctx, task.ID, clientID, "success")
-	logrus.Infof("get successful pieces: %v", pieceSuccess)
+	logrus.Debugf("taskID: %s, get successful pieces: %v", task.ID, pieceSuccess)
 	if cdnSuccess && (int32(len(pieceSuccess)) == task.PieceTotal) {
 		finishInfo := make(map[string]interface{})
 		finishInfo["md5"] = task.Md5
@@ -286,12 +286,12 @@ func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, tas
 	}
 
 	// get scheduler pieceResult
-	logrus.Infof("start scheduler for taskID: %s clientID: %s", task.ID, clientID)
+	logrus.Debugf("start scheduler for taskID: %s clientID: %s", task.ID, clientID)
 	pieceResult, err := tm.schedulerMgr.Schedule(ctx, task.ID, clientID, dfgetTask.PeerID)
 	if err != nil {
 		return false, nil, err
 	}
-	logrus.Infof("get scheduler result length(%d) with taskID(%s) and clientID(%s)", len(pieceResult), task.ID, clientID)
+	logrus.Debugf("get scheduler result length(%d) with taskID(%s) and clientID(%s)", len(pieceResult), task.ID, clientID)
 
 	var pieceInfos []*types.PieceInfo
 	for _, v := range pieceResult {
