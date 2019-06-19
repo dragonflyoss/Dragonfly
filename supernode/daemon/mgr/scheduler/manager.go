@@ -131,8 +131,9 @@ func (sm *Manager) getPieceResults(ctx context.Context, taskID, clientID, peerID
 	if err != nil {
 		return nil, err
 	}
-	if srcPeerState.ClientErrorCount > config.FailCountLimit {
-		logrus.Warnf("peerID: %s got errors for %d times which reaches error limit: %d for taskID(%s)", peerID, srcPeerState.ClientErrorCount, config.FailCountLimit, taskID)
+	if srcPeerState.ClientErrorCount.Get() > config.FailCountLimit {
+		logrus.Warnf("peerID: %s got errors for %d times which reaches error limit: %d for taskID(%s)",
+			peerID, srcPeerState.ClientErrorCount.Get(), config.FailCountLimit, taskID)
 		useSupernode = true
 	}
 
@@ -191,13 +192,13 @@ func (sm *Manager) tryGetPID(ctx context.Context, taskID string, pieceNum int, p
 		}
 
 		// if the service has been down, and then it should not be needed.
-		if peerState.ServiceDownTime > 0 {
+		if peerState.ServiceDownTime != nil && *(peerState.ServiceDownTime) > 0 {
 			sm.deletePeerIDByPieceNum(ctx, taskID, pieceNum, peerIDs[i])
 			continue
 		}
 
 		// if service has failed for EliminationLimit times, and then it should not be needed.
-		if peerState.ServiceErrorCount >= config.EliminationLimit {
+		if peerState.ServiceErrorCount != nil && peerState.ServiceErrorCount.Get() >= config.EliminationLimit {
 			sm.deletePeerIDByPieceNum(ctx, taskID, pieceNum, peerIDs[i])
 			continue
 		}
@@ -212,8 +213,11 @@ func (sm *Manager) tryGetPID(ctx context.Context, taskID string, pieceNum int, p
 			continue
 		}
 
-		if peerState.ProducerLoad < config.PeerUpLimit {
-			return peerIDs[i]
+		if peerState.ProducerLoad != nil {
+			if peerState.ProducerLoad.Add(1) <= config.PeerUpLimit {
+				return peerIDs[i]
+			}
+			peerState.ProducerLoad.Add(-1)
 		}
 	}
 	return
