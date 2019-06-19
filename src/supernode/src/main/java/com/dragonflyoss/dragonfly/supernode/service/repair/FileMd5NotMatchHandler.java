@@ -129,6 +129,9 @@ public class FileMd5NotMatchHandler extends BaseClientErrorHandler {
             return null;
         }
         List<String> pieceMd5s = fileMetaDataService.readPieceMd5(taskId, meta.getRealMd5());
+        if (pieceMd5s == null) {
+            return null;
+        }
 
         return pieceMd5s.size() > pieceNum ? pieceMd5s.get(pieceNum) : null;
     }

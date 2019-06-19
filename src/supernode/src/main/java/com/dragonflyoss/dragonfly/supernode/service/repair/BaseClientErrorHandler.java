@@ -73,7 +73,7 @@ public abstract class BaseClientErrorHandler implements ClientErrorHandler {
     }
 
     private void removeTask(String taskId) {
-        if (StringUtils.isNoneBlank(taskId)) {
+        if (StringUtils.isNotBlank(taskId)) {
             remover.add(taskId, true);
         }
     }
