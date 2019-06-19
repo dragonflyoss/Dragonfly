@@ -41,7 +41,7 @@ func (cm *Manager) download(ctx context.Context, taskID, url string, headers map
 
 func getWithURL(url string, headers map[string]string, checkCode int) (*http.Response, error) {
 	// TODO: add timeout
-	resp, err := cutil.HTTPGetWithHeaders(url, headers)
+	resp, err := cutil.HTTPGet(url, headers)
 	if err != nil {
 		return nil, err
 	}
