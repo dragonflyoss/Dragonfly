@@ -60,5 +60,5 @@ func (d *downloadAPI) Download(ip string, port int, req *DownloadRequest) (*http
 	headers[config.StrUserAgent] = "dfget/" + version.DFGetVersion
 
 	url := fmt.Sprintf("http://%s:%d%s", ip, port, req.Path)
-	return util.HTTPGetWithHeaders(url, headers)
+	return util.HTTPGet(url, headers)
 }

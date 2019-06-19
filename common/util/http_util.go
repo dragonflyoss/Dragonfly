@@ -18,6 +18,7 @@ package util
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -56,6 +57,21 @@ type SimpleHTTPClient interface {
 	Get(url string, timeout time.Duration) (code int, res []byte, e error)
 	PostJSONWithHeaders(url string, headers map[string]string, body interface{}, timeout time.Duration) (code int, resBody []byte, err error)
 	GetWithHeaders(url string, headers map[string]string, timeout time.Duration) (code int, resBody []byte, err error)
+}
+
+func init() {
+	http.DefaultClient.Transport = &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   3 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
 }
 
 // ----------------------------------------------------------------------------
@@ -192,16 +208,27 @@ func Do(url string, headers map[string]string, timeout time.Duration) (string, e
 	return result, nil
 }
 
-// HTTPGetWithHeaders send an HTTP GET request with headers.
-func HTTPGetWithHeaders(url string, headers map[string]string) (*http.Response, error) {
-	return HTTPWithHeaders("GET", url, headers)
+// HTTPGet send an HTTP GET request with headers.
+func HTTPGet(url string, headers map[string]string) (*http.Response, error) {
+	return HTTPWithHeaders("GET", url, headers, 0)
+}
+
+// HTTPGetTimeout send an HTTP GET request with timeout.
+func HTTPGetTimeout(url string, headers map[string]string, timeout time.Duration) (*http.Response, error) {
+	return HTTPWithHeaders("GET", url, headers, timeout)
 }
 
 // HTTPWithHeaders send an HTTP request with headers and specified method.
-func HTTPWithHeaders(method, url string, headers map[string]string) (*http.Response, error) {
+func HTTPWithHeaders(method, url string, headers map[string]string, timeout time.Duration) (*http.Response, error) {
 	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
 		return nil, err
+	}
+
+	if timeout > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		req = req.WithContext(ctx)
+		defer cancel()
 	}
 
 	for k, v := range headers {
@@ -282,7 +309,7 @@ func IsExpired(url string, headers map[string]string, lastModified int64, eTag s
 	}
 
 	// send request
-	resp, err := HTTPWithHeaders("HEAD", url, headers)
+	resp, err := HTTPGetTimeout(url, headers, 4*time.Second)
 	if err != nil {
 		return false, err
 	}
@@ -300,14 +327,13 @@ func IsSupportRange(url string, headers map[string]string) (bool, error) {
 	headers["Range"] = "bytes=0-0"
 
 	// send request
-	resp, err := HTTPWithHeaders("HEAD", url, headers)
+	resp, err := HTTPGetTimeout(url, headers, 4*time.Second)
 	if err != nil {
 		return false, err
 	}
 	resp.Body.Close()
 
-	acceptRanges := resp.Header.Get("Accept-Ranges")
-	if acceptRanges == "none" && resp.StatusCode == http.StatusPartialContent {
+	if resp.StatusCode == http.StatusPartialContent {
 		return true, nil
 	}
 	return false, nil
@@ -316,7 +342,7 @@ func IsSupportRange(url string, headers map[string]string) (bool, error) {
 // GetContentLength send a head request to get file length.
 func GetContentLength(url string, headers map[string]string) (int64, int, error) {
 	// send request
-	resp, err := HTTPWithHeaders("HEAD", url, headers)
+	resp, err := HTTPGetTimeout(url, headers, 4*time.Second)
 	if err != nil {
 		return 0, 0, err
 	}
