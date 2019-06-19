@@ -18,19 +18,23 @@ package util
 
 import (
 	"bufio"
+	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
 
 const (
 	separator = "&"
+	layoutGMT = "GMT"
 )
 
 var defaultRateLimit = "20M"
@@ -234,6 +238,24 @@ func GetAllIPs() (ipList []string, err error) {
 		}
 	}
 	return
+}
+
+// ConvertTimeStringToInt converts a string time to a int64 timestamp.
+func ConvertTimeStringToInt(timeStr string) (int64, error) {
+	formatTime, err := time.ParseInLocation(http.TimeFormat, timeStr, time.UTC)
+	if err != nil {
+		return 0, err
+	}
+
+	return formatTime.Unix() * int64(1000), nil
+}
+
+// ConvertTimeIntToString converts a int64 timestamp to a string time.
+func ConvertTimeIntToString(timestamp int64) (string, error) {
+	localTime := time.Unix(timestamp/int64(1000), 0)
+	timeString := localTime.UTC().Format(http.TimeFormat)
+
+	return fmt.Sprintf("%s%s", timeString[:len(timeString)-3], layoutGMT), nil
 }
 
 // slice2Map translate a slice to a map with

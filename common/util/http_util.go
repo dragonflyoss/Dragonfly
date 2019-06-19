@@ -274,7 +274,8 @@ func IsExpired(url string, headers map[string]string, lastModified int64, eTag s
 		headers = make(map[string]string)
 	}
 	if lastModified > 0 {
-		headers["If-Modified-Since"] = strconv.FormatInt(lastModified, 10)
+		lastModifiedStr, _ := ConvertTimeIntToString(lastModified)
+		headers["If-Modified-Since"] = lastModifiedStr
 	}
 	if !IsEmptyStr(eTag) {
 		headers["If-None-Match"] = eTag
