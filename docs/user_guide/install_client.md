@@ -18,21 +18,21 @@ You can install from the latest packages we provided.
 
     - If you're in China:
 
-        - [Linux 64-bit](http://dragonflyoss.oss-cn-hangzhou.aliyuncs.com/df-client_0.3.0_linux_amd64.tar.gz): `http://dragonflyoss.oss-cn-hangzhou.aliyuncs.com/df-client_0.3.0_linux_amd64.tar.gz`
+        - [Linux 64-bit](http://dragonflyoss.oss-cn-hangzhou.aliyuncs.com/df-client_0.4.0_linux_amd64.tar.gz): `http://dragonflyoss.oss-cn-hangzhou.aliyuncs.com/df-client_0.4.0_linux_amd64.tar.gz`
 
-        - [MacOS 64-bit](http://dragonflyoss.oss-cn-hangzhou.aliyuncs.com/df-client_0.3.0_darwin_amd64.tar.gz): `http://dragonflyoss.oss-cn-hangzhou.aliyuncs.com/df-client_0.3.0_darwin_amd64.tar.gz`
+        - [MacOS 64-bit](http://dragonflyoss.oss-cn-hangzhou.aliyuncs.com/df-client_0.4.0_darwin_amd64.tar.gz): `http://dragonflyoss.oss-cn-hangzhou.aliyuncs.com/df-client_0.4.0_darwin_amd64.tar.gz`
 
     - If you're not in China:
 
-        - [Linux 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.3.0/df-client_0.3.0_linux_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.3.0/df-client_0.3.0_linux_amd64.tar.gz`
+        - [Linux 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.4.0/df-client_0.4.0_linux_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.4.0/df-client_0.4.0_linux_amd64.tar.gz`
 
-        - [MacOS 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.3.0/df-client_0.3.0_darwin_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.3.0/df-client_0.3.0_darwin_amd64.tar.gz`
+        - [MacOS 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.4.0/df-client_0.4.0_darwin_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.4.0/df-client_0.4.0_darwin_amd64.tar.gz`
 
 2. Unzip the package.
 
     ```bash
     # Replace `xxx` with the installation directory.
-    tar -zxf df-client_0.3.0_linux_amd64.tar.gz -C xxx
+    tar -zxf df-client_0.4.0_linux_amd64.tar.gz -C xxx
     ```
 
 3. Add the directory of `df-client` to your `PATH` environment variable to make sure you can directly use `dfget` and `dfdaemon` command.
@@ -80,5 +80,5 @@ You can also install from the source code.
 Test if the downloading works.
 
     ```sh
-    dfget --url "http://${resourceUrl}" --output ./resource.png --node "127.0.0.1"
+    dfget --url "http://${resourceUrl}" --output ./resource.png --node "127.0.0.1:8002"
     ```
