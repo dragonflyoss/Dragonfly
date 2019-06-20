@@ -1,4 +1,4 @@
-# Downloading Files
+# Downloading Files with Dragonfly
 
 Things are done differently when you download container images and download general files with Dragonfly.
 
@@ -11,19 +11,15 @@ Things are done differently when you download container images and download gene
 
 ## Downloading container images
 
-1. Specify the supernodes.
+1. Config the supernodes with the configuration file.
 
-    a. Open the Dragonfly configuration file.
-
-    ```sh
-    vi /etc/dragonfly.conf
-    ```
-
-    b. Add the IP of supernodes separated by comma to the configuration file.
-
-    ```sh
-    [node]
-    address=nodeIp1,nodeIp2
+    ```shell
+    cat <<EOD > /etc/dragonfly/dfget.yml
+    nodes:
+        - supernode01:port
+        - supernode02:port
+        - supernode03:port
+    EOD
     ```
 
 2. Start the dfget proxy (dfdaemon).
@@ -92,25 +88,25 @@ Things are done differently when you download container images and download gene
     - Specifying with the configuration file.
 
         ```sh
-        # Open the Dragonfly configuration file.
-        vi /etc/dragonfly.conf
-
-        # Add the IP of supernodes separated by comma to the configuration file
-        [node]
-        address=nodeIp1,nodeIp2
-        ```
+        cat <<EOD > /etc/dragonfly/dfget.yml
+        nodes:
+            - supernode01:port
+            - supernode02:port
+            - supernode03:port
+        EOD
+         ```
 
     - Specifying with the parameter in the command line.
 
         ```sh
-        dfget -u "http://www.taobao.com" -o /tmp/test.html --node nodeIp1,nodeIp2
+        dfget -u "http://www.taobao.com" -o /tmp/test.html --node supernode01:port,supernode02:port,supernode03:port
         ```
 
         **Note:** When using this method, you must add the `node` parameter every time when you run the dfget command. And the parameter in the command line takes precedence over the configuration file.
 
 2. Download general files with Dragonfly in one of the following ways.
 
-    - Download files with the default `/etc/dragonfly.conf` configuration.
+    - Download files with the default `/etc/dragonfly/dfget.yml` configuration.
 
         ```sh
         dfget --url "http://xxx.xx.x"
@@ -121,7 +117,7 @@ Things are done differently when you download container images and download gene
     - Download files with your specified supernodes.
 
         ```sh
-        dfget --url "http://xxx.xx.x" --node "127.0.0.1"
+        dfget --url "http://xxx.xx.x" --node "127.0.0.1:8002"
         ```
 
     - Download files to your specified output file.
@@ -133,4 +129,3 @@ Things are done differently when you download container images and download gene
 ## After this Task
 
 To review the downloading log, run `less ~/.small-dragonfly/logs/dfclient.log`.
-

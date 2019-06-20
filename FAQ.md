@@ -19,7 +19,7 @@ While container technologies makes devops life easier most of the time, it sure 
 
 It delivers up to 57 times the throughput of native docker and saves up to 99.5% the out bandwidth of registry(*2).
 
-Dragonfly makes it simple and cost-effective to set up, operate, and scale any kind of files/images/data distribution.
+Dragonfly makes it simple and cost-effective to set up, operate, and scale any kind of files/images/data distribution.
 
 ## Is Dragonfly only designed for distribute container images
 
@@ -266,16 +266,39 @@ You can follow the steps:
 
 - find a failed task: `grep 'download FAIL' dfclient.log`, such as:
 
-  ```
+  ```sh
   2019-05-22 05:40:58.120 INFO sign:38923-1558496382.915 : download FAIL cost:75.208s length:4120442 reason:0
   ```
 
 - get all the logs of this task through the sign `38923-1558496382.915`: `grep 38923-1558496382.915 dfclient.log`, such as:
 
-  ```
+  ```sh
   2019-05-22 05:39:42.919 INFO sign:38923-1558496382.915 : get cmd params:["dfget" "-u" "https://xxx" "-o" "./a.test"]
   ...
   ...
   2019-05-22 05:40:58.120 INFO sign:38923-1558496382.915 : download FAIL cost:75.208s length:4120442 reason:0
   ```
 
+## Can I use self-specified ports for dragonfly
+
+Announce the results firstly, and it is yes.
+
+Here are the port list that dragonfly will use:
+
+Name                           | Default Value | Description
+------------------------------ | ------------- | ----------
+dfdaemon proxy server port     | 65001         | The port that dfdaemon proxy will listen.
+dfget uploader server port     | Random        | The port that the dfget uploader server will listen.
+supernode register port        | 8002          | It's used for clients to register themselves as peers of p2p-network into supernode.
+supernode cdn file server port | 8001          | It's used for clients to download file pieces from supernode.
+
+And each item in the above table can be self-defined.
+
+Name                           | Flag                      | Remark
+------------------------------ | ------------------------- | ----------
+dfdaemon proxy server port     | dfdaemon --port           | The port should   be in the range of 2000-65535.
+dfget uploader server port     | dfget server --port       | You can use command `dfget server` to start a uploader server before using dfget to download if you don't want to use a random port.
+supernode register port        | supernode --port          | You can use `dfget --node IP:port` to register with the specified supernode register port.
+supernode cdn file server port | supernode --download-port | You should prepare a file server firstly and listen on the port that flag `download-port` will use.
+
+**NOTE**: The supernode maintains both Java and Golang versions currently. And the above table is for the Golang version. And you will get a guide [here](https://d7y.io/en-us/docs/userguide/supernode_configuration.html) for Java version.
