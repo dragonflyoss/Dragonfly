@@ -65,7 +65,7 @@ func (sm *Manager) Schedule(ctx context.Context, taskID, clientID, peerID string
 	}
 	logrus.Debugf("scheduler get pieces %v with prioritize for taskID(%s)", pieceNums, taskID)
 
-	return sm.getPieceResults(ctx, taskID, peerID, pieceNums, runningCount)
+	return sm.getPieceResults(ctx, taskID, clientID, peerID, pieceNums, runningCount)
 }
 
 func (sm *Manager) sort(ctx context.Context, pieceNums, runningPieces []int, taskID string) ([]int, error) {
@@ -124,7 +124,7 @@ func (sm *Manager) sortExecutor(ctx context.Context, pieceNums []int, centerNum 
 	})
 }
 
-func (sm *Manager) getPieceResults(ctx context.Context, taskID, peerID string, pieceNums []int, runningCount int) ([]*mgr.PieceResult, error) {
+func (sm *Manager) getPieceResults(ctx context.Context, taskID, clientID, peerID string, pieceNums []int, runningCount int) ([]*mgr.PieceResult, error) {
 	// validate ClientErrorCount
 	var useSupernode bool
 	srcPeerState, err := sm.progressMgr.GetPeerStateByPeerID(ctx, peerID)
@@ -151,6 +151,11 @@ func (sm *Manager) getPieceResults(ctx context.Context, taskID, peerID string, p
 		}
 
 		if dstPID == "" {
+			continue
+		}
+
+		if err := sm.progressMgr.UpdateClientProgress(ctx, taskID, clientID, dstPID, pieceNums[i], config.PieceRUNNING); err != nil {
+			logrus.Warnf("failed to update client progress running for pieceNum(%d) taskID(%s) clientID(%s) dstPID(%s)", pieceNums[i], taskID, clientID, dstPID)
 			continue
 		}
 

@@ -46,7 +46,7 @@ func (pm *Manager) updatePieceProgress(taskID, srcPID string, pieceNum int) erro
 	return pstate.add(srcPID)
 }
 
-// updateClientProgress update the client progress when clientID is not a supernode,
+// updateClientProgress updates the client progress when clientID is not a supernode,
 // otherwise update the super progress.
 func (pm *Manager) updateClientProgress(taskID, srcCID, dstPID string, pieceNum, pieceStatus int) (bool, error) {
 	// update piece bitSet
