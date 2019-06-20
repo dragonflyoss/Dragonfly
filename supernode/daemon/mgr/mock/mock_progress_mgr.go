@@ -66,6 +66,20 @@ func (mr *MockProgressMgrMockRecorder) UpdateProgress(ctx, taskID, srcCID, srcPI
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateProgress", reflect.TypeOf((*MockProgressMgr)(nil).UpdateProgress), ctx, taskID, srcCID, srcPID, dstPID, pieceNum, pieceStatus)
 }
 
+// UpdateClientProgress mocks base method
+func (m *MockProgressMgr) UpdateClientProgress(ctx context.Context, taskID, srcCID, dstPID string, pieceNum, pieceStatus int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateClientProgress", ctx, taskID, srcCID, dstPID, pieceNum, pieceStatus)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateClientProgress indicates an expected call of UpdateClientProgress
+func (mr *MockProgressMgrMockRecorder) UpdateClientProgress(ctx, taskID, srcCID, dstPID, pieceNum, pieceStatus interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateClientProgress", reflect.TypeOf((*MockProgressMgr)(nil).UpdateClientProgress), ctx, taskID, srcCID, dstPID, pieceNum, pieceStatus)
+}
+
 // GetPieceProgressByCID mocks base method
 func (m *MockProgressMgr) GetPieceProgressByCID(ctx context.Context, taskID, clientID, filter string) ([]int, error) {
 	m.ctrl.T.Helper()
