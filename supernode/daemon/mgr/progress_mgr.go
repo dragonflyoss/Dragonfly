@@ -13,16 +13,16 @@ type PeerState struct {
 	PeerID string
 
 	// ProducerLoad is the load of download services provided by the current node.
-	ProducerLoad int32
+	ProducerLoad *cutil.AtomicInt
 
 	// ClientErrorCount maintains the number of times that PeerID failed to downloaded from the other peer nodes.
-	ClientErrorCount int32
+	ClientErrorCount *cutil.AtomicInt
 
 	// ServiceErrorCount maintains the number of times that the other peer nodes failed to downloaded from the PeerID.
-	ServiceErrorCount int32
+	ServiceErrorCount *cutil.AtomicInt
 
 	// ServiceDownTime the down time of the peer service.
-	ServiceDownTime int64
+	ServiceDownTime *int64
 }
 
 // ProgressMgr is responsible for maintaining the correspondence between peer and pieces.
