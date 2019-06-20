@@ -27,20 +27,23 @@ type PeerState struct {
 
 // ProgressMgr is responsible for maintaining the correspondence between peer and pieces.
 type ProgressMgr interface {
-	// InitProgress init the correlation information between peers and pieces, etc.
+	// InitProgress inits the correlation information between peers and pieces, etc.
 	InitProgress(ctx context.Context, taskID, peerID, clientID string) error
 
-	// UpdateProgress update the correlation information between peers and pieces.
+	// UpdateProgress updates the correlation information between peers and pieces.
 	// 1. update the info about srcCID to tell the scheduler that corresponding peer has the piece now.
 	// 2. update the info about dstPID to tell the scheduler that someone has downloaded the piece form here.
 	// Scheduler will calculate the load and times of error/success for every peer to make better decisions.
 	UpdateProgress(ctx context.Context, taskID, srcCID, srcPID, dstPID string, pieceNum, pieceStatus int) error
 
-	// GetPieceProgressByCID get all pieces progress with specified clientID.
+	// UpdateClientProgress updates the info when success to schedule peer srcCID to download from dstPID.
+	UpdateClientProgress(ctx context.Context, taskID, srcCID, dstPID string, pieceNum, pieceStatus int) error
+
+	// GetPieceProgressByCID gets all pieces progress with specified clientID.
 	// The filter parameter depends on the specific implementation.
 	GetPieceProgressByCID(ctx context.Context, taskID, clientID, filter string) (pieceNums []int, err error)
 
-	// DeletePieceProgressByCID delete the pieces progress with specified clientID.
+	// DeletePieceProgressByCID deletes the pieces progress with specified clientID.
 	DeletePieceProgressByCID(ctx context.Context, taskID, clientID string) (err error)
 
 	// GetPeerIDsByPieceNum gets all peerIDs with specified taskID and pieceNum.
@@ -56,9 +59,9 @@ type ProgressMgr interface {
 	// DeletePeerStateByPeerID deletes the peerState by PeerID.
 	DeletePeerStateByPeerID(ctx context.Context, peerID string) error
 
-	// GetPeersByTaskID get all peers info with specified taskID.
+	// GetPeersByTaskID gets all peers info with specified taskID.
 	GetPeersByTaskID(ctx context.Context, taskID string) (peersInfo []*types.PeerInfo, err error)
 
-	// GetBlackInfoByPeerID get black info with specified peerID.
+	// GetBlackInfoByPeerID gets black info with specified peerID.
 	GetBlackInfoByPeerID(ctx context.Context, peerID string) (dstPIDMap *cutil.SyncMap, err error)
 }
