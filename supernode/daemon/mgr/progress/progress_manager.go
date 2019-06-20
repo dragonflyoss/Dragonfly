@@ -67,7 +67,7 @@ func NewManager(cfg *config.Config) (*Manager, error) {
 	}, nil
 }
 
-// InitProgress init the correlation information between peers and pieces, etc.
+// InitProgress inits the correlation information between peers and pieces, etc.
 func (pm *Manager) InitProgress(ctx context.Context, taskID, peerID, clientID string) (err error) {
 	// validate the param
 	if cutil.IsEmptyStr(taskID) {
@@ -100,7 +100,7 @@ func (pm *Manager) InitProgress(ctx context.Context, taskID, peerID, clientID st
 	return pm.peerProgress.add(peerID, newPeerState())
 }
 
-// UpdateProgress update the correlation information between peers and pieces.
+// UpdateProgress updates the correlation information between peers and pieces.
 // NOTE: What if the update failed?
 func (pm *Manager) UpdateProgress(ctx context.Context, taskID, srcCID, srcPID, dstPID string, pieceNum, pieceStatus int) error {
 	if cutil.IsEmptyStr(taskID) {
@@ -152,7 +152,28 @@ func (pm *Manager) UpdateProgress(ctx context.Context, taskID, srcCID, srcPID, d
 	return nil
 }
 
-// GetPieceProgressByCID get all pieces with specified clientID.
+// UpdateClientProgress updates the clientProgress and superProgress.
+func (pm *Manager) UpdateClientProgress(ctx context.Context, taskID, srcCID, dstPID string, pieceNum, pieceStatus int) error {
+	if cutil.IsEmptyStr(taskID) {
+		return errors.Wrap(errorType.ErrEmptyValue, "taskID")
+	}
+	if cutil.IsEmptyStr(srcCID) {
+		return errors.Wrapf(errorType.ErrEmptyValue, "srcCID for taskID:%s", taskID)
+	}
+
+	result, err := pm.updateClientProgress(taskID, srcCID, dstPID, pieceNum, pieceStatus)
+	if err != nil {
+		logrus.Errorf("failed to update ClientProgress taskID(%s) srcCID(%s) dstPID(%s) pieceNum(%d) pieceStatus(%d): %v",
+			taskID, srcCID, dstPID, pieceNum, pieceStatus, err)
+		return err
+	}
+	logrus.Debugf("success to update ClientProgress taskID(%s) srcCID(%s) dstPID(%s) pieceNum(%d) pieceStatus(%d) with result: %t",
+		taskID, srcCID, dstPID, pieceNum, pieceStatus, result)
+
+	return nil
+}
+
+// GetPieceProgressByCID gets all pieces with specified clientID.
 //
 // And the pieceStatus should be one of the `PieceRunning`,`PieceSuccess` and `PieceAvailable`.
 // If not, the `PieceAvailable` will be as the default value.
@@ -185,7 +206,7 @@ func (pm *Manager) GetPieceProgressByCID(ctx context.Context, taskID, clientID, 
 	return getAvailablePieces(clientBitset, cdnBitset, runningPieces)
 }
 
-// DeletePieceProgressByCID delete the pieces progress with specified clientID.
+// DeletePieceProgressByCID deletes the pieces progress with specified clientID.
 func (pm *Manager) DeletePieceProgressByCID(ctx context.Context, taskID, clientID string) (err error) {
 	if pm.cfg.IsSuperCID(clientID) {
 		return pm.superProgress.remove(taskID)
@@ -250,12 +271,12 @@ func (pm *Manager) DeletePeerStateByPeerID(ctx context.Context, peerID string) e
 	return pm.peerProgress.remove(peerID)
 }
 
-// GetPeersByTaskID get all peers info with specified taskID.
+// GetPeersByTaskID gets all peers info with specified taskID.
 func (pm *Manager) GetPeersByTaskID(ctx context.Context, taskID string) (peersInfo []*types.PeerInfo, err error) {
 	return nil, nil
 }
 
-// GetBlackInfoByPeerID get black info with specified peerID.
+// GetBlackInfoByPeerID gets black info with specified peerID.
 func (pm *Manager) GetBlackInfoByPeerID(ctx context.Context, peerID string) (dstPIDMap *cutil.SyncMap, err error) {
 	return pm.clientBlackInfo.GetAsMap(peerID)
 }
