@@ -7,6 +7,9 @@ FAQ contains the frequently asked questions about two aspects:
 
 Techinical question will not be included in FAQ.
 
+Techinical question will not be included in FAQ.
+Techinical question will not be included in FAQ.
+Techinical question will not be included in FAQ.
 ## What is Dragonfly
 
 **Dragonfly is an intelligent P2P based image and file distribution system.**
