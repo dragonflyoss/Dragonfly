@@ -6,10 +6,6 @@ FAQ contains the frequently asked questions about two aspects:
 - Second, underlying concept and thoery.
 
 Techinical question will not be included in FAQ.
-uuuuu
-Techinical question will not be included in FAQ.
-Techinical question will not be included in FAQ.
-Techinical question will not be included in FAQ.
 ## What is Dragonfly
 
 **Dragonfly is an intelligent P2P based image and file distribution system.**
@@ -18,7 +14,7 @@ It aims to resolve issues related to low-efficiency, low-success rate and waste 
 
 In Alibaba, Dragonfly is invoked 2 Billion times and the data distributed is 3.4PB every month. Dragonfly has become one of the most important pieces of infrastructure at Alibaba.
 
-While container technologies makes devops life easier most of the time, it sure brings a some challenges: the efficiency of image distribution, especially when you have to replicate image distribution on several hosts. Dragonfly works extremely well with both Docker and [PouchContainer](https://github.com/alibaba/pouch) for this scenario. It also is compatible with any other container formats.
+While container technologies makes devops life easier most of the time, it sure brings some challenges: the efficiency of image distribution, especially when you have to replicate image distribution on several hosts. Dragonfly works extremely well with both Docker and [PouchContainer](https://github.com/alibaba/pouch) for this scenario. It also is compatible with any other container formats.
 
 It delivers up to 57 times the throughput of native docker and saves up to 99.5% the out bandwidth of registry(*2).
 
@@ -38,7 +34,7 @@ Supernode will maintain a bitmap which records the correspondence between peers 
 
 Supernode will download files and cache them via CDN. For more information, please refer to [The sequence of supernode's CDN functionality](#what-is-the-sequence-of-supernode's-cdn-functionality).
 
-After finishing distributing file from other peers, `dfget` should do two kinds of thing:
+After finishing distributing file from other peers, `dfget` should do two kinds of things:
 
 - first, construct all the pieces into unioned file(s);
 - second, backup the unioned file(s) in configured directory, by default "$HOME/.small-dragonfly/data" with a suffix of ".server";
@@ -48,9 +44,9 @@ After finishing distributing file from other peers, `dfget` should do two kinds 
 
 ## What is the sequence of supernode's CDN functionality
 
-When dfget register a task to supernode, supernode will check whether the file to be downloaded has a cache locally.
+When dfget registers a task to supernode, supernode will check whether the file to be downloaded has a cache locally.
 
-If the file to be downloaded which has not been cached in supernode yet, supernode will do as the following sequence:
+If the file to be downloaded  has not been cached in supernode yet, supernode will do as the following sequence:
 
 - First Step: supernode triggers the downloading task asynchronously:
   - fetch the file/image length;
@@ -66,7 +62,7 @@ In addition, supernode does not have to wait for all the piece downloadings fini
 
 ## What if you kill the dfget server process or delete the source files
 
-If a file on the peer is deleted manually or by GC, the supernode won't know that. And in the subsequent scheduling, if multiple download tasks fail from this peer, the scheduler will add it to blacklist. So do with that if the server process be killed or other abnormal conditions.
+If a file on the peer is deleted manually or by GC, the supernode won't know that. And in the subsequent scheduling, if multiple download tasks fail from this peer, the scheduler will add it to blacklist. So do with that if the server process is killed or other abnormal conditions.
 
 ## What is the peer scheduling algorithm by default
 
@@ -84,7 +80,7 @@ If a file on the peer is deleted manually or by GC, the supernode won't know tha
 
 Dragonfly tries to make block(piece) size dynamically to ensure efficiency.
 
-The size of pieces which is calculated as per the following strategy:
+The size of pieces calculated as the following strategy:
 
 - If file's total size is less than 200MB, then the piece size is `4MB` by default.
 - Otherwise, it equals to `min{ totalSize/100MB + 2 MB, 15MB }`.
@@ -120,7 +116,7 @@ In a P2P network, a peer not only plays a role of downloader, but also plays a r
 - For downloader, peer needs to download block/piece of the file/image from other peers (supernode is one special peer as well);
 - For uploader, peer needs to provide block/piece downloading service for other peers. At this time, other peers downloads block/piece from this peer, and this peer can be treated as an uploader.
 
-Back to question, when a peer finishes to download file/image, while there may be other peers which is still downloading block/piece from this peer. Then this dfget process still exist for the potential uploading service.
+Back to question, when a peer finishes to download file/image, while there may be other peers which is still downloading block/piece from this peer. Then this dfget process still exists for the potential uploading service.
 
 Only when there is no new task to download file/images or no other peers coming to download block/piece from this peer, the dfget process will terminate.
 
