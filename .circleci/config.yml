@@ -58,7 +58,7 @@ jobs:
   
   unit-test-golang:
     docker:
-      - image: circleci/golang:1.10.4
+      - image: circleci/golang:1.12.6
     working_directory: /go/src/github.com/dragonflyoss/Dragonfly
     steps:
       - checkout
@@ -83,7 +83,7 @@ jobs:
 
   api-integration-test-java:
     docker:
-      - image: circleci/golang:1.10.4
+      - image: circleci/golang:1.12.6
     working_directory: /go/src/github.com/dragonflyoss/Dragonfly
     steps:
       - checkout
@@ -100,7 +100,7 @@ jobs:
 
   api-integration-test-golang:
     docker:
-      - image: circleci/golang:1.10.4
+      - image: circleci/golang:1.12.6
     working_directory: /go/src/github.com/dragonflyoss/Dragonfly
     steps:
       - checkout
