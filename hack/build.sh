@@ -3,7 +3,7 @@ DFDAEMON_BINARY_NAME=dfdaemon
 DFGET_BINARY_NAME=dfget
 SUPERNODE_BINARY_NAME=supernode
 PKG=github.com/dragonflyoss/Dragonfly
-BUILD_IMAGE=golang:1.10.4
+BUILD_IMAGE=golang:1.12.6
 VERSION=$(git describe --tags | cut -c 2-)
 LDFLAGS="-X ${PKG}/version.Version=${VERSION}"
 
