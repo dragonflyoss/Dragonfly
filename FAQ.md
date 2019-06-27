@@ -1,11 +1,11 @@
 # Frequently Asked Questions (FAQ)
 
-FAQ contains the frequently asked questions about two aspects:
+FAQ contains some frequently asked questions about two aspects:
 
 - First, user-facing functionalities.
 - Second, underlying concept and thoery.
 
-Techinical question will not be included in FAQ.
+Techinical questiones will not be included in FAQ.
 
 ## What is Dragonfly
 
@@ -13,13 +13,13 @@ Techinical question will not be included in FAQ.
 
 It aims to resolve issues related to low-efficiency, low-success rate and waste of network bandwidth in file transferring process. Especially in large-scale file distribution scenarios such as application distribution, cache distribution, log distribution, image distribution, etc.
 
-In Alibaba, Dragonfly is invoked 2 Billion times and the data distributed is 3.4PB every month. Dragonfly has become one of the most important pieces of infrastructure at Alibaba.
+In Alibaba, Dragonfly is invoked 2 Billion times and the data distributed is 3.4PB every month. Dragonfly has become one of the most important pieces of infrastructure in Alibaba.
 
-While container technologies makes devops life easier most of the time, it sure brings a some challenges: the efficiency of image distribution, especially when you have to replicate image distribution on several hosts. Dragonfly works extremely well with both Docker and [PouchContainer](https://github.com/alibaba/pouch) for this scenario. It also is compatible with any other container formats.
+While container technologies makes devops life easier most of time, it sure brings some challenges: the efficiency of image distribution, especially when you have to replicate image distribution on several hosts. Dragonfly works extremely well with both Docker and [PouchContainer](https://github.com/alibaba/pouch) for this scenario. It also is compatible with any other container formats.
 
 It delivers up to 57 times the throughput of native docker and saves up to 99.5% the out bandwidth of registry(*2).
 
-Dragonfly makes it simple and cost-effective to set up, operate, and scale any kind of files/images/data distribution.
+Dragonfly makes it simple and cost-effective to set up, operate, and scale any kinds of files/images/data distribution.
 
 ## Is Dragonfly only designed for distribute container images
 
@@ -29,25 +29,25 @@ No, Dragonfly can be used to distribute all kinds of files, not only container i
 
 Supernode will maintain a bitmap which records the correspondence between peers and pieces. When dfget starts to download, supernode will return several pieces info (4 by default）according to the scheduler.
 
-**NOTE**: The scheduler will decide whether to download from the supernode or other peers. As for the details of the scheduler, please refer to [scheduler algorithm](#what-is-the-peer-scheduling-algorithm-by-default)
+**NOTE**: The scheduler will decide whether to download from the supernode or other peers. As for the detail of the scheduler, please refer to [scheduler algorithm](#what-is-the-peer-scheduling-algorithm-by-default)
 
 ## How do supernode and peers manage file cache which is ready for other peer's pulling
 
 Supernode will download files and cache them via CDN. For more information, please refer to [The sequence of supernode's CDN functionality](#what-is-the-sequence-of-supernode's-cdn-functionality).
 
-After finishing distributing file from other peers, `dfget` should do two kinds of thing:
+After finishing distributing file from other peers, `dfget` should do two kinds of things:
 
 - first, construct all the pieces into unioned file(s);
-- second, backup the unioned file(s) in configured directory, by default "$HOME/.small-dragonfly/data" with a suffix of ".server";
+- second, backup the unioned file(s) in a configured directory, by default "$HOME/.small-dragonfly/data" with a suffix of ".server";
 - third, move the original unioned file(s) to the destination path.
 
-**NOTE**: The supernode cannot manage the cached file which is already distributed to peer node at all. For that what will happen if the cached file on a peer is deleted, please refer to [What if you kill the dfget server process or delete the source files](#what-if-you-kill-the-dfget-server-process-or-delete-the-source-files)
+**NOTE**: The supernode cannot manage the cached file which is already distributed to peer nodes at all. For  what will happen if the cached file on a peer is deleted, please refer to [What if you kill the dfget server process or delete the source files](#what-if-you-kill-the-dfget-server-process-or-delete-the-source-files)
 
 ## What is the sequence of supernode's CDN functionality
 
-When dfget register a task to supernode, supernode will check whether the file to be downloaded has a cache locally.
+When dfget registers a task to supernode, supernode will check whether the file to be downloaded has a cache locally.
 
-If the file to be downloaded which has not been cached in supernode yet, supernode will do as the following sequence:
+If the file to be downloaded  has not been cached in supernode yet, supernode will do as the following sequence:
 
 - First Step: supernode triggers the downloading task asynchronously:
   - fetch the file/image length;
@@ -57,19 +57,19 @@ If the file to be downloaded which has not been cached in supernode yet, superno
   - supernode finishes to download one piece
   - supernode starts the P2P distribution work for the downloaded one piece among peers;
 
-If the requested file which has already been cached in supernode, supernode will send an HTTP GET request, which contains both HTTP headers `If-None-Match:<eTag>` and `If-Modified-Since:<lastModified>`, to source file network address to determine whether the remote file has been updated.
+If the requested file has already been cached in supernode, supernode will send an HTTP GET request, which contains both HTTP headers `If-None-Match:<eTag>` and `If-Modified-Since:<lastModified>`, to source file network address to determine whether the remote file has been updated.
 
-In addition, supernode does not have to wait for all the piece downloadings finished, so it can concurrently start piece downloading once one piece downloaded.
+In addition, supernode does not have to wait for all the piece downloadings finished, so it can concurrently start pieces downloading once one piece has bean downloaded.
 
-## What if you kill the dfget server process or delete the source files
+## What will happen  if you kill the dfget server process or delete the source files
 
-If a file on the peer is deleted manually or by GC, the supernode won't know that. And in the subsequent scheduling, if multiple download tasks fail from this peer, the scheduler will add it to blacklist. So do with that if the server process be killed or other abnormal conditions.
+If a file on a peer is deleted manually or by GC, the supernode won't know that. And in the subsequent scheduling, if multiple download tasks fail from this peer, the scheduler will add it to a blacklist. So do with that if the server process is killed or other abnormal conditions.
 
 ## What is the peer scheduling algorithm by default
 
-- Distribute the number of pieces evenly. Select the piece with the smallest number in the entire P2P network so that the distribution of each piece in the P2P network is balanced to avoid "Nervous resources".
+- Distribute the number of pieces evenly. Select the pieces with the smallest number in the entire P2P network so that the distribution of each piece in the P2P network is balanced to avoid "Nervous resources".
 
-- Nearest distance priority. For a peer, the piece closest to the piece currently being downloaded is preferentially selected, so that the peer can achieve the effect of sequential read and write approximately which will improve the I/O efficiency of file.
+- Nearest distance priority. For a peer, the piece closest to the piece currently being downloaded is preferentially selected, so that the peer can achieve the effect of sequential read and write approximately, which will improve the I/O efficiency of file.
 
 - Local blacklist and global blacklist. An example is easier to understand: When peer A fails to download from peer B, B will become the local blacklist of A, and then the download tasks of A will filter B out; When the number of failed downloads from B reaches a certain threshold, B will become the global blacklist, and all the download tasks will filter B out.
 
@@ -112,18 +112,18 @@ You can also config it with config files, refer to [link](./docs/cli_reference/d
 
 ## Why does dfget still keep running after file/image distribution finished
 
-In a P2P network, a peer not only plays a role of downloader, but also plays a role of uploader.
+In a P2P network, a peer can not only plays a role of downloader, but also plays a role of uploader.
 
-- For downloader, peer needs to download block/piece of the file/image from other peers (supernode is one special peer as well);
+- For downloader, peer needs to download block/piece of the file/image from other peers (supernode is a special peer as well);
 - For uploader, peer needs to provide block/piece downloading service for other peers. At this time, other peers downloads block/piece from this peer, and this peer can be treated as an uploader.
 
-Back to question, when a peer finishes to download file/image, while there may be other peers which is still downloading block/piece from this peer. Then this dfget process still exist for the potential uploading service.
+Back to question, when a peer finishes to download file/image, while there may be other peers which are still downloading block/piece from this peer. Then this dfget process still exists for the potential uploading service.
 
 Only when there is no new task to download file/images or no other peers coming to download block/piece from this peer, the dfget process will terminate.
 
 ## Do I have to change my container engine configuration to support Dragonfly
 
-Currently Dragonfly supports almost all kinds of container engines, such as Docker, [PouchContainer](https://github.com/alibaba/pouch). When using Dragonfly, only one part of container engine's configuration needs update. It is the `registry-mirrors` configuration. This configuration update aims at making image pulling requests, which does not contain a third-party non-dockerhub registry address, from container engine will all be sent to `dfdaemon` process locally. And dfget does the request translation thing and proxies it to `dfget` locally.
+Currently Dragonfly supports almost all kinds of container engines, such as Docker, [PouchContainer](https://github.com/alibaba/pouch). When using Dragonfly, only one part of container engine's configuration needs to be updated. It is the `registry-mirrors` configuration. This configuration update aims at making image pulling requests, which does not contain a third-party non-dockerhub registry address, from container engine will all be sent to `dfdaemon` process locally. And dfget does the request translation thing and proxies it to `dfget` locally.
 
 Configure container engine's `registry-mirrors` is quite easy. We take docker as an example. Administrator should modify configuration file of docker `/etc/docker/daemon.json` to add the following item:
 
@@ -131,7 +131,7 @@ Configure container engine's `registry-mirrors` is quite easy. We take docker as
 "registry-mirrors": ["http://127.0.0.1:65001"]
 ```
 
-With updating the configuration, request `docker pull mysql:5.6` will be sent to dfdaemon, while request `docker pull a.b.com/mysql:5.6` will not be sent to dfdaemon. Because docker engine only deals official images from docker hub to take advantages of registry mirror. However, if you set `--registry a.b.com` in dfdaemon, and send a request `docker pull mysql:5.6`, dfdaemon will proxy the request and distribute image `mysql:5.6` from registry `a.b.com`.
+With updating the configuration, request `docker pull mysql:5.6` will be sent to dfdaemon, while request `docker pull a.b.com/mysql:5.6` will not be sent to dfdaemon. Because docker engine only deals with official images from docker hub to take advantages of registry mirror. However, if you set `--registry a.b.com` in dfdaemon, and send a request `docker pull mysql:5.6`, dfdaemon will proxy the request and distributes image `mysql:5.6` from registry `a.b.com`.
 
 > Note: please remember restarting container engine after updating configuration.
 
@@ -184,7 +184,7 @@ Because administrator needs to configure `--registry-mirrors=["http://127.0.0.1:
 
 ## Where is the log directory of Dragonfly client dfget
 
-Log is very important for debugging or tracing. `dfget`'s log directory is `$HOME/.small-dragonfly/logs/dfclient.log`.
+Log is very important for debugging and tracing. `dfget`'s log directory is `$HOME/.small-dragonfly/logs/dfclient.log`.
 
 ## Where is the data directory of Dragonfly client dfget
 
@@ -213,7 +213,7 @@ Normally, Dragonfly automatically cleans up files which are not accessed in thre
 Follow these steps to clean up the data directory manually:
 
 - Identify the account to which the residual files belong.
-- Check if there is any running dfget process started by other accounts.
+- Check if there are any running dfget process started by other accounts.
 - If there is such a process, then terminate the process, and start a dfget process with the account identified at Step 1. This process will automatically clean up the residual files from the data directory.
 
 ## Does Dragonfly support pulling images from an HTTPS enabled registry
