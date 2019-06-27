@@ -57,14 +57,14 @@ func ParseFilter(req *http.Request, sortKeyMap map[string]bool) (pageFilter *Pag
 	// pageNum
 	pageNum, err := stoi(v.Get(PAGENUM))
 	if err != nil {
-		return nil, errors.Wrapf(errorType.ErrInvalidValue, "pageNum %s is not a number: %v", pageNum, err)
+		return nil, errors.Wrapf(errorType.ErrInvalidValue, "pageNum %d is not a number: %v", pageNum, err)
 	}
 	pageFilter.PageNum = pageNum
 
 	// pageSize
 	pageSize, err := stoi(v.Get(PAGESIZE))
 	if err != nil {
-		return nil, errors.Wrapf(errorType.ErrInvalidValue, "pageSize %s is not a number: %v", pageSize, err)
+		return nil, errors.Wrapf(errorType.ErrInvalidValue, "pageSize %d is not a number: %v", pageSize, err)
 	}
 	pageFilter.PageSize = pageSize
 
@@ -105,12 +105,12 @@ func stoi(str string) (int, error) {
 func ValidateFilter(pageFilter *PageFilter, sortKeyMap map[string]bool) error {
 	// pageNum
 	if pageFilter.PageNum < 0 {
-		return errors.Wrapf(errorType.ErrInvalidValue, "pageNum %s is not a natural number: %v", pageFilter.PageNum)
+		return errors.Wrapf(errorType.ErrInvalidValue, "pageNum %d is not a natural number", pageFilter.PageNum)
 	}
 
 	// pageSize
 	if pageFilter.PageSize < 0 {
-		return errors.Wrapf(errorType.ErrInvalidValue, "pageSize %s is not a natural number: %v", pageFilter.PageSize)
+		return errors.Wrapf(errorType.ErrInvalidValue, "pageSize %d is not a natural number", pageFilter.PageSize)
 	}
 
 	// sortDirect
