@@ -111,7 +111,7 @@ Actually in Dragonfly, we take two rules serious when committing:
 
 #### Commit Message
 
-Commit message could help reviewers better understand what is the purpose of submitted PR. It could help accelerate the code review procedure as well. We encourage contributors to use **EXPLICIT** commit message rather than ambiguous message. In general, we advocate the following commit message type:
+Commit message could help reviewers better understand what the purpose of submitted PR is. It could help accelerate the code review procedure as well. We encourage contributors to use **EXPLICIT** commit message rather than ambiguous message. In general, we advocate the following commit message type:
 
 * docs: xxxx. For example, "docs: add docs about storage installation".
 * feature: xxxx.For example, "feature: make result show in sorted order".
@@ -135,7 +135,7 @@ Commit content represents all content changes included in one commit. We had bet
 * avoid very large change in a commit;
 * complete and reviewable for each commit.
 
-No matter commit message, or commit content, we do take more emphasis on code review.
+No matter what the commit message, or commit content is, we do take more emphasis on code review.
 
 ### PR Description
 
