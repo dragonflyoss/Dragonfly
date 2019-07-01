@@ -123,7 +123,7 @@ func NewFromConfig(c config.Properties) (*Proxy, error) {
 			if r.UseHTTPS {
 				scheme = "and force https"
 			}
-			logrus.Infof("[%d] proxy %s %s%s", i+1, r.Regx, method, scheme)
+			logrus.Infof("[%d] proxy %s %s %s", i+1, r.Regx, method, scheme)
 		}
 	}
 
@@ -176,7 +176,7 @@ func (proxy *Proxy) mirrorRegistry(w http.ResponseWriter, r *http.Request) {
 func (proxy *Proxy) remoteConfig(host string) *tls.Config {
 	for _, h := range proxy.httpsHosts {
 		if h.Regx.MatchString(host) {
-			config := &tls.Config{}
+			config := &tls.Config{InsecureSkipVerify: h.Insecure}
 			if h.Certs != nil {
 				config.RootCAs = h.Certs.CertPool
 			}
