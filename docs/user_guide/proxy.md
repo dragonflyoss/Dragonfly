@@ -37,12 +37,11 @@ proxies:
 ```
 
 Set HTTP_PROXY for docker daemon in `/etc/systemd/system/docker.service.d/http-proxy.conf`.
-`65002` is the default proxy port for dfdaemon. This can be configured with the
-`--proxyPort` cli parameter of dfdaemon.
+`65001` is the default proxy port for dfdaemon.
 
 ```
 [Service]
-Environment="HTTP_PROXY=http://127.0.0.1:65002"
+Environment="HTTP_PROXY=http://127.0.0.1:65001"
 ```
 
 Set your registry as insecure in `/etc/docker/daemon.json`
@@ -77,7 +76,7 @@ requests that match the proxy rules. This works for any program that
 respects the `HTTP_PROXY` environment variable.
 
 ```
-HTTP_PROXY=http://127.0.0.1:65002 curl http://github.com
+HTTP_PROXY=http://127.0.0.1:65001 curl http://github.com
 ```
 
 HTTPS requests and requests that are not matched, will be proxied directly,
