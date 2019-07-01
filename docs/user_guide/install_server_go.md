@@ -125,7 +125,7 @@ docker run -d --name dfsupernode -p 8002:8002 -v /home/admin/supernode:/home/adm
 
     ```sh
     telnet 127.0.0.1 8001
-    telent 127.0.0.1 8002
+    telnet 127.0.0.1 8002
     ```
 
 - Install the Dragonfly client and test if the downloading works.
