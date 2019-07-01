@@ -1,29 +1,34 @@
 # Dragonfly Quick Start
 
-Dragonfly Quick Start document aims to help you to quick start Dragonfly journey. This experiement is quite easy and simplified.
+Dragonfly Quick Start document aims to help you to quick start Dragonfly journey. This experiment is quite easy and simplified.
 
 If you are using Dragonfly in your production environment to handle production image distribution, please refer to supernode and dfget's detailed production parameter configuration.
 
 ## Prerequisites
 
-All steps in this document are done on the same machine using the docker container, so make sure the docker container engine is installed and started on your machine. You can also refer to the documentation: [multi-machine deployment] (../userguide/multi_machines_deployment.md) to experience Dragonfly.
+All steps in this document are done on the same machine using the docker container, so make sure the docker container engine is installed and started on your machine. You can also refer to the documentation: [multi-machine deployment](../user_guide/multi_machines_deployment.md) to experience Dragonfly.
 
 ## Step 1: Deploy Dragonfly Server (SuperNode)
 
 ```bash
-docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 \
-    dragonflyoss/supernode:0.4.0 -Dsupernode.advertiseIp=127.0.0.1
+docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 dragonflyoss/supernode:0.4.1
 ```
 
-> **NOTE**: `supernode.advertiseIp` should be the ip that clients can connect to, `127.0.0.1` here is an example for testing, and it can only be used if the server and client are in the same machine.
+**NOTE**:
+
+- If dfclient cannot connect to supernode directly, you can specify parameter `--advertise-ip` when supernode starts. This ip address must be accessible from dfclient. If this parameter is not specified, supernode will advertise its first non-loop address.
 
 ## Step 2：Deploy Dragonfly Client (dfclient)
 
 ```bash
-docker run -d --name dfclient -p 65001:65001 dragonflyoss/dfclient:0.4.0 --registry https://index.docker.io
+SUPERNODE_IP=`docker inspect supernode -f '{{.NetworkSettings.Networks.bridge.IPAddress}}'`
+docker run -d --name dfclient -p 65001:65001 dragonflyoss/dfclient:0.4.1 --registry https://index.docker.io --node $SUPERNODE_IP
 ```
 
-**NOTE**: The `--registry` parameter specifies the mirrored image registry address, and `https://index.docker.io` is the address of official image registry, you can also set it to the others.
+**NOTE**:
+
+- The `--registry` parameter specifies the mirrored image registry address, and `https://index.docker.io` is the address of official image registry, you can also set it to the others.
+- The `--node` parameter specifies the supernode's ip address. Here we use `docker inspect` to get the ip of supernode container. Since the supernode container exposes its ports, you can specify this parameter to node ip address as well.
 
 ## Step 3. Configure Docker Daemon
 
