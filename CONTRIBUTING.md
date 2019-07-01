@@ -139,7 +139,7 @@ No matter what the commit message, or commit content is, we do take more emphasi
 
 ### PR Description
 
-PR is the only way to make change to Dragonfly project flies. To help reviewers better get your purpose, PR description could not be too detailed. We encourage contributors to follow the [PR template](./.github/PULL_REQUEST_TEMPLATE.md) to finish the pull request.
+PR is the only way to make change to Dragonfly project files. To help reviewers better get your purpose, PR description could not be too detailed. We encourage contributors to follow the [PR template](./.github/PULL_REQUEST_TEMPLATE.md) to finish the pull request.
 
 ### Developing Environment
 
