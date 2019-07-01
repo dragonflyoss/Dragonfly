@@ -60,7 +60,7 @@ In details, Dragonfly has the following features:
 
 For Dragonfly, no matter how many clients start the file downloading, the average downloading time is almost stable without increasement (12s in experiment, which means it only takes 12s in total for all client to finish downloading file/image).
 
-And for wget, the downloading time keeps increasing when you have more clients. As the amount of wget clients reaches 1200 (in following experiment), the file source will crash, then it can not serve any client.
+And for wget, the downloading time keeps increasing when you have more clients. As the number of wget clients reaches 1200 (in following experiment), the file source will crash, then it can not serve any client.
 
 The following table shows the testing environment and the graph shows the comparison result.
 
