@@ -19,6 +19,12 @@ USE_DOCKER?=0 # Default: build components in the local environment.
 # Assign the Dragonfly version to DF_VERSION as the image tag.
 DF_VERSION?=latest # Default: use latest as the image tag which built by docker.
 
+# Default: in order to use go mod we have to export GO111MODULE=on.
+export GO111MODULE=on
+
+# Default: use GOPROXY to speed up downloading go mod dependency.
+export GOPROXY=https://goproxy.io
+
 clean:
 	@echo "Begin to clean redundant files."
 	@rm -rf ./bin
@@ -94,12 +100,32 @@ unit-test: build-dirs
 	./hack/unit-test.sh
 .PHONY: unit-test
 
+integration-test:
+	@go test ./test
+.PHONY: integration-test
+
 check:
 	@echo "Begin to check code formats."
 	./hack/check.sh
 	@echo "Begin to check dockerd whether is startup"
 	./hack/check-docker.sh
 .PHONY: check
+
+go-mod-tidy:
+	@echo "Begin to tidy up go.mod and go.sum"
+	@go mod tidy
+.PHONY: go-mod-tidy
+
+# we need this because currently gometalinter can't work in go mod environment.
+go-mod-vendor:
+	@echo "Begin to vendor go mod dependency"
+	@go mod vendor
+.PHONY: go-mod-vendor
+
+check-go-mod: go-mod-tidy
+	@echo "Begin to check for unused/missing packages in go.mod"
+	@git diff --exit-code -- go.sum go.mod
+.PHONY: check-go-mod
 
 docs:
 	@echo "Begin to generate docs of API/CLI"
