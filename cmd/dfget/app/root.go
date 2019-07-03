@@ -56,6 +56,7 @@ var rootCmd = &cobra.Command{
 	Use:               "dfget",
 	Short:             "client of Dragonfly used to download and upload files",
 	Long:              dfgetDescription,
+	Args:              cobra.MinimumNArgs(1),
 	DisableAutoGenTag: true, // disable displaying auto generation tag in cli docs
 	Example:           dfgetExample(),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -87,7 +88,6 @@ func runDfget() error {
 		return err
 	}
 
-	checkParameters()
 	logrus.Infof("get cmd params:%q", os.Args)
 
 	if err := config.AssertConfig(cfg); err != nil {
@@ -103,13 +103,6 @@ func runDfget() error {
 		os.Exit(err.Code)
 	}
 	return nil
-}
-
-func checkParameters() {
-	if len(os.Args) < 2 {
-		fmt.Println("Please use the command 'help' to show the help information.")
-		os.Exit(0)
-	}
 }
 
 // load config from property files.
