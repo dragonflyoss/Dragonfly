@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"path"
 	"path/filepath"
 
@@ -27,7 +28,8 @@ import (
 )
 
 type FileUtilTestSuite struct {
-	tmpDir string
+	tmpDir   string
+	username string
 }
 
 func init() {
@@ -36,6 +38,9 @@ func init() {
 
 func (s *FileUtilTestSuite) SetUpSuite(c *check.C) {
 	s.tmpDir, _ = ioutil.TempDir("/tmp", "dfget-FileUtilTestSuite-")
+	if u, e := user.Current(); e == nil {
+		s.username = u.Username
+	}
 }
 
 func (s *FileUtilTestSuite) TearDownSuite(c *check.C) {
@@ -58,7 +63,11 @@ func (s *FileUtilTestSuite) TestCreateDirectory(c *check.C) {
 	os.Chmod(dirPath, 0555)
 	defer os.Chmod(dirPath, 0755)
 	err = CreateDirectory(path.Join(dirPath, "1"))
-	c.Assert(err, check.NotNil)
+	if s.username != "root" {
+		c.Assert(err, check.NotNil)
+	} else {
+		c.Assert(err, check.IsNil)
+	}
 }
 
 func (s *FileUtilTestSuite) TestPathExists(c *check.C) {
@@ -210,7 +219,11 @@ func (s *FileUtilTestSuite) TestMd5sum(c *check.C) {
 	pathStr := path.Join(s.tmpDir, "TestMd5Sum")
 	_, _ = OpenFile(pathStr, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0000)
 	pathStrMd5 := Md5Sum(pathStr)
-	c.Assert(pathStrMd5, check.Equals, "")
+	if s.username != "root" {
+		c.Assert(pathStrMd5, check.Equals, "")
+	} else {
+		c.Assert(pathStrMd5, check.Equals, "d41d8cd98f00b204e9800998ecf8427e")
+	}
 
 	pathStr = path.Join(s.tmpDir, "TestMd5SumDir")
 	os.Mkdir(pathStr, 0755)
