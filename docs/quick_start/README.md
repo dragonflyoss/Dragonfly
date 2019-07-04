@@ -20,10 +20,10 @@ docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 \
 ## Step 2：Deploy Dragonfly Client (dfclient)
 
 ```bash
-docker run -d --name dfclient -p 65001:65001 dragonflyoss/dfclient:0.4.0 --registry https://index.docker.io
+docker run -d --name dfclient -v /etc/localtime:/etc/localtime:ro -p 65001:65001 dragonflyoss/dfclient:0.4.0 --registry https://index.docker.io
 ```
 
-**NOTE**: The `--registry` parameter specifies the mirrored image registry address, and `https://index.docker.io` is the address of official image registry, you can also set it to the others.
+**NOTE**: The `--registry` parameter specifies the mirrored image registry address,`-v /etc/localtime:/etc/localtime:ro` makes docker container and the host time synchronization,and `https://index.docker.io` is the address of official image registry, you can also set it to the others.
 
 ## Step 3. Configure Docker Daemon
 
