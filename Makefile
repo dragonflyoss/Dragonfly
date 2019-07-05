@@ -30,14 +30,9 @@ build-dirs:
 .PHONY: build-dirs
 
 build: build-dirs
-	@echo "Begin to build dfget and dfdaemon and supernode." 
+	@echo "Begin to build dfget and dfdaemon and supernode."
 	./hack/build.sh
 .PHONY: build
-
-build-java: build-client
-	@echo "Begin to build dfget and dfdaemon and java version supernode." 
-	./hack/build-supernode.sh
-.PHONY: build-java
 
 build-client: build-dirs
 	@echo "Begin to build dfget and dfdaemon."
@@ -49,11 +44,6 @@ build-supernode: build-dirs
 	@echo "Begin to build supernode."
 	./hack/build.sh supernode
 .PHONY: build-supernode
-
-build-supernode-java: build-dirs
-	@echo "Begin to build java version supernode."
-	./hack/build-supernode.sh
-.PHONY: build-supernode-java
 
 install:
 	@echo "Begin to install dfget and dfdaemon and supernode."
@@ -86,13 +76,13 @@ uninstall-supernode:
 .PHONY: uninstall-supernode
 
 docker-build:
-	@echo "Begin to use docker build dfcient and supernode images."
+	@echo "Begin to use docker build dfclient and supernode images."
 	./hack/docker-build.sh
 .PHONY: docker-build
 
 docker-build-client:
-	@echo "Begin to use docker build dfcient image."
-	./hack/docker-build.sh dfclient 
+	@echo "Begin to use docker build dfclient image."
+	./hack/docker-build.sh dfclient
 .PHONY: docker-build-client
 
 docker-build-supernode:
@@ -106,9 +96,9 @@ unit-test: build-dirs
 
 check:
 	@echo "Begin to check code formats."
-	./hack/check.sh	
-	@echo "Begin to check java version supernode code formats."
-	./hack/check-supernode.sh
+	./hack/check.sh
+	@echo "Begin to check dockerd whether is startup"
+	./hack/check-docker.sh
 .PHONY: check
 
 docs:
