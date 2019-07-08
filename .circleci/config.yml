@@ -7,7 +7,7 @@ jobs:
     docker:
       # this image is build from Dockerfile
       # https://github.com/pouchcontainer/pouchlinter/blob/master/Dockerfile
-      - image: pouchcontainer/pouchlinter:v0.1.2
+      - image: pouchcontainer/pouchlinter:v0.2.1
     working_directory: /go/src/github.com/dragonflyoss/Dragonfly
     steps:
       - checkout
@@ -39,7 +39,7 @@ jobs:
 
   gocode-check-via-gometalinter-swagger:
     docker:
-      - image: pouchcontainer/pouchlinter:v0.1.2
+      - image: pouchcontainer/pouchlinter:v0.2.1
     working_directory: /go/src/github.com/dragonflyoss/Dragonfly
     steps:
       - checkout
