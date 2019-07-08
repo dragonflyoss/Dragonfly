@@ -55,7 +55,7 @@ jobs:
           name: detect deadcode without test folder
           command: |
             gometalinter --disable-all --skip vendor --skip test -E deadcode ./...
-  
+
   unit-test-golang:
     docker:
       - image: circleci/golang:1.12.6
@@ -81,24 +81,7 @@ jobs:
           name: rm coverage.txt
           command: rm coverage.txt
 
-  api-integration-test-java:
-    docker:
-      - image: circleci/golang:1.12.6
-    working_directory: /go/src/github.com/dragonflyoss/Dragonfly
-    steps:
-      - checkout
-      - run:
-          name: start supernode daemon background & run all integration test cases in test
-          command: |
-            echo "install maven and jdk8"
-            sudo apt-get update > /dev/null 2>&1
-            sudo apt-get install openjdk-8-jdk maven > /dev/null 2>&1
-            echo "building..."
-            make build-java > /dev/null
-            echo "start integration test with java version supernode..."
-            go test ./test --args --java-version=true
-
-  api-integration-test-golang:
+  api-integration-test:
     docker:
       - image: circleci/golang:1.12.6
     working_directory: /go/src/github.com/dragonflyoss/Dragonfly
@@ -111,7 +94,7 @@ jobs:
             make build > /dev/null
             echo "start integration test..."
             go test ./test
-           
+
 workflows:
   version: 2
   ci:
@@ -119,5 +102,4 @@ workflows:
       - markdownlint-misspell-shellcheck
       - unit-test-golang
       - gocode-check-via-gometalinter-swagger
-      - api-integration-test-java
-      - api-integration-test-golang
+      - api-integration-test

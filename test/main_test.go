@@ -12,10 +12,6 @@ import (
 	"github.com/go-check/check"
 )
 
-func init() {
-	flag.BoolVar(&environment.UseJavaVersion, "java-version", false, "whether to run integration test with java version supernode")
-}
-
 var (
 	// A apiClient is a Dragonfly supernode API client.
 	apiClient *client.APIClient

@@ -1,13 +1,11 @@
 services:
   - docker
 sudo: false
-language: java
-jdk:
-  - oraclejdk8
+language: go
+go:
+  - 1.12.x
 script:
-  - ./hack/check-supernode.sh
-  - ./hack/build-supernode.sh
-  # - (cd ./build/client && ./configure && make unit-test) && export LOG_HOME=/tmp/supernode && ./build/build.sh
+  - make docker-build
 
 # after_success:
 #   - bash <(curl -s https://codecov.io/bash) || echo "Failed to report code coverage!"

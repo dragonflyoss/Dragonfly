@@ -27,11 +27,11 @@ create-dirs() {
 }
 
 build-local() {
-    test -f "${BUILD_SOURCE_HOME}/${BUILD_PATH}/$1" && rm -f "${BUILD_SOURCE_HOME}/${BUILD_PATH}/$1"	
-    cd "${BUILD_SOURCE_HOME}/cmd/$2" || return	
+    test -f "${BUILD_SOURCE_HOME}/${BUILD_PATH}/$1" && rm -f "${BUILD_SOURCE_HOME}/${BUILD_PATH}/$1"
+    cd "${BUILD_SOURCE_HOME}/cmd/$2" || return
     go build -o "${BUILD_SOURCE_HOME}/${BUILD_PATH}/$1" -ldflags "${LDFLAGS}"
     chmod a+x "${BUILD_SOURCE_HOME}/${BUILD_PATH}/$1"
-    echo "BUILD: $2 in ${BUILD_SOURCE_HOME}/${BUILD_PATH}/$1" 
+    echo "BUILD: $2 in ${BUILD_SOURCE_HOME}/${BUILD_PATH}/$1"
 }
 
 build-dfdaemon-local(){
@@ -62,7 +62,7 @@ build-docker() {
         -w /go/src/${PKG}                                                 \
         ${BUILD_IMAGE}                                                    \
         go install -v -pkgdir /go/pkg -ldflags "${LDFLAGS}" ./cmd/"$2"
-    echo "BUILD: dfget in ${BUILD_SOURCE_HOME}/${BUILD_PATH}/$1"	
+    echo "BUILD: dfget in ${BUILD_SOURCE_HOME}/${BUILD_PATH}/$1"
 }
 
 build-dfdaemon-docker(){
@@ -79,7 +79,7 @@ build-supernode-docker() {
 
 main() {
     create-dirs
-    if [ "1" == "${USE_DOCKER}" ]
+    if [[ "1" == "${USE_DOCKER}" ]]
     then
         echo "Begin to build with docker."
         case "$1" in

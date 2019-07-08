@@ -7,9 +7,6 @@ import (
 	"github.com/dragonflyoss/Dragonfly/client"
 )
 
-// UseJavaVersion whether to run integration test with java version supernode
-var UseJavaVersion bool
-
 var (
 	// SupernodeListenPort is the port that supernode will listen.
 	SupernodeListenPort = 8008
