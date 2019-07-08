@@ -147,7 +147,7 @@ As a contributor, if you want to make any contribution to Dragonfly project, we 
 Here are some dependents with specific version:
 
 * golang : v1.12.6
-* swagger : 0.17.1
+* swagger : 0.19.0
 * markdownlint : v0.5.0
 * misspell : latest
 * shellCheck : latest
