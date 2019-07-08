@@ -60,6 +60,9 @@ type Properties struct {
 	// LocalLimit rate limit about a single download task,format: 20M/m/K/k.
 	LocalLimit int `yaml:"localLimit"`
 
+	// Minimal rate about a single download task,format: 20M/m/K/k.
+	MinRate int `yaml:"minRate"`
+
 	// TotalLimit rate limit about the whole host,format: 20M/m/K/k.
 	TotalLimit int `yaml:"totalLimit"`
 
@@ -75,6 +78,7 @@ func NewProperties() *Properties {
 	return &Properties{
 		Nodes:           []string{DefaultNode},
 		LocalLimit:      DefaultLocalLimit,
+		MinRate:         DefaultMinRate,
 		ClientQueueSize: DefaultClientQueueSize,
 	}
 }
@@ -138,6 +142,9 @@ type Config struct {
 
 	// LocalLimit rate limit about a single download task,format: 20M/m/K/k.
 	LocalLimit int `json:"localLimit,omitempty"`
+
+	// Minimal rate about a single download task,format: 20M/m/K/k.
+	MinRate int `json:"minRate,omitempty"`
 
 	// TotalLimit rate limit about the whole host,format: 20M/m/K/k.
 	TotalLimit int `json:"totalLimit,omitempty"`

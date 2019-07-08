@@ -49,6 +49,7 @@ const (
 	DefaultIniConfigFile   = "/etc/dragonfly.conf"
 	DefaultNode            = "127.0.0.1"
 	DefaultLocalLimit      = 20 * 1024 * 1024
+	DefaultMinRate         = 64 * 1024
 	DefaultClientQueueSize = 6
 )
 
