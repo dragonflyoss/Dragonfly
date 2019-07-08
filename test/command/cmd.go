@@ -36,10 +36,9 @@ import (
 )
 
 var (
-	dfgetPath       string
-	dfdaemonPath    string
-	supernodePath   string
-	supernodeGoPath string
+	dfgetPath     string
+	dfdaemonPath  string
+	supernodePath string
 )
 
 func init() {
@@ -58,8 +57,7 @@ func init() {
 
 	dfgetPath = fp.Join(binDir, "dfget")
 	dfdaemonPath = fp.Join(binDir, "dfdaemon")
-	supernodePath = fp.Join(sourceDir, "src", "supernode", "target", "supernode.jar")
-	supernodeGoPath = fp.Join(binDir, "supernode")
+	supernodePath = fp.Join(binDir, "supernode")
 }
 
 func checkExist(s string) {
@@ -75,11 +73,7 @@ func checkExist(s string) {
 func NewStarter(name string) *Starter {
 	checkExist(dfgetPath)
 	checkExist(dfdaemonPath)
-	if environment.UseJavaVersion {
-		checkExist(supernodePath)
-	} else {
-		checkExist(supernodeGoPath)
-	}
+	checkExist(supernodePath)
 
 	home, err := ioutil.TempDir("/tmp", "df-"+name+"-")
 	if err != nil {
@@ -135,31 +129,18 @@ func (s *Starter) getCmdGo(dir string, running time.Duration, args ...string) (c
 	args = append([]string{
 		"--home-dir=" + dir,
 		"--port=" + strconv.Itoa(environment.SupernodeListenPort),
+		"--advertise-ip=127.0.0.1",
 		"--debug",
 	}, args...)
 
-	return s.execCmd(running, supernodeGoPath, args...)
-}
-
-func (s *Starter) getCmdJava(dir string, running time.Duration, args ...string) (cmd *exec.Cmd, err error) {
-	args = append([]string{
-		"-Dsupernode.baseHome=" + dir,
-		"-Dserver.port=" + strconv.Itoa(environment.SupernodeListenPort),
-		"-jar", supernodePath,
-	}, args...)
-
-	return s.execCmd(running, "java", args...)
+	return s.execCmd(running, supernodePath, args...)
 }
 
 // Supernode starts supernode.
 func (s *Starter) Supernode(running time.Duration, args ...string) (
 	cmd *exec.Cmd, err error) {
 	dir := fp.Join(s.Home, "supernode")
-	if environment.UseJavaVersion {
-		cmd, err = s.getCmdJava(dir, running, args...)
-	} else {
-		cmd, err = s.getCmdGo(dir, running, args...)
-	}
+	cmd, err = s.getCmdGo(dir, running, args...)
 	if err != nil {
 		return nil, err
 	}
