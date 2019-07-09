@@ -39,6 +39,7 @@ import (
 var (
 	localLimit string
 	totalLimit string
+	minRate    string
 	filter     string
 )
 
@@ -132,6 +133,10 @@ func initProperties() {
 		cfg.LocalLimit = properties.LocalLimit
 	}
 
+	if cfg.MinRate == 0 {
+		cfg.MinRate = properties.MinRate
+	}
+
 	if cfg.TotalLimit == 0 {
 		cfg.TotalLimit = properties.TotalLimit
 	}
@@ -149,6 +154,10 @@ func transParams() error {
 	var err error
 	if cfg.LocalLimit, err = transLimit(localLimit); err != nil {
 		return errHandler.Wrapf(errors.ErrConvertFailed, "locallimit: %v", err)
+	}
+
+	if cfg.MinRate, err = transLimit(minRate); err != nil {
+		return errHandler.Wrapf(errors.ErrConvertFailed, "minrate: %v", err)
 	}
 
 	if cfg.TotalLimit, err = transLimit(totalLimit); err != nil {
@@ -184,9 +193,11 @@ func initFlags() {
 	flagSet.StringVarP(&cfg.Output, "output", "o", "",
 		"Destination path which is used to store the requested downloading file. It must contain detailed directory and specific filename, for example, '/tmp/file.mp4'")
 
-	// localLimit & totalLimit & timeout
+	// localLimit & minRate & totalLimit & timeout
 	flagSet.StringVarP(&localLimit, "locallimit", "s", "",
 		"network bandwidth rate limit for single download task, in format of 20M/m/K/k")
+	flagSet.StringVar(&minRate, "minrate", "",
+		"minimal network bandwidth rate for downloading a file, in format of 20M/m/K/k")
 	flagSet.StringVar(&totalLimit, "totallimit", "",
 		"network bandwidth rate limit for the whole host, in format of 20M/m/K/k")
 	flagSet.IntVarP(&cfg.Timeout, "timeout", "e", 0,
