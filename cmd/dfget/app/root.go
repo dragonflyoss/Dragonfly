@@ -196,7 +196,7 @@ func initFlags() {
 	// localLimit & minRate & totalLimit & timeout
 	flagSet.StringVarP(&localLimit, "locallimit", "s", "",
 		"network bandwidth rate limit for single download task, in format of 20M/m/K/k")
-	flagSet.StringVarP(&minRate, "minrate", "x", "",
+	flagSet.StringVar(&minRate, "minrate", "",
 		"minimal network bandwidth rate for downloading a file, in format of 20M/m/K/k")
 	flagSet.StringVar(&totalLimit, "totallimit", "",
 		"network bandwidth rate limit for the whole host, in format of 20M/m/K/k")
