@@ -9,14 +9,15 @@ COPY . /go/src/github.com/dragonflyoss/Dragonfly
 # write the resulting executable to the dir /opt/dragonfly/df-supernode.
 RUN make build-supernode && make install-supernode
 
-FROM nginx:1.16-alpine
+FROM dragonflyoss/nginx:apline
 
 RUN apk --no-cache add ca-certificates bash
 
+COPY --from=builder /go/src/github.com/dragonflyoss/Dragonfly/hack/start-supernode.sh /root/start.sh
 COPY --from=builder /go/src/github.com/dragonflyoss/Dragonfly/hack/supernode-nginx.conf /etc/nginx/nginx.conf
 COPY --from=builder /opt/dragonfly/df-supernode/supernode /opt/dragonfly/df-supernode/supernode
 
 # supernode will listen 8001,8002 in default.
 EXPOSE 8001 8002
 
-ENTRYPOINT [ "sh", "-c", "nginx && /opt/dragonfly/df-supernode/supernode" ]
+ENTRYPOINT /root/start.sh $0 $@
