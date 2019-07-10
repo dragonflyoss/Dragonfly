@@ -302,3 +302,11 @@ supernode register port        | supernode --port          | You can use `dfget 
 supernode cdn file server port | supernode --download-port | You should prepare a file server firstly and listen on the port that flag `download-port` will use.
 
 **NOTE**: The supernode maintains both Java and Golang versions currently. And the above table is for the Golang version. And you will get a guide [here](https://d7y.io/en-us/docs/userguide/supernode_configuration.html) for Java version.
+
+## Why the time in the log is wrong
+
+If you are in China,docker container uses UTC time(Coordinated Universal Time) and the host uses CST time(China Shanghai Time).So the log's time is 8 hours behind the host time.If you want to make their time consistent,you should add a config `-v /etc/localtime:/etc/localtime:ro` before you start a container.For example,you can run a command as follows to start a dfclient.
+
+```sh
+ docker run -d --name dfclient -v /etc/localtime:/etc/localtime:ro -p 65001:65001 dragonflyoss/dfclient:0.4.0 --registry https://index.docker.io
+```
