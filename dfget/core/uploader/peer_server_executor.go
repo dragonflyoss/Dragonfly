@@ -75,6 +75,7 @@ func (pe *peerServerExecutor) StartPeerServerProcess(cfg *config.Config) (port i
 
 	cmd := exec.Command(os.Args[0], "server",
 		"--ip", cfg.RV.LocalIP,
+		"--port", strconv.Itoa(cfg.RV.PeerPort),
 		"--meta", cfg.RV.MetaPath,
 		"--data", cfg.RV.SystemDataDir,
 		"--expiretime", cfg.RV.DataExpireTime.String(),
