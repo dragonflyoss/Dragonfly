@@ -20,4 +20,4 @@ COPY --from=builder /opt/dragonfly/df-supernode/supernode /opt/dragonfly/df-supe
 # supernode will listen 8001,8002 in default.
 EXPOSE 8001 8002
 
-ENTRYPOINT /root/start.sh $0 $@
+ENTRYPOINT ["/root/start.sh"]
