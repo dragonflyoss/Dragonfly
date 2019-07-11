@@ -44,22 +44,9 @@ func initRoute(s *Server) *mux.Router {
 	}
 
 	if s.Config.Debug || s.Config.EnableProfiler {
-		profilerSetup(r)
+		r.PathPrefix("/debug/pprof/").HandlerFunc(pprof.Index)
 	}
 	return r
-}
-
-func profilerSetup(mainRouter *mux.Router) {
-	var r = mainRouter.PathPrefix("/debug/").Subrouter()
-	r.HandleFunc("/pprof/", pprof.Index)
-	r.HandleFunc("/pprof/cmdline", pprof.Cmdline)
-	r.HandleFunc("/pprof/profile", pprof.Profile)
-	r.HandleFunc("/pprof/symbol", pprof.Symbol)
-	r.HandleFunc("/pprof/trace", pprof.Trace)
-	r.HandleFunc("/pprof/block", pprof.Handler("block").ServeHTTP)
-	r.HandleFunc("/pprof/heap", pprof.Handler("heap").ServeHTTP)
-	r.HandleFunc("/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
-	r.HandleFunc("/pprof/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
 }
 
 func filter(handler Handler, s *Server) http.HandlerFunc {

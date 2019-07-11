@@ -18,16 +18,15 @@ package handler
 
 import (
 	"net/http"
-	"net/http/pprof"
+	// pprof will inject handlers for users to profile this program
+	_ "net/http/pprof"
 )
 
-// New returns a new handler for dfdaemon
+// New returns a new http mux for dfdaemon
 func New() *http.ServeMux {
-	s := http.NewServeMux()
+	s := http.DefaultServeMux
 	s.HandleFunc("/args", getArgs)
-	s.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-	s.HandleFunc("/debug/pprof/", pprof.Index)
-	s.HandleFunc("/debug/version", getVersion)
 	s.HandleFunc("/env", getEnv)
+	s.HandleFunc("/debug/version", getVersion)
 	return s
 }
