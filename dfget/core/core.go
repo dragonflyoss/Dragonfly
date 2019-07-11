@@ -103,7 +103,9 @@ func prepare(cfg *config.Config) (err error) {
 	rv.DataDir = cfg.RV.SystemDataDir
 
 	cfg.Node = adjustSupernodeList(cfg.Node)
-	rv.LocalIP = checkConnectSupernode(cfg.Node)
+	if cutil.IsEmptyStr(rv.LocalIP) {
+		rv.LocalIP = checkConnectSupernode(cfg.Node)
+	}
 	rv.Cid = getCid(rv.LocalIP, cfg.Sign)
 	rv.TaskFileName = getTaskFileName(rv.RealTarget, cfg.Sign)
 	rv.TaskURL = cutil.FilterURLParam(cfg.URL, cfg.Filter)

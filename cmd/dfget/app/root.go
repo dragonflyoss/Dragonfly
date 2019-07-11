@@ -236,7 +236,11 @@ func initFlags() {
 	flagSet.BoolVar(&cfg.Verbose, "verbose", false,
 		"be verbose")
 
-	// pass to server
+	// pass to peer server which as a uploader server
+	flagSet.StringVar(&cfg.RV.LocalIP, "ip", "",
+		"IP address that server will listen on")
+	flagSet.IntVar(&cfg.RV.PeerPort, "port", 0,
+		"port number that server will listen on")
 	flagSet.DurationVar(&cfg.RV.DataExpireTime, "expiretime", config.DataExpireTime,
 		"caching duration for which cached file keeps no accessed by any process, after this period cache file will be deleted")
 	flagSet.DurationVar(&cfg.RV.ServerAliveTime, "alivetime", config.ServerAliveTime,
