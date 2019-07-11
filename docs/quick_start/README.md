@@ -2,7 +2,7 @@
 
 Dragonfly Quick Start document aims to help you to quick start Dragonfly journey. This experiment is quite easy and simplified.
 
-If you are using Dragonfly in your production environment to handle production image distribution, please refer to supernode and dfget's detailed production parameter configuration.
+If you are using Dragonfly in your **production environment** to handle production image distribution, please refer to supernode and dfget's detailed production parameter configuration.
 
 ## Prerequisites
 
