@@ -91,7 +91,7 @@ func (s *Server) Start() error {
 	}
 
 	server := &http.Server{
-		Handler:           router,
+		Handler:           router.router,
 		ReadTimeout:       time.Minute * 10,
 		ReadHeaderTimeout: time.Minute * 10,
 		IdleTimeout:       time.Minute * 10,

@@ -68,3 +68,10 @@ const (
 	// CDNWriterRoutineLimit 4
 	CDNWriterRoutineLimit = 4
 )
+
+const (
+	// Namespace is the prefix of the metrics' name of dragonfly
+	Namespace = "dragonfly"
+	// Subsystem represents metrics for supernode
+	Subsystem = "supernode"
+)
