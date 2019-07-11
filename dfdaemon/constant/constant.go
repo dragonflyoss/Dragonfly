@@ -44,3 +44,10 @@ const (
 	// DefaultConfigPath the default path of dfdaemon configuration file.
 	DefaultConfigPath = "/etc/dragonfly/dfdaemon.yml"
 )
+
+const (
+	// Namespace is the prefix of the metrics' name of dragonfly
+	Namespace = "dragonfly"
+	// Subsystem represents metrics for dfdaemon
+	Subsystem = "dfdaemon"
+)

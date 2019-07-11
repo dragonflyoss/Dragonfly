@@ -10,14 +10,21 @@ import (
 	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // versionMatcher defines to parse version url path.
 const versionMatcher = "/v{version:[0-9.]+}"
 
-func initRoute(s *Server) *mux.Router {
-	r := mux.NewRouter()
+// metricsRouter is a wrapper for mux.Router and metrics.
+type metricsRouter struct {
+	router  *mux.Router
+	metrics *metrics
+}
 
+func initRoute(s *Server) *metricsRouter {
+	r := mux.NewRouter()
+	router := &metricsRouter{r, newMetrics()}
 	handlers := []*HandlerSpec{
 		// system
 		{Method: http.MethodGet, Path: "/_ping", HandlerFunc: s.ping},
@@ -40,18 +47,21 @@ func initRoute(s *Server) *mux.Router {
 	// register API
 	for _, h := range handlers {
 		if h != nil {
-			r.Path(versionMatcher + h.Path).Methods(h.Method).Handler(filter(h.HandlerFunc, s))
-			r.Path(h.Path).Methods(h.Method).Handler(filter(h.HandlerFunc, s))
+			r.Path(versionMatcher + h.Path).Methods(h.Method).Handler(router.metrics.instrumentHandler(versionMatcher+h.Path, filter(h.HandlerFunc)))
+			r.Path(h.Path).Methods(h.Method).Handler(router.metrics.instrumentHandler(h.Path, filter(h.HandlerFunc)))
 		}
 	}
+
+	// metrics
+	r.Handle("/metrics", router.metrics.instrumentHandler("/metrics", promhttp.Handler().ServeHTTP))
 
 	if s.Config.Debug || s.Config.EnableProfiler {
 		r.PathPrefix("/debug/pprof/").HandlerFunc(pprof.Index)
 	}
-	return r
+	return router
 }
 
-func filter(handler Handler, s *Server) http.HandlerFunc {
+func filter(handler Handler) http.HandlerFunc {
 	pctx := context.Background()
 
 	return func(w http.ResponseWriter, req *http.Request) {
