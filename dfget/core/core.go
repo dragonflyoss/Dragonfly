@@ -262,6 +262,10 @@ func checkConnectSupernode(nodes []string) (localIP string) {
 
 func calculateTimeout(fileLength int64, defaultTimeoutSecond int, minRate int) time.Duration {
 	timeout := 5 * 60
+	// avoid trigger panic when minRate equals zero
+	if minRate <= 0 {
+		minRate = config.DefaultMinRate
+	}
 
 	if defaultTimeoutSecond > 0 {
 		timeout = defaultTimeoutSecond
