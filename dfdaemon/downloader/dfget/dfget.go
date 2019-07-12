@@ -73,6 +73,10 @@ func (dfGetter *DFGetter) getCommand(
 		args = append(args, "--notbs")
 	}
 
+	if dfGetter.config.Verbose {
+		args = append(args, "--verbose")
+	}
+
 	add := func(key, value string) {
 		if v := strings.TrimSpace(value); v != "" {
 			args = append(args, key, v)
