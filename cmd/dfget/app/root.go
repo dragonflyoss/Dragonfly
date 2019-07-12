@@ -76,13 +76,14 @@ func runDfget() error {
 		return err
 	}
 
-	// get config from property files
-	initProperties()
-
 	if err := transParams(); err != nil {
 		util.Printer.Println(err.Error())
 		return err
 	}
+
+	// get config from property files
+	initProperties()
+
 	if err := handleNodes(); err != nil {
 		util.Printer.Println(err.Error())
 		return err
