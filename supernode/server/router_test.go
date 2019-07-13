@@ -1,16 +1,20 @@
 package server
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
+	"runtime"
 	"strconv"
 	"testing"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/apis/types"
 	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
+	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/go-check/check"
 )
@@ -46,6 +50,13 @@ func (rs *RouterTestSuite) SetUpSuite(c *check.C) {
 	}
 	s, err := New(testConf)
 	c.Check(err, check.IsNil)
+	version.DFVersion = &types.DragonflyVersion{
+		Version:   "test",
+		Revision:  "test",
+		Arch:      runtime.GOARCH,
+		OS:        runtime.GOOS,
+		GoVersion: runtime.Version(),
+	}
 	router := initRoute(s)
 	rs.listener, err = net.Listen("tcp", rs.addr)
 	c.Check(err, check.IsNil)
@@ -80,4 +91,21 @@ func (rs *RouterTestSuite) TestDebugHandler(c *check.C) {
 		c.Check(err, check.IsNil)
 		c.Assert(code, check.Equals, tc.code)
 	}
+}
+
+func (rs *RouterTestSuite) TestVersionHandler(c *check.C) {
+	code, res, err := cutil.Get("http://"+rs.addr+"/version", 0)
+	c.Check(err, check.IsNil)
+	c.Assert(code, check.Equals, 200)
+
+	expectDFVersion, err := json.Marshal(&types.DragonflyVersion{
+		Version:   "test",
+		Revision:  "test",
+		Arch:      runtime.GOARCH,
+		OS:        runtime.GOOS,
+		GoVersion: runtime.Version(),
+	})
+
+	c.Check(err, check.IsNil)
+	c.Check(string(expectDFVersion), check.Equals, string(res))
 }

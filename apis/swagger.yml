@@ -44,6 +44,20 @@ paths:
         500:
           $ref: "#/responses/500ErrorResponse"
 
+  /version:
+    get:
+      summary: "Get version and build information"
+      description: |
+        Get version and build information, including GoVersion, OS,
+        Arch, Version, BuildDate, and GitCommit.
+      responses:
+        200:
+          description: "no error"
+          schema:
+            $ref: "#/definitions/DragonflyVersion"
+        500:
+          $ref: "#/responses/500ErrorResponse"
+
   /peer/registry:
     post:
       summary: "registry a task"
@@ -566,6 +580,30 @@ definitions:
     properties:
       message:
         type: string
+
+  DragonflyVersion:
+    type: "object"
+    description: |
+      Version and build information of Dragonfly components.
+    properties:
+      Version:
+        type: "string"
+        description: "Version of Dragonfly components"
+      Revision:
+        type: "string"
+        description: "Git commit when building Dragonfly components"
+      BuildDate:
+        type: "string"
+        description: "Build Date of Dragonfly components"
+      GoVersion:
+        type: "string"
+        description: "Golang runtime version"
+      OS:
+        type: "string"
+        description: "Dragonfly components's operating system"
+      Arch:
+        type: "string"
+        description: "Dragonfly components's architecture target"
 
   ResultInfo: 
     type: "object"

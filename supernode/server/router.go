@@ -7,6 +7,7 @@ import (
 	"net/http/pprof"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
+	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/gorilla/mux"
 )
@@ -20,6 +21,7 @@ func initRoute(s *Server) *mux.Router {
 	handlers := []*HandlerSpec{
 		// system
 		{Method: http.MethodGet, Path: "/_ping", HandlerFunc: s.ping},
+		{Method: http.MethodGet, Path: "/version", HandlerFunc: version.HandlerWithCtx},
 
 		// v0.3
 		{Method: http.MethodPost, Path: "/peer/registry", HandlerFunc: s.registry},

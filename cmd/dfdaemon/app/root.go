@@ -18,7 +18,6 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -29,14 +28,13 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfdaemon"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
-	"github.com/dragonflyoss/Dragonfly/version"
+
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
-
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v2"
 )
 
 var rootCmd = &cobra.Command{
@@ -45,11 +43,6 @@ var rootCmd = &cobra.Command{
 	Long:              "The dfdaemon is a proxy between container engine and registry used for pulling images.",
 	DisableAutoGenTag: true, // disable displaying auto generation tag in cli docs
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if viper.GetBool("version") {
-			fmt.Println("dfdaemon version:", version.DFDaemonVersion)
-			return nil
-		}
-
 		if err := readConfigFile(viper.GetViper(), cmd); err != nil {
 			return errors.Wrap(err, "read config file")
 		}
@@ -83,7 +76,6 @@ func init() {
 
 	rf := rootCmd.Flags()
 
-	rf.BoolP("version", "v", false, "version")
 	rf.String("config", constant.DefaultConfigPath, "the path of dfdaemon's configuration file")
 
 	rf.Bool("verbose", false, "verbose")
