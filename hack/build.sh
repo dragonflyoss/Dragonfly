@@ -4,8 +4,10 @@ DFGET_BINARY_NAME=dfget
 SUPERNODE_BINARY_NAME=supernode
 PKG=github.com/dragonflyoss/Dragonfly
 BUILD_IMAGE=golang:1.12.6
-VERSION=$(git describe --tags | cut -c 2-)
-LDFLAGS="-X ${PKG}/version.Version=${VERSION}"
+VERSION=$(git describe --tags "$(git rev-list --tags --max-count=1)")
+REVISION=$(git rev-parse --short HEAD)
+DATE=$(date "+%Y%m%d-%H:%M:%S")
+LDFLAGS="-X ${PKG}/version.version=${VERSION:1} -X ${PKG}/version.revision=${REVISION} -X ${PKG}/version.buildDate=${DATE}"
 
 curDir=$(cd "$(dirname "$0")" && pwd)
 cd "${curDir}" || return
