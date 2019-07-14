@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"io/ioutil"
 	"math/rand"
 	"net"
@@ -32,7 +33,7 @@ func init() {
 type RouterTestSuite struct {
 	addr     string
 	listener net.Listener
-	router   *metricsRouter
+	router   *mux.Router
 }
 
 func (rs *RouterTestSuite) SetUpSuite(c *check.C) {
@@ -63,7 +64,7 @@ func (rs *RouterTestSuite) SetUpSuite(c *check.C) {
 	rs.router = initRoute(s)
 	rs.listener, err = net.Listen("tcp", rs.addr)
 	c.Check(err, check.IsNil)
-	go http.Serve(rs.listener, rs.router.router)
+	go http.Serve(rs.listener, rs.router)
 }
 
 func (rs *RouterTestSuite) TearDownSuite(c *check.C) {
@@ -119,7 +120,7 @@ func (rs *RouterTestSuite) TestHTTPMetrics(c *check.C) {
 	c.Check(err, check.IsNil)
 	c.Assert(code, check.Equals, 200)
 
-	counter := rs.router.metrics.requestCounter
+	counter := m.requestCounter
 	c.Assert(1, check.Equals,
 		int(prom_testutil.ToFloat64(counter.WithLabelValues("/metrics", strconv.Itoa(http.StatusOK)))))
 

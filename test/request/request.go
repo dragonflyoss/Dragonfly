@@ -90,7 +90,7 @@ func Delete(endpoint string, opts ...Option) (*http.Response, error) {
 
 // Debug sends request to the default pouchd server to get the debug info.
 //
-// NOTE: without any vesion information.
+// NOTE: without any version information.
 func Debug(endpoint string) (*http.Response, error) {
 	apiClient, err := newAPIClient(environment.DragonflyAddress, environment.TLSConfig)
 	if err != nil {
