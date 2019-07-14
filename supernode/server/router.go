@@ -16,15 +16,10 @@ import (
 // versionMatcher defines to parse version url path.
 const versionMatcher = "/v{version:[0-9.]+}"
 
-// metricsRouter is a wrapper for mux.Router and metrics.
-type metricsRouter struct {
-	router  *mux.Router
-	metrics *metrics
-}
+var m = newMetrics()
 
-func initRoute(s *Server) *metricsRouter {
+func initRoute(s *Server) *mux.Router {
 	r := mux.NewRouter()
-	router := &metricsRouter{r, newMetrics()}
 	handlers := []*HandlerSpec{
 		// system
 		{Method: http.MethodGet, Path: "/_ping", HandlerFunc: s.ping},
@@ -42,23 +37,27 @@ func initRoute(s *Server) *metricsRouter {
 		{Method: http.MethodDelete, Path: "/peers/{id}", HandlerFunc: s.deRegisterPeer},
 		{Method: http.MethodGet, Path: "/peers/{id}", HandlerFunc: s.getPeer},
 		{Method: http.MethodGet, Path: "/peers", HandlerFunc: s.listPeers},
+
+		{Method: http.MethodGet, Path: "/metrics", HandlerFunc: handleMetrics},
 	}
 
 	// register API
 	for _, h := range handlers {
 		if h != nil {
-			r.Path(versionMatcher + h.Path).Methods(h.Method).Handler(router.metrics.instrumentHandler(versionMatcher+h.Path, filter(h.HandlerFunc)))
-			r.Path(h.Path).Methods(h.Method).Handler(router.metrics.instrumentHandler(h.Path, filter(h.HandlerFunc)))
+			r.Path(versionMatcher + h.Path).Methods(h.Method).Handler(m.instrumentHandler(h.Path, filter(h.HandlerFunc)))
+			r.Path(h.Path).Methods(h.Method).Handler(m.instrumentHandler(h.Path, filter(h.HandlerFunc)))
 		}
 	}
-
-	// metrics
-	r.Handle("/metrics", router.metrics.instrumentHandler("/metrics", promhttp.Handler().ServeHTTP))
 
 	if s.Config.Debug || s.Config.EnableProfiler {
 		r.PathPrefix("/debug/pprof/").HandlerFunc(pprof.Index)
 	}
-	return router
+	return r
+}
+
+func handleMetrics(ctx context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
+	promhttp.Handler().ServeHTTP(rw, req)
+	return nil
 }
 
 func filter(handler Handler) http.HandlerFunc {
