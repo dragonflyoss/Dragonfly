@@ -16,7 +16,6 @@
 
 package app
 
-import "C"
 import (
 	"fmt"
 	"os"
