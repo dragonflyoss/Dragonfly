@@ -29,6 +29,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -109,6 +110,9 @@ type ServiceDownFuncType func(ip string, taskID string, cid string) (*types.Base
 // ClientErrorFuncType function type of SupernodeAPI#ReportClientError
 type ClientErrorFuncType func(ip string, req *types.ClientErrorRequest) (*types.BaseResponse, error)
 
+//StatusFuncType function type of SupernodeAPI#Ping
+type StatusFuncType func(ip string) (*types.BaseResponse, error)
+
 // MockSupernodeAPI mock SupernodeAPI
 type MockSupernodeAPI struct {
 	RegisterFunc    RegisterFuncType
@@ -116,9 +120,20 @@ type MockSupernodeAPI struct {
 	ReportFunc      ReportFuncType
 	ServiceDownFunc ServiceDownFuncType
 	ClientErrorFunc ClientErrorFuncType
+	StatusFunc      StatusFuncType
 }
 
 var _ api.SupernodeAPI = &MockSupernodeAPI{}
+
+//Status implements SupernodeAPI#Ping
+//TODO[yunfeiyangbuaa]:add a ping test
+func (m *MockSupernodeAPI) Status(ip string) (
+	*types.BaseResponse, error) {
+	if m.StatusFunc != nil {
+		return m.StatusFunc(ip)
+	}
+	return nil, nil
+}
 
 // Register implements SupernodeAPI#Register
 func (m *MockSupernodeAPI) Register(ip string, req *types.RegisterRequest) (

@@ -18,6 +18,7 @@ package downloader
 
 import (
 	"bytes"
+	"fmt"
 	"math/rand"
 	"os"
 	"strconv"
@@ -160,11 +161,9 @@ func (p2p *P2PDownloader) Run() error {
 			continue
 		}
 		logrus.Infof("downloading piece:%v", lastItem)
-
 		curItem := *lastItem
 		curItem.Content = &bytes.Buffer{}
 		lastItem = nil
-
 		response, err := p2p.pullPieceTask(&curItem)
 		if err == nil {
 			code := response.Code
@@ -247,15 +246,35 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 		if registerRes, err = p2p.Register.Register(p2p.cfg.RV.PeerPort); !cutil.IsNil(err) {
 			return nil, err
 		}
-		p2p.pieceSizeHistory[1] = registerRes.PieceSize
-		item.Status = constants.TaskStatusStart
-		item.SuperNode = registerRes.Node
-		item.TaskID = registerRes.TaskID
-		util.Printer.Println("migrated to node:" + item.SuperNode)
+		//TODO:HA should do with it
+		if p2p.RegisterResult.UseHa == false {
+			p2p.pieceSizeHistory[1] = registerRes.PieceSize
+			item.Status = constants.TaskStatusStart
+			item.SuperNode = registerRes.Node
+			item.TaskID = registerRes.TaskID
+			util.Printer.Println("migrated to node:" + item.SuperNode)
+		} else {
+			item.SuperNode = p2p.findHaActiveSupernode()
+		}
 		return p2p.pullPieceTask(item)
 	}
 
 	return res, err
+}
+func (p2p *P2PDownloader) findHaActiveSupernode() string {
+	nodes, nLen := p2p.cfg.Node, len(p2p.cfg.Node)
+	for i := 0; i < nLen; i++ {
+		pingResp, err := p2p.API.Status(nodes[i])
+		if err != nil {
+			fmt.Println("ping err")
+			continue
+		}
+		status := pingResp.Code
+		if status == constants.SupernodeUseHaActive {
+			return nodes[i]
+		}
+	}
+	return ""
 }
 
 // getPullRate get download rate limit dynamically.
@@ -322,6 +341,7 @@ func (p2p *P2PDownloader) getItem(latestItem *Piece) (bool, *Piece) {
 		if item.PieceSize != 0 && item.PieceSize != p2p.pieceSizeHistory[1] {
 			return false, latestItem
 		}
+		//TODO:implement HA should do with it
 		if item.SuperNode != p2p.node {
 			item.DstCid = ""
 			item.SuperNode = p2p.node
@@ -454,6 +474,7 @@ func (p2p *P2PDownloader) refresh(item *Piece) {
 			// console log reset
 		}
 	}
+	//TODO:implement ha should do with it
 	if p2p.node != item.SuperNode {
 		p2p.node = item.SuperNode
 		p2p.taskID = item.TaskID

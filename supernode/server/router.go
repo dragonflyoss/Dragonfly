@@ -21,7 +21,10 @@ func initRoute(s *Server) *mux.Router {
 	handlers := []*HandlerSpec{
 		// system
 		{Method: http.MethodGet, Path: "/_ping", HandlerFunc: s.ping},
+
 		{Method: http.MethodGet, Path: "/version", HandlerFunc: version.HandlerWithCtx},
+
+		{Method: http.MethodGet, Path: "/status", HandlerFunc: s.status},
 
 		// v0.3
 		{Method: http.MethodPost, Path: "/peer/registry", HandlerFunc: s.registry},
@@ -70,6 +73,7 @@ func filter(handler Handler, s *Server) http.HandlerFunc {
 
 // EncodeResponse encodes response in json.
 func EncodeResponse(rw http.ResponseWriter, statusCode int, data interface{}) error {
+	//fmt.Println("data",data)
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(statusCode)
 	return json.NewEncoder(rw).Encode(data)

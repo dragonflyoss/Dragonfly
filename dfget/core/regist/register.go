@@ -124,17 +124,17 @@ func (s *supernodeRegister) constructRegisterRequest(port int) *types.RegisterRe
 	cfg := s.cfg
 	hostname, _ := os.Hostname()
 	req := &types.RegisterRequest{
-		RawURL:     cfg.URL,
-		TaskURL:    cfg.RV.TaskURL,
-		Cid:        cfg.RV.Cid,
-		IP:         cfg.RV.LocalIP,
-		HostName:   hostname,
-		Port:       port,
-		Path:       getTaskPath(cfg.RV.TaskFileName),
-		Version:    version.DFGetVersion,
-		CallSystem: cfg.CallSystem,
-		Headers:    cfg.Header,
-		Dfdaemon:   cfg.DFDaemon,
+		RawURL:   cfg.URL,
+		TaskURL:  cfg.RV.TaskURL,
+		Cid:      cfg.RV.Cid,
+		IP:       cfg.RV.LocalIP,
+		HostName: hostname,
+		Port:     port,
+		Path:     getTaskPath(cfg.RV.TaskFileName),
+		Version:  version.DFGetVersion,
+		//CallSystem: cfg.CallSystem,
+		Headers:  cfg.Header,
+		Dfdaemon: cfg.DFDaemon,
 	}
 	if cfg.Md5 != "" {
 		req.Md5 = cfg.Md5
@@ -155,6 +155,7 @@ func getTaskPath(taskFileName string) string {
 func NewRegisterResult(node string, remainder []string, url string,
 	taskID string, fileLen int64, pieceSize int32) *RegisterResult {
 	return &RegisterResult{
+		UseHa:          false,
 		Node:           node,
 		RemainderNodes: remainder,
 		URL:            url,
@@ -166,6 +167,7 @@ func NewRegisterResult(node string, remainder []string, url string,
 
 // RegisterResult is the register result set.
 type RegisterResult struct {
+	UseHa          bool
 	Node           string
 	RemainderNodes []string
 	URL            string

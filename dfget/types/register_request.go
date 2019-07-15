@@ -23,20 +23,20 @@ import (
 // RegisterRequest contains all the parameters that need to be passed to the
 // supernode when registering a downloading task.
 type RegisterRequest struct {
-	SupernodeIP string   `json:"superNodeIp"`
-	RawURL      string   `json:"rawUrl"`
-	TaskURL     string   `json:"taskUrl"`
-	Cid         string   `json:"cid"`
-	IP          string   `json:"ip"`
-	HostName    string   `json:"hostName"`
-	Port        int      `json:"port"`
-	Path        string   `json:"path"`
-	Version     string   `json:"version,omitempty"`
-	Md5         string   `json:"md5,omitempty"`
-	Identifier  string   `json:"identifier,omitempty"`
-	CallSystem  string   `json:"callSystem,omitempty"`
-	Headers     []string `json:"headers,omitempty"`
-	Dfdaemon    bool     `json:"dfdaemon,omitempty"`
+	SupernodeIP string `json:"superNodeIp"`
+	RawURL      string `json:"rawUrl"`
+	TaskURL     string `json:"taskUrl"`
+	Cid         string `json:"cid"`
+	IP          string `json:"ip"`
+	HostName    string `json:"hostName"`
+	Port        int    `json:"port"`
+	Path        string `json:"path"`
+	Version     string `json:"version,omitempty"`
+	Md5         string `json:"md5,omitempty"`
+	Identifier  string `json:"identifier,omitempty"`
+	//CallSystem  string   `json:"callSystem,omitempty"`
+	Headers  []string `json:"headers,omitempty"`
+	Dfdaemon bool     `json:"dfdaemon,omitempty"`
 }
 
 func (r *RegisterRequest) String() string {

@@ -95,3 +95,12 @@ const (
 	ClientErrorFileNotExist    = "FILE_NOT_EXIST"
 	ClientErrorFileMd5NotMatch = "FILE_MD5_NOT_MATCH"
 )
+
+/*the code od supernode ha status*/
+const (
+	SupernodeUseHaFalse   = 900
+	SupernodeUseHaStandby = 901
+	SupernodeUseHaInit    = 902
+	SupernodeUseHaActive  = 903
+	SupernodeUsehakill    = 904
+)

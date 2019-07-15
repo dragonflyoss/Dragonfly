@@ -32,6 +32,7 @@ const (
 	peerReportPiecePath   = "/peer/piece/suc"
 	peerClientErrorPath   = "/peer/piece/error"
 	peerServiceDownPath   = "/peer/service/down"
+	peerPingPath          = "/status"
 )
 
 // NewSupernodeAPI creates a new instance of SupernodeAPI with default value.
@@ -50,6 +51,7 @@ type SupernodeAPI interface {
 	ReportPiece(node string, req *types.ReportPieceRequest) (resp *types.BaseResponse, e error)
 	ServiceDown(node string, taskID string, cid string) (resp *types.BaseResponse, e error)
 	ReportClientError(node string, req *types.ClientErrorRequest) (resp *types.BaseResponse, e error)
+	Status(node string) (resp *types.BaseResponse, e error)
 }
 
 type supernodeAPI struct {
@@ -70,6 +72,7 @@ func (api *supernodeAPI) Register(node string, req *types.RegisterRequest) (
 	)
 	url := fmt.Sprintf("%s://%s%s",
 		api.Scheme, node, peerRegisterPath)
+	fmt.Println("register-url", url)
 	if code, body, e = api.HTTPClient.PostJSON(url, req, api.Timeout); e != nil {
 		return nil, e
 	}
@@ -115,6 +118,7 @@ func (api *supernodeAPI) ServiceDown(node string, taskID string, cid string) (
 
 	resp = new(types.BaseResponse)
 	e = api.get(url, resp)
+
 	return
 }
 
@@ -125,6 +129,14 @@ func (api *supernodeAPI) ReportClientError(node string, req *types.ClientErrorRe
 	url := fmt.Sprintf("%s://%s%s?%s",
 		api.Scheme, node, peerClientErrorPath, util.ParseQuery(req))
 
+	resp = new(types.BaseResponse)
+	e = api.get(url, resp)
+	return
+}
+
+func (api *supernodeAPI) Status(node string) (resp *types.BaseResponse, e error) {
+	url := fmt.Sprintf("%s://%s%s",
+		api.Scheme, node, peerPingPath)
 	resp = new(types.BaseResponse)
 	e = api.get(url, resp)
 	return
