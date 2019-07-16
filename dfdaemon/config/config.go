@@ -145,6 +145,7 @@ func (p *Properties) DFGetConfig() DFGetConfig {
 		URLFilter:  p.URLFilter,
 		CallSystem: p.CallSystem,
 		Notbs:      p.Notbs,
+		Verbose:    p.Verbose,
 	}
 }
 
@@ -157,6 +158,7 @@ type DFGetConfig struct {
 	URLFilter  string   `yaml:"urlfilter"`
 	CallSystem string   `yaml:"callsystem"`
 	Notbs      bool     `yaml:"notbs"`
+	Verbose    bool     `yaml:"verbose"`
 }
 
 // RegistryMirror configures the mirror of the official docker registry
