@@ -18,10 +18,6 @@ USE_DOCKER=${USE_DOCKER:-"0"}
 
 create-dirs() {
     cd "${BUILD_SOURCE_HOME}" || return
-    if [ "${GOOS}" == "darwin" ] && [ "1" == "${USE_DOCKER}" ]
-    then
-        BUILD_PATH=bin
-    fi
     mkdir -p .go/src/${PKG} .go/bin .cache
     mkdir -p "${BUILD_PATH}"
 }
@@ -58,11 +54,13 @@ build-docker() {
         -v "$(pwd)"/.cache:/.cache                                        \
         -e GOOS="${GOOS}"                                                 \
         -e GOARCH="${GOARCH}"                                             \
-        -e CGO_ENABLED=1                                                  \
+        -e CGO_ENABLED=0                                                  \
+        -e GO111MODULE=on                                                 \
+        -e GOPROXY=https://goproxy.io                                     \
         -w /go/src/${PKG}                                                 \
         ${BUILD_IMAGE}                                                    \
-        go install -v -pkgdir /go/pkg -ldflags "${LDFLAGS}" ./cmd/"$2"
-    echo "BUILD: dfget in ${BUILD_SOURCE_HOME}/${BUILD_PATH}/$1"
+        go build -o "/go/bin/$1" -ldflags "${LDFLAGS}" ./cmd/"$2" 
+    echo "BUILD: $1 in ${BUILD_SOURCE_HOME}/${BUILD_PATH}/$1"
 }
 
 build-dfdaemon-docker(){
