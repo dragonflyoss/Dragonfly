@@ -51,22 +51,21 @@ func (s *APIMetricsSuite) TestHttpMetrics(c *check.C) {
 	CheckRespStatus(c, resp, 200)
 
 	// Get httpRequest counter value equals 1.
-	pingTimes, found := GetMetricValue(c, fmt.Sprintf(requestCounter, 200, "/_ping", "get"))
-	c.Assert(found, check.Equals, true)
-	c.Assert(pingTimes, check.Equals, float64(1))
+	CheckMetric(c, fmt.Sprintf(requestCounter, 200, "/_ping", "get"), 1)
 
 	// Get httpResponse size sum value equals 2.
-	responseBytes, found := GetMetricValue(c, fmt.Sprintf(responseSizeSum, 200, "/_ping", "get"))
-	c.Assert(found, check.Equals, true)
-	c.Assert(responseBytes, check.Equals, float64(2))
+	CheckMetric(c, fmt.Sprintf(responseSizeSum, 200, "/_ping", "get"), 2)
 
 	// Get httpResponse size count value equals 1.
-	responseCount, found := GetMetricValue(c, fmt.Sprintf(responseSizeCount, 200, "/_ping", "get"))
-	c.Assert(found, check.Equals, true)
-	c.Assert(responseCount, check.Equals, float64(1))
+	CheckMetric(c, fmt.Sprintf(responseSizeCount, 200, "/_ping", "get"), 1)
 
 	// Get httpRequest size count value equals 1.
-	requestCount, found := GetMetricValue(c, fmt.Sprintf(requestSizeCount, 200, "/_ping", "get"))
-	c.Assert(found, check.Equals, true)
-	c.Assert(requestCount, check.Equals, float64(1))
+	CheckMetric(c, fmt.Sprintf(requestSizeCount, 200, "/_ping", "get"), 1)
+}
+
+// TestBuildInfoMetrics tests build info metric.
+func (s *APIMetricsSuite) TestBuildInfoMetrics(c *check.C) {
+	supernodeBuildInfo := `dragonfly_supernode_build_info{`
+	// Ensure build_info metric exists.
+	CheckMetric(c, supernodeBuildInfo, 1)
 }

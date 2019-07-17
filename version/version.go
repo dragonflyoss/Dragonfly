@@ -27,6 +27,9 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 )
 
@@ -102,6 +105,23 @@ func Print(program string) string {
 		panic(err)
 	}
 	return strings.TrimSpace(buf.String())
+}
+
+// NewBuildInfo register a collector which exports metrics about version and build information.
+func NewBuildInfo(program string) {
+	buildInfo := promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Namespace: "dragonfly",
+			Subsystem: program,
+			Name:      "build_info",
+			Help: fmt.Sprintf(
+				"A metric with a constant '1' value labeled by version, revision, os, arch and goversion from which %s was built.",
+				program,
+			),
+		},
+		[]string{"version", "revision", "os", "arch", "goversion"},
+	)
+	buildInfo.WithLabelValues(version, revision, os, arch, goVersion).Set(1)
 }
 
 // Handler returns build information

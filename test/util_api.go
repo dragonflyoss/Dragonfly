@@ -20,9 +20,9 @@ func CheckRespStatus(c *check.C, resp *http.Response, status int) {
 	}
 }
 
-// GetMetricValue get the specific metrics from /metrics endpoint,
-// if cannot find this metrics, return not found.
-func GetMetricValue(c *check.C, key string) (float64, bool) {
+// CheckMetric find the specific metric from /metrics endpoint and it will compare the metric
+// value with expected value.
+func CheckMetric(c *check.C, metric string, value float64) {
 	var val float64
 	resp, err := request.Get("/metrics")
 	c.Assert(err, check.IsNil)
@@ -31,12 +31,14 @@ func GetMetricValue(c *check.C, key string) (float64, bool) {
 	c.Assert(err, check.IsNil)
 	lines := strings.Split(string(data), "\n")
 	for _, line := range lines {
-		if strings.Contains(line, key) {
+		if strings.Contains(line, metric) {
 			val, err = strconv.ParseFloat(strings.Split(line, " ")[1], 64)
 			c.Assert(err, check.IsNil)
-			return val, true
+			c.Assert(val, check.Equals, value)
+			return
 		}
 	}
 
-	return val, false
+	// Cannot find expected metric and fail the test.
+	c.FailNow()
 }
