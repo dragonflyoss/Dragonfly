@@ -20,6 +20,8 @@ import (
 	"net/http"
 	// pprof will inject handlers for users to profile this program
 	_ "net/http/pprof"
+
+	"github.com/dragonflyoss/Dragonfly/version"
 )
 
 // New returns a new http mux for dfdaemon
@@ -27,6 +29,6 @@ func New() *http.ServeMux {
 	s := http.DefaultServeMux
 	s.HandleFunc("/args", getArgs)
 	s.HandleFunc("/env", getEnv)
-	s.HandleFunc("/debug/version", getVersion)
+	s.HandleFunc("/debug/version", version.Handler)
 	return s
 }
