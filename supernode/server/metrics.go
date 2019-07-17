@@ -43,8 +43,8 @@ func newMetrics() *metrics {
 			prometheus.HistogramOpts{
 				Namespace: config.Namespace,
 				Subsystem: config.Subsystem,
-				Name: "http_request_size_bytes",
-				Help: "Histogram of request size for HTTP requests.",
+				Name:      "http_request_size_bytes",
+				Help:      "Histogram of request size for HTTP requests.",
 				Buckets:   prometheus.ExponentialBuckets(100, 10, 8),
 			},
 			[]string{"code", "handler", "method"},

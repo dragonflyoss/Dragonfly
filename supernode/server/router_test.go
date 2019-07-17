@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"math/rand"
 	"net"
@@ -18,6 +17,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/go-check/check"
+	"github.com/gorilla/mux"
 	prom_testutil "github.com/prometheus/client_golang/prometheus/testutil"
 )
 
@@ -122,13 +122,13 @@ func (rs *RouterTestSuite) TestHTTPMetrics(c *check.C) {
 
 	counter := m.requestCounter
 	c.Assert(1, check.Equals,
-		int(prom_testutil.ToFloat64(counter.WithLabelValues("/metrics", strconv.Itoa(http.StatusOK)))))
+		int(prom_testutil.ToFloat64(counter.WithLabelValues(strconv.Itoa(http.StatusOK), "/metrics", "get"))))
 
 	for i := 0; i < 5; i++ {
 		code, _, err := cutil.Get("http://"+rs.addr+"/_ping", 0)
 		c.Check(err, check.IsNil)
 		c.Assert(code, check.Equals, 200)
 		c.Assert(i+1, check.Equals,
-			int(prom_testutil.ToFloat64(counter.WithLabelValues("/_ping", strconv.Itoa(http.StatusOK)))))
+			int(prom_testutil.ToFloat64(counter.WithLabelValues(strconv.Itoa(http.StatusOK), "/_ping", "get"))))
 	}
 }

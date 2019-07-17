@@ -15,11 +15,12 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/scheduler"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/task"
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
+	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/sirupsen/logrus"
 )
 
-// Server is server instance.
+// Server is supernode server struct.
 type Server struct {
 	Config       *config.Config
 	PeerMgr      mgr.PeerMgr
@@ -78,7 +79,7 @@ func New(cfg *config.Config) (*Server, error) {
 	}, nil
 }
 
-// Start runs
+// Start runs supernode server.
 func (s *Server) Start() error {
 	router := initRoute(s)
 
@@ -90,6 +91,8 @@ func (s *Server) Start() error {
 		return err
 	}
 
+	// register supernode build information
+	version.NewBuildInfo("supernode")
 	server := &http.Server{
 		Handler:           router,
 		ReadTimeout:       time.Minute * 10,

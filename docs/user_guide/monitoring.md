@@ -2,7 +2,7 @@
 
 Currently metrics become an important part of observability. As for monitoring Dragonfly, we recommend you to use Prometheus.
 
-In Dragonfly project, there are two long-running process: supernode and dfdaemon. Both of these two components expose its metrics via `/metrics` endpoint, so Prometheus can get metrics from these two components. We will also support dfget metrics in the future. As for current metrics, you can check out this docs.
+In Dragonfly project, there are two long-running processes: supernode and dfdaemon. Each of the components expose its metrics via `/metrics` endpoint, so Prometheus can get metrics from each component. We will also support dfget metrics in the future. As for current metrics, you can check out [metrics](metrics.md).
 
 ## How to set up Prometheus
 
