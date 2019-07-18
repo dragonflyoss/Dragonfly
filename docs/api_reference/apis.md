@@ -614,6 +614,26 @@ to those peers.
 * `application/json`
 
 
+<a name="version-get"></a>
+### Get version and build information
+```
+GET /version
+```
+
+
+#### Description
+Get version and build information, including GoVersion, OS,
+Arch, Version, BuildDate, and GitCommit.
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|[DragonflyVersion](#dragonflyversion)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
 
 
 <a name="definitions"></a>
@@ -632,6 +652,21 @@ A download process initiated by dfget or other clients.
 |**pieceSize**  <br>*optional*|The size of pieces which is calculated as per the following strategy<br>1. If file's total size is less than 200MB, then the piece size is 4MB by default.<br>2. Otherwise, it equals to the smaller value between totalSize/100MB + 2 MB and 15MB.|integer (int32)|
 |**status**  <br>*optional*|The status of Dfget download process.|enum (WAITING, RUNNING, FAILED, SUCCESS)|
 |**taskId**  <br>*optional*||string|
+
+
+<a name="dragonflyversion"></a>
+### DragonflyVersion
+Version and build information of Dragonfly components.
+
+
+|Name|Description|Schema|
+|---|---|---|
+|**Arch**  <br>*optional*|Dragonfly components's architecture target|string|
+|**BuildDate**  <br>*optional*|Build Date of Dragonfly components|string|
+|**GoVersion**  <br>*optional*|Golang runtime version|string|
+|**OS**  <br>*optional*|Dragonfly components's operating system|string|
+|**Revision**  <br>*optional*|Git commit when building Dragonfly components|string|
+|**Version**  <br>*optional*|Version of Dragonfly components|string|
 
 
 <a name="error"></a>
