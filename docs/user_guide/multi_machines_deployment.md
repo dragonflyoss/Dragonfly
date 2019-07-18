@@ -25,11 +25,10 @@ Then, we must provice:
 Deploy the Dragonfly server (Supernode) on the machine `dfsupernode`.
 
 ```bash
-docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 \
-    dragonflyoss/supernode:0.3.0 -Dsupernode.advertiseIp=dfsupernode
+docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 -v /home/admin/supernode:/home/admin/supernode dragonflyoss/supernode:0.4.2 --download-port=8001 --advertise-ip=dfsupernode
 ```
 
-> **NOTE**: `supernode.advertiseIp` should be the ip that clients can connect to, `127.0.0.1` here is an example for testing, and it can only be used if the server and client are in the same machine.
+> **NOTE**: `advertise-ip` should be the ip that clients can connect to.
 
 ## Step 2：Deploy Dragonfly Client (dfclient)
 
@@ -53,7 +52,8 @@ EOD
 ```bash
 docker run -d --name dfclient --restart=always -p 65001:65001 \
     -v /etc/dragonfly:/etc/dragonfly \
-    dragonflyoss/dfclient:0.4.0 --registry https://index.docker.io
+    -v $HOME/.small-dragonfly:/root/.small-dragonfly \
+    dragonflyoss/dfclient:0.4.2 --registry https://index.docker.io
 ```
 
 **NOTE**: The `--registry` parameter specifies the mirrored image registry address, and `https://index.docker.io` is the address of official image registry, you can also set it to the others.

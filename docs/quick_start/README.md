@@ -11,7 +11,7 @@ All steps in this document are done on the same machine using the docker contain
 ## Step 1: Deploy Dragonfly Server (SuperNode)
 
 ```bash
-docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 dragonflyoss/supernode:0.4.1
+docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 -v /home/admin/supernode:/home/admin/supernode dragonflyoss/supernode:0.4.2
 ```
 
 **NOTE**:
@@ -22,12 +22,12 @@ docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 dragon
 
 ```bash
 SUPERNODE_IP=`docker inspect supernode -f '{{.NetworkSettings.Networks.bridge.IPAddress}}'`
-docker run -d --name dfclient -p 65001:65001 dragonflyoss/dfclient:0.4.1 --registry https://index.docker.io --node $SUPERNODE_IP
+docker run -d --name dfclient --restart=always -p 65001:65001 -v $HOME/.small-dragonfly:/root/.small-dragonfly dragonflyoss/dfclient:0.4.2 --registry https://index.docker.io --node $SUPERNODE_IP
 ```
 
 **NOTE**:
 
-- The `--registry` parameter specifies the mirrored image registry address, and `https://index.docker.io` is the address of official image registry, you can also set it to the others.
+- The `--registry` parameter specifies the mirrored image registry address, and `https://index.docker.io` is the address of official image registry, you can also set it to the other **non-https image registries**.
 - The `--node` parameter specifies the supernode's ip address. Here we use `docker inspect` to get the ip of supernode container. Since the supernode container exposes its ports, you can specify this parameter to node ip address as well.
 
 ## Step 3. Configure Docker Daemon
@@ -75,3 +75,12 @@ If the output of command above has content like
 ```
 
 then Dragonfly is proved to work successfully.
+
+## SEE ALSO
+
+- [multi machines deployment](../user_guide/multi_machines_deployment.md) - experience Dragonfly on multiple machines
+- [install server](../user_guide/install_server.md) - how to install the Dragonfly server
+- [install client](../user_guide/install_client.md) - how to install the Dragonfly dfclient
+- [docker proxy](../user_guide/docker_proxy.md) - make Dragonfly as HTTP proxy for docker daemon
+- [proxy](../user_guide/proxy.md) - config proxy
+- [download files](../user_guide/download_files.md) - download files with Dragonfly

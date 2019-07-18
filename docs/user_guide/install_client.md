@@ -16,23 +16,15 @@ You can install from the latest packages we provided.
 
     Available packages:
 
-    - If you're in China:
+    - [Linux 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.4.2/df-client_0.4.2_linux_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.4.2/df-client_0.4.2_linux_amd64.tar.gz`
 
-        - [Linux 64-bit](http://dragonflyoss.oss-cn-hangzhou.aliyuncs.com/df-client_0.4.0_linux_amd64.tar.gz): `http://dragonflyoss.oss-cn-hangzhou.aliyuncs.com/df-client_0.4.0_linux_amd64.tar.gz`
-
-        - [MacOS 64-bit](http://dragonflyoss.oss-cn-hangzhou.aliyuncs.com/df-client_0.4.0_darwin_amd64.tar.gz): `http://dragonflyoss.oss-cn-hangzhou.aliyuncs.com/df-client_0.4.0_darwin_amd64.tar.gz`
-
-    - If you're not in China:
-
-        - [Linux 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.4.0/df-client_0.4.0_linux_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.4.0/df-client_0.4.0_linux_amd64.tar.gz`
-
-        - [MacOS 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.4.0/df-client_0.4.0_darwin_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.4.0/df-client_0.4.0_darwin_amd64.tar.gz`
+    - [MacOS 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.4.2/df-client_0.4.2_darwin_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.4.2/df-client_0.4.2_darwin_amd64.tar.gz`
 
 2. Unzip the package.
 
     ```bash
     # Replace `xxx` with the installation directory.
-    tar -zxf df-client_0.4.0_linux_amd64.tar.gz -C xxx
+    tar -zxf df-client_0.4.2_linux_amd64.tar.gz -C xxx
     ```
 
 3. Add the directory of `df-client` to your `PATH` environment variable to make sure you can directly use `dfget` and `dfdaemon` command.
@@ -72,13 +64,13 @@ You can also install from the source code.
 4. Install `dfdaemon` and `dfget` in `/opt/dragonfly/df-client` and create soft-link in `/usr/local/bin`.
 
     ```sh
-    sudo make install
+    sudo make install-client
     ```
 
 ## After this Task
 
 Test if the downloading works.
 
-    ```sh
-    dfget --url "http://${resourceUrl}" --output ./resource.png --node "127.0.0.1:8002"
-    ```
+```sh
+dfget --url "http://${resourceUrl}" --output ./resource.png --node "127.0.0.1:8002"
+```

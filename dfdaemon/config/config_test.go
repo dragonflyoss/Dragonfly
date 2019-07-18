@@ -252,7 +252,7 @@ func (ts *configTestSuite) TestProxyNew() {
 
 func (ts *configTestSuite) TestProxyMatch() {
 	r := ts.Require()
-	p, err := NewProxy("blobs/sha256:.*", false, false)
+	p, err := NewProxy("blobs/sha256.*", false, false)
 	r.Nil(err)
 	r.NotNil(p)
 
