@@ -14,7 +14,7 @@ Proxy rules are configured in `/etc/dragonfly/dfdaemon.yml`.
 # matching rule.
 proxies:
   # proxy all http image layer download requests with dfget
-- regx: blobs/sha256:.*
+- regx: blobs/sha256.*
   # proxy requests directly, without dfget
 - regx: no-proxy-reg
   direct: true
