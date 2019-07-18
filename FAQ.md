@@ -5,7 +5,7 @@ FAQ contains some frequently asked questions about two aspects:
 - First, user-facing functionalities.
 - Second, underlying concept and thoery.
 
-Techinical questiones will not be included in FAQ.
+Techinical questions will not be included in FAQ.
 
 ## What is Dragonfly
 
