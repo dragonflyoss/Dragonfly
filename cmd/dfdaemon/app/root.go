@@ -96,6 +96,7 @@ func init() {
 	rf.String("ratelimit", util.NetLimit(), "net speed limit,format:xxxM/K")
 	rf.String("urlfilter", "Signature&Expires&OSSAccessKeyId", "filter specified url fields")
 	rf.Bool("notbs", true, "not try back source to download if throw exception")
+	rf.Int("timeout", 0, "global timeout for dfget tasks")
 	rf.StringSlice("node", nil, "specify the addresses(IP:port) of supernodes that will be passed to dfget.")
 
 	exitOnError(bindRootFlags(viper.GetViper()), "bind root command flags")

@@ -276,6 +276,7 @@ func (ts *configTestSuite) TestDFGetConfig() {
 	r.Equal(cfg.RateLimit, dfgetCfg.RateLimit)
 	r.Equal(cfg.URLFilter, dfgetCfg.URLFilter)
 	r.Equal(cfg.CallSystem, dfgetCfg.CallSystem)
+	r.Equal(cfg.Timeout, dfgetCfg.Timeout)
 	r.Equal(cfg.Notbs, dfgetCfg.Notbs)
 }
 

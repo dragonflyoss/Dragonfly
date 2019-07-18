@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -87,6 +88,7 @@ func (dfGetter *DFGetter) getCommand(
 	add("-f", dfGetter.config.URLFilter)
 	add("-s", dfGetter.config.RateLimit)
 	add("--totallimit", dfGetter.config.RateLimit)
+	add("--timeout", strconv.Itoa(dfGetter.config.Timeout))
 	add("--node", strings.Join(dfGetter.config.SuperNodes, ","))
 
 	for key, value := range header {

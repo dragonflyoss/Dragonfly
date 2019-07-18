@@ -201,7 +201,7 @@ func initFlags() {
 		"minimal network bandwidth rate for downloading a file, in format of 20M/m/K/k")
 	flagSet.StringVar(&totalLimit, "totallimit", "",
 		"network bandwidth rate limit for the whole host, in format of 20M/m/K/k")
-	flagSet.IntVarP(&cfg.Timeout, "timeout", "e", 0,
+	flagSet.IntVarP(&cfg.Timeout, "timeout", "t", 0,
 		"Timeout set for file downloading task. If dfget has not finished downloading all pieces of file before --timeout, the dfget will throw an error and exit")
 
 	// md5 & identifier
@@ -247,7 +247,7 @@ func initFlags() {
 	flagSet.DurationVar(&cfg.RV.ServerAliveTime, "alivetime", config.ServerAliveTime,
 		"Alive duration for which uploader keeps no accessing by any uploading requests, after this period uploader will automically exit")
 
-	flagSet.MarkDeprecated("exceed", "please use '--timeout' or '-e' instead")
+	flagSet.MarkDeprecated("exceed", "please use '--timeout' or '-t' instead")
 }
 
 // Helper functions.

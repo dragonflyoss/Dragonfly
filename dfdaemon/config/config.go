@@ -95,6 +95,7 @@ type Properties struct {
 	RateLimit  string   `yaml:"ratelimit" json:"ratelimit"`
 	URLFilter  string   `yaml:"urlfilter" json:"urlfilter"`
 	CallSystem string   `yaml:"callsystem" json:"callsystem"`
+	Timeout    int      `yaml:"timeout" json:"timeout"`
 	Notbs      bool     `yaml:"notbs" json:"notbs"`
 
 	Verbose bool `yaml:"verbose" json:"verbose"`
@@ -144,6 +145,7 @@ func (p *Properties) DFGetConfig() DFGetConfig {
 		RateLimit:  p.RateLimit,
 		URLFilter:  p.URLFilter,
 		CallSystem: p.CallSystem,
+		Timeout:    p.Timeout,
 		Notbs:      p.Notbs,
 		Verbose:    p.Verbose,
 	}
@@ -157,6 +159,7 @@ type DFGetConfig struct {
 	RateLimit  string   `yaml:"ratelimit"`
 	URLFilter  string   `yaml:"urlfilter"`
 	CallSystem string   `yaml:"callsystem"`
+	Timeout    int      `yaml:"timeout"`
 	Notbs      bool     `yaml:"notbs"`
 	Verbose    bool     `yaml:"verbose"`
 }
