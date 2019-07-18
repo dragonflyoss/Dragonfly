@@ -9,9 +9,10 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/handler"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/proxy"
-	"github.com/sirupsen/logrus"
+	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 // Server represents the dfdaemon server
@@ -104,6 +105,8 @@ func (s *Server) Start() error {
 	} else {
 		logrus.Infof("start dfdaemon http server on %s", s.server.Addr)
 	}
+	// register dfdaemon build information
+	version.NewBuildInfo("dfdaemon")
 	return s.server.ListenAndServe()
 }
 

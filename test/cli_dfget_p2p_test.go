@@ -21,10 +21,10 @@ import (
 	. "path/filepath"
 	"time"
 
-	"github.com/go-check/check"
-
 	"github.com/dragonflyoss/Dragonfly/test/command"
 	"github.com/dragonflyoss/Dragonfly/test/environment"
+
+	"github.com/go-check/check"
 )
 
 func init() {
