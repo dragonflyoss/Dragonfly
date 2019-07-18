@@ -200,8 +200,9 @@ func (s *Server) reportPiece(ctx context.Context, rw http.ResponseWriter, req *h
 		return err
 	}
 
-	rw.WriteHeader(http.StatusOK)
-	return nil
+	return EncodeResponse(rw, http.StatusOK, &types.ResultInfo{
+		Code: constants.CodeGetPieceReport,
+	})
 }
 
 func (s *Server) reportServiceDown(ctx context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
@@ -230,6 +231,7 @@ func (s *Server) reportServiceDown(ctx context.Context, rw http.ResponseWriter, 
 		return err
 	}
 
-	rw.WriteHeader(http.StatusOK)
-	return nil
+	return EncodeResponse(rw, http.StatusOK, &types.ResultInfo{
+		Code: constants.CodeGetPeerDown,
+	})
 }
