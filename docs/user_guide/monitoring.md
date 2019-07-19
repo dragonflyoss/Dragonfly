@@ -93,7 +93,9 @@ scrape_configs:
       - targets: ['localhost:8002', 'localhost:65001']
 ```
 
-If you are not familiar with Prometheus, you can modify `prometheus.yml` to this configuration above. Here we don't use any alert rules and alertmanager, so these parts is unset. After modifying this file, you can validate it via `promtool`.
+If you are not familiar with Prometheus, you can modify `prometheus.yml` to this configuration above. We add `localhost:8002` and `localhost:65001` to targets as an example, it represents the ip address of supernode and dfdaemon, which is accessible by Prometheus server. Most of the cases you may have to change to other ip address rather than using `localhost` because these components run in different machines or in docker containers.
+
+Here we don't use any alert rules and alertmanager, so these parts is unset. After modifying this file, you can validate it via `promtool`.
 
 ``` bash
 ./promtool check config prometheus.yml
