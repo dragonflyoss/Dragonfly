@@ -112,3 +112,21 @@ Finally you can start Prometheus in the same directory. If Prometheus works well
 In Prometheus web ui, you can search Dragonfly metrics below. If you want to learn more about Prometheus query language, please check [promql](https://prometheus.io/docs/prometheus/latest/querying/basics/) for help.
 
 ![dragonfly_metrics.png](../images/dragonfly_metrics.png)
+
+### Add your own metrics
+
+Sometimes maybe you want to add your own metrics to Dragonfly. First please ensure you know the basic concepts about Prometheus metrics. If you don't, please check [metrics types](https://prometheus.io/docs/concepts/metric_types/).
+
+We provide several functions to add metrics easily. Here is an example to add a Counter type metric.
+
+``` go
+import "github.com/dragonflyoss/Dragonfly/common/util"
+
+requestCounter := util.NewCounter("supernode", "http_requests_total",
+			"Counter of HTTP requests.", []string{"code"})
+requestCounter.WithLabelValues("200").Inc()
+```
+
+This function will auto-register metrics to Prometheus default registry and you can get `dragonfly_supernode_http_requests_total{code,handler,method}` in /metrics endpoint. Here we also add prefix `dragonfly` to metrics name by default. If you want to learn more about how to use these metrics after getting them, please check [prometheus/client_golang](https://github.com/prometheus/client_golang).
+
+As for naming of metric and label, it is better to follow the best practice. We suggest you to check this [metric and label naming](https://prometheus.io/docs/practices/naming/) guide for more detailed information.

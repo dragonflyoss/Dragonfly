@@ -3,10 +3,10 @@ package server
 import (
 	"net/http"
 
+	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -19,49 +19,23 @@ type metrics struct {
 }
 
 func newMetrics() *metrics {
-	m := &metrics{
-		requestCounter: promauto.NewCounterVec(
-			prometheus.CounterOpts{
-				Namespace: config.Namespace,
-				Subsystem: config.Subsystem,
-				Name:      "http_requests_total",
-				Help:      "Counter of HTTP requests.",
-			},
-			[]string{"code", "handler", "method"},
+	return &metrics{
+		requestCounter: util.NewCounter(config.SubsystemSupernode, "http_requests_total",
+			"Counter of HTTP requests.", []string{"code", "handler", "method"},
 		),
-		requestDuration: promauto.NewHistogramVec(
-			prometheus.HistogramOpts{
-				Namespace: config.Namespace,
-				Subsystem: config.Subsystem,
-				Name:      "http_request_duration_seconds",
-				Help:      "Histogram of latencies for HTTP requests.",
-				Buckets:   []float64{.1, .2, .4, 1, 3, 8, 20, 60, 120},
-			},
-			[]string{"code", "handler", "method"},
+		requestDuration: util.NewHistogram(config.SubsystemSupernode, "http_request_duration_seconds",
+			"Histogram of latencies for HTTP requests.", []string{"code", "handler", "method"},
+			[]float64{.1, .2, .4, 1, 3, 8, 20, 60, 120},
 		),
-		requestSize: promauto.NewHistogramVec(
-			prometheus.HistogramOpts{
-				Namespace: config.Namespace,
-				Subsystem: config.Subsystem,
-				Name:      "http_request_size_bytes",
-				Help:      "Histogram of request size for HTTP requests.",
-				Buckets:   prometheus.ExponentialBuckets(100, 10, 8),
-			},
-			[]string{"code", "handler", "method"},
+		requestSize: util.NewHistogram(config.SubsystemSupernode, "http_request_size_bytes",
+			"Histogram of request size for HTTP requests.", []string{"code", "handler", "method"},
+			prometheus.ExponentialBuckets(100, 10, 8),
 		),
-		responseSize: promauto.NewHistogramVec(
-			prometheus.HistogramOpts{
-				Namespace: config.Namespace,
-				Subsystem: config.Subsystem,
-				Name:      "http_response_size_bytes",
-				Help:      "Histogram of response size for HTTP requests.",
-				Buckets:   prometheus.ExponentialBuckets(100, 10, 8),
-			},
-			[]string{"code", "handler", "method"},
+		responseSize: util.NewHistogram(config.SubsystemSupernode, "http_response_size_bytes",
+			"Histogram of response size for HTTP requests.", []string{"code", "handler", "method"},
+			prometheus.ExponentialBuckets(100, 10, 8),
 		),
 	}
-
-	return m
 }
 
 // instrumentHandler will update metrics for every http request
