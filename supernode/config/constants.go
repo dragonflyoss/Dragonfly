@@ -70,8 +70,8 @@ const (
 )
 
 const (
-	// Namespace is the prefix of the metrics' name of dragonfly
-	Namespace = "dragonfly"
-	// Subsystem represents metrics for supernode
-	Subsystem = "supernode"
+	// SubsystemSupernode represents metrics from supernode
+	SubsystemSupernode = "supernode"
+	// SubsystemDfget represents metrics from dfget
+	SubsystemDfget = "dfget"
 )
