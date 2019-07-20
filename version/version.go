@@ -78,7 +78,7 @@ func init() {
 
 // versionInfoTmpl contains the template used by Info.
 var versionInfoTmpl = `
-{{.program}}, version  {{.version}}
+{{.program}} version  {{.version}}
   Git commit:     {{.revision}}
   Build date:     {{.buildDate}}
   Go version:     {{.goVersion}}
