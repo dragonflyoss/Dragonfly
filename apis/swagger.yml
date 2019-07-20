@@ -58,6 +58,17 @@ paths:
         500:
           $ref: "#/responses/500ErrorResponse"
 
+  /metrics:
+    get:
+      summary: "Get Prometheus metrics"
+      description: "Get Prometheus metrics"
+      responses:
+        200:
+          description: "no error"
+          schema:
+            type: "string"
+            example: "go_goroutines 1"
+
   /peer/registry:
     post:
       summary: "registry a task"
