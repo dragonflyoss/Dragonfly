@@ -154,12 +154,13 @@ func (tm *Manager) updateTask(taskID string, updateTaskInfo *types.TaskInfo) err
 
 func (tm *Manager) addDfgetTask(ctx context.Context, req *types.TaskCreateRequest, task *types.TaskInfo) (*types.DfGetTask, error) {
 	dfgetTask := &types.DfGetTask{
-		CID:       req.CID,
-		Path:      req.Path,
-		PieceSize: task.PieceSize,
-		Status:    types.DfGetTaskStatusWAITING,
-		TaskID:    task.ID,
-		PeerID:    req.PeerID,
+		CID:         req.CID,
+		Path:        req.Path,
+		PieceSize:   task.PieceSize,
+		Status:      types.DfGetTaskStatusWAITING,
+		TaskID:      task.ID,
+		PeerID:      req.PeerID,
+		SupernodeIP: req.SupernodeIP,
 	}
 
 	if err := tm.dfgetTaskMgr.Add(ctx, dfgetTask); err != nil {
@@ -299,6 +300,11 @@ func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, tas
 		pieceInfo, err := tm.pieceResultToPieceInfo(ctx, v, task.PieceSize)
 		if err != nil {
 			return false, nil, err
+		}
+
+		// get supernode IP according to the cid dynamically
+		if tm.cfg.IsSuperPID(pieceInfo.PID) {
+			pieceInfo.PeerIP = dfgetTask.SupernodeIP
 		}
 
 		pieceInfos = append(pieceInfos, pieceInfo)

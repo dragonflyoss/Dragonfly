@@ -859,6 +859,10 @@ definitions:
         description: |
           PeerID is used to uniquely identifies a peer which will be used to create a dfgetTask.
           The value must be the value in the response after registering a peer.
+      supernodeIP:
+        type: "string"
+        description: "IP address of supernode which the peer connects to"
+        
 
   TaskCreateResponse:
     type: "object"
@@ -1162,6 +1166,9 @@ definitions:
           PeerID uniquely identifies a peer, and the cID uniquely identifies a 
           download task belonging to a peer. One peer can initiate multiple download tasks, 
           which means that one peer corresponds to multiple cIDs.
+      supernodeIP:
+        type: "string"
+        description: "IP address of supernode which the peer connects to"
  
   ErrorResponse:
     type: "object"
