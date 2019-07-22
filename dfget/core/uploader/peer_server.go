@@ -136,7 +136,7 @@ func (ps *peerServer) uploadHandler(w http.ResponseWriter, r *http.Request) {
 	taskFileName := mux.Vars(r)["commonFile"]
 	rangeStr := r.Header.Get(config.StrRange)
 
-	logrus.Debugf("upload file:%s to %s, req:%v", taskFileName, r.RemoteAddr, jsonStr(r.Header))
+	logrus.Infof("upload file:%s to %s, req:%v", taskFileName, r.RemoteAddr, jsonStr(r.Header))
 
 	// Step1: parse param
 	if up, err = parseParams(rangeStr, r.Header.Get(config.StrPieceNum),
