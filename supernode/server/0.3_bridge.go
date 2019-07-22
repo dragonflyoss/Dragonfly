@@ -76,15 +76,16 @@ func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http
 
 	peerID := peerCreateResponse.ID
 	taskCreateRequest := &types.TaskCreateRequest{
-		CID:        request.CID,
-		Dfdaemon:   request.Dfdaemon,
-		Headers:    cutil.ConvertHeaders(request.Headers),
-		Identifier: request.Identifier,
-		Md5:        request.Md5,
-		Path:       request.Path,
-		PeerID:     peerID,
-		RawURL:     request.RawURL,
-		TaskURL:    request.TaskURL,
+		CID:         request.CID,
+		Dfdaemon:    request.Dfdaemon,
+		Headers:     cutil.ConvertHeaders(request.Headers),
+		Identifier:  request.Identifier,
+		Md5:         request.Md5,
+		Path:        request.Path,
+		PeerID:      peerID,
+		RawURL:      request.RawURL,
+		TaskURL:     request.TaskURL,
+		SupernodeIP: request.SuperNodeIP.String(),
 	}
 	resp, err := s.TaskMgr.Register(ctx, taskCreateRequest)
 	if err != nil {

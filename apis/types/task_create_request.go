@@ -83,6 +83,9 @@ type TaskCreateRequest struct {
 	//
 	RawURL string `json:"rawURL,omitempty"`
 
+	// IP address of supernode which the peer connects to
+	SupernodeIP string `json:"supernodeIP,omitempty"`
+
 	// taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via
 	// --filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.
 	//
