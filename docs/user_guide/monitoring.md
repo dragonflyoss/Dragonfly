@@ -1,14 +1,14 @@
 # Monitor Dragonfly with Prometheus
 
-Currently metrics become an important part of observability. As for monitoring Dragonfly, we recommend you to use Prometheus.
+Currently, metrics become an important part of observability. As for monitoring Dragonfly, we recommend you to use Prometheus.
 
-In Dragonfly project, there are two long-running processes: supernode and dfdaemon. Each of the components expose its metrics via `/metrics` endpoint, so Prometheus can get metrics from each component. We will also support dfget metrics in the future. As for current metrics, you can check out [metrics](metrics.md).
+In the Dragonfly project, there are two long-running processes: supernode and dfdaemon. Each of the components expose its metrics via `/metrics` endpoint, so Prometheus can get metrics from each component. We will also support dfget metrics in the future. As for current metrics, you can check out [metrics](metrics.md).
 
 ## How to set up Prometheus
 
 ### Setup Dragonfly Environment
 
-First, please ensure you know how to setup Dragonfly environment. If you don't, you can check out this  [quick_start](https://github.com/dragonflyoss/Dragonfly/blob/master/docs/quick_start/README.md) docs first. Besides, building from source code is ok.
+First, please ensure you know how to set up a Dragonfly environment. If you don't, you can check out this  [quick_start](https://github.com/dragonflyoss/Dragonfly/blob/master/docs/quick_start/README.md) docs first. Besides, building from source code is ok.
 
 ``` bash
 make build
@@ -17,7 +17,7 @@ bin/linux_amd64/supernode --advertise-ip 127.0.0.1
 bin/linux_amd64/dfdaemon
 ```
 
-When supernode and dfdaemon is running normally, you can check metrics through command line.
+When supernode and dfdaemon are running normally, you can check metrics through the command line.
 
 check dfdaemon metrics:
 
@@ -93,7 +93,7 @@ scrape_configs:
       - targets: ['localhost:8002', 'localhost:65001']
 ```
 
-If you are not familiar with Prometheus, you can modify `prometheus.yml` to this configuration above. Here we don't use any alert rules and alertmanager, so these parts is unset. After modifying this file, you can validate it via `promtool`.
+If you are not familiar with Prometheus, you can modify `prometheus.yml` to this configuration above. Here we don't use any alert rules and alertmanager, so these parts are unset. After modifying this file, you can validate it via `promtool`.
 
 ``` bash
 ./promtool check config prometheus.yml
@@ -101,7 +101,7 @@ Checking prometheus.yml
   SUCCESS: 0 rule files found
 ```
 
-Finally you can start Prometheus in the same directory. If Prometheus works well, you can open your browser with localhost:9090 and see Prometheus web ui.
+Finally, you can start Prometheus in the same directory. If Prometheus works well, you can open your browser with localhost:9090 and see Prometheus web UI.
 
 ``` bash
 ./prometheus
@@ -109,6 +109,6 @@ Finally you can start Prometheus in the same directory. If Prometheus works well
 
 ### Get Dragonfly Metrics Using Prometheus
 
-In Prometheus web ui, you can search Dragonfly metrics below. If you want to learn more about Prometheus query language, please check [promql](https://prometheus.io/docs/prometheus/latest/querying/basics/) for help.
+In Prometheus web UI, you can search Dragonfly metrics below. If you want to learn more about Prometheus query language, please check [promql](https://prometheus.io/docs/prometheus/latest/querying/basics/) for help.
 
 ![dragonfly_metrics.png](../images/dragonfly_metrics.png)
