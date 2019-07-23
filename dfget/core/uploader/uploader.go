@@ -68,7 +68,7 @@ func LaunchPeerServer(cfg *config.Config) (int, error) {
 	var p2pPtr unsafe.Pointer
 
 	logrus.Infof("********************")
-	logrus.Infof("start peer server...")
+	logrus.Infof("start peer server on %s:%d ...", cfg.RV.LocalIP, cfg.RV.PeerPort)
 
 	res := make(chan error)
 	go func() {

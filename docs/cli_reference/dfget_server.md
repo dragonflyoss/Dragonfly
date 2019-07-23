@@ -24,6 +24,12 @@ dfget server [flags]
       --verbose               be verbose
 ```
 
+### Environments
+
+In addition to the command line arguments, peer server will also take configs from environment variables. Following environment variables are used:
+
+* **LOCAL_IP** IP address that server will listen on, it will override value provided by command argument `ip`.
+
 ### SEE ALSO
 
 * [dfget](dfget.md)	 - client of Dragonfly used to download and upload files

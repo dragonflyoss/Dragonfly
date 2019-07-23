@@ -18,6 +18,7 @@ package app
 
 import (
 	"fmt"
+	"os"
 	"path"
 
 	"github.com/dragonflyoss/Dragonfly/common/dflog"
@@ -63,8 +64,16 @@ func initServerFlags() {
 		"be verbose")
 }
 
+func initCfgFromEnvs() {
+	if ip := os.Getenv(config.EnvPeerServerIP); len(ip) > 0 {
+		cfg.RV.LocalIP = ip
+	}
+}
+
 func runServer() error {
 	initServerLog()
+	initCfgFromEnvs()
+
 	// launch a peer server as a uploader server
 	port, err := uploader.LaunchPeerServer(cfg)
 	if err != nil {
