@@ -216,7 +216,7 @@ func (proxy *Proxy) handleHTTP(w http.ResponseWriter, req *http.Request) {
 	copyHeader(w.Header(), resp.Header)
 	w.WriteHeader(resp.StatusCode)
 	if _, err := io.Copy(w, resp.Body); err != nil {
-		logrus.Errorf("failed to write http body")
+		logrus.Errorf("failed to write http body: %v", err)
 	}
 }
 

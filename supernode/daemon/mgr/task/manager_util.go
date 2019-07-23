@@ -56,7 +56,7 @@ func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateReq
 	}
 
 	// get fileLength with req.Headers
-	fileLength, err := getHTTPFileLength(taskID, task.TaskURL, req.Headers)
+	fileLength, err := getHTTPFileLength(taskID, task.RawURL, req.Headers)
 	if err != nil {
 		logrus.Errorf("failed to get file length from http client for taskID(%s): %v", taskID, err)
 	}
