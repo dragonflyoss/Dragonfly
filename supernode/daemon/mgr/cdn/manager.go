@@ -84,7 +84,7 @@ func (cm *Manager) TriggerCDN(ctx context.Context, task *types.TaskInfo) (*types
 	pieceContSize := task.PieceSize - config.PieceWrapSize
 
 	// start to download the source file
-	resp, err := cm.download(ctx, task.ID, task.TaskURL, task.Headers, startPieceNum, httpFileLength, pieceContSize)
+	resp, err := cm.download(ctx, task.ID, task.RawURL, task.Headers, startPieceNum, httpFileLength, pieceContSize)
 	if err != nil {
 		return getUpdateTaskInfoWithStatusOnly(types.TaskInfoCdnStatusFAILED), err
 	}
