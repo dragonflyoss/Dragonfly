@@ -1,5 +1,9 @@
 #!/bin/bash
 
+set -o nounset
+set -o errexit
+set -o pipefail
+
 DF_VERSION=${DF_VERSION:-"latest"}
 curDir=$(cd "$(dirname "$0")" && pwd)
 cd "${curDir}/../" || return
@@ -13,7 +17,7 @@ docker-build::build-supernode(){
 }
 
 main() {
-    case "$1" in
+    case "${1-}" in
         dfclient)
             docker-build::build-dfclient
         ;;

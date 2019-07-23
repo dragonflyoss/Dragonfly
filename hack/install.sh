@@ -1,4 +1,9 @@
 #!/bin/bash
+
+set -o nounset
+set -o errexit
+set -o pipefail
+
 BIN_DIR="../bin"
 DFDAEMON_BINARY_NAME=dfdaemon
 DFGET_BINARY_NAME=dfget
