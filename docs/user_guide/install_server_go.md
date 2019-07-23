@@ -40,7 +40,7 @@ You can get it from [DockerHub](https://hub.docker.com/) directly.
     docker pull dragonflyoss/supernode:0.4.0
     ```
 
-Or you can build your own supernode image.
+Or you can build your supernode image.
 
 1. Obtain the source code of Dragonfly.
 
