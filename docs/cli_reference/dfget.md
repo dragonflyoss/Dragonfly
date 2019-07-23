@@ -44,6 +44,7 @@ download SUCCESS(0) cost:0.026s length:141898 reason:0
       --header strings        http header, eg: --header='Accept: *' --header='Host: abc'
   -h, --help                  help for dfget
   -i, --identifier string     The usage of identifier is making different downloading tasks generate different downloading task IDs even if they have the same URLs. conflict with --md5.
+      --ip string             IP address that server will listen on
   -s, --locallimit string     network bandwidth rate limit for single download task, in format of 20M/m/K/k
   -m, --md5 string            md5 value input from user for the requested downloading file to enhance security
       --minrate string        minimal network bandwidth rate for downloading a file, in format of 20M/m/K/k
@@ -51,6 +52,7 @@ download SUCCESS(0) cost:0.026s length:141898 reason:0
       --notbs                 disable back source downloading for requested file when p2p fails to download it
   -o, --output string         Destination path which is used to store the requested downloading file. It must contain detailed directory and specific filename, for example, '/tmp/file.mp4'
   -p, --pattern string        download pattern, must be p2p/cdn/source, cdn and source do not support flag --totallimit (default "p2p")
+      --port int              port number that server will listen on
   -b, --showbar               show progress bar, it is conflict with '--console'
   -e, --timeout int           Timeout set for file downloading task. If dfget has not finished downloading all pieces of file before --timeout, the dfget will throw an error and exit
       --totallimit string     network bandwidth rate limit for the whole host, in format of 20M/m/K/k
@@ -62,5 +64,5 @@ download SUCCESS(0) cost:0.026s length:141898 reason:0
 
 * [dfget gen-doc](dfget_gen-doc.md)	 - Generate Document for dfget command line tool with MarkDown format
 * [dfget server](dfget_server.md)	 - Launch a peer server for uploading files.
-* [dfget version](dfget_version.md)	 - Show the current version
+* [dfget version](dfget_version.md)	 - Show the current version of dfget
 
