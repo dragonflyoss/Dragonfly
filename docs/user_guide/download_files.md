@@ -102,7 +102,7 @@ Things are done differently when you download container images and download gene
         dfget -u "http://www.taobao.com" -o /tmp/test.html --node supernode01:port,supernode02:port,supernode03:port
         ```
 
-        **Note:** When using this method, you must add the `node` parameter every time when you run the dfget command. And the parameter in the command line takes precedence over the configuration file.
+        **Note:** When using this method, you must add the `node` parameter whenever you run the dfget command. And the parameter in the command line takes precedence over the configuration file.
 
 2. Download general files with Dragonfly in one of the following ways.
 
