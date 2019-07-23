@@ -1,5 +1,8 @@
 #!/bin/bash
-set -e
+
+set -o nounset
+set -o errexit
+set -o pipefail
 
 # see also ".mailmap" for how email addresses and names are deduplicated
 

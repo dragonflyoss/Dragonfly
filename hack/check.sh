@@ -1,4 +1,9 @@
 #!/bin/bash
+
+set -o nounset
+set -o errexit
+set -o pipefail
+
 curDir=$(cd "$(dirname "$0")" && pwd)
 cd "${curDir}/../" || return
 

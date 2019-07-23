@@ -1,5 +1,9 @@
 #!/bin/bash
 
+set -o nounset
+set -o errexit
+set -o pipefail
+
 curDir=$(cd "$(dirname "$0")" && pwd)
 cd "${curDir}" || return
 
@@ -17,7 +21,7 @@ generate-cli-docs(){
 }
 
 main () {
-    case "$1" in
+    case "${1-}" in
         cli)
             generate-cli-docs
         ;;
