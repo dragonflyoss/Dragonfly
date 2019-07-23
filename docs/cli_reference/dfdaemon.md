@@ -29,10 +29,10 @@ dfdaemon [flags]
       --registry string     registry mirror url, which will override the registry mirror settings in the config file if presented (default "https://index.docker.io")
       --urlfilter string    filter specified url fields (default "Signature&Expires&OSSAccessKeyId")
       --verbose             verbose
-  -v, --version             version
 ```
 
 ### SEE ALSO
 
 * [dfdaemon gen-doc](dfdaemon_gen-doc.md)	 - Generate Document for dfdaemon command line tool with MarkDown format
+* [dfdaemon version](dfdaemon_version.md)	 - Show the current version of dfdaemon
 
