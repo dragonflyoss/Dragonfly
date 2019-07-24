@@ -5,7 +5,7 @@ cd "${curDir}/../" || return
 check() {
     # gofmt
     echo "CHECK: gofmt, check code formats"
-    result=$(find . -name '*.go' -print0 | xargs gofmt -s -l -d 2>/dev/null)
+    result=$(find . -name '*.go' -print0 | xargs -0 gofmt -s -l -d 2>/dev/null)
     if [[ ${#result} -gt 0 ]]; then
         echo "${result}"
         echo "CHECK: please format Go code with 'gofmt -s -w .'"
