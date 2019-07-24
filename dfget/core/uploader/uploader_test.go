@@ -220,7 +220,6 @@ func (s *UploaderTestSuite) TestServerGC(c *check.C) {
 		v := &cases[i]
 		expire := time.Duration(v.expire) * time.Minute
 		v.name = createTestFile(p2p, v.store, v.finished, expire)
-
 	}
 
 	time.AfterFunc(500*time.Millisecond, func() {
@@ -276,7 +275,10 @@ func createTestFile(srv *peerServer, store bool, finished bool, expire time.Dura
 	os.Chtimes(taskFile, expireTime, expireTime)
 
 	if store {
-		srv.syncTaskMap.Store(name, &taskConfig{finished: finished})
+		srv.syncTaskMap.Store(name, &taskConfig{
+			finished:   finished,
+			accessTime: expireTime,
+		})
 	}
 	return name
 }

@@ -192,7 +192,7 @@ func (tm *Manager) triggerCdnSyncAction(ctx context.Context, task *types.TaskInf
 	go func() {
 		updateTaskInfo, err := tm.cdnMgr.TriggerCDN(ctx, task)
 		if err != nil {
-			logrus.Errorf("trigger cdn get error: %v", err)
+			logrus.Errorf("taskID(%s) trigger cdn get error: %v", task.ID, err)
 		}
 		tm.updateTask(task.ID, updateTaskInfo)
 		logrus.Infof("success to update task cdn %+v", updateTaskInfo)
