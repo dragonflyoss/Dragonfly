@@ -32,7 +32,7 @@ For almost all users, commandline is the first reference you may need. Document 
 
 ## API Reference
 
-Commandline is the easiest way to experience Dragonfly's ability. And API extension will bring more furthure experience of Dragonfly. Commandline is just one kind of combination usage of API, if you wish to hack or take more advantages of Dragonfly, please see [API Reference](./api_reference). Like command line document, all API docs are auto generated via source code.
+Commandline is the easiest way to experience Dragonfly's ability. And API extension will bring more further experience of Dragonfly. Commandline is just one kind of combination usage of API, if you wish to hack or take more advantages of Dragonfly, please see [API Reference](./api_reference). Like command line document, all API docs are auto generated via source code.
 
 ## Ecosystem
 
