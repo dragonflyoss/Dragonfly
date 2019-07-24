@@ -49,10 +49,12 @@ func (cd *cacheDetector) detectCache(ctx context.Context, task *types.TaskInfo) 
 }
 
 func (cd *cacheDetector) parseBreakNum(ctx context.Context, task *types.TaskInfo, metaData *fileMetaData) int {
-	expired, err := cutil.IsExpired(task.TaskURL, task.Headers, metaData.LastModified, metaData.ETag)
+	expired, err := cutil.IsExpired(task.RawURL, task.Headers, metaData.LastModified, metaData.ETag)
 	if err != nil {
 		logrus.Errorf("failed to check whether the task(%s) has expired: %v", task.ID, err)
 	}
+
+	logrus.Debugf("success to get expired result: %t for taskID(%s)", expired, task.ID)
 	if expired {
 		return 0
 	}
@@ -103,7 +105,11 @@ func (cd *cacheDetector) resetRepo(ctx context.Context, task *types.TaskInfo) (*
 	return cd.metaDataManager.writeFileMetaDataByTask(ctx, task)
 }
 
-func checkSameFile(task *types.TaskInfo, metaData *fileMetaData) bool {
+func checkSameFile(task *types.TaskInfo, metaData *fileMetaData) (result bool) {
+	defer func() {
+		logrus.Debugf("check same File for taskID(%s) get result: %t", task.ID, result)
+	}()
+
 	if cutil.IsNil(task) || cutil.IsNil(metaData) {
 		return false
 	}
