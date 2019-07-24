@@ -1,6 +1,6 @@
 # Installing Dragonfly Client
 
-You have three options when installing the Dragonfly client: installing from the latest package, installing by pulling the image, or installing from the source code.
+You have three options when installing the Dragonfly client: installing from the latest package, installing from pulling the image or installing from the source code.
 
 ## Installing from the Latest Package
 
