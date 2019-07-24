@@ -69,7 +69,7 @@ func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateReq
 		task.Headers = req.Headers
 	}
 
-	// caculate piece size and update the PieceSize and PieceTotal
+	// calculate piece size and update the PieceSize and PieceTotal
 	pieceSize := computePieceSize(fileLength)
 	task.PieceSize = pieceSize
 	task.PieceTotal = int32((fileLength + (int64(pieceSize) - 1)) / int64(pieceSize))
