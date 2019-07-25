@@ -39,7 +39,7 @@ type PeerState struct {
 	ServiceErrorCount *atomiccount.AtomicInt
 
 	// ServiceDownTime the down time of the peer service.
-	ServiceDownTime *int64
+	ServiceDownTime int64
 }
 
 // ProgressMgr is responsible for maintaining the correspondence between peer and pieces.
@@ -60,9 +60,6 @@ type ProgressMgr interface {
 	// The filter parameter depends on the specific implementation.
 	GetPieceProgressByCID(ctx context.Context, taskID, clientID, filter string) (pieceNums []int, err error)
 
-	// DeletePieceProgressByCID deletes the pieces progress with specified clientID.
-	DeletePieceProgressByCID(ctx context.Context, taskID, clientID string) (err error)
-
 	// GetPeerIDsByPieceNum gets all peerIDs with specified taskID and pieceNum.
 	GetPeerIDsByPieceNum(ctx context.Context, taskID string, pieceNum int) (peerIDs []string, err error)
 
@@ -73,12 +70,24 @@ type ProgressMgr interface {
 	// GetPeerStateByPeerID gets peer state with specified peerID.
 	GetPeerStateByPeerID(ctx context.Context, peerID string) (peerState *PeerState, err error)
 
-	// DeletePeerStateByPeerID deletes the peerState by PeerID.
-	DeletePeerStateByPeerID(ctx context.Context, peerID string) error
+	// UpdatePeerServiceDown do update operation when a peer server offline.
+	//
+	// This function will update the service down time for the peerID.
+	// And the supernode will not dispatch tasks to this peer.
+	UpdatePeerServiceDown(ctx context.Context, peerID string) (err error)
 
 	// GetPeersByTaskID gets all peers info with specified taskID.
 	GetPeersByTaskID(ctx context.Context, taskID string) (peersInfo []*types.PeerInfo, err error)
 
 	// GetBlackInfoByPeerID gets black info with specified peerID.
 	GetBlackInfoByPeerID(ctx context.Context, peerID string) (dstPIDMap *syncmap.SyncMap, err error)
+
+	// DeleteTaskID deletes the super progress with specified taskID.
+	DeleteTaskID(ctx context.Context, taskID string) (err error)
+
+	// DeleteCID deletes the super progress with specified clientID.
+	DeleteCID(ctx context.Context, clientID string) (err error)
+
+	// DeletePeerID deletes the peerState by PeerID.
+	DeletePeerID(ctx context.Context, peerID string) (err error)
 }

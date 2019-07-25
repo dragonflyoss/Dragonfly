@@ -230,26 +230,12 @@ func (s *Server) reportServiceDown(ctx context.Context, rw http.ResponseWriter, 
 	taskID := params.Get("taskId")
 	cID := params.Get("cid")
 
+	// get peerID according to the CID and taskID
 	dfgetTask, err := s.DfgetTaskMgr.Get(ctx, cID, taskID)
 	if err != nil {
 		return err
 	}
-
-	if err := s.ProgressMgr.DeletePieceProgressByCID(ctx, taskID, cID); err != nil {
-		return err
-	}
-
-	if err := s.ProgressMgr.DeletePeerStateByPeerID(ctx, dfgetTask.PeerID); err != nil {
-		return err
-	}
-
-	if err := s.PeerMgr.DeRegister(ctx, dfgetTask.PeerID); err != nil {
-		return err
-	}
-
-	if err := s.DfgetTaskMgr.Delete(ctx, cID, taskID); err != nil {
-		return err
-	}
+	s.ProgressMgr.UpdatePeerServiceDown(ctx, dfgetTask.PeerID)
 
 	return EncodeResponse(rw, http.StatusOK, &types.ResultInfo{
 		Code: constants.CodeGetPeerDown,

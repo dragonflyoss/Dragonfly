@@ -102,7 +102,11 @@ func NewBaseProperties() *BaseProperties {
 		MaxBandwidth:            200,
 		EnableProfiler:          false,
 		Debug:                   false,
-		FailAccessInterval:      3,
+		FailAccessInterval:      DefaultFailAccessInterval,
+		GCInitialDelay:          DefaultGCInitialDelay,
+		GCMetaInterval:          DefaultGCMetaInterval,
+		TaskExpireTime:          DefaultTaskExpireTime,
+		PeerGCDelay:             DefaultPeerGCDelay,
 	}
 }
 
@@ -189,6 +193,19 @@ type BaseProperties struct {
 	// unit: minutes
 	// default: 3
 	FailAccessInterval time.Duration `yaml:"failAccessInterval"`
+
+	// GCInitialDelay is the delay time from the start to the first GC execution.
+	GCInitialDelay time.Duration `yaml:"gcInitialDelay"`
+
+	// GCMetaInterval is the interval time to execute the GC meta.
+	GCMetaInterval time.Duration `yaml:"gcMetaInterval"`
+
+	// TaskExpireTime when a task is not accessed within the taskExpireTime,
+	// and it will be treated to be expired.
+	TaskExpireTime time.Duration `yaml:"taskExpireTime"`
+
+	// PeerGCDelay is the delay time to execute the GC after the peer has reported the offline.
+	PeerGCDelay time.Duration `yaml:"peerGCDelay"`
 
 	// cIDPrefix s a prefix string used to indicate that the CID is supernode.
 	cIDPrefix string

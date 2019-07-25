@@ -20,6 +20,18 @@ import (
 	"sync"
 )
 
+var defaultLocker = NewLockerPool()
+
+// GetLock locks key with defaultLocker.
+func GetLock(key string, ro bool) {
+	defaultLocker.GetLock(key, ro)
+}
+
+// ReleaseLock unlocks key with defaultLocker.
+func ReleaseLock(key string, ro bool) {
+	defaultLocker.ReleaseLock(key, ro)
+}
+
 // LockerPool is a set of reader/writer mutual exclusion locks.
 type LockerPool struct {
 	// use syncPool to cache allocated but unused *countRWMutex items for later reuse

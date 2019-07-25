@@ -17,47 +17,33 @@
 package progress
 
 import (
-	"sync"
-
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
-	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
 
 	"github.com/pkg/errors"
 )
 
 // stateSyncMap is a thread-safe map.
 type stateSyncMap struct {
-	*sync.Map
+	*syncmap.SyncMap
 }
 
 // newStateSyncMap returns a new stateSyncMap.
 func newStateSyncMap() *stateSyncMap {
-	return &stateSyncMap{&sync.Map{}}
+	return &stateSyncMap{syncmap.NewSyncMap()}
 }
 
 // add a key-value pair into the *sync.Map.
 // The ErrEmptyValue error will be returned if the key is empty.
 func (mmap *stateSyncMap) add(key string, value interface{}) error {
-	if stringutils.IsEmptyStr(key) {
-		return errors.Wrap(errortypes.ErrEmptyValue, "key")
-	}
-	mmap.Store(key, value)
-	return nil
+	return mmap.Add(key, value)
 }
 
 // get returns result as interface{} according to the key.
 // The ErrEmptyValue error will be returned if the key is empty.
 // And the ErrDataNotFound error will be returned if the key cannot be found.
 func (mmap *stateSyncMap) get(key string) (interface{}, error) {
-	if stringutils.IsEmptyStr(key) {
-		return nil, errors.Wrap(errortypes.ErrEmptyValue, "key")
-	}
-
-	if v, ok := mmap.Load(key); ok {
-		return v, nil
-	}
-
-	return nil, errors.Wrapf(errortypes.ErrDataNotFound, "key: %s", key)
+	return mmap.Get(key)
 }
 
 // getAsSuperState returns result as *superState.
@@ -120,14 +106,5 @@ func (mmap *stateSyncMap) getAsPieceState(key string) (*pieceState, error) {
 // The ErrEmptyValue error will be returned if the key is empty.
 // And the ErrDataNotFound error will be returned if the key cannot be found.
 func (mmap *stateSyncMap) remove(key string) error {
-	if stringutils.IsEmptyStr(key) {
-		return errors.Wrap(errortypes.ErrEmptyValue, "key")
-	}
-
-	if _, ok := mmap.Load(key); !ok {
-		return errors.Wrapf(errortypes.ErrDataNotFound, "key: %s", key)
-	}
-
-	mmap.Delete(key)
-	return nil
+	return mmap.Remove(key)
 }

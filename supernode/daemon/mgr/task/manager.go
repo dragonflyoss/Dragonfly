@@ -25,7 +25,6 @@ import (
 	"github.com/dragonflyoss/Dragonfly/pkg/metricsutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
-	"github.com/dragonflyoss/Dragonfly/pkg/timeutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	dutil "github.com/dragonflyoss/Dragonfly/supernode/daemon/util"
@@ -76,7 +75,6 @@ type Manager struct {
 	cfg *config.Config
 
 	taskStore               *dutil.Store
-	taskLocker              *util.LockerPool
 	accessTimeMap           *syncmap.SyncMap
 	taskURLUnReachableStore *syncmap.SyncMap
 
@@ -96,7 +94,6 @@ func NewManager(cfg *config.Config, peerMgr mgr.PeerMgr, dfgetTaskMgr mgr.DfgetT
 	return &Manager{
 		cfg:                     cfg,
 		taskStore:               dutil.NewStore(),
-		taskLocker:              util.NewLockerPool(),
 		peerMgr:                 peerMgr,
 		dfgetTaskMgr:            dfgetTaskMgr,
 		progressMgr:             progressMgr,
@@ -117,7 +114,7 @@ func (tm *Manager) Register(ctx context.Context, req *types.TaskCreateRequest) (
 	}
 
 	// Step2: add a new Task or update the exist task
-	failAccessInterval := tm.cfg.FailAccessInterval * time.Minute
+	failAccessInterval := tm.cfg.FailAccessInterval
 	task, err := tm.addOrUpdateTask(ctx, req, failAccessInterval)
 	if err != nil {
 		logrus.Infof("failed to add or update task with req %+v: %v", req, err)
@@ -127,8 +124,11 @@ func (tm *Manager) Register(ctx context.Context, req *types.TaskCreateRequest) (
 	logrus.Debugf("success to get task info: %+v", task)
 	// TODO: defer rollback the task update
 
+	util.GetLock(task.ID, true)
+	defer util.ReleaseLock(task.ID, true)
+
 	// update accessTime for taskID
-	if err := tm.accessTimeMap.Add(task.ID, timeutils.GetCurrentTimeMillis()); err != nil {
+	if err := tm.accessTimeMap.Add(task.ID, time.Now()); err != nil {
 		logrus.Warnf("failed to update accessTime for taskID(%s): %v", task.ID, err)
 	}
 
@@ -170,6 +170,8 @@ func (tm *Manager) Register(ctx context.Context, req *types.TaskCreateRequest) (
 
 // Get a task info according to specified taskID.
 func (tm *Manager) Get(ctx context.Context, taskID string) (*types.TaskInfo, error) {
+	util.GetLock(taskID, true)
+	defer util.ReleaseLock(taskID, true)
 	return tm.getTask(taskID)
 }
 
@@ -186,6 +188,9 @@ func (tm *Manager) List(ctx context.Context, filter map[string]string) ([]*types
 
 // CheckTaskStatus check the task status.
 func (tm *Manager) CheckTaskStatus(ctx context.Context, taskID string) (bool, error) {
+	util.GetLock(taskID, true)
+	defer util.ReleaseLock(taskID, true)
+
 	task, err := tm.getTask(taskID)
 	if err != nil {
 		return false, err
@@ -201,18 +206,26 @@ func (tm *Manager) CheckTaskStatus(ctx context.Context, taskID string) (bool, er
 
 // Delete deletes a task.
 func (tm *Manager) Delete(ctx context.Context, taskID string) error {
+	tm.accessTimeMap.Delete(taskID)
+	tm.taskURLUnReachableStore.Delete(taskID)
 	tm.taskStore.Delete(taskID)
 	return nil
 }
 
 // Update the info of task.
 func (tm *Manager) Update(ctx context.Context, taskID string, taskInfo *types.TaskInfo) error {
+	util.GetLock(taskID, false)
+	defer util.ReleaseLock(taskID, false)
+
 	return tm.updateTask(taskID, taskInfo)
 }
 
 // GetPieces get the pieces to be downloaded based on the scheduling result.
 func (tm *Manager) GetPieces(ctx context.Context, taskID, clientID string, req *types.PiecePullRequest) (bool, interface{}, error) {
 	logrus.Debugf("get pieces request: %+v with taskID(%s) and clientID(%s)", req, taskID, clientID)
+
+	util.GetLock(taskID, true)
+	defer util.ReleaseLock(taskID, true)
 
 	// convert piece result and dfgetTask status to dfgetTask status code
 	dfgetTaskStatus := convertToDfgetTaskStatus(req.PieceResult, req.DfgetTaskStatus)
@@ -233,7 +246,7 @@ func (tm *Manager) GetPieces(ctx context.Context, taskID, clientID string, req *
 	logrus.Debugf("success to get task: %+v", task)
 
 	// update accessTime for taskID
-	if err := tm.accessTimeMap.Add(task.ID, timeutils.GetCurrentTimeMillis()); err != nil {
+	if err := tm.accessTimeMap.Add(task.ID, time.Now()); err != nil {
 		logrus.Warnf("failed to update accessTime for taskID(%s): %v", task.ID, err)
 	}
 

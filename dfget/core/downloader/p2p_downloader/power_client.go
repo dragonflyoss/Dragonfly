@@ -81,8 +81,8 @@ func (pc *PowerClient) Run() error {
 		pc.readCost.Seconds(), pc.total)
 
 	if err != nil {
-		logrus.Errorf("read piece cont error:%v from dst:%s:%d, wait 20 ms",
-			err, pc.pieceTask.PeerIP, pc.pieceTask.PeerPort)
+		logrus.Errorf("failed to read piece cont(%s) from dst:%s:%d, wait 20 ms: %v",
+			pc.pieceTask.Range, pc.pieceTask.PeerIP, pc.pieceTask.PeerPort, err)
 		time.AfterFunc(time.Millisecond*20, func() {
 			pc.queue.Put(pc.failPiece())
 		})
