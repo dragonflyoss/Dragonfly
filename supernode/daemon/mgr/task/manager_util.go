@@ -44,6 +44,9 @@ func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateReq
 	}
 	taskID := generateTaskID(taskURL, req.Md5, req.Identifier)
 
+	util.GetLock(taskID, true)
+	defer util.ReleaseLock(taskID, true)
+
 	if key, err := tm.taskURLUnReachableStore.Get(taskID); err == nil {
 		if unReachableStartTime, ok := key.(time.Time); ok &&
 			time.Since(unReachableStartTime) < failAccessInterval {
@@ -74,9 +77,6 @@ func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateReq
 	} else {
 		task = newTask
 	}
-
-	tm.taskLocker.GetLock(taskID, false)
-	defer tm.taskLocker.ReleaseLock(taskID, false)
 
 	if task.FileLength != 0 {
 		return task, nil
@@ -145,9 +145,6 @@ func (tm *Manager) updateTask(taskID string, updateTaskInfo *types.TaskInfo) err
 	if stringutils.IsEmptyStr(updateTaskInfo.CdnStatus) {
 		return errors.Wrapf(errortypes.ErrEmptyValue, "CDNStatus of TaskInfo: %+v", updateTaskInfo)
 	}
-
-	tm.taskLocker.GetLock(taskID, false)
-	defer tm.taskLocker.ReleaseLock(taskID, false)
 
 	task, err := tm.getTask(taskID)
 	if err != nil {
@@ -225,6 +222,7 @@ func (tm *Manager) triggerCdnSyncAction(ctx context.Context, task *types.TaskInf
 		}
 		logrus.Infof("success to init cdn node or taskID %s", task.ID)
 	}
+
 	if err := tm.updateTask(task.ID, &types.TaskInfo{
 		CdnStatus: types.TaskInfoCdnStatusRUNNING,
 	}); err != nil {
@@ -322,7 +320,7 @@ func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, tas
 	// Step3. whether success
 	cdnSuccess := task.CdnStatus == types.TaskInfoCdnStatusSUCCESS
 	pieceSuccess, _ := tm.progressMgr.GetPieceProgressByCID(ctx, task.ID, clientID, "success")
-	logrus.Debugf("taskID: %s, get successful pieces: %v", task.ID, pieceSuccess)
+	logrus.Debugf("taskID(%s) clientID(%s) get successful pieces: %v", task.ID, clientID, pieceSuccess)
 	if cdnSuccess && (int32(len(pieceSuccess)) == task.PieceTotal) {
 		// update dfget task status to success
 		if err := tm.dfgetTaskMgr.UpdateStatus(ctx, clientID, task.ID, types.DfGetTaskStatusSUCCESS); err != nil {

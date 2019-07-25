@@ -80,6 +80,36 @@ func (mr *MockDfgetTaskMgrMockRecorder) GetCIDByPeerIDAndTaskID(ctx, peerID, tas
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIDByPeerIDAndTaskID", reflect.TypeOf((*MockDfgetTaskMgr)(nil).GetCIDByPeerIDAndTaskID), ctx, peerID, taskID)
 }
 
+// GetCIDsByTaskID mocks base method
+func (m *MockDfgetTaskMgr) GetCIDsByTaskID(ctx context.Context, taskID string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIDsByTaskID", ctx, taskID)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIDsByTaskID indicates an expected call of GetCIDsByTaskID
+func (mr *MockDfgetTaskMgrMockRecorder) GetCIDsByTaskID(ctx, taskID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIDsByTaskID", reflect.TypeOf((*MockDfgetTaskMgr)(nil).GetCIDsByTaskID), ctx, taskID)
+}
+
+// GetCIDAndTaskIDsByPeerID mocks base method
+func (m *MockDfgetTaskMgr) GetCIDAndTaskIDsByPeerID(ctx context.Context, peerID string) (map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCIDAndTaskIDsByPeerID", ctx, peerID)
+	ret0, _ := ret[0].(map[string]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCIDAndTaskIDsByPeerID indicates an expected call of GetCIDAndTaskIDsByPeerID
+func (mr *MockDfgetTaskMgrMockRecorder) GetCIDAndTaskIDsByPeerID(ctx, peerID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCIDAndTaskIDsByPeerID", reflect.TypeOf((*MockDfgetTaskMgr)(nil).GetCIDAndTaskIDsByPeerID), ctx, peerID)
+}
+
 // List mocks base method
 func (m *MockDfgetTaskMgr) List(ctx context.Context, filter map[string]string) ([]*types.DfGetTask, error) {
 	m.ctrl.T.Helper()

@@ -141,8 +141,13 @@ func (cm *Manager) GetStatus(ctx context.Context, taskID string) (cdnStatus stri
 	return "", nil
 }
 
-// Delete the file from disk with specified taskID.
-func (cm *Manager) Delete(ctx context.Context, taskID string) error {
+// Delete the cdn meta with specified taskID.
+func (cm *Manager) Delete(ctx context.Context, taskID string, force bool) error {
+	if !force {
+		return cm.pieceMD5Manager.removePieceMD5sByTaskID(taskID)
+	}
+
+	// TODO: delete the file form disk.
 	return nil
 }
 

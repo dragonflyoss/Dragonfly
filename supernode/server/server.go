@@ -17,6 +17,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -26,6 +27,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/cdn"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/dfgettask"
+	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/gc"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/peer"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/progress"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/scheduler"
@@ -45,6 +47,8 @@ type Server struct {
 	TaskMgr      mgr.TaskMgr
 	DfgetTaskMgr mgr.DfgetTaskMgr
 	ProgressMgr  mgr.ProgressMgr
+	GCMgr        mgr.GCMgr
+
 	OriginClient httpclient.OriginHTTPClient
 }
 
@@ -94,12 +98,18 @@ func New(cfg *config.Config, register prometheus.Registerer) (*Server, error) {
 		return nil, err
 	}
 
+	GCMgr, err := gc.NewManager(cfg, taskMgr, peerMgr, dfgetTaskMgr, progressMgr, cdnMgr)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Server{
 		Config:       cfg,
 		PeerMgr:      peerMgr,
 		TaskMgr:      taskMgr,
 		DfgetTaskMgr: dfgetTaskMgr,
 		ProgressMgr:  progressMgr,
+		GCMgr:        GCMgr,
 		OriginClient: originClient,
 	}, nil
 }
@@ -116,6 +126,7 @@ func (s *Server) Start() error {
 		return err
 	}
 
+	s.GCMgr.StartGC(context.Background())
 	server := &http.Server{
 		Handler:           router,
 		ReadTimeout:       time.Minute * 10,

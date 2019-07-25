@@ -37,6 +37,12 @@ type DfgetTaskMgr interface {
 	// GetCIDByPeerIDAndTaskID returns cid with specified peerID and taskID.
 	GetCIDByPeerIDAndTaskID(ctx context.Context, peerID, taskID string) (string, error)
 
+	// GetCIDsByTaskID returns cids as a string slice with specified taskID.
+	GetCIDsByTaskID(ctx context.Context, taskID string) ([]string, error)
+
+	// GetCIDAndTaskIDsByPeerID returns a cid<->taskID map by specified peerID.
+	GetCIDAndTaskIDsByPeerID(ctx context.Context, peerID string) (map[string]string, error)
+
 	// List returns the list of dfgetTask.
 	List(ctx context.Context, filter map[string]string) (dfgetTaskList []*types.DfGetTask, err error)
 

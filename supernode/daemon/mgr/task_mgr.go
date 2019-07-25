@@ -53,7 +53,6 @@ type TaskMgr interface {
 	CheckTaskStatus(ctx context.Context, taskID string) (bool, error)
 
 	// Delete deletes a task
-	// NOTE: delete the related peers and dfgetTask info is necessary.
 	Delete(ctx context.Context, taskID string) error
 
 	// Update updates the task info with specified info.
