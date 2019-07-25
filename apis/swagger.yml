@@ -702,6 +702,13 @@ definitions:
           tells whether it is a call from dfdaemon. dfdaemon is a long running
           process which works for container engines. It translates the image
           pulling request into raw requests into those dfget recognizes.
+      callSystem:
+        type: "string"
+        description: |
+          This attribute represents where the dfget requests come from. Dfget will pass
+          this field to supernode and supernode can do some checking and filtering via
+          black/white list mechanism to guarantee security, or some other purposes like debugging.
+        minLength: 1
 
   PeerCreateRequest:
     type: "object"
@@ -840,9 +847,9 @@ definitions:
       callSystem:
         type: "string"
         description: |
-          This field is for debugging. When caller of dfget is using it to files, he can pass callSystem
-          name to dfget. When this field is passing to supernode, supernode has ability to filter them via 
-          some black/white list to guarantee security, or some other purposes.
+          This attribute represents where the dfget requests come from. Dfget will pass
+          this field to supernode and supernode can do some checking and filtering via
+          black/white list mechanism to guarantee security, or some other purposes like debugging.
         minLength: 1
       filter:
         type: "array"
@@ -958,20 +965,7 @@ definitions:
           from source server as user's wish.
         additionalProperties:
           type: "string"
-      dfdaemon:
-        type: "boolean"
-        description: |
-          tells whether it is a call from dfdaemon. dfdaemon is a long running
-          process which works for container engines. It translates the image
-          pulling request into raw requests into those dfget recganises.
-      callSystem:
-        type: "string"
-        description: |
-          This field is for debugging. When caller of dfget is using it to files, he can pass callSystem
-          name to dfget. When this field is passing to supernode, supernode has ability to filter them via 
-          some black/white list to guarantee security, or some other purposes.
-        minLength: 1
-      
+
   TaskUpdateRequest:
     type: "object"
     description: "request used to update task attributes."
@@ -1169,7 +1163,20 @@ definitions:
       supernodeIP:
         type: "string"
         description: "IP address of supernode which the peer connects to"
- 
+      dfdaemon:
+        type: "boolean"
+        description: |
+          tells whether it is a call from dfdaemon. dfdaemon is a long running
+          process which works for container engines. It translates the image
+          pulling request into raw requests into those dfget recganises.
+      callSystem:
+        type: "string"
+        description: |
+          This attribute represents where the dfget requests come from. Dfget will pass
+          this field to supernode and supernode can do some checking and filtering via
+          black/white list mechanism to guarantee security, or some other purposes like debugging.
+        minLength: 1
+
   ErrorResponse:
     type: "object"
     description: |

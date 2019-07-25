@@ -27,6 +27,19 @@ type DfGetTask struct {
 	//
 	CID string `json:"cID,omitempty"`
 
+	// This attribute represents where the dfget requests come from. Dfget will pass
+	// this field to supernode and supernode can do some checking and filtering via
+	// black/white list mechanism to guarantee security, or some other purposes like debugging.
+	//
+	// Min Length: 1
+	CallSystem string `json:"callSystem,omitempty"`
+
+	// tells whether it is a call from dfdaemon. dfdaemon is a long running
+	// process which works for container engines. It translates the image
+	// pulling request into raw requests into those dfget recganises.
+	//
+	Dfdaemon bool `json:"dfdaemon,omitempty"`
+
 	// path is used in one peer A for uploading functionality. When peer B hopes
 	// to get piece C from peer A, B must provide a URL for piece C.
 	// Then when creating a task in supernode, peer A must provide this URL in request.
@@ -61,6 +74,10 @@ type DfGetTask struct {
 func (m *DfGetTask) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateCallSystem(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateStatus(formats); err != nil {
 		res = append(res, err)
 	}
@@ -68,6 +85,19 @@ func (m *DfGetTask) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *DfGetTask) validateCallSystem(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.CallSystem) { // not required
+		return nil
+	}
+
+	if err := validate.MinLength("callSystem", "body", string(m.CallSystem), 1); err != nil {
+		return err
+	}
+
 	return nil
 }
 

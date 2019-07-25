@@ -35,10 +35,15 @@ func init() {
 }
 
 type DfgetTaskMgrTestSuite struct {
+	manager *Manager
+}
+
+// SetUpSuite does common setup in the beginning of each test.
+func (s *DfgetTaskMgrTestSuite) SetUpSuite(c *check.C) {
+	s.manager, _ = NewManager()
 }
 
 func (s *DfgetTaskMgrTestSuite) TestDfgetTaskMgr(c *check.C) {
-	dfgetTaskManager, _ := NewManager()
 	clientID := "foo"
 	taskID := "00c4e7b174af7ed61c414b36ef82810ac0c98142c03e5748c00e1d1113f3c882"
 
@@ -51,11 +56,11 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskMgr(c *check.C) {
 		PeerID:    "foo-192.168.10.11-1553838710990554281",
 	}
 
-	err := dfgetTaskManager.Add(context.Background(), dfgetTask)
+	err := s.manager.Add(context.Background(), dfgetTask)
 	c.Check(err, check.IsNil)
 
 	// Get
-	dt, err := dfgetTaskManager.Get(context.Background(), clientID, taskID)
+	dt, err := s.manager.Get(context.Background(), clientID, taskID)
 	c.Check(err, check.IsNil)
 	c.Check(dt, check.DeepEquals, &types.DfGetTask{
 		CID:       clientID,
@@ -67,10 +72,10 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskMgr(c *check.C) {
 	})
 
 	// UpdateStatus
-	err = dfgetTaskManager.UpdateStatus(context.Background(), clientID, taskID, types.DfGetTaskStatusSUCCESS)
+	err = s.manager.UpdateStatus(context.Background(), clientID, taskID, types.DfGetTaskStatusSUCCESS)
 	c.Check(err, check.IsNil)
 
-	dt, err = dfgetTaskManager.Get(context.Background(), clientID, taskID)
+	dt, err = s.manager.Get(context.Background(), clientID, taskID)
 	c.Check(err, check.IsNil)
 	c.Check(dt, check.DeepEquals, &types.DfGetTask{
 		CID:       clientID,
@@ -82,9 +87,9 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskMgr(c *check.C) {
 	})
 
 	// Delete
-	err = dfgetTaskManager.Delete(context.Background(), clientID, taskID)
+	err = s.manager.Delete(context.Background(), clientID, taskID)
 	c.Check(err, check.IsNil)
 
-	_, err = dfgetTaskManager.Get(context.Background(), clientID, taskID)
+	_, err = s.manager.Get(context.Background(), clientID, taskID)
 	c.Check(errors.IsDataNotFound(err), check.Equals, true)
 }
