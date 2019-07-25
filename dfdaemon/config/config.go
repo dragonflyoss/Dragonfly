@@ -50,7 +50,7 @@ var fs = afero.NewOsFs()
 //
 //     proxies:
 //     # proxy all http image layer download requests with dfget
-//     - regx: blobs/sha256:.*
+//     - regx: blobs/sha256.*
 //     # change http requests to some-registry to https and proxy them with dfget
 //     - regx: some-registry/
 //       use_https: true
