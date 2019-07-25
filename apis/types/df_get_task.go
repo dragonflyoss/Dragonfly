@@ -50,6 +50,9 @@ type DfGetTask struct {
 	// Enum: [WAITING RUNNING FAILED SUCCESS]
 	Status string `json:"status,omitempty"`
 
+	// IP address of supernode which the peer connects to
+	SupernodeIP string `json:"supernodeIP,omitempty"`
+
 	// task Id
 	TaskID string `json:"taskId,omitempty"`
 }
