@@ -83,7 +83,7 @@ func (lr *LimitReader) Read(p []byte) (n int, err error) {
 		if lr.md5sum != nil {
 			lr.md5sum.Write(p[:n])
 		}
-		lr.Limiter.AcquireBlocking(int32(n))
+		lr.Limiter.AcquireBlocking(int64(n))
 	}
 	return n, e
 }

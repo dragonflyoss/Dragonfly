@@ -26,7 +26,7 @@ import (
 )
 
 // Max returns the larger of x or y.
-func Max(x, y int32) int32 {
+func Max(x, y int64) int64 {
 	if x > y {
 		return x
 	}
@@ -34,7 +34,7 @@ func Max(x, y int32) int32 {
 }
 
 // Min returns the smaller of x or y.
-func Min(x, y int32) int32 {
+func Min(x, y int64) int64 {
 	if x < y {
 		return x
 	}

@@ -134,7 +134,7 @@ func (p2p *P2PDownloader) init() {
 
 	p2p.pieceSet = make(map[string]bool)
 
-	p2p.rateLimiter = cutil.NewRateLimiter(int32(p2p.cfg.LocalLimit), 2)
+	p2p.rateLimiter = cutil.NewRateLimiter(int64(p2p.cfg.LocalLimit), 2)
 	p2p.pullRateTime = time.Now().Add(-3 * time.Second)
 }
 

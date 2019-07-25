@@ -162,7 +162,7 @@ func (s *PowerClientTestSuite) reset() {
 	s.powerClient = &PowerClient{
 		cfg:         &config.Config{RV: config.RuntimeVariable{Cid: ""}},
 		node:        "127.0.0.1",
-		rateLimiter: util.NewRateLimiter(int32(5), 2),
+		rateLimiter: util.NewRateLimiter(int64(5), 2),
 		downloadAPI: NewMockDownloadAPI(),
 		pieceTask: &types.PullPieceTaskResponseContinueData{
 			PieceMd5: "",
