@@ -28,8 +28,6 @@ func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateReq
 	var task *types.TaskInfo
 	newTask := &types.TaskInfo{
 		ID:         taskID,
-		CallSystem: req.CallSystem,
-		Dfdaemon:   req.Dfdaemon,
 		Headers:    req.Headers,
 		Identifier: req.Identifier,
 		Md5:        req.Md5,
@@ -155,6 +153,8 @@ func (tm *Manager) updateTask(taskID string, updateTaskInfo *types.TaskInfo) err
 func (tm *Manager) addDfgetTask(ctx context.Context, req *types.TaskCreateRequest, task *types.TaskInfo) (*types.DfGetTask, error) {
 	dfgetTask := &types.DfGetTask{
 		CID:         req.CID,
+		CallSystem:  req.CallSystem,
+		Dfdaemon:    req.Dfdaemon,
 		Path:        req.Path,
 		PieceSize:   task.PieceSize,
 		Status:      types.DfGetTaskStatusWAITING,

@@ -81,9 +81,7 @@ func (s *TaskUtilTestSuite) TestAddOrUpdateTask(c *check.C) {
 			},
 			task: &types.TaskInfo{
 				ID:             generateTaskID("http://aa.bb.com", "", ""),
-				CallSystem:     "foo",
 				CdnStatus:      types.TaskInfoCdnStatusWAITING,
-				Dfdaemon:       true,
 				HTTPFileLength: 1000,
 				PieceSize:      config.DefaultPieceSize,
 				PieceTotal:     1,
@@ -103,9 +101,7 @@ func (s *TaskUtilTestSuite) TestAddOrUpdateTask(c *check.C) {
 			},
 			task: &types.TaskInfo{
 				ID:             generateTaskID("http://aa.bb.com", "", ""),
-				CallSystem:     "foo",
 				CdnStatus:      types.TaskInfoCdnStatusWAITING,
-				Dfdaemon:       true,
 				HTTPFileLength: 1000,
 				PieceSize:      config.DefaultPieceSize,
 				PieceTotal:     1,
