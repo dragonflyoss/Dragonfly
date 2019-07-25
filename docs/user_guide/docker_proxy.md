@@ -8,7 +8,7 @@ To use dfdaemon as HTTP proxy, first you need to add a proxy rule in
 
 ```yaml
 proxies:
-- regx: blobs/sha256:.*
+- regx: blobs/sha256.*
 ```
 
 This will proxy all requests for image layers with dfget.
