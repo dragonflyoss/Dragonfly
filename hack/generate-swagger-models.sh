@@ -1,5 +1,9 @@
 #!/bin/bash
 
+set -o nounset
+set -o errexit
+set -o pipefail
+
 # Here is details of the swagger binary we use.
 # $ swagger version
 # version: 0.19.0

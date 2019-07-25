@@ -1,4 +1,9 @@
 #!/bin/bash
+
+set -o nounset
+set -o errexit
+set -o pipefail
+
 DFDAEMON_BINARY_NAME=dfdaemon
 DFGET_BINARY_NAME=dfget
 SUPERNODE_BINARY_NAME=supernode
@@ -100,7 +105,7 @@ main() {
         esac
     else
         echo "Begin to build in the local environment."
-        case "$1" in
+        case "${1-}" in
             dfdaemon)
                 build-dfdaemon-local
             ;;

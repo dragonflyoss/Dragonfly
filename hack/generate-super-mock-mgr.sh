@@ -1,5 +1,8 @@
 #!/bin/bash
-set -e
+
+set -o nounset
+set -o errexit
+set -o pipefail
 
 # This script is used to generate mock files for interfaces.
 
