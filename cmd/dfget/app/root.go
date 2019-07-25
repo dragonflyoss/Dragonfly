@@ -89,7 +89,10 @@ func runDfget() error {
 		return err
 	}
 
-	checkParameters()
+	if err := checkParameters(); err != nil {
+		util.Printer.Println(err.Error())
+		return err
+	}
 	logrus.Infof("get cmd params:%q", os.Args)
 
 	if err := config.AssertConfig(cfg); err != nil {
@@ -107,11 +110,11 @@ func runDfget() error {
 	return nil
 }
 
-func checkParameters() {
+func checkParameters() error {
 	if len(os.Args) < 2 {
-		fmt.Println("Please use the command 'help' to show the help information.")
-		os.Exit(0)
+		return errors.New(-1, "Please use the command 'help' to show the help information.")
 	}
+	return nil
 }
 
 // load config from property files.
