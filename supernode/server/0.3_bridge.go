@@ -77,6 +77,7 @@ func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http
 	peerID := peerCreateResponse.ID
 	taskCreateRequest := &types.TaskCreateRequest{
 		CID:         request.CID,
+		CallSystem:  request.CallSystem,
 		Dfdaemon:    request.Dfdaemon,
 		Headers:     cutil.ConvertHeaders(request.Headers),
 		Identifier:  request.Identifier,
