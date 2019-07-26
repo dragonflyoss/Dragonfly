@@ -24,9 +24,9 @@ type TaskCreateRequest struct {
 	//
 	CID string `json:"cID,omitempty"`
 
-	// This field is for debugging. When caller of dfget is using it to files, he can pass callSystem
-	// name to dfget. When this field is passing to supernode, supernode has ability to filter them via
-	// some black/white list to guarantee security, or some other purposes.
+	// This attribute represents where the dfget requests come from. Dfget will pass
+	// this field to supernode and supernode can do some checking and filtering via
+	// black/white list mechanism to guarantee security, or some other purposes like debugging.
 	//
 	// Min Length: 1
 	CallSystem string `json:"callSystem,omitempty"`
