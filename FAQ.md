@@ -298,7 +298,7 @@ Name                           | Flag                      | Remark
 ------------------------------ | ------------------------- | ----------
 dfdaemon proxy server port     | dfdaemon --port           | The port should   be in the range of 2000-65535.
 dfget uploader server port     | dfget server --port       | You can use command `dfget server` to start a uploader server before using dfget to download if you don't want to use a random port.
-supernode register port        | supernode --port          | You can use `dfget --node IP:port` to register with the specified supernode register port.
+supernode register port        | supernode --port          | You can use `dfget --node host:port` to register with the specified supernode register port.
 supernode cdn file server port | supernode --download-port | You should prepare a file server firstly and listen on the port that flag `download-port` will use.
 
 **NOTE**: The supernode maintains both Java and Golang versions currently. And the above table is for the Golang version. And you will get a guide [here](https://d7y.io/en-us/docs/userguide/supernode_configuration.html) for Java version.
