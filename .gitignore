@@ -15,6 +15,7 @@ target
 .go/
 release/
 bin/
+vendor/
 
 #df-daemon
 
