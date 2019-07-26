@@ -2,16 +2,12 @@ package cdn
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
+	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 )
 
-var getCurrentTimeMillisFunc = getCurrentTimeMillis
-
-func getCurrentTimeMillis() int64 {
-	return time.Now().UnixNano() / time.Millisecond.Nanoseconds()
-}
+var getCurrentTimeMillisFunc = cutil.GetCurrentTimeMillis
 
 // getContentLengthByHeader calculates the piece content length by piece header.
 func getContentLengthByHeader(pieceHeader uint32) int32 {

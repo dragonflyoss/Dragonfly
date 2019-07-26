@@ -29,8 +29,9 @@ var getContentLength = cutil.GetContentLength
 type Manager struct {
 	cfg *config.Config
 
-	taskStore  *dutil.Store
-	taskLocker *util.LockerPool
+	taskStore     *dutil.Store
+	taskLocker    *util.LockerPool
+	accessTimeMap *cutil.SyncMap
 
 	peerMgr      mgr.PeerMgr
 	dfgetTaskMgr mgr.DfgetTaskMgr
@@ -43,14 +44,15 @@ type Manager struct {
 func NewManager(cfg *config.Config, peerMgr mgr.PeerMgr, dfgetTaskMgr mgr.DfgetTaskMgr,
 	progressMgr mgr.ProgressMgr, cdnMgr mgr.CDNMgr, schedulerMgr mgr.SchedulerMgr) (*Manager, error) {
 	return &Manager{
-		cfg:          cfg,
-		taskStore:    dutil.NewStore(),
-		taskLocker:   util.NewLockerPool(),
-		peerMgr:      peerMgr,
-		dfgetTaskMgr: dfgetTaskMgr,
-		progressMgr:  progressMgr,
-		cdnMgr:       cdnMgr,
-		schedulerMgr: schedulerMgr,
+		cfg:           cfg,
+		taskStore:     dutil.NewStore(),
+		taskLocker:    util.NewLockerPool(),
+		peerMgr:       peerMgr,
+		dfgetTaskMgr:  dfgetTaskMgr,
+		progressMgr:   progressMgr,
+		cdnMgr:        cdnMgr,
+		schedulerMgr:  schedulerMgr,
+		accessTimeMap: cutil.NewSyncMap(),
 	}, nil
 }
 
@@ -69,6 +71,11 @@ func (tm *Manager) Register(ctx context.Context, req *types.TaskCreateRequest) (
 	}
 	logrus.Debugf("success to get task info: %+v", task)
 	// TODO: defer rollback the task update
+
+	// update accessTime for taskID
+	if err := tm.accessTimeMap.Add(task.ID, cutil.GetCurrentTimeMillis()); err != nil {
+		logrus.Warnf("failed to update accessTime for taskID(%s): %v", task.ID, err)
+	}
 
 	// Step3: add a new DfgetTask
 	dfgetTask, err := tm.addDfgetTask(ctx, req, task)
@@ -109,6 +116,11 @@ func (tm *Manager) Register(ctx context.Context, req *types.TaskCreateRequest) (
 // Get a task info according to specified taskID.
 func (tm *Manager) Get(ctx context.Context, taskID string) (*types.TaskInfo, error) {
 	return tm.getTask(taskID)
+}
+
+// GetAccessTime gets all task accessTime.
+func (tm *Manager) GetAccessTime(ctx context.Context) (*cutil.SyncMap, error) {
+	return tm.accessTimeMap, nil
 }
 
 // List returns a list of tasks with filter.
@@ -164,6 +176,11 @@ func (tm *Manager) GetPieces(ctx context.Context, taskID, clientID string, req *
 		return false, nil, errors.Wrapf(err, "failed to get taskID (%s)", taskID)
 	}
 	logrus.Debugf("success to get task: %+v", task)
+
+	// update accessTime for taskID
+	if err := tm.accessTimeMap.Add(task.ID, cutil.GetCurrentTimeMillis()); err != nil {
+		logrus.Warnf("failed to update accessTime for taskID(%s): %v", task.ID, err)
+	}
 
 	if dfgetTaskStatus == types.DfGetTaskStatusWAITING {
 		logrus.Debugf("start to process task(%s) start", taskID)
