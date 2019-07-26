@@ -651,6 +651,7 @@ A download process initiated by dfget or other clients.
 |**peerID**  <br>*optional*|PeerID uniquely identifies a peer, and the cID uniquely identifies a <br>download task belonging to a peer. One peer can initiate multiple download tasks, <br>which means that one peer corresponds to multiple cIDs.|string|
 |**pieceSize**  <br>*optional*|The size of pieces which is calculated as per the following strategy<br>1. If file's total size is less than 200MB, then the piece size is 4MB by default.<br>2. Otherwise, it equals to the smaller value between totalSize/100MB + 2 MB and 15MB.|integer (int32)|
 |**status**  <br>*optional*|The status of Dfget download process.|enum (WAITING, RUNNING, FAILED, SUCCESS)|
+|**supernodeIP**  <br>*optional*|IP address of supernode which the peer connects to|string|
 |**taskId**  <br>*optional*||string|
 
 
@@ -834,6 +835,7 @@ The returned information from supernode.
 |**path**  <br>*optional*|path is used in one peer A for uploading functionality. When peer B hopes<br>to get piece C from peer A, B must provide a URL for piece C.<br>Then when creating a task in supernode, peer A must provide this URL in request.|string|
 |**peerID**  <br>*optional*|PeerID is used to uniquely identifies a peer which will be used to create a dfgetTask.<br>The value must be the value in the response after registering a peer.|string|
 |**rawURL**  <br>*optional*|The is the resource's URL which user uses dfget to download. The location of URL can be anywhere, LAN or WAN.<br>For image distribution, this is image layer's URL in image registry.<br>The resource url is provided by command line parameter.|string|
+|**supernodeIP**  <br>*optional*|IP address of supernode which the peer connects to|string|
 |**taskURL**  <br>*optional*|taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via<br>--filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.|string|
 
 
