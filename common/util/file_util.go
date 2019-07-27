@@ -158,7 +158,7 @@ func MoveFileAfterCheckMd5(src string, dst string, md5 string) error {
 	}
 	m := Md5Sum(src)
 	if m != md5 {
-		return fmt.Errorf("move file with md5 check:%s error, md5 of srouce "+
+		return fmt.Errorf("move file with md5 check:%s error, md5 of source "+
 			"file doesn't match against the given md5 value", src)
 	}
 	return MoveFile(src, dst)
