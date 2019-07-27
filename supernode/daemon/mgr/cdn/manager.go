@@ -15,6 +15,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
 	"github.com/dragonflyoss/Dragonfly/supernode/util"
 
+	"github.com/dragonflyoss/Dragonfly/supernode/httpclient"
 	"github.com/sirupsen/logrus"
 )
 
@@ -31,12 +32,13 @@ type Manager struct {
 	metaDataManager *fileMetaDataManager
 	cdnReporter     *reporter
 	detector        *cacheDetector
+	originClient    httpclient.OriginHTTPClient
 	pieceMD5Manager *pieceMD5Mgr
 	writer          *superWriter
 }
 
 // NewManager returns a new Manager.
-func NewManager(cfg *config.Config, cacheStore *store.Store, progressManager mgr.ProgressMgr) (*Manager, error) {
+func NewManager(cfg *config.Config, cacheStore *store.Store, progressManager mgr.ProgressMgr, originClient httpclient.OriginHTTPClient) (*Manager, error) {
 	rateLimiter := ratelimiter.NewRateLimiter(ratelimiter.TransRate(config.TransLimit(cfg.MaxBandwidth-cfg.SystemReservedBandwidth)), 2)
 	metaDataManager := newFileMetaDataManager(cacheStore)
 	pieceMD5Manager := newpieceMD5Mgr()
@@ -50,7 +52,8 @@ func NewManager(cfg *config.Config, cacheStore *store.Store, progressManager mgr
 		metaDataManager: metaDataManager,
 		pieceMD5Manager: pieceMD5Manager,
 		cdnReporter:     cdnReporter,
-		detector:        newCacheDetector(cacheStore, metaDataManager),
+		detector:        newCacheDetector(cacheStore, metaDataManager, originClient),
+		originClient:    originClient,
 		writer:          newSuperWriter(cacheStore, cdnReporter),
 	}, nil
 }

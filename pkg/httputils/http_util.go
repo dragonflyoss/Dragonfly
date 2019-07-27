@@ -29,8 +29,6 @@ import (
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
-	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
-	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/util"
 
 	"github.com/pkg/errors"
@@ -291,67 +289,6 @@ func CheckConnect(ip string, port int, timeout int) (localIP string, e error) {
 		}
 	}
 	return
-}
-
-// IsExpired checks if a resource received or stored is the same.
-func IsExpired(url string, headers map[string]string, lastModified int64, eTag string) (bool, error) {
-	if lastModified <= 0 && stringutils.IsEmptyStr(eTag) {
-		return true, nil
-	}
-
-	// set headers
-	if headers == nil {
-		headers = make(map[string]string)
-	}
-	if lastModified > 0 {
-		lastModifiedStr, _ := netutils.ConvertTimeIntToString(lastModified)
-		headers["If-Modified-Since"] = lastModifiedStr
-	}
-	if !stringutils.IsEmptyStr(eTag) {
-		headers["If-None-Match"] = eTag
-	}
-
-	// send request
-	resp, err := HTTPGetTimeout(url, headers, 4*time.Second)
-	if err != nil {
-		return false, err
-	}
-	resp.Body.Close()
-
-	return resp.StatusCode != http.StatusNotModified, nil
-}
-
-// IsSupportRange checks if the source url support partial requests.
-func IsSupportRange(url string, headers map[string]string) (bool, error) {
-	// set headers
-	if headers == nil {
-		headers = make(map[string]string)
-	}
-	headers["Range"] = "bytes=0-0"
-
-	// send request
-	resp, err := HTTPGetTimeout(url, headers, 4*time.Second)
-	if err != nil {
-		return false, err
-	}
-	resp.Body.Close()
-
-	if resp.StatusCode == http.StatusPartialContent {
-		return true, nil
-	}
-	return false, nil
-}
-
-// GetContentLength send a head request to get file length.
-func GetContentLength(url string, headers map[string]string) (int64, int, error) {
-	// send request
-	resp, err := HTTPGetTimeout(url, headers, 4*time.Second)
-	if err != nil {
-		return 0, 0, err
-	}
-	resp.Body.Close()
-
-	return resp.ContentLength, resp.StatusCode, nil
 }
 
 // ConstructRangeStr wrap the rangeStr as a HTTP Range header value.
