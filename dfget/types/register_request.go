@@ -37,6 +37,8 @@ type RegisterRequest struct {
 	CallSystem  string   `json:"callSystem,omitempty"`
 	Headers     []string `json:"headers,omitempty"`
 	Dfdaemon    bool     `json:"dfdaemon,omitempty"`
+	Insecure    bool     `json:"insecure,omitempty"`
+	RootCAs     [][]byte `json:"rootCAs,omitempty"`
 }
 
 func (r *RegisterRequest) String() string {

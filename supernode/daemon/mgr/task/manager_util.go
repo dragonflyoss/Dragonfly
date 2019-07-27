@@ -82,7 +82,7 @@ func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateReq
 	}
 
 	// get fileLength with req.Headers
-	fileLength, err := getHTTPFileLength(taskID, task.RawURL, req.Headers)
+	fileLength, err := tm.getHTTPFileLength(taskID, task.RawURL, req.Headers)
 	if err != nil {
 		if errortypes.IsURLNotReachable(err) {
 			tm.taskURLUnReachableStore.Add(taskID, time.Now())
@@ -496,8 +496,8 @@ func isWait(CDNStatus string) bool {
 	return CDNStatus == types.TaskInfoCdnStatusWAITING
 }
 
-func getHTTPFileLength(taskID, url string, headers map[string]string) (int64, error) {
-	fileLength, code, err := getContentLength(url, headers)
+func (tm *Manager) getHTTPFileLength(taskID, url string, headers map[string]string) (int64, error) {
+	fileLength, code, err := tm.OriginClient.GetContentLength(url, headers)
 	if err != nil {
 		return -1, errors.Wrapf(errortypes.ErrUnknowError, "failed to get http file Length: %v", err)
 	}

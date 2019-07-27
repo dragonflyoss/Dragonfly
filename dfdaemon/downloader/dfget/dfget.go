@@ -18,17 +18,18 @@ package dfget
 
 import (
 	"fmt"
+	netUrl "net/url"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/exception"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // DFGetter implements Downloader to download file by dragonfly
@@ -89,6 +90,18 @@ func (dfGetter *DFGetter) getCommand(
 			}
 		} else {
 			add("--header", fmt.Sprintf("%s:%s", key, ""))
+		}
+	}
+
+	urlInfo, _ := netUrl.Parse(url)
+	for _, h := range dfGetter.config.HostsConfig {
+		if urlInfo != nil && h.Regx.MatchString(urlInfo.Host) {
+			if h.Insecure {
+				args = append(args, "--insecure")
+			}
+			if h.Certs != nil && len(h.Certs.Files) != 0 {
+				add("--cacerts", strings.Join(h.Certs.Files, ","))
+			}
 		}
 	}
 

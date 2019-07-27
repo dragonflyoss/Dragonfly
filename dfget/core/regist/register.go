@@ -17,6 +17,7 @@
 package regist
 
 import (
+	"io/ioutil"
 	"os"
 	"time"
 
@@ -139,12 +140,23 @@ func (s *supernodeRegister) constructRegisterRequest(port int) *types.RegisterRe
 		CallSystem: cfg.CallSystem,
 		Headers:    cfg.Header,
 		Dfdaemon:   cfg.DFDaemon,
+		Insecure:   cfg.Insecure,
 	}
 	if cfg.Md5 != "" {
 		req.Md5 = cfg.Md5
 	} else if cfg.Identifier != "" {
 		req.Identifier = cfg.Identifier
 	}
+
+	for _, certPath := range cfg.Cacerts {
+		caBytes, err := ioutil.ReadFile(certPath)
+		if err != nil {
+			logrus.Errorf("read cert file fail:%v", err)
+			continue
+		}
+		req.RootCAs = append(req.RootCAs, caBytes)
+	}
+
 	return req
 }
 
