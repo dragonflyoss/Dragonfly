@@ -122,6 +122,9 @@ type Starter struct {
 	// is killed.
 	fileSrv map[*exec.Cmd]*http.Server
 
+	// supernodeFileServerHome is the home dir of supernode file server.
+	supernodeFileServerHome string
+
 	lock sync.Mutex
 }
 
@@ -130,6 +133,7 @@ func (s *Starter) getCmdGo(dir string, running time.Duration, args ...string) (c
 		"--home-dir=" + dir,
 		"--port=" + strconv.Itoa(environment.SupernodeListenPort),
 		"--advertise-ip=127.0.0.1",
+		"--download-port=" + strconv.Itoa(environment.SupernodeDownloadPort),
 		"--debug",
 	}, args...)
 
@@ -149,11 +153,17 @@ func (s *Starter) Supernode(running time.Duration, args ...string) (
 		s.Kill(cmd)
 		return nil, err
 	}
-	if _, err = s.fileServer(cmd, fp.Join(dir, "repo")); err != nil {
+	s.supernodeFileServerHome = fp.Join(dir, "repo")
+	if _, err = s.fileServer(cmd, s.supernodeFileServerHome, environment.SupernodeDownloadPort); err != nil {
 		s.Kill(cmd)
 		return nil, err
 	}
 	return cmd, err
+}
+
+// WriteSupernodeFileServer write a file to the supernode file server.
+func (s *Starter) WriteSupernodeFileServer(filePath string, data []byte, perm os.FileMode) error {
+	return ioutil.WriteFile(fp.Join(s.supernodeFileServerHome, filePath), data, perm)
 }
 
 // DFDaemon starts dfdaemon.
@@ -253,9 +263,9 @@ func (s *Starter) addCmd(cmd *exec.Cmd) {
 	s.listMap[cmd] = el
 }
 
-func (s *Starter) fileServer(cmd *exec.Cmd, root string) (*http.Server, error) {
+func (s *Starter) fileServer(cmd *exec.Cmd, root string, port int) (*http.Server, error) {
 	server := &http.Server{
-		Addr:    ":8001",
+		Addr:    ":" + strconv.Itoa(port),
 		Handler: http.FileServer(http.Dir(root)),
 	}
 	err := make(chan error)
