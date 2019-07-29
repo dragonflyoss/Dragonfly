@@ -87,12 +87,13 @@ type peerServer struct {
 
 // taskConfig refers to some name about peer task.
 type taskConfig struct {
-	taskID    string
-	rateLimit int
-	cid       string
-	dataDir   string
-	superNode string
-	finished  bool
+	taskID     string
+	rateLimit  int
+	cid        string
+	dataDir    string
+	superNode  string
+	finished   bool
+	accessTime time.Time
 }
 
 // uploadParam refers to all params needed in the handler of upload.
@@ -253,13 +254,15 @@ func (ps *peerServer) oneFinishHandler(w http.ResponseWriter, r *http.Request) {
 		task.cid = cid
 		task.superNode = superNode
 		task.finished = true
+		task.accessTime = time.Now()
 	} else {
 		ps.syncTaskMap.Store(taskFileName, &taskConfig{
-			taskID:    taskID,
-			cid:       cid,
-			dataDir:   ps.cfg.RV.SystemDataDir,
-			superNode: superNode,
-			finished:  true,
+			taskID:     taskID,
+			cid:        cid,
+			dataDir:    ps.cfg.RV.SystemDataDir,
+			superNode:  superNode,
+			finished:   true,
+			accessTime: time.Now(),
 		})
 	}
 	sendSuccess(w)
@@ -274,7 +277,7 @@ func (ps *peerServer) pingHandler(w http.ResponseWriter, r *http.Request) {
 // ----------------------------------------------------------------------------
 // handler process
 
-// getTaskFile find the file2000 and return the File object.
+// getTaskFile finds the file and returns the File object.
 func (ps *peerServer) getTaskFile(taskFileName string) (*os.File, int64, error) {
 	errSize := int64(-1)
 
@@ -286,6 +289,9 @@ func (ps *peerServer) getTaskFile(taskFileName string) (*os.File, int64, error) 
 	if !ok {
 		return nil, errSize, fmt.Errorf("failed to assert: %s", taskFileName)
 	}
+
+	// update the accessTime of taskFileName
+	tc.accessTime = time.Now()
 
 	taskPath := helper.GetServiceFile(taskFileName, tc.dataDir)
 
@@ -482,7 +488,15 @@ func (ps *peerServer) deleteExpiredFile(path string, info os.FileInfo,
 		if ok && !task.finished {
 			return false
 		}
-		if time.Now().Sub(info.ModTime()) > expireTime {
+
+		var lastAccessTime = task.accessTime
+		// use the bigger of access time and modify time to
+		// check whether the task is expired
+		if task.accessTime.Sub(info.ModTime()) < 0 {
+			lastAccessTime = info.ModTime()
+		}
+		// if the last access time is expireTime ago
+		if time.Since(lastAccessTime) > expireTime {
 			if ok {
 				ps.api.ServiceDown(task.superNode, task.taskID, task.cid)
 			}

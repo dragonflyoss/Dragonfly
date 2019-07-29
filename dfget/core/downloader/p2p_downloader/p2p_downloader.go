@@ -226,11 +226,11 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 
 	for {
 		if res, err = p2p.API.PullPieceTask(item.SuperNode, req); err != nil {
-			logrus.Errorf("pull piece task error: %v", err)
+			logrus.Errorf("pull piece task(%+v) error: %v", item, err)
 		} else if res.Code == constants.CodePeerWait {
 			sleepTime := time.Duration(rand.Intn(1400)+600) * time.Millisecond
-			logrus.Infof("pull piece task result:%s and sleep %.3fs",
-				res, sleepTime.Seconds())
+			logrus.Infof("pull piece task(%+v) result:%s and sleep %.3fs",
+				item, res, sleepTime.Seconds())
 			time.Sleep(sleepTime)
 			continue
 		}
