@@ -339,9 +339,10 @@ func (s *PeerServerTestSuite) TestDeleteExpiredFile(c *check.C) {
 	}
 	var t = func(f bool) *taskConfig {
 		return &taskConfig{
-			taskID:   fmt.Sprintf("%d", rand.Int63()),
-			finished: f,
-			dataDir:  cfg.RV.SystemDataDir,
+			taskID:     fmt.Sprintf("%d", rand.Int63()),
+			finished:   f,
+			dataDir:    cfg.RV.SystemDataDir,
+			accessTime: time.Now(),
 		}
 	}
 
