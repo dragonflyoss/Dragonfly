@@ -30,7 +30,7 @@ func init() {
 
 func (suite *RateLimiterSuite) TestNewRateLimiter(c *check.C) {
 	var cases = []struct {
-		r int32
+		r int64
 		w int64
 		e *RateLimiter
 	}{
@@ -44,7 +44,7 @@ func (suite *RateLimiterSuite) TestNewRateLimiter(c *check.C) {
 	for _, cc := range cases {
 		rl := NewRateLimiter(cc.r, cc.w)
 		c.Assert(rl.capacity, check.Equals, cc.e.rate)
-		c.Assert(rl.bucket, check.Equals, int32(0))
+		c.Assert(rl.bucket, check.Equals, int64(0))
 		c.Assert(rl.rate, check.Equals, cc.e.rate)
 		c.Assert(rl.window, check.Equals, cc.e.window)
 		c.Assert(rl.ratePerWindow, check.Equals, cc.e.ratePerWindow)
@@ -53,9 +53,9 @@ func (suite *RateLimiterSuite) TestNewRateLimiter(c *check.C) {
 
 func (suite *RateLimiterSuite) TestRateLimiter_SetRate(c *check.C) {
 	var cases = []struct {
-		r  int32
+		r  int64
 		w  int64
-		nr int32
+		nr int64
 		e  *RateLimiter
 	}{
 		{0, 1, 500, &RateLimiter{rate: 500, window: 2, ratePerWindow: 1}},
@@ -78,9 +78,9 @@ func (suite *RateLimiterSuite) TestRateLimiter_SetRate(c *check.C) {
 
 func (suite *RateLimiterSuite) TestRateLimiter_AcquireBlocking(c *check.C) {
 	var cases = []struct {
-		r     int32
+		r     int64
 		w     int64
-		t     int32
+		t     int64
 		count int
 		e     int64
 	}{
@@ -106,7 +106,7 @@ func (suite *RateLimiterSuite) TestRateLimiter_AcquireBlocking(c *check.C) {
 
 func (suite *RateLimiterSuite) TestRateLimiter_AcquireNonBlocking(c *check.C) {
 	rl := NewRateLimiter(1000, 1)
-	c.Assert(rl.AcquireNonBlocking(1000), check.Equals, int32(-1))
+	c.Assert(rl.AcquireNonBlocking(1000), check.Equals, int64(-1))
 	rl.blocking(1000)
-	c.Assert(rl.AcquireNonBlocking(1000), check.Equals, int32(1000))
+	c.Assert(rl.AcquireNonBlocking(1000), check.Equals, int64(1000))
 }

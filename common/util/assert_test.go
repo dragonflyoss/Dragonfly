@@ -34,16 +34,16 @@ func init() {
 
 func (suite *AssertSuite) TestMax(c *check.C) {
 	c.Assert(Max(1, 2), check.Not(check.Equals), 2)
-	c.Assert(Max(1, 2), check.Equals, int32(2))
-	c.Assert(Max(1, 1), check.Equals, int32(1))
-	c.Assert(Max(3, 2), check.Equals, int32(3))
+	c.Assert(Max(1, 2), check.Equals, int64(2))
+	c.Assert(Max(1, 1), check.Equals, int64(1))
+	c.Assert(Max(3, 2), check.Equals, int64(3))
 }
 
 func (suite *AssertSuite) TestMin(c *check.C) {
 	c.Assert(Min(1, 2), check.Not(check.Equals), 1)
-	c.Assert(Min(1, 2), check.Equals, int32(1))
-	c.Assert(Min(1, 1), check.Equals, int32(1))
-	c.Assert(Min(3, 2), check.Equals, int32(2))
+	c.Assert(Min(1, 2), check.Equals, int64(1))
+	c.Assert(Min(1, 1), check.Equals, int64(1))
+	c.Assert(Min(3, 2), check.Equals, int64(2))
 }
 
 func (suite *AssertSuite) TestIsEmptyStr(c *check.C) {
