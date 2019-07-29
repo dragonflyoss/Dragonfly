@@ -59,7 +59,7 @@ var fs = afero.NewOsFs()
 //       direct: true
 //
 //     hijack_https:
-//       # key pair used to hijack https requests
+//       # key pair used to hijack https requests, used for default cert
 //       cert: df.crt
 //       key: df.key
 //       hosts:
@@ -68,6 +68,9 @@ var fs = afero.NewOsFs()
 //         insecure: false
 //         # optional certificates if the host uses self-signed certificates
 //         certs: []
+//         # key pair used to hijack https requests
+//         serverCertFile: df.crt
+//         serverCertKey: df.key
 type Properties struct {
 	// Registry mirror settings
 	RegistryMirror *RegistryMirror `yaml:"registry_mirror" json:"registry_mirror"`
@@ -199,9 +202,12 @@ type HijackConfig struct {
 
 // HijackHost is a hijack rule for the hosts that matches Regx
 type HijackHost struct {
-	Regx     *Regexp   `yaml:"regx" json:"regx"`
-	Insecure bool      `yaml:"insecure" json:"insecure"`
-	Certs    *CertPool `yaml:"certs" json:"certs"`
+	Regx           *Regexp   `yaml:"regx" json:"regx"`
+	Insecure       bool      `yaml:"insecure" json:"insecure"`
+	Certs          *CertPool `yaml:"certs" json:"certs"`
+	ServerCertFile string    `yaml:"serverCertFile" json:"serverCertFile"`
+	ServerKeyFile  string    `yaml:"serverKeyFile" json:"serverKeyFile"`
+	ServerCert     *tls.Certificate
 }
 
 // URL is simple wrapper around url.URL to make it unmarshallable from a string
