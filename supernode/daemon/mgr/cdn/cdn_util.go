@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	"github.com/dragonflyoss/Dragonfly/pkg/time"
+	"github.com/dragonflyoss/Dragonfly/pkg/timeutils"
 )
 
-var getCurrentTimeMillisFunc = time.GetCurrentTimeMillis
+var getCurrentTimeMillisFunc = timeutils.GetCurrentTimeMillis
 
 // getContentLengthByHeader calculates the piece content length by piece header.
 func getContentLengthByHeader(pieceHeader uint32) int32 {
