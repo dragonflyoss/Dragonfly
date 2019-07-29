@@ -210,7 +210,7 @@ func (ps *peerServer) checkHandler(w http.ResponseWriter, r *http.Request) {
 	totalLimit, err := strconv.Atoi(r.Header.Get(config.StrTotalLimit))
 	if err == nil && totalLimit > 0 {
 		if ps.rateLimiter == nil {
-			ps.rateLimiter = util.NewRateLimiter(int32(totalLimit), 2)
+			ps.rateLimiter = util.NewRateLimiter(int64(totalLimit), 2)
 		} else {
 			ps.rateLimiter.SetRate(util.TransRate(totalLimit))
 		}
