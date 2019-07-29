@@ -35,6 +35,18 @@ func WithCert(cert *tls.Certificate) Option {
 func WithHTTPSHosts(hosts ...*config.HijackHost) Option {
 	return func(p *Proxy) error {
 		p.httpsHosts = hosts
+		for _, host := range p.httpsHosts {
+			if host.ServerCertFile != "" && host.ServerKeyFile != "" {
+				cert, err := tls.LoadX509KeyPair(host.ServerCertFile, host.ServerKeyFile)
+				if err != nil {
+					logrus.Errorf("failed to load self-signed certificate (%s, %s) for https hijacking, host: %s, err: %v",
+						host.ServerCertFile, host.ServerKeyFile, host.Regx.String(), err)
+					return err
+				}
+				logrus.Infof("use self-signed certificate (%s, %s) for https hijacking, host: %s", host.ServerCertFile, host.ServerKeyFile, host.Regx.String())
+				host.ServerCert = &cert
+			}
+		}
 		return nil
 	}
 }
@@ -173,17 +185,17 @@ func (proxy *Proxy) mirrorRegistry(w http.ResponseWriter, r *http.Request) {
 
 // remoteConfig returns the tls.Config used to connect to the given remote host.
 // If the host should not be hijacked, nil will be returned.
-func (proxy *Proxy) remoteConfig(host string) *tls.Config {
+func (proxy *Proxy) remoteConfig(host string) (*tls.Config, *tls.Certificate) {
 	for _, h := range proxy.httpsHosts {
 		if h.Regx.MatchString(host) {
 			config := &tls.Config{InsecureSkipVerify: h.Insecure}
 			if h.Certs != nil {
 				config.RootCAs = h.Certs.CertPool
 			}
-			return config
+			return config, h.ServerCert
 		}
 	}
-	return nil
+	return nil, nil
 }
 
 // SetRules change the rule lists of the proxy to the given rules
@@ -273,21 +285,19 @@ func tunnelHTTPS(w http.ResponseWriter, r *http.Request) {
 }
 
 func (proxy *Proxy) handleHTTPS(w http.ResponseWriter, r *http.Request) {
-	if proxy.cert == nil {
+	cConfig, serverCert := proxy.remoteConfig(r.Host)
+	if cConfig == nil || serverCert == nil && proxy.cert == nil {
 		tunnelHTTPS(w, r)
 		return
 	}
-
-	cConfig := proxy.remoteConfig(r.Host)
-	if cConfig == nil {
-		tunnelHTTPS(w, r)
-		return
+	if serverCert == nil {
+		serverCert = proxy.cert
 	}
 
 	logrus.Debugln("hijack https request to", r.Host)
 
 	sConfig := new(tls.Config)
-	sConfig.Certificates = []tls.Certificate{*proxy.cert}
+	sConfig.Certificates = []tls.Certificate{*serverCert}
 
 	sConn, err := handshake(w, sConfig)
 	if err != nil {
