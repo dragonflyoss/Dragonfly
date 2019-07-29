@@ -2,13 +2,14 @@ package task
 
 import (
 	"context"
+	"time"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
-	"github.com/dragonflyoss/Dragonfly/pkg/time"
+	"github.com/dragonflyoss/Dragonfly/pkg/timeutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	dutil "github.com/dragonflyoss/Dragonfly/supernode/daemon/util"
@@ -32,9 +33,10 @@ var getContentLength = httputils.GetContentLength
 type Manager struct {
 	cfg *config.Config
 
-	taskStore     *dutil.Store
-	taskLocker    *util.LockerPool
-	accessTimeMap *syncmap.SyncMap
+	taskStore               *dutil.Store
+	taskLocker              *util.LockerPool
+	accessTimeMap           *syncmap.SyncMap
+	taskURLUnReachableStore *syncmap.SyncMap
 
 	peerMgr      mgr.PeerMgr
 	dfgetTaskMgr mgr.DfgetTaskMgr
@@ -47,15 +49,16 @@ type Manager struct {
 func NewManager(cfg *config.Config, peerMgr mgr.PeerMgr, dfgetTaskMgr mgr.DfgetTaskMgr,
 	progressMgr mgr.ProgressMgr, cdnMgr mgr.CDNMgr, schedulerMgr mgr.SchedulerMgr) (*Manager, error) {
 	return &Manager{
-		cfg:           cfg,
-		taskStore:     dutil.NewStore(),
-		taskLocker:    util.NewLockerPool(),
-		peerMgr:       peerMgr,
-		dfgetTaskMgr:  dfgetTaskMgr,
-		progressMgr:   progressMgr,
-		cdnMgr:        cdnMgr,
-		schedulerMgr:  schedulerMgr,
-		accessTimeMap: syncmap.NewSyncMap(),
+		cfg:                     cfg,
+		taskStore:               dutil.NewStore(),
+		taskLocker:              util.NewLockerPool(),
+		peerMgr:                 peerMgr,
+		dfgetTaskMgr:            dfgetTaskMgr,
+		progressMgr:             progressMgr,
+		cdnMgr:                  cdnMgr,
+		schedulerMgr:            schedulerMgr,
+		accessTimeMap:           syncmap.NewSyncMap(),
+		taskURLUnReachableStore: syncmap.NewSyncMap(),
 	}, nil
 }
 
@@ -67,7 +70,8 @@ func (tm *Manager) Register(ctx context.Context, req *types.TaskCreateRequest) (
 	}
 
 	// Step2: add a new Task or update the exist task
-	task, err := tm.addOrUpdateTask(ctx, req)
+	failAccessInterval := tm.cfg.FailAccessInterval * time.Minute
+	task, err := tm.addOrUpdateTask(ctx, req, failAccessInterval)
 	if err != nil {
 		logrus.Infof("failed to add or update task with req %+v: %v", req, err)
 		return nil, err
@@ -76,7 +80,7 @@ func (tm *Manager) Register(ctx context.Context, req *types.TaskCreateRequest) (
 	// TODO: defer rollback the task update
 
 	// update accessTime for taskID
-	if err := tm.accessTimeMap.Add(task.ID, time.GetCurrentTimeMillis()); err != nil {
+	if err := tm.accessTimeMap.Add(task.ID, timeutils.GetCurrentTimeMillis()); err != nil {
 		logrus.Warnf("failed to update accessTime for taskID(%s): %v", task.ID, err)
 	}
 
@@ -181,7 +185,7 @@ func (tm *Manager) GetPieces(ctx context.Context, taskID, clientID string, req *
 	logrus.Debugf("success to get task: %+v", task)
 
 	// update accessTime for taskID
-	if err := tm.accessTimeMap.Add(task.ID, time.GetCurrentTimeMillis()); err != nil {
+	if err := tm.accessTimeMap.Add(task.ID, timeutils.GetCurrentTimeMillis()); err != nil {
 		logrus.Warnf("failed to update accessTime for taskID(%s): %v", task.ID, err)
 	}
 
