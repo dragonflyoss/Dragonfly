@@ -159,7 +159,7 @@ func (mm *fileMetaDataManager) writePieceMD5s(ctx context.Context, taskID, fileM
 	mm.locker.GetLock(taskID, false)
 	defer mm.locker.ReleaseLock(taskID, false)
 
-	if cutil.IsEmptySlice(pieceMD5s) {
+	if len(pieceMD5s) == 0 {
 		logrus.Warnf("failed to write empty pieceMD5s for taskID: %s", taskID)
 		return nil
 	}
@@ -185,7 +185,7 @@ func (mm *fileMetaDataManager) readPieceMD5s(ctx context.Context, taskID, fileMD
 	}
 	pieceMD5s = strings.Split(strings.TrimSpace(string(bytes)), "\n")
 
-	if cutil.IsEmptySlice(pieceMD5s) {
+	if len(pieceMD5s) == 0 {
 		return nil, nil
 	}
 

@@ -63,7 +63,7 @@ func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateReq
 
 	// if success to get the information successfully with the req.Headers,
 	// and then update the task.Headers to req.Headers.
-	if !cutil.IsNil(req.Headers) {
+	if req.Headers != nil {
 		task.Headers = req.Headers
 	}
 
@@ -99,7 +99,7 @@ func (tm *Manager) updateTask(taskID string, updateTaskInfo *types.TaskInfo) err
 		return errors.Wrap(errorType.ErrEmptyValue, "taskID")
 	}
 
-	if cutil.IsNil(updateTaskInfo) {
+	if updateTaskInfo == nil {
 		return errors.Wrap(errorType.ErrEmptyValue, "Update TaskInfo")
 	}
 
