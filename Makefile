@@ -132,6 +132,10 @@ check-go-mod: go-mod-tidy
 	@git diff --exit-code -- go.sum go.mod
 .PHONY: check-go-mod
 
+swagger-generate:
+	./hack/swagger.sh
+.PHONY: swagger-generate
+
 docs:
 	@echo "Begin to generate docs of API/CLI"
 	./hack/generate-docs.sh

@@ -83,10 +83,10 @@ Daemon side can use `SystemVersion` easily as well.
 
 ### Auto-generate API struct
 
-With above two parts finished in swagger.yml, the following step is auto-generating source code for API structs. We can do that with a script [generate-swagger-models.sh](../hack/generate-swagger-models.sh). We can execute the script via:
+With above two parts finished in swagger.yml, the following step is auto-generating source code for API structs. We can do that with a script [swagger.sh](../hack/swagger.sh). We can execute the script via:
 
 ``` shell
-Dragonfly (master) $ ./hack/generate-swagger-models.sh
+$ make swagger-generate
 ```
 
 Then details you updated would auto generate source code in directory `Dragonfly/apis/types`. With the example above, you will find file `system_version.go` existing there.
