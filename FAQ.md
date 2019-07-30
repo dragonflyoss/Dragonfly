@@ -3,9 +3,9 @@
 FAQ contains some frequently asked questions about two aspects:
 
 - First, user-facing functionalities.
-- Second, underlying concept and thoery.
+- Second, underlying concept and theory.
 
-Techinical questions will not be included in FAQ.
+Technical questions will not be included in FAQ.
 
 ## What is Dragonfly
 
@@ -15,7 +15,7 @@ It aims to resolve issues related to low-efficiency, low-success rate and waste 
 
 In Alibaba, Dragonfly is invoked 2 Billion times and the data distributed is 3.4PB every month. Dragonfly has become one of the most important pieces of infrastructure in Alibaba.
 
-While container technologies makes devops life easier most of time, it sure brings some challenges: the efficiency of image distribution, especially when you have to replicate image distribution on several hosts. Dragonfly works extremely well with both Docker and [PouchContainer](https://github.com/alibaba/pouch) for this scenario. It also is compatible with any other container formats.
+While container technologies make DevOps life easier most of time, it sure brings some challenges: the efficiency of image distribution, especially when you have to replicate image distribution on several hosts. Dragonfly works extremely well with both Docker and [PouchContainer](https://github.com/alibaba/pouch) for this scenario. It also is compatible with any other container formats.
 
 It delivers up to 57 times the throughput of native docker and saves up to 99.5% the out bandwidth of registry(*2).
 
@@ -59,7 +59,7 @@ If the file to be downloaded  has not been cached in supernode yet, supernode wi
 
 If the requested file has already been cached in supernode, supernode will send an HTTP GET request, which contains both HTTP headers `If-None-Match:<eTag>` and `If-Modified-Since:<lastModified>`, to source file network address to determine whether the remote file has been updated.
 
-In addition, supernode does not have to wait for all the piece downloadings finished, so it can concurrently start pieces downloading once one piece has bean downloaded.
+In addition, supernode does not have to wait for all the piece downloading finished, so it can concurrently start pieces downloading once one piece has been downloaded.
 
 ## What will happen  if you kill the dfget server process or delete the source files
 
@@ -141,9 +141,9 @@ Yes, please refer to the [proxy guide](./docs/user_guide/proxy.md).
 
 ## Do we support HA of supernode in Dragonfly
 
-Currently no. In the later release, we will try to realise the HA of Dragonfly.
+Currently no. In the later release, we will try to release the HA of Dragonfly.
 
-In fact, you can [provide multiple supernodes for dfget](#how-to-config-supernodes-for-dfget) as an alternative. When a peer started to download a task, it will register to one of the supernode list randomly. And when the supernode suffers failure, the task being downloaded on it will automatically migrate to the other supdernodes in the supernode list.
+In fact, you can [provide multiple supernodes for dfget](#how-to-config-supernodes-for-dfget) as an alternative. When a peer started to download a task, it will register to one of the supernode list randomly. And when the supernode suffers failure, the task being downloaded on it will automatically migrate to the other supernodes in the supernode list.
 
 ## How to config supernodes for dfget
 
@@ -174,7 +174,7 @@ NOTE: If you use dfdaemon to call dfget, you can also pass this parameter to dfg
 
 ## How to use Dragonfly in Kubernetes
 
-It is very easy to deloy Dragonfly in Kubernetes with [Helm](https://github.com/helm/helm). For more information of Dragonfly's Helm Chart, please refer to project [dragonflyoss/helm-chart](https://github.com/dragonflyoss/helm-chart).
+It is very easy to deploy Dragonfly in Kubernetes with [Helm](https://github.com/helm/helm). For more information of Dragonfly's Helm Chart, please refer to project [dragonflyoss/helm-chart](https://github.com/dragonflyoss/helm-chart).
 
 ## Can an image from a third-party registry be pulled via Dragonfly
 
