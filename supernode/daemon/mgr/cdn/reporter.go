@@ -72,13 +72,13 @@ func (re *reporter) processCacheByQuick(ctx context.Context, taskID string, meta
 		logrus.Debugf("failed to processCacheByQuick: failed to get pieceMd5s taskID %s: %v", taskID, err)
 		return false, nil, err
 	}
-	if cutil.IsEmptySlice(pieceMd5s) {
+	if len(pieceMd5s) == 0 {
 		if pieceMd5s, err = re.metaDataManager.readPieceMD5s(ctx, taskID, metaData.RealMd5); err != nil {
 			logrus.Debugf("failed to processCacheByQuick: failed to read pieceMd5s taskID %s: %v", taskID, err)
 			return false, nil, err
 		}
 	}
-	if cutil.IsEmptySlice(pieceMd5s) {
+	if len(pieceMd5s) == 0 {
 		logrus.Debugf("failed to processCacheByQuick: empty pieceMd5s taskID %s: %v", taskID, err)
 		return false, nil, nil
 	}
