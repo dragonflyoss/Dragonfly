@@ -26,5 +26,6 @@ Below are the adoptors of project Dragonfly. If you are using to Dragonfly to im
 <a href="https://ele.me/" border="0" target="_blank"><img alt="eleme" src="docs/images/adoptor_logo/eleme.png" height="70"></a>&nbsp; &nbsp; &nbsp;<br/><br/>
 <a href="https://caicloud.io/" border="0" target="_blank"><img alt="caicloud" src="docs/images/adoptor_logo/caicloud.png" height="70"></a>&nbsp; &nbsp; &nbsp;
 <a href="https://www.bilibili.com/" border="0" target="_blank"><img alt="bilibili" src="docs/images/adoptor_logo/bilibili.png" height="70"></a>&nbsp; &nbsp; &nbsp;
-<a href="https://www.sogou.com/" border="0" target="_blank"><img alt="sogou" src="docs/images/adoptor_logo/sogou.jpg" height="70"></a>&nbsp; &nbsp; &nbsp;
+<a href="https://www.sogou.com/" border="0" target="_blank"><img alt="sogou" src="docs/images/adoptor_logo/sogou.jpg" height="70"></a>&nbsp; &nbsp; &nbsp;<br/><br/>
+<a href="www.chinaunicom.com.cn" border="0" target="_blank"><img alt="ChinaUnicom" src="docs/images/adoptor_logo/ChinaUnicom.png" height="70"></a>&nbsp; &nbsp; &nbsp;
 
