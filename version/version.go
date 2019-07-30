@@ -27,10 +27,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
-
 	"github.com/dragonflyoss/Dragonfly/apis/types"
+	"github.com/dragonflyoss/Dragonfly/common/util"
 )
 
 var (
@@ -80,7 +78,7 @@ func init() {
 
 // versionInfoTmpl contains the template used by Info.
 var versionInfoTmpl = `
-{{.program}}, version  {{.version}}
+{{.program}} version  {{.version}}
   Git commit:     {{.revision}}
   Build date:     {{.buildDate}}
   Go version:     {{.goVersion}}
@@ -109,16 +107,9 @@ func Print(program string) string {
 
 // NewBuildInfo register a collector which exports metrics about version and build information.
 func NewBuildInfo(program string) {
-	buildInfo := promauto.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: "dragonfly",
-			Subsystem: program,
-			Name:      "build_info",
-			Help: fmt.Sprintf(
-				"A metric with a constant '1' value labeled by version, revision, os, arch and goversion from which %s was built.",
-				program,
-			),
-		},
+	buildInfo := util.NewGauge(program, "build_info",
+		fmt.Sprintf("A metric with a constant '1' value labeled by version, revision, os, "+
+			"arch and goversion from which %s was built.", program),
 		[]string{"version", "revision", "os", "arch", "goversion"},
 	)
 	buildInfo.WithLabelValues(version, revision, os, arch, goVersion).Set(1)

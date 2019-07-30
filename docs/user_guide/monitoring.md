@@ -93,7 +93,9 @@ scrape_configs:
       - targets: ['localhost:8002', 'localhost:65001']
 ```
 
-If you are not familiar with Prometheus, you can modify `prometheus.yml` to this configuration above. Here we don't use any alert rules and alertmanager, so these parts is unset. After modifying this file, you can validate it via `promtool`.
+If you are not familiar with Prometheus, you can modify `prometheus.yml` to this configuration above. We add `localhost:8002` and `localhost:65001` to targets as an example, it represents the ip address of supernode and dfdaemon, which is accessible by Prometheus server. Most of the cases you may have to change to other ip address rather than using `localhost` because these components run in different machines or in docker containers.
+
+Here we don't use any alert rules and alertmanager, so these parts is unset. After modifying this file, you can validate it via `promtool`.
 
 ``` bash
 ./promtool check config prometheus.yml
@@ -112,3 +114,21 @@ Finally you can start Prometheus in the same directory. If Prometheus works well
 In Prometheus web ui, you can search Dragonfly metrics below. If you want to learn more about Prometheus query language, please check [promql](https://prometheus.io/docs/prometheus/latest/querying/basics/) for help.
 
 ![dragonfly_metrics.png](../images/dragonfly_metrics.png)
+
+### Add your own metrics
+
+Sometimes maybe you want to add your own metrics to Dragonfly. First please ensure you know the basic concepts about Prometheus metrics. If you don't, please check [metrics types](https://prometheus.io/docs/concepts/metric_types/).
+
+We provide several functions to add metrics easily. Here is an example to add a Counter type metric.
+
+``` go
+import "github.com/dragonflyoss/Dragonfly/common/util"
+
+requestCounter := util.NewCounter("supernode", "http_requests_total",
+			"Counter of HTTP requests.", []string{"code"})
+requestCounter.WithLabelValues("200").Inc()
+```
+
+This function will auto-register metrics to Prometheus default registry and you can get `dragonfly_supernode_http_requests_total{code,handler,method}` in /metrics endpoint. Here we also add prefix `dragonfly` to metrics name by default. If you want to learn more about how to use these metrics after getting them, please check [prometheus/client_golang](https://github.com/prometheus/client_golang).
+
+As for naming of metric and label, it is better to follow the best practice. We suggest you to check this [metric and label naming](https://prometheus.io/docs/practices/naming/) guide for more detailed information.
