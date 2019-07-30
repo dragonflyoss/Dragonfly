@@ -66,6 +66,15 @@ func (client *APIClient) post(ctx context.Context, path string, query url.Values
 	return client.sendRequest(ctx, "POST", path, query, body, headers)
 }
 
+func (client *APIClient) put(ctx context.Context, path string, query url.Values, obj interface{}, headers map[string][]string) (*Response, error) {
+	body, err := objectToJSONStream(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.sendRequest(ctx, "PUT", path, query, body, headers)
+}
+
 func (client *APIClient) postRawData(ctx context.Context, path string, query url.Values, data io.Reader, headers map[string][]string) (*Response, error) {
 	return client.sendRequest(ctx, "POST", path, query, data, headers)
 }
