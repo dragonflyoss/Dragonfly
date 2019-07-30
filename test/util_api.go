@@ -32,7 +32,11 @@ func CheckMetric(c *check.C, metric string, value float64) {
 	lines := strings.Split(string(data), "\n")
 	for _, line := range lines {
 		if strings.Contains(line, metric) {
-			val, err = strconv.ParseFloat(strings.Split(line, " ")[1], 64)
+			vals := strings.Split(line, " ")
+			if len(vals) != 2 {
+				c.Errorf("bad metrics format")
+			}
+			val, err = strconv.ParseFloat(vals[1], 64)
 			c.Assert(err, check.IsNil)
 			c.Assert(val, check.Equals, value)
 			return

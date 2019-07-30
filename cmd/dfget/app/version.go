@@ -47,7 +47,7 @@ func init() {
 
 // versionExample shows examples in version command, and is used in auto-generated cli docs.
 func versionExample() string {
-	return `dfget, version  0.4.1
+	return `dfget version  0.4.1
   Git commit:     6fd5c8f
   Build date:     20190717-15:57:52
   Go version:     go1.12.6
