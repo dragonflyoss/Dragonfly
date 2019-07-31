@@ -11,6 +11,9 @@ var (
 	// SupernodeListenPort is the port that supernode will listen.
 	SupernodeListenPort = 8008
 
+	// SupernodeDownloadPort is the port that supernode will listen.
+	SupernodeDownloadPort = 8009
+
 	// DragonflySupernodeBinary is default binary
 	DragonflySupernodeBinary = "/usr/local/bin/supernode"
 

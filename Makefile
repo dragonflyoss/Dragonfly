@@ -100,6 +100,7 @@ unit-test: build-dirs
 	./hack/unit-test.sh
 .PHONY: unit-test
 
+# TODO: output the log file when the test is failed
 integration-test:
 	@go test ./test
 .PHONY: integration-test

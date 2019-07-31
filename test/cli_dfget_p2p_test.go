@@ -18,6 +18,8 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
 	. "path/filepath"
 	"time"
 
@@ -49,14 +51,65 @@ func (s *DFGetP2PTestSuite) TearDownSuite(c *check.C) {
 	s.starter.Clean()
 }
 
-func (s *DFGetP2PTestSuite) TestDownload(c *check.C) {
-	cmd, err := s.starter.DFGet(5*time.Second,
-		"-u", "https://lowzj.com",
-		"-o", Join(s.starter.Home, "a.test"),
-		"--node", fmt.Sprintf("127.0.0.1:%d", environment.SupernodeListenPort),
-		"--notbs")
-	cmd.Wait()
+func (s *DFGetP2PTestSuite) TestDownloadFile(c *check.C) {
+	var cases = []struct {
+		filePath    string
+		fileContent []byte
+		targetPath  string
+		createFile  bool
+		execSuccess bool
+		timeout     time.Duration
+	}{
+		{
+			filePath:    "normal.txt",
+			fileContent: []byte("hello Dragonfly"),
+			targetPath:  Join(s.starter.Home, "normal.test"),
+			createFile:  true,
+			execSuccess: true,
+			timeout:     5,
+		},
+		{
+			filePath:    "empty.txt",
+			fileContent: []byte(""),
+			targetPath:  Join(s.starter.Home, "empty.test"),
+			createFile:  true,
+			execSuccess: true,
+			timeout:     5,
+		},
+		{
+			filePath:    "notExist.txt",
+			fileContent: []byte(""),
+			targetPath:  Join(s.starter.Home, "notExist.test"),
+			createFile:  false,
+			execSuccess: false,
+			timeout:     5,
+		},
+	}
 
-	c.Assert(err, check.IsNil)
-	c.Assert(cmd.ProcessState.Success(), check.Equals, true)
+	for _, ca := range cases {
+		if ca.createFile {
+			s.starter.WriteSupernodeFileServer(ca.filePath, ca.fileContent, os.ModePerm)
+		}
+		cmd, err := s.starter.DFGet(ca.timeout*time.Second,
+			"-u", fmt.Sprintf("http://127.0.0.1:%d/%s", environment.SupernodeDownloadPort, ca.filePath),
+			"-o", ca.targetPath,
+			"--node", fmt.Sprintf("127.0.0.1:%d", environment.SupernodeListenPort),
+			"--notbs")
+		cmd.Wait()
+
+		c.Assert(err, check.IsNil)
+		execResult := cmd.ProcessState.Success()
+		if ca.execSuccess {
+			c.Assert(execResult, check.Equals, true)
+
+			if execResult {
+				// check the downloaded file content
+				data, err := ioutil.ReadFile(ca.targetPath)
+				c.Assert(err, check.IsNil)
+				c.Assert(data, check.DeepEquals, ca.fileContent)
+			}
+		} else {
+			c.Assert(execResult, check.Equals, false)
+		}
+	}
 }
