@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"io"
 
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 
 	"github.com/pkg/errors"
@@ -100,8 +100,8 @@ func (s *Store) PutBytes(ctx context.Context, raw *Raw, data []byte) error {
 
 // Remove the data from the storage based on raw information.
 func (s *Store) Remove(ctx context.Context, raw *Raw) error {
-	if raw == nil || (cutil.IsEmptyStr(raw.Key) &&
-		cutil.IsEmptyStr(raw.Bucket)) {
+	if raw == nil || (stringutils.IsEmptyStr(raw.Key) &&
+		stringutils.IsEmptyStr(raw.Bucket)) {
 		return errors.Wrapf(ErrEmptyKey, "cannot set both key and bucket empty at the same time")
 	}
 	return s.driver.Remove(ctx, raw)
@@ -118,7 +118,7 @@ func (s *Store) Stat(ctx context.Context, raw *Raw) (*StorageInfo, error) {
 }
 
 func checkEmptyKey(raw *Raw) error {
-	if raw == nil || cutil.IsEmptyStr(raw.Key) {
+	if raw == nil || stringutils.IsEmptyStr(raw.Key) {
 		return ErrEmptyKey
 	}
 

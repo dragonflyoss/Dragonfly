@@ -26,9 +26,9 @@ import (
 	"path"
 	"testing"
 
-	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 
 	"github.com/go-check/check"
 )
@@ -88,7 +88,7 @@ func (s *BackDownloaderTestSuite) TestBackDownloader_Run(c *check.C) {
 
 	bd.cleaned = false
 	bd.Md5 = testFileMd5
-	md5sum := util.Md5Sum(dst)
+	md5sum := fileutils.Md5Sum(dst)
 	c.Assert(testFileMd5, check.Equals, md5sum)
 
 	// test: realMd5 doesn't equal to expectedMd5

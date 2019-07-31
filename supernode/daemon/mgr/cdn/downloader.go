@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	errorType "github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 	"github.com/dragonflyoss/Dragonfly/supernode/util"
 
 	"github.com/pkg/errors"
@@ -31,7 +31,7 @@ func (cm *Manager) download(ctx context.Context, taskID, url string, headers map
 		if headers == nil {
 			headers = make(map[string]string)
 		}
-		headers["Range"] = cutil.ConstructRangeStr(breakRange)
+		headers["Range"] = httputils.ConstructRangeStr(breakRange)
 		checkCode = http.StatusPartialContent
 	}
 
@@ -41,7 +41,7 @@ func (cm *Manager) download(ctx context.Context, taskID, url string, headers map
 
 func getWithURL(url string, headers map[string]string, checkCode int) (*http.Response, error) {
 	// TODO: add timeout
-	resp, err := cutil.HTTPGet(url, headers)
+	resp, err := httputils.HTTPGet(url, headers)
 	if err != nil {
 		return nil, err
 	}

@@ -19,7 +19,7 @@ package types
 import (
 	"encoding/json"
 
-	"github.com/dragonflyoss/Dragonfly/common/constants"
+	"github.com/dragonflyoss/Dragonfly/pkg/constants"
 )
 
 // PullPieceTaskResponse is the response of PullPieceTaskRequest.

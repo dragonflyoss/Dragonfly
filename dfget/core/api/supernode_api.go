@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/constants"
-	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
+	"github.com/dragonflyoss/Dragonfly/pkg/constants"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 
 	"github.com/sirupsen/logrus"
 )
@@ -42,7 +42,7 @@ func NewSupernodeAPI() SupernodeAPI {
 	return &supernodeAPI{
 		Scheme:     "http",
 		Timeout:    5 * time.Second,
-		HTTPClient: util.DefaultHTTPClient,
+		HTTPClient: httputils.DefaultHTTPClient,
 	}
 }
 
@@ -58,7 +58,7 @@ type SupernodeAPI interface {
 type supernodeAPI struct {
 	Scheme     string
 	Timeout    time.Duration
-	HTTPClient util.SimpleHTTPClient
+	HTTPClient httputils.SimpleHTTPClient
 }
 
 var _ SupernodeAPI = &supernodeAPI{}
@@ -76,7 +76,7 @@ func (api *supernodeAPI) Register(node string, req *types.RegisterRequest) (
 	if code, body, e = api.HTTPClient.PostJSON(url, req, api.Timeout); e != nil {
 		return nil, e
 	}
-	if !util.HTTPStatusOk(code) {
+	if !httputils.HTTPStatusOk(code) {
 		return nil, fmt.Errorf("%d:%s", code, body)
 	}
 	resp = new(types.RegisterResponse)
@@ -92,7 +92,7 @@ func (api *supernodeAPI) PullPieceTask(node string, req *types.PullPieceTaskRequ
 	resp *types.PullPieceTaskResponse, e error) {
 
 	url := fmt.Sprintf("%s://%s%s?%s",
-		api.Scheme, node, peerPullPieceTaskPath, util.ParseQuery(req))
+		api.Scheme, node, peerPullPieceTaskPath, httputils.ParseQuery(req))
 
 	resp = new(types.PullPieceTaskResponse)
 	if e = api.get(url, resp); e != nil {
@@ -106,7 +106,8 @@ func (api *supernodeAPI) ReportPiece(node string, req *types.ReportPieceRequest)
 	resp *types.BaseResponse, e error) {
 
 	url := fmt.Sprintf("%s://%s%s?%s",
-		api.Scheme, node, peerReportPiecePath, util.ParseQuery(req))
+		api.Scheme, node, peerReportPiecePath, httputils.ParseQuery(req))
+
 	resp = new(types.BaseResponse)
 	if e = api.get(url, resp); e != nil {
 		logrus.Errorf("failed to report piece{taskid:%s,range:%s},err: %v", req.TaskID, req.PieceRange, e)
@@ -141,7 +142,7 @@ func (api *supernodeAPI) ReportClientError(node string, req *types.ClientErrorRe
 	resp *types.BaseResponse, e error) {
 
 	url := fmt.Sprintf("%s://%s%s?%s",
-		api.Scheme, node, peerClientErrorPath, util.ParseQuery(req))
+		api.Scheme, node, peerClientErrorPath, httputils.ParseQuery(req))
 
 	resp = new(types.BaseResponse)
 	e = api.get(url, resp)
@@ -160,7 +161,7 @@ func (api *supernodeAPI) get(url string, resp interface{}) error {
 	if code, body, e = api.HTTPClient.Get(url, api.Timeout); e != nil {
 		return e
 	}
-	if !util.HTTPStatusOk(code) {
+	if !httputils.HTTPStatusOk(code) {
 		return fmt.Errorf("%d:%s", code, body)
 	}
 	e = json.Unmarshal(body, resp)

@@ -24,11 +24,12 @@ import (
 	"os"
 	"path"
 
-	"github.com/dragonflyoss/Dragonfly/common/constants"
-	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
+	"github.com/dragonflyoss/Dragonfly/pkg/constants"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -41,8 +42,8 @@ func CreateConfig(writer io.Writer, workHome string) *config.Config {
 	cfg.WorkHome = workHome
 	cfg.RV.MetaPath = path.Join(cfg.WorkHome, "meta", "host.meta")
 	cfg.RV.SystemDataDir = path.Join(cfg.WorkHome, "data")
-	util.CreateDirectory(path.Dir(cfg.RV.MetaPath))
-	util.CreateDirectory(cfg.RV.SystemDataDir)
+	fileutils.CreateDirectory(path.Dir(cfg.RV.MetaPath))
+	fileutils.CreateDirectory(cfg.RV.SystemDataDir)
 
 	logrus.StandardLogger().Out = writer
 	return cfg
@@ -65,7 +66,7 @@ func CreateTestFileWithMD5(path string, content string) string {
 		return ""
 	}
 	defer f.Close()
-	return util.Md5Sum(f.Name())
+	return fileutils.Md5Sum(f.Name())
 }
 
 func createFile(path string, content string) (*os.File, error) {

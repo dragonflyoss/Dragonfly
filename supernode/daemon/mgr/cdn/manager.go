@@ -6,7 +6,10 @@ import (
 	"path"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/limitreader"
+	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/ratelimiter"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
@@ -21,7 +24,7 @@ var _ mgr.CDNMgr = &Manager{}
 type Manager struct {
 	cfg             *config.Config
 	cacheStore      *store.Store
-	limiter         *cutil.RateLimiter
+	limiter         *ratelimiter.RateLimiter
 	cdnLocker       *util.LockerPool
 	progressManager mgr.ProgressMgr
 
@@ -34,7 +37,7 @@ type Manager struct {
 
 // NewManager returns a new Manager.
 func NewManager(cfg *config.Config, cacheStore *store.Store, progressManager mgr.ProgressMgr) (*Manager, error) {
-	rateLimiter := cutil.NewRateLimiter(cutil.TransRate(config.TransLimit(cfg.MaxBandwidth-cfg.SystemReservedBandwidth)), 2)
+	rateLimiter := ratelimiter.NewRateLimiter(ratelimiter.TransRate(config.TransLimit(cfg.MaxBandwidth-cfg.SystemReservedBandwidth)), 2)
 	metaDataManager := newFileMetaDataManager(cacheStore)
 	pieceMD5Manager := newpieceMD5Mgr()
 	cdnReporter := newReporter(cfg, cacheStore, progressManager, metaDataManager, pieceMD5Manager)
@@ -91,7 +94,7 @@ func (cm *Manager) TriggerCDN(ctx context.Context, task *types.TaskInfo) (*types
 	defer resp.Body.Close()
 
 	cm.updateLastModifiedAndETag(ctx, task.ID, resp.Header.Get("Last-Modified"), resp.Header.Get("Etag"))
-	reader := cutil.NewLimitReaderWithLimiterAndMD5Sum(resp.Body, cm.limiter, fileMD5)
+	reader := limitreader.NewLimitReaderWithLimiterAndMD5Sum(resp.Body, cm.limiter, fileMD5)
 	downloadMetadata, err := cm.writer.startWriter(ctx, cm.cfg, reader, task, startPieceNum, httpFileLength, pieceContSize)
 	if err != nil {
 		logrus.Errorf("failed to write for task %s: %v", task.ID, err)
@@ -126,7 +129,7 @@ func (cm *Manager) Delete(ctx context.Context, taskID string) error {
 
 func (cm *Manager) handleCDNResult(ctx context.Context, task *types.TaskInfo, realMd5 string, httpFileLength, realHTTPFileLength, realFileLength int64) (bool, error) {
 	var isSuccess = true
-	if !cutil.IsEmptyStr(task.Md5) && task.Md5 != realMd5 {
+	if !stringutils.IsEmptyStr(task.Md5) && task.Md5 != realMd5 {
 		logrus.Errorf("taskId:%s url:%s file md5 not match expected:%s real:%s", task.ID, task.TaskURL, task.Md5, realMd5)
 		isSuccess = false
 	}
@@ -165,7 +168,7 @@ func (cm *Manager) handleCDNResult(ctx context.Context, task *types.TaskInfo, re
 }
 
 func (cm *Manager) updateLastModifiedAndETag(ctx context.Context, taskID, lastModified, eTag string) {
-	lastModifiedInt, _ := cutil.ConvertTimeStringToInt(lastModified)
+	lastModifiedInt, _ := netutils.ConvertTimeStringToInt(lastModified)
 	if err := cm.metaDataManager.updateLastModifiedAndETag(ctx, taskID, lastModifiedInt, eTag); err != nil {
 		logrus.Errorf("failed to update LastModified(%s) and ETag(%s) for taskID %s: %v", lastModified, eTag, taskID, err)
 	}

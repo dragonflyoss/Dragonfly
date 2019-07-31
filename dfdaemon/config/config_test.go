@@ -26,8 +26,8 @@ import (
 	"testing"
 	"time"
 
-	dferr "github.com/dragonflyoss/Dragonfly/common/errors"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
@@ -62,7 +62,7 @@ func (ts *configTestSuite) TestValidatePort() {
 		c.Port = p
 		err := c.Validate()
 		r.NotNil(err)
-		de, ok := err.(*dferr.DfError)
+		de, ok := err.(*errortypes.DfError)
 		r.True(ok)
 		r.Equal(constant.CodeExitPortInvalid, de.Code)
 	}
@@ -367,7 +367,7 @@ func (m *yamlM) Marshal(d interface{}) ([]byte, error)      { return yaml.Marsha
 func (m *yamlM) Unmarshal(text []byte, d interface{}) error { return yaml.Unmarshal(text, d) }
 
 func getCode(err error) int {
-	if de, ok := err.(*dferr.DfError); ok {
+	if de, ok := err.(*errortypes.DfError); ok {
 		return de.Code
 	}
 	return 0

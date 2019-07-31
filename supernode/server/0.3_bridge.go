@@ -6,9 +6,10 @@ import (
 	"net/http"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	"github.com/dragonflyoss/Dragonfly/common/constants"
-	errTypes "github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/constants"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	sutil "github.com/dragonflyoss/Dragonfly/supernode/util"
 
 	"github.com/go-openapi/strfmt"
@@ -54,11 +55,11 @@ func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http
 	reader := req.Body
 	request := &types.TaskRegisterRequest{}
 	if err := json.NewDecoder(reader).Decode(request); err != nil {
-		return errors.Wrap(errTypes.ErrInvalidValue, err.Error())
+		return errors.Wrap(errortypes.ErrInvalidValue, err.Error())
 	}
 
 	if err := request.Validate(strfmt.NewFormats()); err != nil {
-		return errors.Wrap(errTypes.ErrInvalidValue, err.Error())
+		return errors.Wrap(errortypes.ErrInvalidValue, err.Error())
 	}
 
 	peerCreateRequest := &types.PeerCreateRequest{
@@ -70,7 +71,7 @@ func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http
 	peerCreateResponse, err := s.PeerMgr.Register(ctx, peerCreateRequest)
 	if err != nil {
 		logrus.Errorf("failed to register peer %+v: %v", peerCreateRequest, err)
-		return errors.Wrapf(errTypes.ErrSystemError, "failed to register peer: %v", err)
+		return errors.Wrapf(errortypes.ErrSystemError, "failed to register peer: %v", err)
 	}
 	logrus.Infof("success to register peer %+v", peerCreateRequest)
 
@@ -79,7 +80,7 @@ func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http
 		CID:         request.CID,
 		CallSystem:  request.CallSystem,
 		Dfdaemon:    request.Dfdaemon,
-		Headers:     cutil.ConvertHeaders(request.Headers),
+		Headers:     netutils.ConvertHeaders(request.Headers),
 		Identifier:  request.Identifier,
 		Md5:         request.Md5,
 		Path:        request.Path,
@@ -118,7 +119,7 @@ func (s *Server) pullPieceTask(ctx context.Context, rw http.ResponseWriter, req 
 
 	// try to get dstPID
 	dstCID := params.Get("dstCid")
-	if !cutil.IsEmptyStr(dstCID) {
+	if !stringutils.IsEmptyStr(dstCID) {
 		dstDfgetTask, err := s.DfgetTaskMgr.Get(ctx, dstCID, taskID)
 		if err != nil {
 			logrus.Warnf("failed to get dfget task by dstCID(%s) and taskID(%s), and the srcCID is %s, err: %v",
@@ -130,7 +131,7 @@ func (s *Server) pullPieceTask(ctx context.Context, rw http.ResponseWriter, req 
 
 	isFinished, data, err := s.TaskMgr.GetPieces(ctx, taskID, srcCID, request)
 	if err != nil {
-		if errTypes.IsCDNFail(err) {
+		if errortypes.IsCDNFail(err) {
 			logrus.Errorf("taskID:%s, failed to get pieces %+v: %v", taskID, request, err)
 		}
 		resultInfo := NewResultInfoWithError(err)

@@ -24,11 +24,14 @@ import (
 	"os"
 	"path"
 
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/downloader"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
+	"github.com/dragonflyoss/Dragonfly/pkg/limitreader"
+	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 
 	"github.com/sirupsen/logrus"
 )
@@ -86,7 +89,7 @@ func (bd *BackDownloader) Run() error {
 		return err
 	}
 
-	util.Printer.Printf("download from source")
+	fmt.Printf("download from source")
 	logrus.Infof("start download %s from the source station", path.Base(bd.Target))
 
 	defer bd.Cleanup()
@@ -98,7 +101,7 @@ func (bd *BackDownloader) Run() error {
 	bd.tempFileName = f.Name()
 	defer f.Close()
 
-	if resp, err = cutil.HTTPGet(bd.URL, cutil.ConvertHeaders(bd.cfg.Header)); err != nil {
+	if resp, err = httputils.HTTPGet(bd.URL, netutils.ConvertHeaders(bd.cfg.Header)); err != nil {
 		return err
 	}
 	defer resp.Body.Close()
@@ -108,7 +111,7 @@ func (bd *BackDownloader) Run() error {
 	}
 
 	buf := make([]byte, 512*1024)
-	reader := cutil.NewLimitReader(resp.Body, bd.cfg.LocalLimit, bd.Md5 != "")
+	reader := limitreader.NewLimitReader(resp.Body, bd.cfg.LocalLimit, bd.Md5 != "")
 	if _, err = io.CopyBuffer(f, reader, buf); err != nil {
 		return err
 	}
@@ -128,8 +131,8 @@ func (bd *BackDownloader) Cleanup() {
 		return
 	}
 
-	if !cutil.IsEmptyStr(bd.tempFileName) {
-		cutil.DeleteFile(bd.tempFileName)
+	if !stringutils.IsEmptyStr(bd.tempFileName) {
+		fileutils.DeleteFile(bd.tempFileName)
 	}
 	bd.cleaned = true
 }

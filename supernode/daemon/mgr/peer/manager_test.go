@@ -22,7 +22,7 @@ import (
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	"github.com/dragonflyoss/Dragonfly/common/errors"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	dutil "github.com/dragonflyoss/Dragonfly/supernode/daemon/util"
 
 	"github.com/go-check/check"
@@ -77,7 +77,7 @@ func (s *PeerMgrTestSuite) TestPeerMgr(c *check.C) {
 
 	// get
 	info, err = manager.Get(context.Background(), id)
-	c.Check(errors.IsDataNotFound(err), check.Equals, true)
+	c.Check(errortypes.IsDataNotFound(err), check.Equals, true)
 	c.Check(info, check.IsNil)
 }
 
@@ -96,12 +96,12 @@ func (s *PeerMgrTestSuite) TestGet(c *check.C) {
 
 	// get with empty peerID
 	info, err := manager.Get(context.Background(), "")
-	c.Check(errors.IsEmptyValue(err), check.Equals, true)
+	c.Check(errortypes.IsEmptyValue(err), check.Equals, true)
 	c.Check(info, check.IsNil)
 
 	// get with not exist peerID
 	info, err = manager.Get(context.Background(), "fooerror")
-	c.Check(errors.IsDataNotFound(err), check.Equals, true)
+	c.Check(errortypes.IsDataNotFound(err), check.Equals, true)
 	c.Check(info, check.IsNil)
 
 	// get normally

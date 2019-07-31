@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	"github.com/dragonflyoss/Dragonfly/common/errors"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 
 	"github.com/go-check/check"
 )
@@ -91,5 +91,5 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskMgr(c *check.C) {
 	c.Check(err, check.IsNil)
 
 	_, err = s.manager.Get(context.Background(), clientID, taskID)
-	c.Check(errors.IsDataNotFound(err), check.Equals, true)
+	c.Check(errortypes.IsDataNotFound(err), check.Equals, true)
 }

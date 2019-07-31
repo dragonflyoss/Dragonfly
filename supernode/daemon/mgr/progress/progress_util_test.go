@@ -17,7 +17,7 @@
 package progress
 
 import (
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/atomiccount"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 
 	"github.com/go-check/check"
@@ -106,5 +106,5 @@ func updateAndCheckBlackInfo(pm *Manager, srcPID, dstPID string, expected int32,
 	c.Check(err, check.IsNil)
 	count, err := dstPIDMap.GetAsAtomicInt(dstPID)
 	c.Check(err, check.IsNil)
-	c.Check(count.Get(), check.Equals, cutil.NewAtomicInt(expected).Get())
+	c.Check(count.Get(), check.Equals, atomiccount.NewAtomicInt(expected).Get())
 }

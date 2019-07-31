@@ -24,7 +24,8 @@ import (
 	"os"
 	"path"
 
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	statutils "github.com/dragonflyoss/Dragonfly/pkg/stat"
 	"github.com/dragonflyoss/Dragonfly/supernode/util"
 
 	"github.com/pkg/errors"
@@ -74,7 +75,7 @@ func NewLocalStorage(conf string) (StorageDriver, error) {
 	if !path.IsAbs(cfg.BaseDir) {
 		return nil, fmt.Errorf("not absolute path: %s", cfg.BaseDir)
 	}
-	if err := cutil.CreateDirectory(cfg.BaseDir); err != nil {
+	if err := fileutils.CreateDirectory(cfg.BaseDir); err != nil {
 		return nil, err
 	}
 
@@ -173,7 +174,7 @@ func (ls *localStorage) Put(ctx context.Context, raw *Raw, data io.Reader) error
 	lock(path, raw.Offset, false)
 	defer unLock(path, raw.Offset, false)
 
-	f, err := cutil.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0644)
+	f, err := fileutils.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0644)
 	if err != nil {
 		return err
 	}
@@ -209,7 +210,7 @@ func (ls *localStorage) PutBytes(ctx context.Context, raw *Raw, data []byte) err
 	lock(path, raw.Offset, false)
 	defer unLock(path, raw.Offset, false)
 
-	f, err := cutil.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0644)
+	f, err := fileutils.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0644)
 	if err != nil {
 		return err
 	}
@@ -236,14 +237,14 @@ func (ls *localStorage) Stat(ctx context.Context, raw *Raw) (*StorageInfo, error
 		return nil, err
 	}
 
-	sys, ok := cutil.GetSys(fileInfo)
+	sys, ok := fileutils.GetSys(fileInfo)
 	if !ok {
 		return nil, fmt.Errorf("get create time error")
 	}
 	return &StorageInfo{
 		Path:       path.Join(raw.Bucket, raw.Key),
 		Size:       fileInfo.Size(),
-		CreateTime: cutil.Ctime(sys),
+		CreateTime: statutils.Ctime(sys),
 		ModTime:    fileInfo.ModTime(),
 	}, nil
 }
@@ -267,7 +268,7 @@ func (ls *localStorage) Remove(ctx context.Context, raw *Raw) error {
 func (ls *localStorage) preparePath(bucket, key string) (string, error) {
 	dir := path.Join(ls.BaseDir, bucket)
 
-	if err := cutil.CreateDirectory(dir); err != nil {
+	if err := fileutils.CreateDirectory(dir); err != nil {
 		return "", err
 	}
 

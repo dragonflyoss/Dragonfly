@@ -3,8 +3,8 @@ package server
 import (
 	"fmt"
 
-	"github.com/dragonflyoss/Dragonfly/common/constants"
-	"github.com/dragonflyoss/Dragonfly/common/errors"
+	"github.com/dragonflyoss/Dragonfly/pkg/constants"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 )
 
 // ResultInfo identify a struct that will returned to the client.
@@ -17,20 +17,20 @@ type ResultInfo struct {
 // NewResultInfoWithError returns a new ResultInfo with error only.
 // And it will fill the result code according to the type of error.
 func NewResultInfoWithError(err error) ResultInfo {
-	if errors.IsEmptyValue(err) ||
-		errors.IsInvalidValue(err) {
+	if errortypes.IsEmptyValue(err) ||
+		errortypes.IsInvalidValue(err) {
 		return NewResultInfoWithCodeError(constants.CodeParamError, err)
 	}
 
-	if errors.IsDataNotFound(err) {
+	if errortypes.IsDataNotFound(err) {
 		return NewResultInfoWithCodeError(constants.CodeTargetNotFound, err)
 	}
 
-	if errors.IsPeerWait(err) {
+	if errortypes.IsPeerWait(err) {
 		return NewResultInfoWithCodeError(constants.CodePeerWait, err)
 	}
 
-	if errors.IsPeerContinue(err) {
+	if errortypes.IsPeerContinue(err) {
 		return NewResultInfoWithCodeError(constants.CodePeerContinue, err)
 	}
 

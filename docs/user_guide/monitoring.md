@@ -122,7 +122,7 @@ Sometimes maybe you want to add your own metrics to Dragonfly. First please ensu
 We provide several functions to add metrics easily. Here is an example to add a Counter type metric.
 
 ``` go
-import "github.com/dragonflyoss/Dragonfly/common/util"
+import "github.com/dragonflyoss/Dragonfly/pkg/util"
 
 requestCounter := util.NewCounter("supernode", "http_requests_total",
 			"Counter of HTTP requests.", []string{"code"})

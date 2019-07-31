@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"encoding/json"
 
-	"github.com/dragonflyoss/Dragonfly/common/constants"
+	"github.com/dragonflyoss/Dragonfly/pkg/constants"
 )
 
 // Piece contains all information of a piece.

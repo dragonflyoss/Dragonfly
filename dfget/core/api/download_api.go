@@ -21,8 +21,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 	"github.com/dragonflyoss/Dragonfly/version"
 )
 
@@ -60,5 +60,5 @@ func (d *downloadAPI) Download(ip string, port int, req *DownloadRequest) (*http
 	headers[config.StrUserAgent] = "dfget/" + version.DFGetVersion
 
 	url := fmt.Sprintf("http://%s:%d%s", ip, port, req.Path)
-	return util.HTTPGet(url, headers)
+	return httputils.HTTPGet(url, headers)
 }

@@ -19,17 +19,17 @@ package util
 import (
 	"sync"
 
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/atomiccount"
 )
 
 type countRWMutex struct {
-	count *cutil.AtomicInt
+	count *atomiccount.AtomicInt
 	sync.RWMutex
 }
 
 func newCountRWMutex() *countRWMutex {
 	return &countRWMutex{
-		count: cutil.NewAtomicInt(0),
+		count: atomiccount.NewAtomicInt(0),
 	}
 }
 
