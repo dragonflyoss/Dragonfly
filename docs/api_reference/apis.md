@@ -68,6 +68,33 @@ json :
 ```
 
 
+<a name="metrics-get"></a>
+### Get Prometheus metrics
+```
+GET /metrics
+```
+
+
+#### Description
+Get Prometheus metrics
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|string|
+
+
+#### Example HTTP response
+
+##### Response 200
+```
+json :
+"go_goroutines 1"
+```
+
+
 <a name="peer-piece-suc-get"></a>
 ### report a piece has been success
 ```
