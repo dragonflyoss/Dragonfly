@@ -121,9 +121,11 @@ func (s *Server) pullPieceTask(ctx context.Context, rw http.ResponseWriter, req 
 	if !cutil.IsEmptyStr(dstCID) {
 		dstDfgetTask, err := s.DfgetTaskMgr.Get(ctx, dstCID, taskID)
 		if err != nil {
-			return err
+			logrus.Warnf("failed to get dfget task by dstCID(%s) and taskID(%s), and the srcCID is %s, err: %v",
+				dstCID, taskID, srcCID, err)
+		} else {
+			request.DstPID = dstDfgetTask.PeerID
 		}
-		request.DstPID = dstDfgetTask.PeerID
 	}
 
 	isFinished, data, err := s.TaskMgr.GetPieces(ctx, taskID, srcCID, request)
