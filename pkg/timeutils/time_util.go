@@ -24,3 +24,8 @@ import (
 func GetCurrentTimeMillis() int64 {
 	return time.Now().UnixNano() / time.Millisecond.Nanoseconds()
 }
+
+// GetCurrentTimeMillisFloat returns the time in millis for now in float64 format.
+func GetCurrentTimeMillisFloat() float64 {
+	return float64(time.Now().UnixNano()) / float64(time.Millisecond.Nanoseconds())
+}

@@ -24,8 +24,11 @@ import (
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	dutil "github.com/dragonflyoss/Dragonfly/supernode/daemon/util"
+	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/go-check/check"
+	"github.com/prometheus/client_golang/prometheus"
+	prom_testutil "github.com/prometheus/client_golang/prometheus/testutil"
 )
 
 func Test(t *testing.T) {
@@ -39,18 +42,28 @@ func init() {
 type PeerMgrTestSuite struct {
 }
 
+// SetUpTest does common setup in the beginning of each test.
+func (s *PeerMgrTestSuite) SetUpTest(c *check.C) {
+	// In every test, we should reset Prometheus default registry, otherwise
+	// it will panic because of duplicate metricsutils.
+	prometheus.DefaultRegisterer = prometheus.NewRegistry()
+}
+
 func (s *PeerMgrTestSuite) TestPeerMgr(c *check.C) {
 	manager, _ := NewManager()
-
+	peersNumCounter := manager.metrics.peers
 	// register
 	request := &types.PeerCreateRequest{
 		IP:       "192.168.10.11",
 		HostName: "foo",
 		Port:     65001,
-		Version:  "v0.3.0",
+		Version:  version.DFGetVersion,
 	}
 	resp, err := manager.Register(context.Background(), request)
 	c.Check(err, check.IsNil)
+
+	c.Assert(1, check.Equals,
+		int(prom_testutil.ToFloat64(peersNumCounter.WithLabelValues("foo"))))
 
 	// get
 	id := resp.ID
@@ -75,6 +88,9 @@ func (s *PeerMgrTestSuite) TestPeerMgr(c *check.C) {
 	err = manager.DeRegister(context.Background(), id)
 	c.Check(err, check.IsNil)
 
+	c.Assert(0, check.Equals,
+		int(prom_testutil.ToFloat64(peersNumCounter.WithLabelValues("foo"))))
+
 	// get
 	info, err = manager.Get(context.Background(), id)
 	c.Check(errortypes.IsDataNotFound(err), check.Equals, true)
@@ -89,7 +105,7 @@ func (s *PeerMgrTestSuite) TestGet(c *check.C) {
 		IP:       "192.168.10.11",
 		HostName: "foo",
 		Port:     65001,
-		Version:  "v0.3.0",
+		Version:  version.DFGetVersion,
 	}
 	resp, err := manager.Register(context.Background(), request)
 	c.Check(err, check.IsNil)
@@ -126,7 +142,7 @@ func (s *PeerMgrTestSuite) TestList(c *check.C) {
 		IP:       "192.168.10.11",
 		HostName: "foo",
 		Port:     65001,
-		Version:  "v0.3.0",
+		Version:  version.DFGetVersion,
 	}
 	resp, err := manager.Register(context.Background(), request)
 	c.Check(err, check.IsNil)
@@ -139,7 +155,7 @@ func (s *PeerMgrTestSuite) TestList(c *check.C) {
 		IP:       "192.168.10.11",
 		HostName: "foo2",
 		Port:     65001,
-		Version:  "v0.3.0",
+		Version:  version.DFGetVersion,
 	}
 	resp, err = manager.Register(context.Background(), request)
 	c.Check(err, check.IsNil)

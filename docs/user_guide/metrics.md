@@ -9,6 +9,13 @@ This doc contains all the metrics that Dragonfly components currently support. N
 - dragonfly_supernode_http_request_duration_seconds{code, handler, method} - http request latency in seconds
 - dragonfly_supernode_http_request_size_bytes{code, handler, method} - http request size in bytes
 - dragonfly_supernode_http_response_size_bytes{code, handler, method} - http response size in bytes
+- dragonfly_supernode_peers{hostname} - dragonfly peers
+- dragonfly_supernode_tasks{taskid, cdnstatus} - dragonfly tasks
+- dragonfly_supernode_dfgettasks{taskid, callsystem} - dragonfly dfget tasks
+- dragonfly_supernode_daemon_dfgettasks{taskid, callsystem} - dragonfly current dfget tasks, which are called from dfdaemon
+- dragonfly_supernode_schedule_duration_milliseconds{taskid} - duration for task scheduling in milliseconds
+- dragonfly_supernode_trigger_cdn_total{} - total times of triggering cdn.
+- dragonfly_supernode_trigger_cdn_failed_total{} - total failed times of triggering cdn.
 
 ## Dfdaemon
 

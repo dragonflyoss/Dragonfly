@@ -38,6 +38,7 @@ require (
 	github.com/stretchr/testify v1.2.2
 	github.com/valyala/fasthttp v1.3.0
 	github.com/willf/bitset v0.0.0-20190228212526-18bd95f470f9
+	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
 	gopkg.in/gcfg.v1 v1.2.3
 	gopkg.in/mgo.v2 v2.0.0-20160818020120-3f83fa500528 // indirect
 	gopkg.in/warnings.v0 v0.1.2
