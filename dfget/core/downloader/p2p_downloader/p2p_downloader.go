@@ -178,6 +178,8 @@ func (p2p *P2PDownloader) Run() error {
 			} else if code == constants.CodePeerFinish {
 				p2p.finishTask(response, clientWriter)
 				return nil
+			} else if code == constants.CodePeerWait {
+				continue
 			}
 
 			logrus.Warnf("request piece result:%v", response)
@@ -233,6 +235,9 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 		if res.Code != constants.CodePeerWait {
 			break
 		}
+		if p2p.queue.Len() > 0 {
+			break
+		}
 		sleepTime := time.Duration(rand.Intn(1400)+600) * time.Millisecond
 		logrus.Infof("pull piece task(%+v) result:%s and sleep %.3fs", item, res, sleepTime.Seconds())
 		time.Sleep(sleepTime)
@@ -242,7 +247,8 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 	if res != nil && !(res.Code != constants.CodePeerContinue &&
 		res.Code != constants.CodePeerFinish &&
 		res.Code != constants.CodePeerLimited &&
-		res.Code != constants.Success) {
+		res.Code != constants.Success &&
+		res.Code != constants.CodePeerWait) {
 		return res, err
 	}
 
