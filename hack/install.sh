@@ -15,7 +15,7 @@ cd "${curDir}" || return
 . ./env.sh
 
 install() {
-    case "$1" in
+    case "${1-}" in
         dfclient)
             install-client
         ;;
@@ -53,7 +53,7 @@ install-supernode(){
 
 
 uninstall() {
-    case "$1" in
+    case "${1-}" in
         dfclient)
             uninstall-client
         ;;
@@ -101,12 +101,12 @@ createDir() {
 }
 
 main() {
-    case "$1" in
+    case "${1-}" in
         install)
-            install "$2"
+            install "${2-}"
         ;;
         uninstall)
-            uninstall "$2"
+            uninstall "${2-}"
         ;;
         *)
             echo "You must specify the subcommand 'install' or 'uninstall'."

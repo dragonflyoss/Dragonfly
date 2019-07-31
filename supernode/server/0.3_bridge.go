@@ -86,7 +86,7 @@ func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http
 		PeerID:      peerID,
 		RawURL:      request.RawURL,
 		TaskURL:     request.TaskURL,
-		SupernodeIP: request.SuperNodeIP.String(),
+		SupernodeIP: request.SuperNodeIP,
 	}
 	resp, err := s.TaskMgr.Register(ctx, taskCreateRequest)
 	if err != nil {
