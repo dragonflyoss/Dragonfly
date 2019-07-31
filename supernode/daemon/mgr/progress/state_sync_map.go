@@ -3,8 +3,8 @@ package progress
 import (
 	"sync"
 
-	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 
 	"github.com/pkg/errors"
 )
@@ -22,8 +22,8 @@ func newStateSyncMap() *stateSyncMap {
 // add a key-value pair into the *sync.Map.
 // The ErrEmptyValue error will be returned if the key is empty.
 func (mmap *stateSyncMap) add(key string, value interface{}) error {
-	if cutil.IsEmptyStr(key) {
-		return errors.Wrap(errorType.ErrEmptyValue, "key")
+	if stringutils.IsEmptyStr(key) {
+		return errors.Wrap(errortypes.ErrEmptyValue, "key")
 	}
 	mmap.Store(key, value)
 	return nil
@@ -33,15 +33,15 @@ func (mmap *stateSyncMap) add(key string, value interface{}) error {
 // The ErrEmptyValue error will be returned if the key is empty.
 // And the ErrDataNotFound error will be returned if the key cannot be found.
 func (mmap *stateSyncMap) get(key string) (interface{}, error) {
-	if cutil.IsEmptyStr(key) {
-		return nil, errors.Wrap(errorType.ErrEmptyValue, "key")
+	if stringutils.IsEmptyStr(key) {
+		return nil, errors.Wrap(errortypes.ErrEmptyValue, "key")
 	}
 
 	if v, ok := mmap.Load(key); ok {
 		return v, nil
 	}
 
-	return nil, errors.Wrapf(errorType.ErrDataNotFound, "key: %s", key)
+	return nil, errors.Wrapf(errortypes.ErrDataNotFound, "key: %s", key)
 }
 
 // getAsSuperState returns result as *superState.
@@ -55,7 +55,7 @@ func (mmap *stateSyncMap) getAsSuperState(key string) (*superState, error) {
 	if value, ok := v.(*superState); ok {
 		return value, nil
 	}
-	return nil, errors.Wrapf(errorType.ErrConvertFailed, "key %s: %v", key, v)
+	return nil, errors.Wrapf(errortypes.ErrConvertFailed, "key %s: %v", key, v)
 }
 
 // getAsClientState returns result as *clientState.
@@ -69,7 +69,7 @@ func (mmap *stateSyncMap) getAsClientState(key string) (*clientState, error) {
 	if value, ok := v.(*clientState); ok {
 		return value, nil
 	}
-	return nil, errors.Wrapf(errorType.ErrConvertFailed, "key %s: %v", key, v)
+	return nil, errors.Wrapf(errortypes.ErrConvertFailed, "key %s: %v", key, v)
 }
 
 // getAsPeerState returns result as *peerState.
@@ -83,7 +83,7 @@ func (mmap *stateSyncMap) getAsPeerState(key string) (*peerState, error) {
 	if value, ok := v.(*peerState); ok {
 		return value, nil
 	}
-	return nil, errors.Wrapf(errorType.ErrConvertFailed, "key %s: %v", key, v)
+	return nil, errors.Wrapf(errortypes.ErrConvertFailed, "key %s: %v", key, v)
 }
 
 // getAsPieceState returns result as *pieceState.
@@ -97,19 +97,19 @@ func (mmap *stateSyncMap) getAsPieceState(key string) (*pieceState, error) {
 	if value, ok := v.(*pieceState); ok {
 		return value, nil
 	}
-	return nil, errors.Wrapf(errorType.ErrConvertFailed, "key %s: %v", key, v)
+	return nil, errors.Wrapf(errortypes.ErrConvertFailed, "key %s: %v", key, v)
 }
 
 // remove deletes the key-value pair from the mmap.
 // The ErrEmptyValue error will be returned if the key is empty.
 // And the ErrDataNotFound error will be returned if the key cannot be found.
 func (mmap *stateSyncMap) remove(key string) error {
-	if cutil.IsEmptyStr(key) {
-		return errors.Wrap(errorType.ErrEmptyValue, "key")
+	if stringutils.IsEmptyStr(key) {
+		return errors.Wrap(errortypes.ErrEmptyValue, "key")
 	}
 
 	if _, ok := mmap.Load(key); !ok {
-		return errors.Wrapf(errorType.ErrDataNotFound, "key: %s", key)
+		return errors.Wrapf(errortypes.ErrDataNotFound, "key: %s", key)
 	}
 
 	mmap.Delete(key)

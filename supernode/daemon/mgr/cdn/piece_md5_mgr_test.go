@@ -17,7 +17,7 @@
 package cdn
 
 import (
-	"github.com/dragonflyoss/Dragonfly/common/errors"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 
 	"github.com/go-check/check"
 )
@@ -48,7 +48,7 @@ func (s *PieceMD5MgrTestSuite) TestPieceMD5(c *check.C) {
 	}
 
 	_, err := mgr.getPieceMD5(taskID, 1000)
-	c.Check(errors.IsDataNotFound(err), check.Equals, true)
+	c.Check(errortypes.IsDataNotFound(err), check.Equals, true)
 
 	pieceMD5s, err := mgr.getPieceMD5sByTaskID(taskID)
 	c.Check(err, check.IsNil)

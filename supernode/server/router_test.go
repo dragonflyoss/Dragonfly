@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/version"
 
@@ -91,14 +91,14 @@ func (rs *RouterTestSuite) TestDebugHandler(c *check.C) {
 		// path not exists
 		{"/debug/pprof/foo", 404},
 	} {
-		code, _, err := cutil.Get("http://"+rs.addr+tc.url, 0)
+		code, _, err := httputils.Get("http://"+rs.addr+tc.url, 0)
 		c.Check(err, check.IsNil)
 		c.Assert(code, check.Equals, tc.code)
 	}
 }
 
 func (rs *RouterTestSuite) TestVersionHandler(c *check.C) {
-	code, res, err := cutil.Get("http://"+rs.addr+"/version", 0)
+	code, res, err := httputils.Get("http://"+rs.addr+"/version", 0)
 	c.Check(err, check.IsNil)
 	c.Assert(code, check.Equals, 200)
 
@@ -116,7 +116,7 @@ func (rs *RouterTestSuite) TestVersionHandler(c *check.C) {
 
 func (rs *RouterTestSuite) TestHTTPMetrics(c *check.C) {
 	// ensure /metrics is accessible
-	code, _, err := cutil.Get("http://"+rs.addr+"/metrics", 0)
+	code, _, err := httputils.Get("http://"+rs.addr+"/metrics", 0)
 	c.Check(err, check.IsNil)
 	c.Assert(code, check.Equals, 200)
 
@@ -125,7 +125,7 @@ func (rs *RouterTestSuite) TestHTTPMetrics(c *check.C) {
 		int(prom_testutil.ToFloat64(counter.WithLabelValues(strconv.Itoa(http.StatusOK), "/metrics", "get"))))
 
 	for i := 0; i < 5; i++ {
-		code, _, err := cutil.Get("http://"+rs.addr+"/_ping", 0)
+		code, _, err := httputils.Get("http://"+rs.addr+"/_ping", 0)
 		c.Check(err, check.IsNil)
 		c.Assert(code, check.Equals, 200)
 		c.Assert(i+1, check.Equals,

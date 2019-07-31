@@ -11,7 +11,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 
 	types "github.com/dragonflyoss/Dragonfly/apis/types"
-	util "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
 	mgr "github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 )
 
@@ -183,10 +183,10 @@ func (mr *MockProgressMgrMockRecorder) GetPeersByTaskID(ctx, taskID interface{})
 }
 
 // GetBlackInfoByPeerID mocks base method
-func (m *MockProgressMgr) GetBlackInfoByPeerID(ctx context.Context, peerID string) (*util.SyncMap, error) {
+func (m *MockProgressMgr) GetBlackInfoByPeerID(ctx context.Context, peerID string) (*syncmap.SyncMap, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBlackInfoByPeerID", ctx, peerID)
-	ret0, _ := ret[0].(*util.SyncMap)
+	ret0, _ := ret[0].(*syncmap.SyncMap)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

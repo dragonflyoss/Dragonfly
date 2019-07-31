@@ -26,9 +26,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/constants"
-	"github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/downloader"
@@ -37,6 +34,13 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
 	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/constants"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
+	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/printer"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/sirupsen/logrus"
@@ -47,7 +51,7 @@ func init() {
 }
 
 // Start function creates a new task and starts it to download file.
-func Start(cfg *config.Config) *errors.DfError {
+func Start(cfg *config.Config) *errortypes.DfError {
 	var (
 		supernodeAPI = api.NewSupernodeAPI()
 		register     = regist.NewSupernodeRegister(cfg, supernodeAPI)
@@ -55,19 +59,19 @@ func Start(cfg *config.Config) *errors.DfError {
 		result       *regist.RegisterResult
 	)
 
-	util.Printer.Println(fmt.Sprintf("--%s--  %s",
+	printer.Println(fmt.Sprintf("--%s--  %s",
 		cfg.StartTime.Format(config.DefaultTimestampFormat), cfg.URL))
 
 	if err = prepare(cfg); err != nil {
-		return errors.New(config.CodePrepareError, err.Error())
+		return errortypes.New(config.CodePrepareError, err.Error())
 	}
 
 	if result, err = registerToSuperNode(cfg, register); err != nil {
-		return errors.New(config.CodeRegisterError, err.Error())
+		return errortypes.New(config.CodeRegisterError, err.Error())
 	}
 
 	if err = downloadFile(cfg, supernodeAPI, register, result); err != nil {
-		return errors.New(config.CodeDownloadError, err.Error())
+		return errortypes.New(config.CodeDownloadError, err.Error())
 	}
 
 	return nil
@@ -75,15 +79,15 @@ func Start(cfg *config.Config) *errors.DfError {
 
 // prepare the RV-related information and create the corresponding files.
 func prepare(cfg *config.Config) (err error) {
-	util.Printer.Printf("dfget version:%s", version.DFGetVersion)
-	util.Printer.Printf("workspace:%s sign:%s", cfg.WorkHome, cfg.Sign)
+	fmt.Printf("dfget version:%s", version.DFGetVersion)
+	fmt.Printf("workspace:%s sign:%s", cfg.WorkHome, cfg.Sign)
 	logrus.Infof("target file path:%s", cfg.Output)
 
 	rv := &cfg.RV
 
 	rv.RealTarget = cfg.Output
 	rv.TargetDir = path.Dir(rv.RealTarget)
-	if err = cutil.CreateDirectory(rv.TargetDir); err != nil {
+	if err = fileutils.CreateDirectory(rv.TargetDir); err != nil {
 		return err
 	}
 
@@ -91,24 +95,24 @@ func prepare(cfg *config.Config) (err error) {
 		return err
 	}
 
-	if err = cutil.CreateDirectory(path.Dir(rv.MetaPath)); err != nil {
+	if err = fileutils.CreateDirectory(path.Dir(rv.MetaPath)); err != nil {
 		return err
 	}
-	if err = cutil.CreateDirectory(cfg.WorkHome); err != nil {
+	if err = fileutils.CreateDirectory(cfg.WorkHome); err != nil {
 		return err
 	}
-	if err = cutil.CreateDirectory(rv.SystemDataDir); err != nil {
+	if err = fileutils.CreateDirectory(rv.SystemDataDir); err != nil {
 		return err
 	}
 	rv.DataDir = cfg.RV.SystemDataDir
 
 	cfg.Node = adjustSupernodeList(cfg.Node)
-	if cutil.IsEmptyStr(rv.LocalIP) {
+	if stringutils.IsEmptyStr(rv.LocalIP) {
 		rv.LocalIP = checkConnectSupernode(cfg.Node)
 	}
 	rv.Cid = getCid(rv.LocalIP, cfg.Sign)
 	rv.TaskFileName = getTaskFileName(rv.RealTarget, cfg.Sign)
-	rv.TaskURL = cutil.FilterURLParam(cfg.URL, cfg.Filter)
+	rv.TaskURL = netutils.FilterURLParam(cfg.URL, cfg.Filter)
 	logrus.Info("runtimeVariable: " + cfg.RV.String())
 
 	return nil
@@ -156,7 +160,7 @@ func registerToSuperNode(cfg *config.Config, register regist.SupernodeRegister) 
 		panic(e.Error())
 	}
 	cfg.RV.FileLength = result.FileLength
-	util.Printer.Printf("client:%s connected to node:%s", cfg.RV.LocalIP, result.Node)
+	fmt.Printf("client:%s connected to node:%s", cfg.RV.LocalIP, result.Node)
 	return result, nil
 }
 
@@ -166,7 +170,7 @@ func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 	if cfg.BackSourceReason > 0 {
 		getter = backDown.NewBackDownloader(cfg, result)
 	} else {
-		util.Printer.Printf("start download by dragonfly")
+		fmt.Printf("start download by dragonfly")
 		getter = p2pDown.NewP2PDownloader(cfg, supernodeAPI, register, result)
 	}
 
@@ -176,7 +180,7 @@ func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 	if err != nil {
 		logrus.Error(err)
 		success = "FAIL"
-	} else if cfg.RV.FileLength < 0 && cutil.IsRegularFile(cfg.RV.RealTarget) {
+	} else if cfg.RV.FileLength < 0 && fileutils.IsRegularFile(cfg.RV.RealTarget) {
 		if info, err := os.Stat(cfg.RV.RealTarget); err == nil {
 			cfg.RV.FileLength = info.Size()
 		}
@@ -253,8 +257,8 @@ func checkConnectSupernode(nodes []string) (localIP string) {
 		e error
 	)
 	for _, n := range nodes {
-		ip, port := cutil.GetIPAndPortFromNode(n, config.DefaultSupernodePort)
-		if localIP, e = cutil.CheckConnect(ip, port, 1000); e == nil {
+		ip, port := netutils.GetIPAndPortFromNode(n, config.DefaultSupernodePort)
+		if localIP, e = httputils.CheckConnect(ip, port, 1000); e == nil {
 			return localIP
 		}
 		logrus.Errorf("Connect to node:%s error: %v", n, e)

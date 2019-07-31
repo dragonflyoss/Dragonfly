@@ -21,9 +21,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dragonflyoss/Dragonfly/common/constants"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
+	"github.com/dragonflyoss/Dragonfly/pkg/constants"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 
 	"github.com/go-check/check"
 )
@@ -33,12 +33,12 @@ func Test(t *testing.T) {
 }
 
 type SupernodeAPITestSuite struct {
-	mock *cutil.MockHTTPClient
+	mock *httputils.MockHTTPClient
 	api  SupernodeAPI
 }
 
 func (s *SupernodeAPITestSuite) SetUpSuite(c *check.C) {
-	s.mock = cutil.NewMockHTTPClient()
+	s.mock = httputils.NewMockHTTPClient()
 	s.api = NewSupernodeAPI()
 	s.api.(*supernodeAPI).HTTPClient = s.mock
 }

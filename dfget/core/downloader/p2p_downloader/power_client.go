@@ -24,13 +24,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/constants"
-	"github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/constants"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
+	"github.com/dragonflyoss/Dragonfly/pkg/limitreader"
+	"github.com/dragonflyoss/Dragonfly/pkg/queue"
+	"github.com/dragonflyoss/Dragonfly/pkg/ratelimiter"
 
 	"github.com/sirupsen/logrus"
 )
@@ -48,13 +50,13 @@ type PowerClient struct {
 	cfg *config.Config
 	// queue maintains a queue of tasks that to be downloaded.
 	// When the download fails, the piece is requeued.
-	queue util.Queue
+	queue queue.Queue
 	// clientQueue maintains a queue of tasks that need to be written to disk.
 	// A piece will be putted into this queue after it be downloaded successfully.
-	clientQueue util.Queue
+	clientQueue queue.Queue
 
 	// rateLimiter limit the download speed.
-	rateLimiter *cutil.RateLimiter
+	rateLimiter *ratelimiter.RateLimiter
 
 	// total indicates the total length of the downloaded piece.
 	total int64
@@ -106,7 +108,7 @@ func (pc *PowerClient) downloadPiece() (content *bytes.Buffer, e error) {
 
 	// check that the target download peer is available
 	if dstIP != pc.node {
-		if _, e = cutil.CheckConnect(dstIP, peerPort, -1); e != nil {
+		if _, e = httputils.CheckConnect(dstIP, peerPort, -1); e != nil {
 			return nil, e
 		}
 	}
@@ -119,18 +121,18 @@ func (pc *PowerClient) downloadPiece() (content *bytes.Buffer, e error) {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusRequestedRangeNotSatisfiable {
-		return nil, errors.ErrRangeNotSatisfiable
+		return nil, errortypes.ErrRangeNotSatisfiable
 	}
 	if !pc.is2xxStatus(resp.StatusCode) {
 		if resp.StatusCode == http.StatusNotFound {
 			pc.initFileNotExistError()
 		}
-		return nil, errors.New(resp.StatusCode, pc.readBody(resp.Body))
+		return nil, errortypes.New(resp.StatusCode, pc.readBody(resp.Body))
 	}
 
 	// start to read data from resp
 	// use limitReader to limit the download speed
-	limitReader := cutil.NewLimitReaderWithLimiter(pc.rateLimiter, resp.Body, pieceMD5 != "")
+	limitReader := limitreader.NewLimitReaderWithLimiter(pc.rateLimiter, resp.Body, pieceMD5 != "")
 	content = &bytes.Buffer{}
 	if pc.total, e = content.ReadFrom(limitReader); e != nil {
 		return nil, e

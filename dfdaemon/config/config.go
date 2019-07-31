@@ -25,8 +25,8 @@ import (
 	"path/filepath"
 	"regexp"
 
-	dferr "github.com/dragonflyoss/Dragonfly/common/errors"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
+	dferr "github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"

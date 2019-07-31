@@ -6,7 +6,8 @@ import (
 	"strings"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/digest"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
 	"github.com/dragonflyoss/Dragonfly/supernode/util"
@@ -143,7 +144,7 @@ func (mm *fileMetaDataManager) updateStatusAndResult(ctx context.Context, taskID
 	originMetaData.Success = metaData.Success
 	if originMetaData.Success {
 		originMetaData.FileLength = metaData.FileLength
-		if !cutil.IsEmptyStr(metaData.RealMd5) {
+		if !stringutils.IsEmptyStr(metaData.RealMd5) {
 			originMetaData.RealMd5 = metaData.RealMd5
 		}
 	}
@@ -167,7 +168,7 @@ func (mm *fileMetaDataManager) writePieceMD5s(ctx context.Context, taskID, fileM
 	// append fileMD5
 	pieceMD5s = append(pieceMD5s, fileMD5)
 	// append the the SHA-1 checksum of pieceMD5s
-	pieceMD5s = append(pieceMD5s, cutil.Sha1(pieceMD5s))
+	pieceMD5s = append(pieceMD5s, digest.Sha1(pieceMD5s))
 
 	pieceMD5Str := strings.Join(pieceMD5s, "\n")
 
@@ -192,7 +193,7 @@ func (mm *fileMetaDataManager) readPieceMD5s(ctx context.Context, taskID, fileMD
 	// validate the SHA-1 checksum of pieceMD5s
 	pieceMD5sLength := len(pieceMD5s)
 	pieceMD5sWithoutSha1Value := pieceMD5s[:pieceMD5sLength-1]
-	expectedSha1Value := cutil.Sha1(pieceMD5sWithoutSha1Value)
+	expectedSha1Value := digest.Sha1(pieceMD5sWithoutSha1Value)
 	realSha1Value := pieceMD5s[pieceMD5sLength-1]
 	if expectedSha1Value != realSha1Value {
 		logrus.Errorf("failed to validate the SHA-1 checksum of pieceMD5s, expected: %s, real: %s", expectedSha1Value, realSha1Value)

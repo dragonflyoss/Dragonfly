@@ -28,9 +28,11 @@ import (
 	"syscall"
 	"time"
 
-	errType "github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/printer"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 
 	"github.com/pkg/errors"
 	"gopkg.in/gcfg.v1"
@@ -94,7 +96,7 @@ func (p *Properties) Load(path string) error {
 	case "ini":
 		return p.loadFromIni(path)
 	case "yaml":
-		return cutil.LoadYaml(path, p)
+		return fileutils.LoadYaml(path, p)
 	}
 	return fmt.Errorf("extension of %s is not in 'conf/ini/yaml/yml'", path)
 }
@@ -248,7 +250,7 @@ func NewConfig() *Config {
 	// TODO: Use parameters instead of currentUser.HomeDir.
 	currentUser, err := user.Current()
 	if err != nil {
-		util.Printer.Println(fmt.Sprintf("get user error: %s", err))
+		printer.Println(fmt.Sprintf("get user error: %s", err))
 		os.Exit(CodeGetUserError)
 	}
 
@@ -264,22 +266,22 @@ func NewConfig() *Config {
 // AssertConfig checks the config and return errors.
 func AssertConfig(cfg *Config) (err error) {
 	if cfg == nil {
-		return errors.Wrap(errType.ErrNotInitialized, "runtime config")
+		return errors.Wrap(errortypes.ErrNotInitialized, "runtime config")
 	}
 
-	if !cutil.IsValidURL(cfg.URL) {
-		return errors.Wrapf(errType.ErrInvalidValue, "url: %v", err)
+	if !netutils.IsValidURL(cfg.URL) {
+		return errors.Wrapf(errortypes.ErrInvalidValue, "url: %v", err)
 	}
 
 	if err := checkOutput(cfg); err != nil {
-		return errors.Wrapf(errType.ErrInvalidValue, "output: %v", err)
+		return errors.Wrapf(errortypes.ErrInvalidValue, "output: %v", err)
 	}
 	return nil
 }
 
 // This function must be called after checkURL
 func checkOutput(cfg *Config) error {
-	if cutil.IsEmptyStr(cfg.Output) {
+	if stringutils.IsEmptyStr(cfg.Output) {
 		url := strings.TrimRight(cfg.URL, "/")
 		idx := strings.LastIndexByte(url, '/')
 		if idx < 0 {
@@ -301,7 +303,7 @@ func checkOutput(cfg *Config) error {
 	}
 
 	// check permission
-	for dir := cfg.Output; !cutil.IsEmptyStr(dir); dir = filepath.Dir(dir) {
+	for dir := cfg.Output; !stringutils.IsEmptyStr(dir); dir = filepath.Dir(dir) {
 		if err := syscall.Access(dir, syscall.O_RDWR); err == nil {
 			break
 		} else if os.IsPermission(err) {

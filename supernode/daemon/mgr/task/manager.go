@@ -4,8 +4,11 @@ import (
 	"context"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
+	"github.com/dragonflyoss/Dragonfly/pkg/time"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	dutil "github.com/dragonflyoss/Dragonfly/supernode/daemon/util"
@@ -23,7 +26,7 @@ var _ mgr.TaskMgr = &Manager{}
 
 // using a variable getContentLength to reference the function util.GetContentLength,
 // and it helps using stub functions in the test with gostub.
-var getContentLength = cutil.GetContentLength
+var getContentLength = httputils.GetContentLength
 
 // Manager is an implementation of the interface of TaskMgr.
 type Manager struct {
@@ -31,7 +34,7 @@ type Manager struct {
 
 	taskStore     *dutil.Store
 	taskLocker    *util.LockerPool
-	accessTimeMap *cutil.SyncMap
+	accessTimeMap *syncmap.SyncMap
 
 	peerMgr      mgr.PeerMgr
 	dfgetTaskMgr mgr.DfgetTaskMgr
@@ -52,7 +55,7 @@ func NewManager(cfg *config.Config, peerMgr mgr.PeerMgr, dfgetTaskMgr mgr.DfgetT
 		progressMgr:   progressMgr,
 		cdnMgr:        cdnMgr,
 		schedulerMgr:  schedulerMgr,
-		accessTimeMap: cutil.NewSyncMap(),
+		accessTimeMap: syncmap.NewSyncMap(),
 	}, nil
 }
 
@@ -73,7 +76,7 @@ func (tm *Manager) Register(ctx context.Context, req *types.TaskCreateRequest) (
 	// TODO: defer rollback the task update
 
 	// update accessTime for taskID
-	if err := tm.accessTimeMap.Add(task.ID, cutil.GetCurrentTimeMillis()); err != nil {
+	if err := tm.accessTimeMap.Add(task.ID, time.GetCurrentTimeMillis()); err != nil {
 		logrus.Warnf("failed to update accessTime for taskID(%s): %v", task.ID, err)
 	}
 
@@ -103,7 +106,7 @@ func (tm *Manager) Register(ctx context.Context, req *types.TaskCreateRequest) (
 
 	// Step5: trigger CDN
 	if err := tm.triggerCdnSyncAction(ctx, task); err != nil {
-		return nil, errors.Wrapf(errorType.ErrSystemError, "failed to trigger cdn: %v", err)
+		return nil, errors.Wrapf(errortypes.ErrSystemError, "failed to trigger cdn: %v", err)
 	}
 
 	return &types.TaskCreateResponse{
@@ -119,7 +122,7 @@ func (tm *Manager) Get(ctx context.Context, taskID string) (*types.TaskInfo, err
 }
 
 // GetAccessTime gets all task accessTime.
-func (tm *Manager) GetAccessTime(ctx context.Context) (*cutil.SyncMap, error) {
+func (tm *Manager) GetAccessTime(ctx context.Context) (*syncmap.SyncMap, error) {
 	return tm.accessTimeMap, nil
 }
 
@@ -137,8 +140,8 @@ func (tm *Manager) CheckTaskStatus(ctx context.Context, taskID string) (bool, er
 	}
 
 	// the expected CDNStatus is not nil
-	if cutil.IsEmptyStr(task.CdnStatus) {
-		return false, errors.Wrap(errorType.ErrSystemError, "CDNStatus of TaskInfo")
+	if stringutils.IsEmptyStr(task.CdnStatus) {
+		return false, errors.Wrap(errortypes.ErrSystemError, "CDNStatus of TaskInfo")
 	}
 
 	return isSuccessCDN(task.CdnStatus), nil
@@ -161,8 +164,8 @@ func (tm *Manager) GetPieces(ctx context.Context, taskID, clientID string, req *
 
 	// convert piece result and dfgetTask status to dfgetTask status code
 	dfgetTaskStatus := convertToDfgetTaskStatus(req.PieceResult, req.DfgetTaskStatus)
-	if cutil.IsEmptyStr(dfgetTaskStatus) {
-		return false, nil, errors.Wrapf(errorType.ErrInvalidValue, "failed to convert piece result (%s) dfgetTaskStatus (%s)", req.PieceResult, req.DfgetTaskStatus)
+	if stringutils.IsEmptyStr(dfgetTaskStatus) {
+		return false, nil, errors.Wrapf(errortypes.ErrInvalidValue, "failed to convert piece result (%s) dfgetTaskStatus (%s)", req.PieceResult, req.DfgetTaskStatus)
 	}
 
 	dfgetTask, err := tm.dfgetTaskMgr.Get(ctx, clientID, taskID)
@@ -178,7 +181,7 @@ func (tm *Manager) GetPieces(ctx context.Context, taskID, clientID string, req *
 	logrus.Debugf("success to get task: %+v", task)
 
 	// update accessTime for taskID
-	if err := tm.accessTimeMap.Add(task.ID, cutil.GetCurrentTimeMillis()); err != nil {
+	if err := tm.accessTimeMap.Add(task.ID, time.GetCurrentTimeMillis()); err != nil {
 		logrus.Warnf("failed to update accessTime for taskID(%s): %v", task.ID, err)
 	}
 
@@ -199,7 +202,7 @@ func (tm *Manager) UpdatePieceStatus(ctx context.Context, taskID, pieceRange str
 	// calculate the pieceNum according to the pieceRange
 	pieceNum := util.CalculatePieceNum(pieceRange)
 	if pieceNum == -1 {
-		return errors.Wrapf(errorType.ErrInvalidValue,
+		return errors.Wrapf(errortypes.ErrInvalidValue,
 			"failed to parse pieceRange: %s to pieceNum for taskID: %s, clientID: %s",
 			pieceRange, taskID, pieceUpdateRequest.ClientID)
 	}
@@ -213,7 +216,7 @@ func (tm *Manager) UpdatePieceStatus(ctx context.Context, taskID, pieceRange str
 	// get piece status code according to the pieceUpdateRequest.Result
 	pieceStatus, ok := mgr.PieceStatusMap[pieceUpdateRequest.PieceStatus]
 	if !ok {
-		return errors.Wrapf(errorType.ErrInvalidValue, "result: %s", pieceUpdateRequest.PieceStatus)
+		return errors.Wrapf(errortypes.ErrInvalidValue, "result: %s", pieceUpdateRequest.PieceStatus)
 	}
 
 	return tm.progressMgr.UpdateProgress(ctx, taskID, pieceUpdateRequest.ClientID,

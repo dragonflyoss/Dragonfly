@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"os"
 
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/queue"
 
 	"github.com/sirupsen/logrus"
 )
@@ -34,7 +34,7 @@ type TargetWriter struct {
 	// dstFile holds the file object for dst path.
 	dstFile *os.File
 	// pieceQueue maintains a queue of tasks that need to be written to target path.
-	pieceQueue util.Queue
+	pieceQueue queue.Queue
 	// finish indicates whether the task written by `TargetWriter` is completed.
 	finish chan struct{}
 	// pieceIndex records the number of pieces currently downloaded.
@@ -42,15 +42,15 @@ type TargetWriter struct {
 	// result records whether the write operation was successful.
 	result bool
 
-	syncQueue util.Queue
+	syncQueue queue.Queue
 	cfg       *config.Config
 }
 
 // NewTargetWriter creates and initialize a TargetWriter instance.
-func NewTargetWriter(dst string, queue util.Queue, cfg *config.Config) (*TargetWriter, error) {
+func NewTargetWriter(dst string, q queue.Queue, cfg *config.Config) (*TargetWriter, error) {
 	targetWriter := &TargetWriter{
 		dst:        dst,
-		pieceQueue: queue,
+		pieceQueue: q,
 		cfg:        cfg,
 	}
 	if err := targetWriter.init(); err != nil {
@@ -61,7 +61,7 @@ func NewTargetWriter(dst string, queue util.Queue, cfg *config.Config) (*TargetW
 
 func (tw *TargetWriter) init() error {
 	var err error
-	tw.dstFile, err = cutil.OpenFile(tw.dst, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0755)
+	tw.dstFile, err = fileutils.OpenFile(tw.dst, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0755)
 	if err != nil {
 		return fmt.Errorf("open target file:%s error:%v", tw.dst, err)
 	}

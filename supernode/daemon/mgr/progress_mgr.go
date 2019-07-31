@@ -4,7 +4,8 @@ import (
 	"context"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/atomiccount"
+	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
 )
 
 // PeerState maintains peer related information.
@@ -13,13 +14,13 @@ type PeerState struct {
 	PeerID string
 
 	// ProducerLoad is the load of download services provided by the current node.
-	ProducerLoad *cutil.AtomicInt
+	ProducerLoad *atomiccount.AtomicInt
 
 	// ClientErrorCount maintains the number of times that PeerID failed to downloaded from the other peer nodes.
-	ClientErrorCount *cutil.AtomicInt
+	ClientErrorCount *atomiccount.AtomicInt
 
 	// ServiceErrorCount maintains the number of times that the other peer nodes failed to downloaded from the PeerID.
-	ServiceErrorCount *cutil.AtomicInt
+	ServiceErrorCount *atomiccount.AtomicInt
 
 	// ServiceDownTime the down time of the peer service.
 	ServiceDownTime *int64
@@ -63,5 +64,5 @@ type ProgressMgr interface {
 	GetPeersByTaskID(ctx context.Context, taskID string) (peersInfo []*types.PeerInfo, err error)
 
 	// GetBlackInfoByPeerID gets black info with specified peerID.
-	GetBlackInfoByPeerID(ctx context.Context, peerID string) (dstPIDMap *cutil.SyncMap, err error)
+	GetBlackInfoByPeerID(ctx context.Context, peerID string) (dstPIDMap *syncmap.SyncMap, err error)
 }

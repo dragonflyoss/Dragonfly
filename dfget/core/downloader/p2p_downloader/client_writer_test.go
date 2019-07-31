@@ -23,7 +23,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 
 	"github.com/go-check/check"
 )
@@ -40,7 +40,7 @@ func init() {
 func (s *ClientWriterTestSuite) SetUpSuite(c *check.C) {
 	s.workHome, _ = ioutil.TempDir("/tmp", "dfget-ClientWriterTestSuite-")
 	serviceFilePath := path.Join(s.workHome, "cwtest.service")
-	s.serviceFile, _ = util.OpenFile(serviceFilePath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0755)
+	s.serviceFile, _ = fileutils.OpenFile(serviceFilePath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0755)
 }
 
 func (s *ClientWriterTestSuite) TearDownSuite(c *check.C) {

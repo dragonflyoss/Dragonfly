@@ -29,8 +29,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/errors"
-	"github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 
 	"github.com/go-check/check"
 	"github.com/sirupsen/logrus"
@@ -100,10 +100,10 @@ func (suite *ConfigSuite) TestAssertConfig(c *check.C) {
 		output    string
 		checkFunc func(err error) bool
 	}{
-		{clog: clog, checkFunc: errors.IsInvalidValue},
-		{clog: clog, url: "http://a", checkFunc: errors.IsInvalidValue},
-		{clog: clog, url: "http://a.b.com", output: "/tmp/output", checkFunc: errors.IsNilError},
-		{clog: clog, url: "http://a.b.com", output: "/root", checkFunc: errors.IsInvalidValue},
+		{clog: clog, checkFunc: errortypes.IsInvalidValue},
+		{clog: clog, url: "http://a", checkFunc: errortypes.IsInvalidValue},
+		{clog: clog, url: "http://a.b.com", output: "/tmp/output", checkFunc: errortypes.IsNilError},
+		{clog: clog, url: "http://a.b.com", output: "/root", checkFunc: errortypes.IsInvalidValue},
 	}
 
 	var f = func() (err error) {
@@ -146,7 +146,7 @@ func (suite *ConfigSuite) TestCheckOutput(c *check.C) {
 	for _, v := range cases {
 		cfg.URL = v.url
 		cfg.Output = v.output
-		if util.IsEmptyStr(v.expected) {
+		if stringutils.IsEmptyStr(v.expected) {
 			c.Assert(checkOutput(cfg), check.NotNil, check.Commentf("%v", v))
 		} else {
 			c.Assert(checkOutput(cfg), check.IsNil, check.Commentf("%v", v))

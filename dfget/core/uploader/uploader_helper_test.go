@@ -27,9 +27,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
+	"github.com/dragonflyoss/Dragonfly/pkg/ratelimiter"
 )
 
 var (
@@ -57,7 +57,7 @@ func newTestPeerServer(workHome string) (srv *peerServer) {
 	cfg := helper.CreateConfig(nil, workHome)
 	srv = newPeerServer(cfg, 0)
 	srv.totalLimitRate = 1000
-	srv.rateLimiter = util.NewRateLimiter(int64(defaultRateLimit), 2)
+	srv.rateLimiter = ratelimiter.NewRateLimiter(int64(defaultRateLimit), 2)
 	return srv
 }
 

@@ -1,8 +1,9 @@
 package progress
 
 import (
-	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -11,21 +12,21 @@ import (
 // pieceState maintains the information about
 // which peers the piece currently exists on.
 type pieceState struct {
-	pieceContainer *cutil.SyncMap
+	pieceContainer *syncmap.SyncMap
 }
 
 // newPieceState returns a new pieceState.
 func newPieceState() *pieceState {
 	return &pieceState{
-		pieceContainer: cutil.NewSyncMap(),
+		pieceContainer: syncmap.NewSyncMap(),
 	}
 }
 
 // add a peerID for the corresponding piece which means that
 // there is a new peer node that owns this piece.
 func (ps *pieceState) add(peerID string) error {
-	if cutil.IsEmptyStr(peerID) {
-		return errors.Wrap(errorType.ErrEmptyValue, "peerID")
+	if stringutils.IsEmptyStr(peerID) {
+		return errors.Wrap(errortypes.ErrEmptyValue, "peerID")
 	}
 
 	ok, err := ps.pieceContainer.GetAsBool(peerID)
@@ -34,7 +35,7 @@ func (ps *pieceState) add(peerID string) error {
 		return nil
 	}
 
-	if err != nil && !errorType.IsDataNotFound(err) {
+	if err != nil && !errortypes.IsDataNotFound(err) {
 		return err
 	}
 

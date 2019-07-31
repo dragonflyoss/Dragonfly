@@ -27,9 +27,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/errors"
-	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
@@ -117,7 +117,7 @@ func (suit *dfgetSuit) Test_transLimit() {
 	for k, v := range cases {
 		i, e := transLimit(k)
 		suit.Equal(i, v.i)
-		if util.IsEmptyStr(v.err) {
+		if stringutils.IsEmptyStr(v.err) {
 			suit.Nil(e)
 		} else {
 			suit.NotNil(e)
@@ -157,7 +157,7 @@ func (suit *dfgetSuit) TestResultMsg() {
 	msg := resultMsg(cfg, end, nil)
 	suit.Equal(msg, "download SUCCESS(0) cost:0.100s length:-1 reason:0")
 
-	msg = resultMsg(cfg, end, errors.New(1, "TestFail"))
+	msg = resultMsg(cfg, end, errortypes.New(1, "TestFail"))
 	suit.Equal(msg, "download FAIL(1) cost:0.100s length:-1 reason:0 error:"+
 		`{"Code":1,"Msg":"TestFail"}`)
 }

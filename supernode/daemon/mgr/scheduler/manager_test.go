@@ -22,7 +22,7 @@ import (
 	"reflect"
 	"testing"
 
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/mock"
 
@@ -123,7 +123,7 @@ func (s *SchedulerMgrTestSuite) TestGetCenterNum(c *check.C) {
 }
 
 func (s *SchedulerMgrTestSuite) TestIsExistInMap(c *check.C) {
-	mmap := cutil.NewSyncMap()
+	mmap := syncmap.NewSyncMap()
 	mmap.Add("a", "value")
 	mmap.Add("b", "value")
 	mmap.Add("c", "value")

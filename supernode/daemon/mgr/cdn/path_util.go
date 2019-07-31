@@ -20,7 +20,7 @@ import (
 	"context"
 	"path"
 
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
 )
@@ -30,19 +30,19 @@ var getMetaDataRawFunc = getMetaDataRaw
 var getMd5DataRawFunc = getMd5DataRaw
 
 func getDownloadKey(taskID string) string {
-	return path.Join(cutil.SubString(taskID, 0, 3), taskID)
+	return path.Join(stringutils.SubString(taskID, 0, 3), taskID)
 }
 
 func getMetaDataKey(taskID string) string {
-	return path.Join(cutil.SubString(taskID, 0, 3), taskID+".meta")
+	return path.Join(stringutils.SubString(taskID, 0, 3), taskID+".meta")
 }
 
 func getMd5DataKey(taskID string) string {
-	return path.Join(cutil.SubString(taskID, 0, 3), taskID+".md5")
+	return path.Join(stringutils.SubString(taskID, 0, 3), taskID+".md5")
 }
 
 func getUploadKey(taskID string) string {
-	return path.Join(cutil.SubString(taskID, 0, 3), taskID)
+	return path.Join(stringutils.SubString(taskID, 0, 3), taskID)
 }
 
 func getDownloadRaw(taskID string) *store.Raw {

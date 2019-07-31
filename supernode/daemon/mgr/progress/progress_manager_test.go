@@ -19,7 +19,7 @@ package progress
 import (
 	"testing"
 
-	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 
 	"github.com/go-check/check"
 	"github.com/willf/bitset"
@@ -47,19 +47,19 @@ func (s *ProgressManagerTestSuite) TestGetSuccessfulPieces(c *check.C) {
 			clientBitset: bitset.New(16).Set(1).Set(9),
 			cdnBitset:    bitset.New(16).Set(1).Set(9),
 			expected:     []int{0, 1},
-			errCheck:     errorType.IsNilError,
+			errCheck:     errortypes.IsNilError,
 		},
 		{
 			clientBitset: bitset.New(16).Set(9),
 			cdnBitset:    bitset.New(16).Set(1).Set(9),
 			expected:     []int{1},
-			errCheck:     errorType.IsNilError,
+			errCheck:     errortypes.IsNilError,
 		},
 		{
 			clientBitset: bitset.New(16).Set(2).Set(9),
 			cdnBitset:    bitset.New(16).Set(1).Set(9),
 			expected:     []int{1},
-			errCheck:     errorType.IsNilError,
+			errCheck:     errortypes.IsNilError,
 		},
 	}
 
@@ -83,14 +83,14 @@ func (s *ProgressManagerTestSuite) TestGetAvailablePieces(c *check.C) {
 			cdnBitset:     bitset.New(24).Set(1).Set(9),
 			runningPieces: []int{1},
 			expected:      []int{0},
-			errCheck:      errorType.IsNilError,
+			errCheck:      errortypes.IsNilError,
 		},
 		{
 			clientBitset:  bitset.New(24).Set(8),
 			cdnBitset:     bitset.New(24).Set(1).Set(9).Set(18),
 			runningPieces: []int{1},
 			expected:      nil,
-			errCheck:      errorType.IsCDNFail,
+			errCheck:      errortypes.IsCDNFail,
 		},
 	}
 

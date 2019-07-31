@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/time"
 )
 
-var getCurrentTimeMillisFunc = cutil.GetCurrentTimeMillis
+var getCurrentTimeMillisFunc = time.GetCurrentTimeMillis
 
 // getContentLengthByHeader calculates the piece content length by piece header.
 func getContentLengthByHeader(pieceHeader uint32) int32 {

@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	"github.com/dragonflyoss/Dragonfly/common/errors"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/mock"
 	dutil "github.com/dragonflyoss/Dragonfly/supernode/daemon/util"
@@ -96,7 +96,7 @@ func (s *TaskMgrTestSuite) TestCheckTaskStatus(c *check.C) {
 	c.Check(isSuccess, check.Equals, false)
 
 	isSuccess, err = s.taskManager.CheckTaskStatus(context.Background(), "foo")
-	c.Check(errors.IsDataNotFound(err), check.Equals, true)
+	c.Check(errortypes.IsDataNotFound(err), check.Equals, true)
 	c.Check(isSuccess, check.Equals, false)
 
 	task, err := s.taskManager.Get(context.Background(), resp.ID)
@@ -122,11 +122,11 @@ func (s *TaskMgrTestSuite) TestUpdateTaskInfo(c *check.C) {
 
 	// return error when taskInfo equals nil
 	err = s.taskManager.Update(context.Background(), resp.ID, nil)
-	c.Check(errors.IsEmptyValue(err), check.Equals, true)
+	c.Check(errortypes.IsEmptyValue(err), check.Equals, true)
 
 	// return error when taskInfo.CDNStatus equals ""
 	err = s.taskManager.Update(context.Background(), resp.ID, &types.TaskInfo{})
-	c.Check(errors.IsEmptyValue(err), check.Equals, true)
+	c.Check(errortypes.IsEmptyValue(err), check.Equals, true)
 
 	// only update the cdnStatus when CDNStatus is not success.
 	err = s.taskManager.Update(context.Background(), resp.ID, &types.TaskInfo{
