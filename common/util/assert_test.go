@@ -53,13 +53,6 @@ func (suite *AssertSuite) TestIsEmptyStr(c *check.C) {
 	c.Assert(IsEmptyStr("x"), check.Equals, false)
 }
 
-func (suite *AssertSuite) TestIsEmptySlice(c *check.C) {
-	c.Assert(IsEmptySlice(nil), check.Equals, true)
-	c.Assert(IsEmptySlice([]string{}), check.Equals, true)
-	c.Assert(IsEmptySlice([]string{""}), check.Equals, false)
-	c.Assert(IsEmptySlice([]string{"aaa", "bbb"}), check.Equals, false)
-}
-
 func (suite *AssertSuite) TestIsNil(c *check.C) {
 	c.Assert(IsNil(nil), check.Equals, true)
 	c.Assert(IsNil(suite), check.Equals, false)

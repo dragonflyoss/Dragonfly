@@ -51,7 +51,7 @@ func (pmm *pieceMD5Mgr) setPieceMD5(taskID string, pieceNum int, pieceMD5 string
 		return err
 	}
 
-	if cutil.IsNil(pieceMD5s) {
+	if pieceMD5s == nil {
 		pieceMD5s = cutil.NewSyncMap()
 		pmm.taskPieceMD5s.Add(taskID, pieceMD5s)
 	}

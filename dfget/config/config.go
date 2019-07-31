@@ -263,7 +263,7 @@ func NewConfig() *Config {
 
 // AssertConfig checks the config and return errors.
 func AssertConfig(cfg *Config) (err error) {
-	if cutil.IsNil(cfg) {
+	if cfg == nil {
 		return errors.Wrap(errType.ErrNotInitialized, "runtime config")
 	}
 

@@ -89,7 +89,7 @@ func readHeader(ctx context.Context, reader io.Reader, pieceMd5 hash.Hash) (uint
 		return 0, fmt.Errorf("unexected head size: %d", n)
 	}
 
-	if !cutil.IsNil(pieceMd5) {
+	if pieceMd5 != nil {
 		pieceMd5.Write(header)
 	}
 
