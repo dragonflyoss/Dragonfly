@@ -87,7 +87,7 @@ main() {
     if [[ "1" == "${USE_DOCKER}" ]]
     then
         echo "Begin to build with docker."
-        case "$1" in
+        case "${1-}" in
             dfdaemon)
                 build-dfdaemon-docker
             ;;

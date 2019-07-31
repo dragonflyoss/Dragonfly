@@ -86,9 +86,8 @@ type TaskRegisterRequest struct {
 	//
 	RawURL string `json:"rawURL,omitempty"`
 
-	// IP address of supernode that the client can connect to
-	// Format: ipv4
-	SuperNodeIP strfmt.IPv4 `json:"superNodeIp,omitempty"`
+	// The address of supernode that the client can connect to
+	SuperNodeIP string `json:"superNodeIp,omitempty"`
 
 	// taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via
 	// --filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.
@@ -116,10 +115,6 @@ func (m *TaskRegisterRequest) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validatePort(formats); err != nil {
-		res = append(res, err)
-	}
-
-	if err := m.validateSuperNodeIP(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -179,19 +174,6 @@ func (m *TaskRegisterRequest) validatePort(formats strfmt.Registry) error {
 	}
 
 	if err := validate.MaximumInt("port", "body", int64(m.Port), 65000, false); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (m *TaskRegisterRequest) validateSuperNodeIP(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.SuperNodeIP) { // not required
-		return nil
-	}
-
-	if err := validate.FormatOf("superNodeIp", "body", "ipv4", m.SuperNodeIP.String(), formats); err != nil {
 		return err
 	}
 

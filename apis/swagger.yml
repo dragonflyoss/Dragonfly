@@ -642,8 +642,7 @@ definitions:
         format: "ipv4"
       superNodeIp:
          type: "string"
-         description: "IP address of supernode that the client can connect to"
-         format: "ipv4"
+         description: "The address of supernode that the client can connect to"
       hostName:
         type: "string"
         description: "host name of peer client node."

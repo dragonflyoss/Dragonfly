@@ -33,7 +33,7 @@ main() {
         FPM="fpm"
     fi
 
-    case "$1" in
+    case "${1-}" in
         rpm )
             build_rpm
             ;;
