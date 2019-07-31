@@ -72,6 +72,8 @@ const (
 	CodeNeedAuth        = 608
 	CodeWaitAuth        = 609
 	CodeSourceError     = 610
+	CodeGetPieceReport  = 611
+	CodeGetPeerDown     = 612
 )
 
 /* the code of task result that dfget will report to supernode */

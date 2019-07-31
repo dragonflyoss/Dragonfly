@@ -21,8 +21,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/common/constants"
 	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
+
+	"github.com/sirupsen/logrus"
 )
 
 /* the url paths of supernode APIs*/
@@ -77,7 +80,9 @@ func (api *supernodeAPI) Register(node string, req *types.RegisterRequest) (
 		return nil, fmt.Errorf("%d:%s", code, body)
 	}
 	resp = new(types.RegisterResponse)
-	e = json.Unmarshal(body, resp)
+	if e = json.Unmarshal(body, resp); e != nil {
+		return nil, e
+	}
 	return resp, e
 }
 
@@ -90,7 +95,9 @@ func (api *supernodeAPI) PullPieceTask(node string, req *types.PullPieceTaskRequ
 		api.Scheme, node, peerPullPieceTaskPath, util.ParseQuery(req))
 
 	resp = new(types.PullPieceTaskResponse)
-	e = api.get(url, resp)
+	if e = api.get(url, resp); e != nil {
+		return nil, e
+	}
 	return
 }
 
@@ -100,9 +107,14 @@ func (api *supernodeAPI) ReportPiece(node string, req *types.ReportPieceRequest)
 
 	url := fmt.Sprintf("%s://%s%s?%s",
 		api.Scheme, node, peerReportPiecePath, util.ParseQuery(req))
-
 	resp = new(types.BaseResponse)
-	e = api.get(url, resp)
+	if e = api.get(url, resp); e != nil {
+		logrus.Errorf("failed to report piece{taskid:%s,range:%s},err: %v", req.TaskID, req.PieceRange, e)
+		return nil, e
+	}
+	if resp != nil && resp.Code != constants.CodeGetPieceReport {
+		logrus.Errorf("failed to report piece{taskid:%s,range:%s} to supernode: api response code is %d not equal to %d", req.TaskID, req.PieceRange, resp.Code, constants.CodeGetPieceReport)
+	}
 	return
 }
 
@@ -114,7 +126,13 @@ func (api *supernodeAPI) ServiceDown(node string, taskID string, cid string) (
 		api.Scheme, node, peerServiceDownPath, taskID, cid)
 
 	resp = new(types.BaseResponse)
-	e = api.get(url, resp)
+	if e = api.get(url, resp); e != nil {
+		logrus.Errorf("failed to send service down,err: %v", e)
+		return nil, e
+	}
+	if resp != nil && resp.Code != constants.CodeGetPeerDown {
+		logrus.Errorf("failed to send service down to supernode: api response code is %d not equal to %d", resp.Code, constants.CodeGetPeerDown)
+	}
 	return
 }
 
