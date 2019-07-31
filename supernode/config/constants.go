@@ -70,8 +70,8 @@ const (
 )
 
 const (
-	// SubsystemSupernode represents metrics from supernode
+	// SubsystemSupernode represents metricsutils from supernode
 	SubsystemSupernode = "supernode"
-	// SubsystemDfget represents metrics from dfget
+	// SubsystemDfget represents metricsutils from dfget
 	SubsystemDfget = "dfget"
 )

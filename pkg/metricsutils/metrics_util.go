@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package util
+package metricsutils
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
@@ -26,6 +26,7 @@ const (
 )
 
 // NewCounter will auto-register a Counter metric to prometheus default registry and return it.
+// TODO(yeya24): Stop using default registry, add registry as a parameter instead.
 func NewCounter(subsystem, name, help string, labels []string) *prometheus.CounterVec {
 	return promauto.NewCounterVec(
 		prometheus.CounterOpts{

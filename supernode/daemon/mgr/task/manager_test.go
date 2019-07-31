@@ -29,6 +29,7 @@ import (
 
 	"github.com/go-check/check"
 	"github.com/golang/mock/gomock"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func Test(t *testing.T) {
@@ -73,6 +74,7 @@ func (s *TaskMgrTestSuite) SetUpSuite(c *check.C) {
 
 func (s *TaskMgrTestSuite) TearDownSuite(c *check.C) {
 	s.mockCtl.Finish()
+	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 }
 
 func (s *TaskMgrTestSuite) TestCheckTaskStatus(c *check.C) {

@@ -19,6 +19,7 @@ package task
 import (
 	"context"
 	"fmt"
+	"github.com/dragonflyoss/Dragonfly/pkg/timeutils"
 	"net/http"
 	"time"
 
@@ -109,6 +110,7 @@ func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateReq
 	task.PieceTotal = int32((fileLength + (int64(pieceSize) - 1)) / int64(pieceSize))
 
 	tm.taskStore.Put(taskID, task)
+	tm.metrics.tasks.WithLabelValues(taskID, task.CdnStatus).Inc()
 	return task, nil
 }
 
@@ -152,14 +154,11 @@ func (tm *Manager) updateTask(taskID string, updateTaskInfo *types.TaskInfo) err
 		return err
 	}
 
-	if !isSuccessCDN(updateTaskInfo.CdnStatus) {
-		// when the origin CDNStatus equals success, do not update it to unsuccessful
-		if isSuccessCDN(task.CdnStatus) {
-			return nil
-		}
-
-		// only update the task CdnStatus when the new CDNStatus and
-		// the origin CDNStatus both not equals success
+	// Update the origin task CDNStatus when the origin CDNStatus not equals success.
+	if !isSuccessCDN(task.CdnStatus) {
+		// In order to update CDNStatus we should reset the origin CDNStatus to 0.
+		tm.metrics.tasks.WithLabelValues(taskID, task.CdnStatus).Dec()
+		tm.metrics.tasks.WithLabelValues(taskID, updateTaskInfo.CdnStatus).Inc()
 		task.CdnStatus = updateTaskInfo.CdnStatus
 		return nil
 	}
@@ -174,14 +173,25 @@ func (tm *Manager) updateTask(taskID string, updateTaskInfo *types.TaskInfo) err
 		task.RealMd5 = updateTaskInfo.RealMd5
 	}
 
-	var pieceTotal int32
-	if updateTaskInfo.FileLength > 0 {
-		pieceTotal = int32((updateTaskInfo.FileLength + int64(task.PieceSize-1)) / int64(task.PieceSize))
+	// only update the task info when the new CDNStatus equals success
+	// and the origin CDNStatus not equals success.
+	if isSuccessCDN(updateTaskInfo.CdnStatus) {
+		if updateTaskInfo.FileLength != 0 {
+			task.FileLength = updateTaskInfo.FileLength
+		}
+
+		if !stringutils.IsEmptyStr(updateTaskInfo.RealMd5) {
+			task.RealMd5 = updateTaskInfo.RealMd5
+		}
+
+		var pieceTotal int32
+		if updateTaskInfo.FileLength > 0 {
+			pieceTotal = int32((updateTaskInfo.FileLength + int64(task.PieceSize-1)) / int64(task.PieceSize))
+		}
+		if pieceTotal != 0 {
+			task.PieceTotal = pieceTotal
+		}
 	}
-	if pieceTotal != 0 {
-		task.PieceTotal = pieceTotal
-	}
-	task.CdnStatus = updateTaskInfo.CdnStatus
 
 	return nil
 }
@@ -227,7 +237,9 @@ func (tm *Manager) triggerCdnSyncAction(ctx context.Context, task *types.TaskInf
 
 	go func() {
 		updateTaskInfo, err := tm.cdnMgr.TriggerCDN(ctx, task)
+		tm.metrics.triggerCdnCount.WithLabelValues().Inc()
 		if err != nil {
+			tm.metrics.triggerCdnFailCount.WithLabelValues().Inc()
 			logrus.Errorf("taskID(%s) trigger cdn get error: %v", task.ID, err)
 		}
 		tm.updateTask(task.ID, updateTaskInfo)
@@ -324,10 +336,12 @@ func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, tas
 
 	// get scheduler pieceResult
 	logrus.Debugf("start scheduler for taskID: %s clientID: %s", task.ID, clientID)
+	startTime := timeutils.GetCurrentTimeMillisFloat()
 	pieceResult, err := tm.schedulerMgr.Schedule(ctx, task.ID, clientID, dfgetTask.PeerID)
 	if err != nil {
 		return false, nil, err
 	}
+	tm.metrics.scheduleDurationMilliSeconds.WithLabelValues(task.ID).Observe(timeutils.GetCurrentTimeMillisFloat() - startTime)
 	logrus.Debugf("get scheduler result length(%d) with taskID(%s) and clientID(%s)", len(pieceResult), task.ID, clientID)
 
 	var pieceInfos []*types.PieceInfo

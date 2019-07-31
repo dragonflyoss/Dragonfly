@@ -17,6 +17,7 @@
 package task
 
 import (
+	"context"
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/mock"
@@ -24,6 +25,7 @@ import (
 
 	"github.com/go-check/check"
 	"github.com/golang/mock/gomock"
+	prom_testutil "github.com/prometheus/client_golang/prometheus/testutil"
 )
 
 func init() {
@@ -121,5 +123,59 @@ func (s *TaskUtilTestSuite) TestEqualsTask(c *check.C) {
 	for _, v := range cases {
 		result := equalsTask(v.existTask, v.task)
 		c.Check(result, check.DeepEquals, v.result)
+	}
+}
+
+func (s *TaskUtilTestSuite) TestTriggerCdnSyncAction(c *check.C) {
+	var err error
+	totalCounter := s.taskManager.metrics.triggerCdnCount
+
+	var cases = []struct {
+		task  *types.TaskInfo
+		err   error
+		skip  bool
+		total float64
+	}{
+		{
+			task: &types.TaskInfo{
+				CdnStatus: types.TaskInfoCdnStatusRUNNING,
+			},
+			err:  nil,
+			skip: true,
+		},
+		{
+			task: &types.TaskInfo{
+				CdnStatus: types.TaskInfoCdnStatusSUCCESS,
+			},
+			err:  nil,
+			skip: true,
+		},
+		{
+			task: &types.TaskInfo{
+				ID:        "foo",
+				CdnStatus: types.TaskInfoCdnStatusWAITING,
+			},
+			err:   nil,
+			skip:  false,
+			total: 1,
+		},
+		{
+			task: &types.TaskInfo{
+				ID:        "foo1",
+				CdnStatus: types.TaskInfoCdnStatusWAITING,
+			},
+			err:   nil,
+			skip:  false,
+			total: 2,
+		},
+	}
+
+	for _, tc := range cases {
+		err = s.taskManager.triggerCdnSyncAction(context.Background(), tc.task)
+		c.Assert(err, check.Equals, tc.err)
+		if !tc.skip {
+			c.Assert(tc.total, check.Equals,
+				int(prom_testutil.ToFloat64(totalCounter.WithLabelValues())))
+		}
 	}
 }

@@ -22,6 +22,7 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/metricsutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
 	"github.com/dragonflyoss/Dragonfly/pkg/timeutils"
@@ -32,6 +33,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/util"
 
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 )
 
@@ -40,6 +42,30 @@ const (
 )
 
 var _ mgr.TaskMgr = &Manager{}
+
+type metrics struct {
+	tasks                        *prometheus.GaugeVec
+	triggerCdnCount              *prometheus.CounterVec
+	triggerCdnFailCount          *prometheus.CounterVec
+	scheduleDurationMilliSeconds *prometheus.HistogramVec
+}
+
+func newMetrics() *metrics {
+	return &metrics{
+		tasks: metricsutils.NewGauge(config.SubsystemSupernode, "tasks",
+			"The status of Supernode tasks", []string{"taskid", "cdnstatus"}),
+
+		triggerCdnCount: metricsutils.NewCounter(config.SubsystemSupernode, "trigger_cdn_total",
+			"The number of triggering cdn", []string{}),
+
+		triggerCdnFailCount: metricsutils.NewCounter(config.SubsystemSupernode, "trigger_cdn_failed_total",
+			"The number of triggering cdn failure", []string{}),
+
+		scheduleDurationMilliSeconds: metricsutils.NewHistogram(config.SubsystemSupernode, "schedule_duration_milliseconds",
+			"duration for task scheduling in milliseconds", []string{"taskid"},
+			prometheus.ExponentialBuckets(0.02, 2, 7)),
+	}
+}
 
 // Manager is an implementation of the interface of TaskMgr.
 type Manager struct {
@@ -56,6 +82,7 @@ type Manager struct {
 	cdnMgr       mgr.CDNMgr
 	schedulerMgr mgr.SchedulerMgr
 	OriginClient httpclient.OriginHTTPClient
+	metrics      *metrics
 }
 
 // NewManager returns a new Manager Object.
@@ -73,6 +100,7 @@ func NewManager(cfg *config.Config, peerMgr mgr.PeerMgr, dfgetTaskMgr mgr.DfgetT
 		accessTimeMap:           syncmap.NewSyncMap(),
 		taskURLUnReachableStore: syncmap.NewSyncMap(),
 		OriginClient:            originClient,
+		metrics:                 newMetrics(),
 	}, nil
 }
 

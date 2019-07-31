@@ -25,7 +25,7 @@ import (
 	"github.com/go-check/check"
 )
 
-// APIMetricsSuite is the test suite for Prometheus metrics.
+// APIMetricsSuite is the test suite for Prometheus metricsutils.
 type APIMetricsSuite struct {
 	starter *command.Starter
 }
@@ -46,16 +46,16 @@ func (s *APIMetricsSuite) TearDownSuite(c *check.C) {
 	s.starter.Clean()
 }
 
-// TestMetrics tests /metrics API.
+// TestMetrics tests /metricsutils API.
 func (s *APIMetricsSuite) TestMetrics(c *check.C) {
-	resp, err := request.Get("/metrics")
+	resp, err := request.Get("/metricsutils")
 	c.Assert(err, check.IsNil)
 	defer resp.Body.Close()
 
 	CheckRespStatus(c, resp, 200)
 }
 
-// TestMetricsRequestTotal tests http-related metrics.
+// TestMetricsRequestTotal tests http-related metricsutils.
 func (s *APIMetricsSuite) TestHttpMetrics(c *check.C) {
 	requestCounter := `dragonfly_supernode_http_requests_total{code="%d",handler="%s",method="%s"}`
 	responseSizeSum := `dragonfly_supernode_http_response_size_bytes_sum{code="%d",handler="%s",method="%s"}`
