@@ -52,7 +52,7 @@ func StartPeerServerProcess(cfg *config.Config) (port int, err error) {
 	if defaultExecutor != nil {
 		return defaultExecutor.StartPeerServerProcess(cfg)
 	}
-	return 0, fmt.Errorf("executor of peer server isn't be initialized")
+	return 0, fmt.Errorf("executor of peer server hasn't been initialized")
 }
 
 // PeerServerExecutor starts an independent peer server process for uploading downloaded files.
