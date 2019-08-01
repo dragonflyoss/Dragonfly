@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	// A apiClient is a Dragonfly supernode API client.
+	// An apiClient is a Dragonfly supernode API client.
 	apiClient *client.APIClient
 )
 

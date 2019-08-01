@@ -175,7 +175,7 @@ func (sm *Manager) getPieceResults(ctx context.Context, taskID, clientID, peerID
 	return pieceResults, nil
 }
 
-// tryGetPID returns a available dstPID from ps.pieceContainer.
+// tryGetPID returns an available dstPID from ps.pieceContainer.
 func (sm *Manager) tryGetPID(ctx context.Context, taskID string, pieceNum int, peerIDs []string) (dstPID string) {
 	defer func() {
 		if dstPID == "" {
