@@ -149,7 +149,7 @@ func cleanLocalRepo(dfpath string) {
 				return nil
 			}
 			if !info.Mode().IsRegular() {
-				logrus.Infof("ignore %s: not a regular file", path)
+				logrus.Debugf("ignore %s: not a regular file", path)
 				return nil
 			}
 			// get the last access time
