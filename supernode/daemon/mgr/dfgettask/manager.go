@@ -19,13 +19,13 @@ package dfgettask
 import (
 	"context"
 	"fmt"
-	"github.com/dragonflyoss/Dragonfly/pkg/metricsutils"
-	"github.com/dragonflyoss/Dragonfly/supernode/config"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/metricsutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	dutil "github.com/dragonflyoss/Dragonfly/supernode/daemon/util"
 
@@ -36,17 +36,13 @@ import (
 var _ mgr.DfgetTaskMgr = &Manager{}
 
 type metrics struct {
-	dfgetTasks       *prometheus.GaugeVec
-	dfgetTasksDaemon *prometheus.GaugeVec
+	dfgetTasks *prometheus.GaugeVec
 }
 
-func newMetrics() *metrics {
+func newMetrics(register prometheus.Registerer) *metrics {
 	return &metrics{
 		dfgetTasks: metricsutils.NewGauge(config.SubsystemSupernode, "dfgettasks",
-			"The number of dfget tasks", []string{"taskid", "callsystem"}),
-
-		dfgetTasksDaemon: metricsutils.NewGauge(config.SubsystemSupernode, "daemon_dfgettasks",
-			"The number of dfget tasks from dfdaemon", []string{"taskid", "callsystem"}),
+			"The number of dfget tasks", []string{"taskid", "callsystem"}, register),
 	}
 }
 
@@ -58,11 +54,11 @@ type Manager struct {
 }
 
 // NewManager returns a new Manager.
-func NewManager() (*Manager, error) {
+func NewManager(register prometheus.Registerer) (*Manager, error) {
 	return &Manager{
 		dfgetTaskStore: dutil.NewStore(),
 		ptoc:           syncmap.NewSyncMap(),
-		metrics:        newMetrics(),
+		metrics:        newMetrics(register),
 	}, nil
 }
 
@@ -93,12 +89,7 @@ func (dtm *Manager) Add(ctx context.Context, dfgetTask *types.DfGetTask) error {
 
 	dtm.ptoc.Add(generatePeerKey(dfgetTask.PeerID, dfgetTask.TaskID), dfgetTask.CID)
 	dtm.dfgetTaskStore.Put(key, dfgetTask)
-
-	if dfgetTask.Dfdaemon {
-		dtm.metrics.dfgetTasksDaemon.WithLabelValues(dfgetTask.TaskID, dfgetTask.CallSystem).Inc()
-	} else {
-		dtm.metrics.dfgetTasks.WithLabelValues(dfgetTask.TaskID, dfgetTask.CallSystem).Inc()
-	}
+	dtm.metrics.dfgetTasks.WithLabelValues(dfgetTask.TaskID, dfgetTask.CallSystem).Inc()
 
 	return nil
 }
@@ -130,11 +121,7 @@ func (dtm *Manager) Delete(ctx context.Context, clientID, taskID string) error {
 		return err
 	}
 	dtm.ptoc.Delete(generatePeerKey(dfgetTask.PeerID, dfgetTask.TaskID))
-	if dfgetTask.Dfdaemon {
-		dtm.metrics.dfgetTasksDaemon.WithLabelValues(dfgetTask.TaskID, dfgetTask.CallSystem).Dec()
-	} else {
-		dtm.metrics.dfgetTasks.WithLabelValues(dfgetTask.TaskID, dfgetTask.CallSystem).Dec()
-	}
+	dtm.metrics.dfgetTasks.WithLabelValues(dfgetTask.TaskID, dfgetTask.CallSystem).Dec()
 	return dtm.dfgetTaskStore.Delete(key)
 }
 

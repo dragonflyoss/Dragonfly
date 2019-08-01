@@ -19,7 +19,6 @@ package task
 import (
 	"context"
 	"fmt"
-	"github.com/dragonflyoss/Dragonfly/pkg/timeutils"
 	"net/http"
 	"time"
 
@@ -28,6 +27,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/timeutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	"github.com/dragonflyoss/Dragonfly/supernode/util"
@@ -154,9 +154,14 @@ func (tm *Manager) updateTask(taskID string, updateTaskInfo *types.TaskInfo) err
 		return err
 	}
 
-	// Update the origin task CDNStatus when the origin CDNStatus not equals success.
-	if !isSuccessCDN(task.CdnStatus) {
-		// In order to update CDNStatus we should reset the origin CDNStatus to 0.
+	if !isSuccessCDN(updateTaskInfo.CdnStatus) {
+		// when the origin CDNStatus equals success, do not update it to unsuccessful
+		if isSuccessCDN(task.CdnStatus) {
+			return nil
+		}
+
+		// only update the task CdnStatus when the new CDNStatus and
+		// the origin CDNStatus both not equals success
 		tm.metrics.tasks.WithLabelValues(taskID, task.CdnStatus).Dec()
 		tm.metrics.tasks.WithLabelValues(taskID, updateTaskInfo.CdnStatus).Inc()
 		task.CdnStatus = updateTaskInfo.CdnStatus
@@ -192,6 +197,9 @@ func (tm *Manager) updateTask(taskID string, updateTaskInfo *types.TaskInfo) err
 			task.PieceTotal = pieceTotal
 		}
 	}
+	tm.metrics.tasks.WithLabelValues(taskID, task.CdnStatus).Dec()
+	tm.metrics.tasks.WithLabelValues(taskID, updateTaskInfo.CdnStatus).Inc()
+	task.CdnStatus = updateTaskInfo.CdnStatus
 
 	return nil
 }
@@ -336,12 +344,12 @@ func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, tas
 
 	// get scheduler pieceResult
 	logrus.Debugf("start scheduler for taskID: %s clientID: %s", task.ID, clientID)
-	startTime := timeutils.GetCurrentTimeMillisFloat()
+	startTime := time.Now()
 	pieceResult, err := tm.schedulerMgr.Schedule(ctx, task.ID, clientID, dfgetTask.PeerID)
 	if err != nil {
 		return false, nil, err
 	}
-	tm.metrics.scheduleDurationMilliSeconds.WithLabelValues(task.ID).Observe(timeutils.GetCurrentTimeMillisFloat() - startTime)
+	tm.metrics.scheduleDurationMilliSeconds.WithLabelValues(task.ID).Observe(timeutils.SinceInMilliseconds(startTime))
 	logrus.Debugf("get scheduler result length(%d) with taskID(%s) and clientID(%s)", len(pieceResult), task.ID, clientID)
 
 	var pieceInfos []*types.PieceInfo

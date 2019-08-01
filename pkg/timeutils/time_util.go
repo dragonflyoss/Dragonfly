@@ -25,7 +25,7 @@ func GetCurrentTimeMillis() int64 {
 	return time.Now().UnixNano() / time.Millisecond.Nanoseconds()
 }
 
-// GetCurrentTimeMillisFloat returns the time in millis for now in float64 format.
-func GetCurrentTimeMillisFloat() float64 {
-	return float64(time.Now().UnixNano()) / float64(time.Millisecond.Nanoseconds())
+// SinceInMilliseconds gets the time since the specified start in milliseconds.
+func SinceInMilliseconds(start time.Time) float64 {
+	return float64(time.Since(start).Nanoseconds()) / float64(time.Millisecond.Nanoseconds())
 }

@@ -18,17 +18,19 @@ package metricsutils
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 const (
 	namespace = "dragonfly"
 )
 
-// NewCounter will auto-register a Counter metric to prometheus default registry and return it.
-// TODO(yeya24): Stop using default registry, add registry as a parameter instead.
-func NewCounter(subsystem, name, help string, labels []string) *prometheus.CounterVec {
-	return promauto.NewCounterVec(
+// NewCounter will register a Counter metric to specified registry and return it.
+// If registry is not specified, it will register metric to default prometheus registry.
+func NewCounter(subsystem, name, help string, labels []string, register prometheus.Registerer) *prometheus.CounterVec {
+	if register == nil {
+		register = prometheus.DefaultRegisterer
+	}
+	m := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: namespace,
 			Subsystem: subsystem,
@@ -37,11 +39,17 @@ func NewCounter(subsystem, name, help string, labels []string) *prometheus.Count
 		},
 		labels,
 	)
+	register.MustRegister(m)
+	return m
 }
 
-// NewGauge will auto-register a Gauge metric to prometheus default registry and return it.
-func NewGauge(subsystem, name, help string, labels []string) *prometheus.GaugeVec {
-	return promauto.NewGaugeVec(
+// NewGauge will register a Gauge metric to specified registry and return it.
+// If registry is not specified, it will register metric to default prometheus registry.
+func NewGauge(subsystem, name, help string, labels []string, register prometheus.Registerer) *prometheus.GaugeVec {
+	if register == nil {
+		register = prometheus.DefaultRegisterer
+	}
+	m := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: namespace,
 			Subsystem: subsystem,
@@ -50,11 +58,17 @@ func NewGauge(subsystem, name, help string, labels []string) *prometheus.GaugeVe
 		},
 		labels,
 	)
+	register.MustRegister(m)
+	return m
 }
 
-// NewSummary will auto-register a Summary metric to prometheus default registry and return it.
-func NewSummary(subsystem, name, help string, labels []string, objectives map[float64]float64) *prometheus.SummaryVec {
-	return promauto.NewSummaryVec(
+// NewSummary will register a Summary metric to specified registry and return it.
+// If registry is not specified, it will register metric to default prometheus registry.
+func NewSummary(subsystem, name, help string, labels []string, objectives map[float64]float64, register prometheus.Registerer) *prometheus.SummaryVec {
+	if register == nil {
+		register = prometheus.DefaultRegisterer
+	}
+	m := prometheus.NewSummaryVec(
 		prometheus.SummaryOpts{
 			Namespace:  namespace,
 			Subsystem:  subsystem,
@@ -64,11 +78,17 @@ func NewSummary(subsystem, name, help string, labels []string, objectives map[fl
 		},
 		labels,
 	)
+	register.MustRegister(m)
+	return m
 }
 
-// NewHistogram will auto-register a Histogram metric to prometheus default registry and return it.
-func NewHistogram(subsystem, name, help string, labels []string, buckets []float64) *prometheus.HistogramVec {
-	return promauto.NewHistogramVec(
+// NewHistogram will register a Histogram metric to specified registry and return it.
+// If registry is not specified, it will register metric to default prometheus registry.
+func NewHistogram(subsystem, name, help string, labels []string, buckets []float64, register prometheus.Registerer) *prometheus.HistogramVec {
+	if register == nil {
+		register = prometheus.DefaultRegisterer
+	}
+	m := prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Namespace: namespace,
 			Subsystem: subsystem,
@@ -78,4 +98,6 @@ func NewHistogram(subsystem, name, help string, labels []string, buckets []float
 		},
 		labels,
 	)
+	register.MustRegister(m)
+	return m
 }

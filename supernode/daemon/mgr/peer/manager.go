@@ -19,14 +19,14 @@ package peer
 import (
 	"context"
 	"fmt"
-	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
-	metrics_util "github.com/dragonflyoss/Dragonfly/pkg/metricsutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/metricsutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	dutil "github.com/dragonflyoss/Dragonfly/supernode/daemon/util"
 
@@ -41,10 +41,10 @@ type metrics struct {
 	peers *prometheus.GaugeVec
 }
 
-func newMetrics() *metrics {
+func newMetrics(register prometheus.Registerer) *metrics {
 	return &metrics{
-		peers: metrics_util.NewGauge(config.SubsystemSupernode, "peers",
-			"The number of supernode peers", []string{"hostname"}),
+		peers: metricsutils.NewGauge(config.SubsystemSupernode, "peers",
+			"The number of supernode peers", []string{"hostname"}, register),
 	}
 }
 
@@ -55,10 +55,10 @@ type Manager struct {
 }
 
 // NewManager return a new Manager Object.
-func NewManager() (*Manager, error) {
+func NewManager(register prometheus.Registerer) (*Manager, error) {
 	return &Manager{
 		peerStore: dutil.NewStore(),
-		metrics:   newMetrics(),
+		metrics:   newMetrics(register),
 	}, nil
 }
 

@@ -34,6 +34,7 @@ import (
 
 	"github.com/go-check/check"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
 	prom_testutil "github.com/prometheus/client_golang/prometheus/testutil"
 )
 
@@ -67,7 +68,7 @@ func (rs *RouterTestSuite) SetUpSuite(c *check.C) {
 		Plugins:  nil,
 		Storages: nil,
 	}
-	s, err := New(testConf)
+	s, err := New(testConf, prometheus.NewRegistry())
 	c.Check(err, check.IsNil)
 	version.DFVersion = &types.DragonflyVersion{
 		Version:   "test",

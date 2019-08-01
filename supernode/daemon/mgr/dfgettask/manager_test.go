@@ -39,17 +39,9 @@ func init() {
 type DfgetTaskMgrTestSuite struct {
 }
 
-// SetUpTest does common setup in the beginning of each test.
-func (s *DfgetTaskMgrTestSuite) SetUpTest(c *check.C) {
-	// In every test, we should reset Prometheus default registry, otherwise
-	// it will panic because of duplicate metricsutils.
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
-}
-
 func (s *DfgetTaskMgrTestSuite) TestDfgetTaskAdd(c *check.C) {
-	manager, _ := NewManager()
-	dfgetNum := manager.metrics.dfgetTasks
-	dfgetDaemonNum := manager.metrics.dfgetTasksDaemon
+	manager, _ := NewManager(prometheus.NewRegistry())
+	dfgetTasks := manager.metrics.dfgetTasks
 
 	var testCases = []struct {
 		dfgetTask *types.DfGetTask
@@ -80,7 +72,7 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskAdd(c *check.C) {
 			dfgetTask: &types.DfGetTask{
 				CID:        "bar",
 				CallSystem: "bar",
-				Dfdaemon:   true,
+				Dfdaemon:   false,
 				Path:       "/peer/file/taskFileName",
 				PieceSize:  4 * 1024 * 1024,
 				TaskID:     "test2",
@@ -89,7 +81,7 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskAdd(c *check.C) {
 			Expect: &types.DfGetTask{
 				CID:        "bar",
 				CallSystem: "bar",
-				Dfdaemon:   true,
+				Dfdaemon:   false,
 				Path:       "/peer/file/taskFileName",
 				PieceSize:  4 * 1024 * 1024,
 				TaskID:     "test2",
@@ -102,16 +94,9 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskAdd(c *check.C) {
 	for _, tc := range testCases {
 		err := manager.Add(context.Background(), tc.dfgetTask)
 		c.Check(err, check.IsNil)
-		if tc.dfgetTask.Dfdaemon {
-			c.Assert(1, check.Equals,
-				int(prom_testutil.ToFloat64(
-					dfgetDaemonNum.WithLabelValues(tc.dfgetTask.TaskID, tc.dfgetTask.CallSystem))))
-		} else {
-			c.Assert(1, check.Equals,
-				int(prom_testutil.ToFloat64(
-					dfgetNum.WithLabelValues(tc.dfgetTask.TaskID, tc.dfgetTask.CallSystem))))
-		}
-
+		c.Assert(1, check.Equals,
+			int(prom_testutil.ToFloat64(
+				dfgetTasks.WithLabelValues(tc.dfgetTask.TaskID, tc.dfgetTask.CallSystem))))
 		dt, err := manager.Get(context.Background(), tc.dfgetTask.CID, tc.dfgetTask.TaskID)
 		c.Check(err, check.IsNil)
 		c.Check(dt, check.DeepEquals, tc.Expect)
@@ -119,7 +104,7 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskAdd(c *check.C) {
 }
 
 func (s *DfgetTaskMgrTestSuite) TestDfgetTaskUpdate(c *check.C) {
-	manager, _ := NewManager()
+	manager, _ := NewManager(prometheus.NewRegistry())
 	var testCases = []struct {
 		dfgetTask  *types.DfGetTask
 		taskStatus string
@@ -151,7 +136,7 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskUpdate(c *check.C) {
 			dfgetTask: &types.DfGetTask{
 				CID:        "bar",
 				CallSystem: "bar",
-				Dfdaemon:   true,
+				Dfdaemon:   false,
 				Path:       "/peer/file/taskFileName",
 				PieceSize:  4 * 1024 * 1024,
 				TaskID:     "test2",
@@ -161,7 +146,7 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskUpdate(c *check.C) {
 			Expect: &types.DfGetTask{
 				CID:        "bar",
 				CallSystem: "bar",
-				Dfdaemon:   true,
+				Dfdaemon:   false,
 				Path:       "/peer/file/taskFileName",
 				PieceSize:  4 * 1024 * 1024,
 				TaskID:     "test2",
@@ -184,9 +169,8 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskUpdate(c *check.C) {
 }
 
 func (s *DfgetTaskMgrTestSuite) TestDfgetTaskDelete(c *check.C) {
-	manager, _ := NewManager()
-	dfgetNum := manager.metrics.dfgetTasks
-	dfgetDaemonNum := manager.metrics.dfgetTasksDaemon
+	manager, _ := NewManager(prometheus.NewRegistry())
+	dfgetTasks := manager.metrics.dfgetTasks
 
 	var testCases = []struct {
 		dfgetTask *types.DfGetTask
@@ -195,7 +179,7 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskDelete(c *check.C) {
 			dfgetTask: &types.DfGetTask{
 				CID:        "foo",
 				CallSystem: "foo",
-				Dfdaemon:   true,
+				Dfdaemon:   false,
 				Path:       "/peer/file/taskFileName",
 				PieceSize:  4 * 1024 * 1024,
 				TaskID:     "test1",
@@ -221,18 +205,11 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskDelete(c *check.C) {
 
 		err = manager.Delete(context.Background(), tc.dfgetTask.CID, tc.dfgetTask.TaskID)
 		c.Check(err, check.IsNil)
-		if tc.dfgetTask.Dfdaemon {
-			c.Assert(0, check.Equals,
-				int(prom_testutil.ToFloat64(
-					dfgetDaemonNum.WithLabelValues(tc.dfgetTask.TaskID, tc.dfgetTask.CallSystem))))
-		} else {
-			c.Assert(0, check.Equals,
-				int(prom_testutil.ToFloat64(
-					dfgetNum.WithLabelValues(tc.dfgetTask.TaskID, tc.dfgetTask.CallSystem))))
-		}
+		c.Assert(0, check.Equals,
+			int(prom_testutil.ToFloat64(
+				dfgetTasks.WithLabelValues(tc.dfgetTask.TaskID, tc.dfgetTask.CallSystem))))
 
 		_, err = manager.Get(context.Background(), tc.dfgetTask.CID, tc.dfgetTask.TaskID)
-		c.Check(errors.IsDataNotFound(err), check.Equals, true)
+		c.Check(errortypes.IsDataNotFound(err), check.Equals, true)
 	}
->>>>>>> 40bbeb8... add some supernode metrics
 }
