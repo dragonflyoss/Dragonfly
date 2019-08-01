@@ -33,7 +33,7 @@ var (
 	defaultVersion = "v1.24"
 )
 
-// APIClient is a API client that performs all operations
+// APIClient is an API client that performs all operations
 // against a server
 type APIClient struct {
 	proto   string // socket type
