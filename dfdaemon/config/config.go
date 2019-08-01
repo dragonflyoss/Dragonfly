@@ -40,6 +40,10 @@ var fs = afero.NewOsFs()
 // Properties holds all configurable properties of dfdaemon.
 // The default path is '/etc/dragonfly/dfdaemon.yml'
 // For examples:
+//     dfget_flags: ["--node","192.168.33.21","--verbose","--ip","192.168.33.23",
+//                   "--port","15001","--expiretime","3m0s","--alivetime","5m0s",
+//                   "-f","filterParam1&filterParam2"]
+//
 //     registry_mirror:
 //       # url for the registry mirror
 //       remote: https://index.docker.io
@@ -88,18 +92,16 @@ type Properties struct {
 	CertPem string `yaml:"certpem" json:"certpem"`
 	KeyPem  string `yaml:"keypem" json:"keypem"`
 
-	// dfget config
-	SuperNodes []string `yaml:"supernodes" json:"supernodes"`
-	DFRepo     string   `yaml:"localrepo" json:"localrepo"`
-	DFPath     string   `yaml:"dfpath" json:"dfpath"`
-	RateLimit  string   `yaml:"ratelimit" json:"ratelimit"`
-	URLFilter  string   `yaml:"urlfilter" json:"urlfilter"`
-	CallSystem string   `yaml:"callsystem" json:"callsystem"`
-	Notbs      bool     `yaml:"notbs" json:"notbs"`
-
 	Verbose bool `yaml:"verbose" json:"verbose"`
 
 	MaxProcs int `yaml:"maxprocs" json:"maxprocs"`
+
+	// dfget config
+	DfgetFlags []string `yaml:"dfget_flags" json:"dfget_flags"`
+	SuperNodes []string `yaml:"supernodes" json:"supernodes"`
+	RateLimit  string   `yaml:"ratelimit" json:"ratelimit"`
+	DFRepo     string   `yaml:"localrepo" json:"localrepo"`
+	DFPath     string   `yaml:"dfpath" json:"dfpath"`
 }
 
 // Validate validates the config
@@ -137,28 +139,30 @@ func (p *Properties) Validate() error {
 
 // DFGetConfig returns config for dfget downloader
 func (p *Properties) DFGetConfig() DFGetConfig {
+	// init DfgetFlags
+	var dfgetFlags []string
+	dfgetFlags = append(dfgetFlags, p.DfgetFlags...)
+	dfgetFlags = append(dfgetFlags, "--dfdaemon")
+	if p.Verbose {
+		dfgetFlags = append(dfgetFlags, "--verbose")
+	}
+
 	return DFGetConfig{
+		DfgetFlags: dfgetFlags,
 		SuperNodes: p.SuperNodes,
+		RateLimit:  p.RateLimit,
 		DFRepo:     p.DFRepo,
 		DFPath:     p.DFPath,
-		RateLimit:  p.RateLimit,
-		URLFilter:  p.URLFilter,
-		CallSystem: p.CallSystem,
-		Notbs:      p.Notbs,
-		Verbose:    p.Verbose,
 	}
 }
 
 // DFGetConfig configures how dfdaemon calls dfget
 type DFGetConfig struct {
+	DfgetFlags []string `yaml:"dfget_flags"`
 	SuperNodes []string `yaml:"supernodes"`
+	RateLimit  string   `yaml:"ratelimit"`
 	DFRepo     string   `yaml:"localrepo"`
 	DFPath     string   `yaml:"dfpath"`
-	RateLimit  string   `yaml:"ratelimit"`
-	URLFilter  string   `yaml:"urlfilter"`
-	CallSystem string   `yaml:"callsystem"`
-	Notbs      bool     `yaml:"notbs"`
-	Verbose    bool     `yaml:"verbose"`
 }
 
 // RegistryMirror configures the mirror of the official docker registry

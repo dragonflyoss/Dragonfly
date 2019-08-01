@@ -64,27 +64,16 @@ func (dfGetter *DFGetter) getCommand(
 	url string, header map[string][]string, output string,
 ) (cmd *exec.Cmd) {
 	args := []string{
-		"--dfdaemon",
 		"-u", url,
 		"-o", output,
 	}
-
-	if dfGetter.config.Notbs {
-		args = append(args, "--notbs")
-	}
-
-	if dfGetter.config.Verbose {
-		args = append(args, "--verbose")
-	}
+	args = append(args, dfGetter.config.DfgetFlags...)
 
 	add := func(key, value string) {
 		if v := strings.TrimSpace(value); v != "" {
 			args = append(args, key, v)
 		}
 	}
-
-	add("--callsystem", dfGetter.config.CallSystem)
-	add("-f", dfGetter.config.URLFilter)
 	add("-s", dfGetter.config.RateLimit)
 	add("--totallimit", dfGetter.config.RateLimit)
 	add("--node", strings.Join(dfGetter.config.SuperNodes, ","))
