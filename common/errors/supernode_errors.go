@@ -87,7 +87,7 @@ func IsTaskIDDuplicate(err error) bool {
 	return checkError(err, codeTaskIDDuplicate)
 }
 
-// IsAuthenticationRequired check the error is a AuthenticationRequired error or not.
+// IsAuthenticationRequired check the error is an AuthenticationRequired error or not.
 func IsAuthenticationRequired(err error) bool {
 	return checkError(err, codeAuthenticationRequired)
 }
