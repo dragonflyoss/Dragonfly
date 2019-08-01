@@ -50,20 +50,20 @@ type metrics struct {
 	scheduleDurationMilliSeconds *prometheus.HistogramVec
 }
 
-func newMetrics() *metrics {
+func newMetrics(register prometheus.Registerer) *metrics {
 	return &metrics{
 		tasks: metricsutils.NewGauge(config.SubsystemSupernode, "tasks",
-			"The status of Supernode tasks", []string{"taskid", "cdnstatus"}),
+			"The status of Supernode tasks", []string{"taskid", "cdnstatus"}, register),
 
 		triggerCdnCount: metricsutils.NewCounter(config.SubsystemSupernode, "trigger_cdn_total",
-			"The number of triggering cdn", []string{}),
+			"The number of triggering cdn", []string{}, register),
 
 		triggerCdnFailCount: metricsutils.NewCounter(config.SubsystemSupernode, "trigger_cdn_failed_total",
-			"The number of triggering cdn failure", []string{}),
+			"The number of triggering cdn failure", []string{}, register),
 
 		scheduleDurationMilliSeconds: metricsutils.NewHistogram(config.SubsystemSupernode, "schedule_duration_milliseconds",
 			"duration for task scheduling in milliseconds", []string{"taskid"},
-			prometheus.ExponentialBuckets(0.02, 2, 7)),
+			prometheus.ExponentialBuckets(0.02, 2, 7), register),
 	}
 }
 
@@ -87,7 +87,7 @@ type Manager struct {
 
 // NewManager returns a new Manager Object.
 func NewManager(cfg *config.Config, peerMgr mgr.PeerMgr, dfgetTaskMgr mgr.DfgetTaskMgr,
-	progressMgr mgr.ProgressMgr, cdnMgr mgr.CDNMgr, schedulerMgr mgr.SchedulerMgr, originClient httpclient.OriginHTTPClient) (*Manager, error) {
+	progressMgr mgr.ProgressMgr, cdnMgr mgr.CDNMgr, schedulerMgr mgr.SchedulerMgr, originClient httpclient.OriginHTTPClient, register prometheus.Registerer) (*Manager, error) {
 	return &Manager{
 		cfg:                     cfg,
 		taskStore:               dutil.NewStore(),
@@ -100,7 +100,7 @@ func NewManager(cfg *config.Config, peerMgr mgr.PeerMgr, dfgetTaskMgr mgr.DfgetT
 		accessTimeMap:           syncmap.NewSyncMap(),
 		taskURLUnReachableStore: syncmap.NewSyncMap(),
 		OriginClient:            originClient,
-		metrics:                 newMetrics(),
+		metrics:                 newMetrics(register),
 	}, nil
 }
 

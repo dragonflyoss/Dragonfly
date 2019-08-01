@@ -26,6 +26,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/server"
 
 	"github.com/go-openapi/strfmt"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 )
 
@@ -47,7 +48,7 @@ func New(cfg *config.Config) (*Daemon, error) {
 		return nil, err
 	}
 
-	s, err := server.New(cfg)
+	s, err := server.New(cfg, prometheus.DefaultRegisterer)
 	if err != nil {
 		return nil, err
 	}

@@ -42,16 +42,9 @@ func init() {
 type PeerMgrTestSuite struct {
 }
 
-// SetUpTest does common setup in the beginning of each test.
-func (s *PeerMgrTestSuite) SetUpTest(c *check.C) {
-	// In every test, we should reset Prometheus default registry, otherwise
-	// it will panic because of duplicate metricsutils.
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
-}
-
 func (s *PeerMgrTestSuite) TestPeerMgr(c *check.C) {
-	manager, _ := NewManager()
-	peersNumCounter := manager.metrics.peers
+	manager, _ := NewManager(prometheus.NewRegistry())
+	peers := manager.metrics.peers
 	// register
 	request := &types.PeerCreateRequest{
 		IP:       "192.168.10.11",
@@ -63,7 +56,7 @@ func (s *PeerMgrTestSuite) TestPeerMgr(c *check.C) {
 	c.Check(err, check.IsNil)
 
 	c.Assert(1, check.Equals,
-		int(prom_testutil.ToFloat64(peersNumCounter.WithLabelValues("foo"))))
+		int(prom_testutil.ToFloat64(peers.WithLabelValues("foo"))))
 
 	// get
 	id := resp.ID
@@ -89,7 +82,7 @@ func (s *PeerMgrTestSuite) TestPeerMgr(c *check.C) {
 	c.Check(err, check.IsNil)
 
 	c.Assert(0, check.Equals,
-		int(prom_testutil.ToFloat64(peersNumCounter.WithLabelValues("foo"))))
+		int(prom_testutil.ToFloat64(peers.WithLabelValues("foo"))))
 
 	// get
 	info, err = manager.Get(context.Background(), id)
@@ -98,7 +91,7 @@ func (s *PeerMgrTestSuite) TestPeerMgr(c *check.C) {
 }
 
 func (s *PeerMgrTestSuite) TestGet(c *check.C) {
-	manager, _ := NewManager()
+	manager, _ := NewManager(prometheus.NewRegistry())
 
 	// register
 	request := &types.PeerCreateRequest{
@@ -136,7 +129,7 @@ func (s *PeerMgrTestSuite) TestGet(c *check.C) {
 }
 
 func (s *PeerMgrTestSuite) TestList(c *check.C) {
-	manager, _ := NewManager()
+	manager, _ := NewManager(prometheus.NewRegistry())
 	// the first data
 	request := &types.PeerCreateRequest{
 		IP:       "192.168.10.11",

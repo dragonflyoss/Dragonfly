@@ -125,7 +125,7 @@ We provide several functions to add metrics easily. Here is an example to add a 
 import "github.com/dragonflyoss/Dragonfly/pkg/util"
 
 requestCounter := util.NewCounter("supernode", "http_requests_total",
-			"Counter of HTTP requests.", []string{"code"})
+			"Counter of HTTP requests.", []string{"code"}, nil)
 requestCounter.WithLabelValues("200").Inc()
 ```
 

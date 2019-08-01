@@ -34,22 +34,22 @@ type metrics struct {
 	responseSize    *prometheus.HistogramVec
 }
 
-func newMetrics() *metrics {
+func newMetrics(register prometheus.Registerer) *metrics {
 	return &metrics{
 		requestCounter: metricsutils.NewCounter(config.SubsystemSupernode, "http_requests_total",
-			"Counter of HTTP requests.", []string{"code", "handler", "method"},
+			"Counter of HTTP requests.", []string{"code", "handler", "method"}, register,
 		),
 		requestDuration: metricsutils.NewHistogram(config.SubsystemSupernode, "http_request_duration_seconds",
 			"Histogram of latencies for HTTP requests.", []string{"code", "handler", "method"},
-			[]float64{.1, .2, .4, 1, 3, 8, 20, 60, 120},
+			[]float64{.1, .2, .4, 1, 3, 8, 20, 60, 120}, register,
 		),
 		requestSize: metricsutils.NewHistogram(config.SubsystemSupernode, "http_request_size_bytes",
 			"Histogram of request size for HTTP requests.", []string{"code", "handler", "method"},
-			prometheus.ExponentialBuckets(100, 10, 8),
+			prometheus.ExponentialBuckets(100, 10, 8), register,
 		),
 		responseSize: metricsutils.NewHistogram(config.SubsystemSupernode, "http_response_size_bytes",
 			"Histogram of response size for HTTP requests.", []string{"code", "handler", "method"},
-			prometheus.ExponentialBuckets(100, 10, 8),
+			prometheus.ExponentialBuckets(100, 10, 8), register,
 		),
 	}
 }

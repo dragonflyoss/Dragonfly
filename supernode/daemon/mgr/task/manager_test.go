@@ -67,14 +67,12 @@ func (s *TaskMgrTestSuite) SetUpSuite(c *check.C) {
 	s.mockProgressMgr.EXPECT().InitProgress(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	s.mockOriginClient.EXPECT().GetContentLength(gomock.Any(), gomock.Any()).Return(int64(1000), 200, nil)
 	cfg := config.NewConfig()
-
 	s.taskManager, _ = NewManager(cfg, s.mockPeerMgr, s.mockDfgetTaskMgr,
-		s.mockProgressMgr, s.mockCDNMgr, s.mockSchedulerMgr, s.mockOriginClient)
+		s.mockProgressMgr, s.mockCDNMgr, s.mockSchedulerMgr, s.mockOriginClient, prometheus.NewRegistry())
 }
 
 func (s *TaskMgrTestSuite) TearDownSuite(c *check.C) {
 	s.mockCtl.Finish()
-	prometheus.DefaultRegisterer = prometheus.NewRegistry()
 }
 
 func (s *TaskMgrTestSuite) TestCheckTaskStatus(c *check.C) {
