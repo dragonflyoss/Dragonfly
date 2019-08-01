@@ -91,11 +91,8 @@ func init() {
 
 	// dfget download config
 	rf.String("localrepo", filepath.Join(os.Getenv("HOME"), ".small-dragonfly/dfdaemon/data/"), "temp output dir of dfdaemon")
-	rf.String("callsystem", "com_ops_dragonfly", "caller name")
 	rf.String("dfpath", defaultDfgetPath, "dfget path")
 	rf.String("ratelimit", netutils.NetLimit(), "net speed limit,format:xxxM/K")
-	rf.String("urlfilter", "Signature&Expires&OSSAccessKeyId", "filter specified url fields")
-	rf.Bool("notbs", true, "not try back source to download if throw exception")
 	rf.StringSlice("node", nil, "specify the addresses(host:port) of supernodes that will be passed to dfget.")
 
 	exitOnError(bindRootFlags(viper.GetViper()), "bind root command flags")

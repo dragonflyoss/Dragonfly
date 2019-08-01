@@ -266,19 +266,6 @@ func (ts *configTestSuite) TestProxyMatch() {
 
 }
 
-func (ts *configTestSuite) TestDFGetConfig() {
-	r := ts.Require()
-	cfg := defaultConfig()
-	dfgetCfg := cfg.DFGetConfig()
-	r.Equal(cfg.SuperNodes, dfgetCfg.SuperNodes)
-	r.Equal(cfg.DFRepo, dfgetCfg.DFRepo)
-	r.Equal(cfg.DFPath, dfgetCfg.DFPath)
-	r.Equal(cfg.RateLimit, dfgetCfg.RateLimit)
-	r.Equal(cfg.URLFilter, dfgetCfg.URLFilter)
-	r.Equal(cfg.CallSystem, dfgetCfg.CallSystem)
-	r.Equal(cfg.Notbs, dfgetCfg.Notbs)
-}
-
 func (ts *configTestSuite) TestMirrorTLSConfig() {
 	r := ts.Require()
 
