@@ -13,7 +13,7 @@ dfdaemon version [flags]
 ### Examples
 
 ```
-dfdaemon, version  0.4.1
+dfdaemon version  0.4.1
   Git commit:     6fd5c8f
   Build date:     20190717-15:57:52
   Go version:     go1.12.6
