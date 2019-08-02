@@ -151,7 +151,7 @@ func getTaskPath(taskFileName string) string {
 	return ""
 }
 
-// NewRegisterResult creates a instance of RegisterResult.
+// NewRegisterResult creates an instance of RegisterResult.
 func NewRegisterResult(node string, remainder []string, url string,
 	taskID string, fileLen int64, pieceSize int32) *RegisterResult {
 	return &RegisterResult{

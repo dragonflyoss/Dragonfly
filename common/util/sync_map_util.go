@@ -163,7 +163,7 @@ func (mmap *SyncMap) ListKeyAsStringSlice() (result []string) {
 	return
 }
 
-// ListKeyAsIntSlice returns the list of keys as a int slice.
+// ListKeyAsIntSlice returns the list of keys as an int slice.
 func (mmap *SyncMap) ListKeyAsIntSlice() (result []int) {
 	if mmap == nil {
 		return []int{}
