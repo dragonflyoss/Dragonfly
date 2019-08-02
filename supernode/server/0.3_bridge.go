@@ -94,7 +94,7 @@ func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http
 		logrus.Errorf("failed to register task %+v: %v", taskCreateRequest, err)
 		return err
 	}
-	logrus.Infof("success to register task %+v", taskCreateRequest)
+	logrus.Debugf("success to register task %+v", taskCreateRequest)
 	return EncodeResponse(rw, http.StatusOK, &types.ResultInfo{
 		Code: constants.Success,
 		Msg:  constants.GetMsgByCode(constants.Success),
