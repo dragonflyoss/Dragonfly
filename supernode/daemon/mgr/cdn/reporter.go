@@ -6,7 +6,7 @@ import (
 	"hash"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
@@ -60,7 +60,7 @@ func (re *reporter) processCacheByQuick(ctx context.Context, taskID string, meta
 	}
 
 	// validate the file md5
-	if cutil.IsEmptyStr(metaData.RealMd5) {
+	if stringutils.IsEmptyStr(metaData.RealMd5) {
 		logrus.Debugf("failed to processCacheByQuick: empty RealMd5 for taskID %s", taskID)
 		return false, nil, nil
 	}
@@ -89,7 +89,7 @@ func (re *reporter) processCacheByQuick(ctx context.Context, taskID string, meta
 
 func (re *reporter) processCacheByReadFile(ctx context.Context, taskID string, metaData *fileMetaData, breakNum int) (hash.Hash, *types.TaskInfo, error) {
 	var calculateFileMd5 = true
-	if breakNum == -1 && !cutil.IsEmptyStr(metaData.RealMd5) {
+	if breakNum == -1 && !stringutils.IsEmptyStr(metaData.RealMd5) {
 		calculateFileMd5 = false
 	}
 
@@ -115,7 +115,7 @@ func (re *reporter) processCacheByReadFile(ctx context.Context, taskID string, m
 	}
 
 	fileMd5Value := metaData.RealMd5
-	if cutil.IsEmptyStr(fileMd5Value) {
+	if stringutils.IsEmptyStr(fileMd5Value) {
 		fileMd5Value = fmt.Sprintf("%x", result.fileMd5.Sum(nil))
 	}
 

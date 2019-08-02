@@ -22,15 +22,16 @@ import (
 	"path"
 	"reflect"
 
+	"github.com/dragonflyoss/Dragonfly/pkg/dflog"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
+	"github.com/dragonflyoss/Dragonfly/supernode/daemon"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-
-	"github.com/dragonflyoss/Dragonfly/common/dflog"
-	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
-	"github.com/dragonflyoss/Dragonfly/supernode/config"
-	"github.com/dragonflyoss/Dragonfly/supernode/daemon"
 )
 
 var (
@@ -115,7 +116,7 @@ func runSuperNode() error {
 	}
 
 	// set supernode advertise ip
-	if cutil.IsEmptyStr(cfg.AdvertiseIP) {
+	if stringutils.IsEmptyStr(cfg.AdvertiseIP) {
 		if err := setAdvertiseIP(); err != nil {
 			return err
 		}
@@ -173,9 +174,9 @@ func initConfig() error {
 
 func setAdvertiseIP() error {
 	// use the first non-loop address if the AdvertiseIP is empty
-	ipList, err := cutil.GetAllIPs()
+	ipList, err := netutils.GetAllIPs()
 	if err != nil {
-		return errors.Wrapf(errorType.ErrSystemError, "failed to get ip list: %v", err)
+		return errors.Wrapf(errortypes.ErrSystemError, "failed to get ip list: %v", err)
 	}
 	if len(ipList) == 0 {
 		logrus.Debugf("get empty system's unicast interface addresses")

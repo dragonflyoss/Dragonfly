@@ -31,7 +31,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 	"github.com/dragonflyoss/Dragonfly/test/environment"
 )
 
@@ -299,7 +299,7 @@ func check(ip string, port int, timeout time.Duration) (err error) {
 		case err = <-end:
 			return err
 		case <-ticker.C:
-			if _, err = util.CheckConnect(ip, port, 50); err == nil {
+			if _, err = httputils.CheckConnect(ip, port, 50); err == nil {
 				return nil
 			}
 		}

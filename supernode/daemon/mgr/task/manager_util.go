@@ -1,3 +1,19 @@
+/*
+ * Copyright The Dragonfly Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package task
 
 import (
@@ -6,8 +22,10 @@ import (
 	"net/http"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/digest"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	"github.com/dragonflyoss/Dragonfly/supernode/util"
@@ -19,8 +37,8 @@ import (
 // addOrUpdateTask adds a new task or update the exist task to taskStore.
 func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateRequest) (*types.TaskInfo, error) {
 	taskURL := req.TaskURL
-	if cutil.IsEmptyStr(req.TaskURL) {
-		taskURL = cutil.FilterURLParam(req.RawURL, req.Filter)
+	if stringutils.IsEmptyStr(req.TaskURL) {
+		taskURL = netutils.FilterURLParam(req.RawURL, req.Filter)
 	}
 	taskID := generateTaskID(taskURL, req.Md5, req.Identifier)
 
@@ -40,7 +58,7 @@ func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateReq
 	if v, err := tm.taskStore.Get(taskID); err == nil {
 		task = v.(*types.TaskInfo)
 		if !equalsTask(task, newTask) {
-			return nil, errors.Wrapf(errorType.ErrTaskIDDuplicate, "%s", taskID)
+			return nil, errors.Wrapf(errortypes.ErrTaskIDDuplicate, "%s", taskID)
 		}
 	} else {
 		task = newTask
@@ -78,8 +96,8 @@ func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateReq
 
 // getTask returns the taskInfo according to the specified taskID.
 func (tm *Manager) getTask(taskID string) (*types.TaskInfo, error) {
-	if cutil.IsEmptyStr(taskID) {
-		return nil, errors.Wrap(errorType.ErrEmptyValue, "taskID")
+	if stringutils.IsEmptyStr(taskID) {
+		return nil, errors.Wrap(errortypes.ErrEmptyValue, "taskID")
 	}
 
 	v, err := tm.taskStore.Get(taskID)
@@ -91,21 +109,21 @@ func (tm *Manager) getTask(taskID string) (*types.TaskInfo, error) {
 	if info, ok := v.(*types.TaskInfo); ok {
 		return info, nil
 	}
-	return nil, errors.Wrapf(errorType.ErrConvertFailed, "taskID %s: %v", taskID, v)
+	return nil, errors.Wrapf(errortypes.ErrConvertFailed, "taskID %s: %v", taskID, v)
 }
 
 func (tm *Manager) updateTask(taskID string, updateTaskInfo *types.TaskInfo) error {
-	if cutil.IsEmptyStr(taskID) {
-		return errors.Wrap(errorType.ErrEmptyValue, "taskID")
+	if stringutils.IsEmptyStr(taskID) {
+		return errors.Wrap(errortypes.ErrEmptyValue, "taskID")
 	}
 
 	if updateTaskInfo == nil {
-		return errors.Wrap(errorType.ErrEmptyValue, "Update TaskInfo")
+		return errors.Wrap(errortypes.ErrEmptyValue, "Update TaskInfo")
 	}
 
 	// the expected new CDNStatus is not nil
-	if cutil.IsEmptyStr(updateTaskInfo.CdnStatus) {
-		return errors.Wrapf(errorType.ErrEmptyValue, "CDNStatus of TaskInfo: %+v", updateTaskInfo)
+	if stringutils.IsEmptyStr(updateTaskInfo.CdnStatus) {
+		return errors.Wrapf(errortypes.ErrEmptyValue, "CDNStatus of TaskInfo: %+v", updateTaskInfo)
 	}
 
 	tm.taskLocker.GetLock(taskID, false)
@@ -134,7 +152,7 @@ func (tm *Manager) updateTask(taskID string, updateTaskInfo *types.TaskInfo) err
 		task.FileLength = updateTaskInfo.FileLength
 	}
 
-	if !cutil.IsEmptyStr(updateTaskInfo.RealMd5) {
+	if !stringutils.IsEmptyStr(updateTaskInfo.RealMd5) {
 		task.RealMd5 = updateTaskInfo.RealMd5
 	}
 
@@ -237,11 +255,11 @@ func (tm *Manager) processTaskRunning(ctx context.Context, srcCID, srcPID string
 	dfgetTask *types.DfGetTask) (bool, interface{}, error) {
 	pieceNum := util.CalculatePieceNum(req.PieceRange)
 	if pieceNum == -1 {
-		return false, nil, errors.Wrapf(errorType.ErrInvalidValue, "pieceRange: %s", req.PieceRange)
+		return false, nil, errors.Wrapf(errortypes.ErrInvalidValue, "pieceRange: %s", req.PieceRange)
 	}
 	pieceStatus, success := convertToPeerPieceStatus(req.PieceResult, req.DfgetTaskStatus)
 	if !success {
-		return false, nil, errors.Wrapf(errorType.ErrInvalidValue, "failed to convert result: %s and status %s to pieceStatus", req.PieceResult, req.DfgetTaskStatus)
+		return false, nil, errors.Wrapf(errortypes.ErrInvalidValue, "failed to convert result: %s and status %s to pieceStatus", req.PieceResult, req.DfgetTaskStatus)
 	}
 
 	logrus.Debugf("start to update progress taskID (%s) srcCID (%s) srcPID (%s) dstPID (%s) pieceNum (%d) pieceStatus (%d)",
@@ -263,16 +281,16 @@ func (tm *Manager) processTaskFinish(ctx context.Context, taskID, clientID, dfge
 
 func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, task *types.TaskInfo, dfgetTask *types.DfGetTask) (bool, interface{}, error) {
 	// Step1. validate
-	if cutil.IsEmptyStr(clientID) {
-		return false, nil, errors.Wrapf(errorType.ErrEmptyValue, "clientID")
+	if stringutils.IsEmptyStr(clientID) {
+		return false, nil, errors.Wrapf(errortypes.ErrEmptyValue, "clientID")
 	}
 
 	// Step2. validate cdn status
 	if task.CdnStatus == types.TaskInfoCdnStatusFAILED {
-		return false, nil, errors.Wrapf(errorType.ErrCDNFail, "taskID: %s", task.ID)
+		return false, nil, errors.Wrapf(errortypes.ErrCDNFail, "taskID: %s", task.ID)
 	}
 	if task.CdnStatus == types.TaskInfoCdnStatusWAITING {
-		return false, nil, errors.Wrapf(errorType.ErrPeerWait, "taskID: %s cdn status is waiting", task.ID)
+		return false, nil, errors.Wrapf(errortypes.ErrPeerWait, "taskID: %s cdn status is waiting", task.ID)
 	}
 
 	// Step3. whether success
@@ -390,7 +408,7 @@ func equalsTask(existTask, newTask *types.TaskInfo) bool {
 		return false
 	}
 
-	if !cutil.IsEmptyStr(existTask.Md5) {
+	if !stringutils.IsEmptyStr(existTask.Md5) {
 		return existTask.Md5 == newTask.Md5
 	}
 
@@ -399,20 +417,20 @@ func equalsTask(existTask, newTask *types.TaskInfo) bool {
 
 // validateParams validates the params of TaskCreateRequest.
 func validateParams(req *types.TaskCreateRequest) error {
-	if !cutil.IsValidURL(req.RawURL) {
-		return errors.Wrapf(errorType.ErrInvalidValue, "raw url: %s", req.RawURL)
+	if !netutils.IsValidURL(req.RawURL) {
+		return errors.Wrapf(errortypes.ErrInvalidValue, "raw url: %s", req.RawURL)
 	}
 
-	if cutil.IsEmptyStr(req.Path) {
-		return errors.Wrapf(errorType.ErrEmptyValue, "path")
+	if stringutils.IsEmptyStr(req.Path) {
+		return errors.Wrapf(errortypes.ErrEmptyValue, "path")
 	}
 
-	if cutil.IsEmptyStr(req.CID) {
-		return errors.Wrapf(errorType.ErrEmptyValue, "cID")
+	if stringutils.IsEmptyStr(req.CID) {
+		return errors.Wrapf(errortypes.ErrEmptyValue, "cID")
 	}
 
-	if cutil.IsEmptyStr(req.PeerID) {
-		return errors.Wrapf(errorType.ErrEmptyValue, "peerID")
+	if stringutils.IsEmptyStr(req.PeerID) {
+		return errors.Wrapf(errortypes.ErrEmptyValue, "peerID")
 	}
 
 	return nil
@@ -422,14 +440,14 @@ func validateParams(req *types.TaskCreateRequest) error {
 // and returns the SHA-256 checksum of the data.
 func generateTaskID(taskURL, md5, identifier string) string {
 	sign := ""
-	if !cutil.IsEmptyStr(md5) {
+	if !stringutils.IsEmptyStr(md5) {
 		sign = md5
-	} else if !cutil.IsEmptyStr(identifier) {
+	} else if !stringutils.IsEmptyStr(identifier) {
 		sign = identifier
 	}
 	id := fmt.Sprintf("%s%s%s%s", key, taskURL, sign, key)
 
-	return cutil.Sha256(id)
+	return digest.Sha256(id)
 }
 
 // computePieceSize computes the piece size with specified fileLength.
@@ -471,7 +489,7 @@ func getHTTPFileLength(taskID, url string, headers map[string]string) (int64, er
 	}
 
 	if code == http.StatusUnauthorized || code == http.StatusProxyAuthRequired {
-		return -1, errors.Wrapf(errorType.ErrAuthenticationRequired, "taskID: %s,code: %d", taskID, code)
+		return -1, errors.Wrapf(errortypes.ErrAuthenticationRequired, "taskID: %s,code: %d", taskID, code)
 	}
 	if code != http.StatusOK {
 		logrus.Warnf("failed to get http file length with unexpected code: %d", code)

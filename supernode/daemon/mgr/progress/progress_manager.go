@@ -4,8 +4,9 @@ import (
 	"context"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 
@@ -50,7 +51,7 @@ type Manager struct {
 
 	// clientBlackInfo maintains the blacklist of the PID.
 	// key:srcPID,value:map[dstPID]*Atomic
-	clientBlackInfo *cutil.SyncMap
+	clientBlackInfo *syncmap.SyncMap
 
 	cfg *config.Config
 }
@@ -63,21 +64,21 @@ func NewManager(cfg *config.Config) (*Manager, error) {
 		clientProgress:  newStateSyncMap(),
 		peerProgress:    newStateSyncMap(),
 		pieceProgress:   newStateSyncMap(),
-		clientBlackInfo: cutil.NewSyncMap(),
+		clientBlackInfo: syncmap.NewSyncMap(),
 	}, nil
 }
 
 // InitProgress inits the correlation information between peers and pieces, etc.
 func (pm *Manager) InitProgress(ctx context.Context, taskID, peerID, clientID string) (err error) {
 	// validate the param
-	if cutil.IsEmptyStr(taskID) {
-		return errors.Wrap(errorType.ErrEmptyValue, "taskID")
+	if stringutils.IsEmptyStr(taskID) {
+		return errors.Wrap(errortypes.ErrEmptyValue, "taskID")
 	}
-	if cutil.IsEmptyStr(clientID) {
-		return errors.Wrap(errorType.ErrEmptyValue, "clientID")
+	if stringutils.IsEmptyStr(clientID) {
+		return errors.Wrap(errortypes.ErrEmptyValue, "clientID")
 	}
-	if cutil.IsEmptyStr(peerID) {
-		return errors.Wrap(errorType.ErrEmptyValue, "peerID")
+	if stringutils.IsEmptyStr(peerID) {
+		return errors.Wrap(errortypes.ErrEmptyValue, "peerID")
 	}
 
 	// init cdn node if the clientID represents a supernode.
@@ -103,14 +104,14 @@ func (pm *Manager) InitProgress(ctx context.Context, taskID, peerID, clientID st
 // UpdateProgress updates the correlation information between peers and pieces.
 // NOTE: What if the update failed?
 func (pm *Manager) UpdateProgress(ctx context.Context, taskID, srcCID, srcPID, dstPID string, pieceNum, pieceStatus int) error {
-	if cutil.IsEmptyStr(taskID) {
-		return errors.Wrap(errorType.ErrEmptyValue, "taskID")
+	if stringutils.IsEmptyStr(taskID) {
+		return errors.Wrap(errortypes.ErrEmptyValue, "taskID")
 	}
-	if cutil.IsEmptyStr(srcCID) {
-		return errors.Wrapf(errorType.ErrEmptyValue, "srcCID for taskID:%s", taskID)
+	if stringutils.IsEmptyStr(srcCID) {
+		return errors.Wrapf(errortypes.ErrEmptyValue, "srcCID for taskID:%s", taskID)
 	}
-	if cutil.IsEmptyStr(srcPID) {
-		return errors.Wrapf(errorType.ErrEmptyValue, "srcPID for taskID:%s", taskID)
+	if stringutils.IsEmptyStr(srcPID) {
+		return errors.Wrapf(errortypes.ErrEmptyValue, "srcPID for taskID:%s", taskID)
 	}
 
 	// Step1: update the PieceProgress
@@ -154,11 +155,11 @@ func (pm *Manager) UpdateProgress(ctx context.Context, taskID, srcCID, srcPID, d
 
 // UpdateClientProgress updates the clientProgress and superProgress.
 func (pm *Manager) UpdateClientProgress(ctx context.Context, taskID, srcCID, dstPID string, pieceNum, pieceStatus int) error {
-	if cutil.IsEmptyStr(taskID) {
-		return errors.Wrap(errorType.ErrEmptyValue, "taskID")
+	if stringutils.IsEmptyStr(taskID) {
+		return errors.Wrap(errortypes.ErrEmptyValue, "taskID")
 	}
-	if cutil.IsEmptyStr(srcCID) {
-		return errors.Wrapf(errorType.ErrEmptyValue, "srcCID for taskID:%s", taskID)
+	if stringutils.IsEmptyStr(srcCID) {
+		return errors.Wrapf(errortypes.ErrEmptyValue, "srcCID for taskID:%s", taskID)
 	}
 
 	result, err := pm.updateClientProgress(taskID, srcCID, dstPID, pieceNum, pieceStatus)
@@ -277,7 +278,7 @@ func (pm *Manager) GetPeersByTaskID(ctx context.Context, taskID string) (peersIn
 }
 
 // GetBlackInfoByPeerID gets black info with specified peerID.
-func (pm *Manager) GetBlackInfoByPeerID(ctx context.Context, peerID string) (dstPIDMap *cutil.SyncMap, err error) {
+func (pm *Manager) GetBlackInfoByPeerID(ctx context.Context, peerID string) (dstPIDMap *syncmap.SyncMap, err error) {
 	return pm.clientBlackInfo.GetAsMap(peerID)
 }
 
@@ -308,12 +309,12 @@ func getAvailablePieces(clientBitset, cdnBitset *bitset.BitSet, runningPieceNums
 		}
 
 		if pieceStatus == config.PieceFAILED {
-			return nil, errors.Wrapf(errorType.ErrCDNFail, "pieceNum: %d", getPieceNumByIndex(i))
+			return nil, errors.Wrapf(errortypes.ErrCDNFail, "pieceNum: %d", getPieceNumByIndex(i))
 		}
 	}
 
 	if len(availablePieces) == 0 {
-		return nil, errors.Wrapf(errorType.ErrPeerWait,
+		return nil, errors.Wrapf(errortypes.ErrPeerWait,
 			"clientSucCount:%d,cdnSucCount:%d", clientSucCount, cdnSucCount)
 	}
 

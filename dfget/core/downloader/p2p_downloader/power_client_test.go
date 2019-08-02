@@ -24,11 +24,11 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/dragonflyoss/Dragonfly/common/errors"
-	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/ratelimiter"
 
 	"github.com/go-check/check"
 )
@@ -87,7 +87,7 @@ func (s *PowerClientTestSuite) TestDownloadPiece(c *check.C) {
 	}
 	content, err = s.powerClient.downloadPiece()
 	c.Check(content, check.IsNil)
-	c.Check(err, check.DeepEquals, errors.ErrRangeNotSatisfiable)
+	c.Check(err, check.DeepEquals, errortypes.ErrRangeNotSatisfiable)
 
 	// dstIP == pc.node && Download Success && StatusCode == 416
 	body2 := ioutil.NopCloser(bytes.NewReader([]byte("test")))
@@ -162,7 +162,7 @@ func (s *PowerClientTestSuite) reset() {
 	s.powerClient = &PowerClient{
 		cfg:         &config.Config{RV: config.RuntimeVariable{Cid: ""}},
 		node:        "127.0.0.1",
-		rateLimiter: util.NewRateLimiter(int64(5), 2),
+		rateLimiter: ratelimiter.NewRateLimiter(int64(5), 2),
 		downloadAPI: NewMockDownloadAPI(),
 		pieceTask: &types.PullPieceTaskResponseContinueData{
 			PieceMd5: "",

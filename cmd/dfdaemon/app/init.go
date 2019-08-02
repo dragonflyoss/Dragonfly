@@ -13,11 +13,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/dflog"
-	dferr "github.com/dragonflyoss/Dragonfly/common/errors"
-	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
+	"github.com/dragonflyoss/Dragonfly/pkg/dflog"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	statutil "github.com/dragonflyoss/Dragonfly/pkg/stat"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -39,7 +40,7 @@ func initDfdaemon(cfg config.Properties) error {
 	}
 
 	if err := os.MkdirAll(cfg.DFRepo, 0755); err != nil {
-		return dferr.Newf(
+		return errortypes.Newf(
 			constant.CodeExitRepoCreateFail,
 			"ensure local repo %s exists", cfg.DFRepo,
 		)
@@ -75,51 +76,57 @@ func initLogger(cfg config.Properties) error {
 		return errors.Wrap(err, "init log file")
 	}
 
-	if logFile, ok := (logrus.StandardLogger().Out).(*os.File); ok {
-		go func(logFile *os.File) {
-			logrus.Infof("rotate %s every 60 seconds", logFilePath)
-			ticker := time.NewTicker(60 * time.Second)
-			for range ticker.C {
-				if err := rotateLog(logFile); err != nil {
-					logrus.Errorf("failed to rotate log %s: %v", logFile.Name(), err)
-				}
-			}
-		}(logFile)
+	logFile, ok := (logrus.StandardLogger().Out).(*os.File)
+	if !ok {
+		return nil
 	}
+	go func(logFile *os.File) {
+		logrus.Infof("rotate %s every 60 seconds", logFilePath)
+		ticker := time.NewTicker(60 * time.Second)
+		for range ticker.C {
+			if err := rotateLog(logFile); err != nil {
+				logrus.Errorf("failed to rotate log %s: %v", logFile.Name(), err)
+			}
+		}
+	}(logFile)
 
 	return nil
 }
 
 // rotateLog truncates the logs file by a certain amount bytes.
 func rotateLog(logFile *os.File) error {
-	stat, err := logFile.Stat()
+	fStat, err := logFile.Stat()
 	if err != nil {
 		return err
 	}
 	logSizeLimit := int64(20 * 1024 * 1024)
-	// if it exceeds the 20MB limitation
-	if stat.Size() > logSizeLimit {
-		log.SetOutput(ioutil.Discard)
-		// make sure set the output of log back to logFile when error be raised.
-		defer log.SetOutput(logFile)
-		logFile.Sync()
-		truncateSize := logSizeLimit/2 - 1
-		mem, err := syscall.Mmap(int(logFile.Fd()), 0, int(stat.Size()),
-			syscall.PROT_READ|syscall.PROT_WRITE, syscall.MAP_SHARED)
-		if err != nil {
-			return err
-		}
-		copy(mem[0:], mem[truncateSize:])
-		if err := syscall.Munmap(mem); err != nil {
-			return err
-		}
-		if err := logFile.Truncate(stat.Size() - truncateSize); err != nil {
-			return err
-		}
-		if _, err := logFile.Seek(truncateSize, 0); err != nil {
-			return err
-		}
+
+	if fStat.Size() <= logSizeLimit {
+		return nil
 	}
+
+	// if it exceeds the 20MB limitation
+	log.SetOutput(ioutil.Discard)
+	// make sure set the output of log back to logFile when error be raised.
+	defer log.SetOutput(logFile)
+	logFile.Sync()
+	truncateSize := logSizeLimit/2 - 1
+	mem, err := syscall.Mmap(int(logFile.Fd()), 0, int(fStat.Size()),
+		syscall.PROT_READ|syscall.PROT_WRITE, syscall.MAP_SHARED)
+	if err != nil {
+		return err
+	}
+	copy(mem[0:], mem[truncateSize:])
+	if err := syscall.Munmap(mem); err != nil {
+		return err
+	}
+	if err := logFile.Truncate(fStat.Size() - truncateSize); err != nil {
+		return err
+	}
+	if _, err := logFile.Seek(truncateSize, 0); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -146,13 +153,13 @@ func cleanLocalRepo(dfpath string) {
 				return nil
 			}
 			// get the last access time
-			statT, ok := util.GetSys(info)
+			statT, ok := fileutils.GetSys(info)
 			if !ok {
 				logrus.Warnf("ignore %s: failed to get last access time", path)
 				return nil
 			}
 			// if the last access time is 1 hour ago
-			if time.Since(util.Atime(statT)) > time.Hour {
+			if time.Since(statutil.Atime(statT)) > time.Hour {
 				if err := os.Remove(path); err == nil {
 					logrus.Infof("remove file:%s success", path)
 				} else {

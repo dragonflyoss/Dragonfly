@@ -23,8 +23,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/constants"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/downloader"
@@ -32,7 +30,12 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/constants"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
+	"github.com/dragonflyoss/Dragonfly/pkg/printer"
+	"github.com/dragonflyoss/Dragonfly/pkg/queue"
+	"github.com/dragonflyoss/Dragonfly/pkg/ratelimiter"
 
 	"github.com/sirupsen/logrus"
 )
@@ -43,7 +46,7 @@ const (
 )
 
 var (
-	uploaderAPI = api.NewUploaderAPI(cutil.DefaultTimeout)
+	uploaderAPI = api.NewUploaderAPI(httputils.DefaultTimeout)
 )
 
 // P2PDownloader is one implementation of Downloader that uses p2p pattern
@@ -71,11 +74,11 @@ type P2PDownloader struct {
 	// queue maintains a queue of tasks that to be downloaded.
 	// The downloader will get download tasks from supernode and put them into this queue.
 	// And the downloader will poll values from this queue constantly and do the actual download actions.
-	queue util.Queue
+	queue queue.Queue
 	// clientQueue maintains a queue of tasks that need to be written to disk.
 	// The downloader will put the piece into this queue after it downloaded a piece successfully.
 	// And clientWriter will poll values from this queue constantly and write to disk.
-	clientQueue util.Queue
+	clientQueue queue.Queue
 
 	// clientFilePath is the full path of the temp file.
 	clientFilePath string
@@ -92,7 +95,7 @@ type P2PDownloader struct {
 	total int64
 
 	// rateLimiter limit the download speed.
-	rateLimiter *cutil.RateLimiter
+	rateLimiter *ratelimiter.RateLimiter
 	// pullRateTime the time when the pull rate API is called to
 	// control the time interval between two calls to the API.
 	pullRateTime time.Time
@@ -124,17 +127,17 @@ func (p2p *P2PDownloader) init() {
 	p2p.pieceSizeHistory[0], p2p.pieceSizeHistory[1] =
 		p2p.RegisterResult.PieceSize, p2p.RegisterResult.PieceSize
 
-	p2p.queue = util.NewQueue(0)
+	p2p.queue = queue.NewQueue(0)
 	p2p.queue.Put(NewPieceSimple(p2p.taskID, p2p.node, constants.TaskStatusStart))
 
-	p2p.clientQueue = util.NewQueue(p2p.cfg.ClientQueueSize)
+	p2p.clientQueue = queue.NewQueue(p2p.cfg.ClientQueueSize)
 
 	p2p.clientFilePath = helper.GetTaskFile(p2p.taskFileName, p2p.cfg.RV.DataDir)
 	p2p.serviceFilePath = helper.GetServiceFile(p2p.taskFileName, p2p.cfg.RV.DataDir)
 
 	p2p.pieceSet = make(map[string]bool)
 
-	p2p.rateLimiter = cutil.NewRateLimiter(int64(p2p.cfg.LocalLimit), 2)
+	p2p.rateLimiter = ratelimiter.NewRateLimiter(int64(p2p.cfg.LocalLimit), 2)
 	p2p.pullRateTime = time.Now().Add(-3 * time.Second)
 }
 
@@ -255,9 +258,8 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 	item.Status = constants.TaskStatusStart
 	item.SuperNode = registerRes.Node
 	item.TaskID = registerRes.TaskID
-	util.Printer.Println("migrated to node:" + item.SuperNode)
+	printer.Println("migrated to node:" + item.SuperNode)
 	return p2p.pullPieceTask(item)
-
 }
 
 // getPullRate get download rate limit dynamically.
@@ -284,18 +286,18 @@ func (p2p *P2PDownloader) getPullRate(data *types.PullPieceTaskResponseContinueD
 	resp, err := uploaderAPI.ParseRate(p2p.cfg.RV.LocalIP, p2p.cfg.RV.PeerPort, req)
 	if err != nil {
 		logrus.Errorf("failed to parse rate in pull rate: %v", err)
-		p2p.rateLimiter.SetRate(cutil.TransRate(localRate))
+		p2p.rateLimiter.SetRate(ratelimiter.TransRate(localRate))
 		return
 	}
 
 	reqRate, err := strconv.Atoi(resp)
 	if err != nil {
 		logrus.Errorf("failed to parse rate from resp %s: %v", resp, err)
-		p2p.rateLimiter.SetRate(cutil.TransRate(localRate))
+		p2p.rateLimiter.SetRate(ratelimiter.TransRate(localRate))
 		return
 	}
 	logrus.Infof("pull rate result:%d cost:%v", reqRate, time.Since(start))
-	p2p.rateLimiter.SetRate(cutil.TransRate(reqRate))
+	p2p.rateLimiter.SetRate(ratelimiter.TransRate(reqRate))
 }
 
 func (p2p *P2PDownloader) startTask(data *types.PullPieceTaskResponseContinueData) {
@@ -425,9 +427,9 @@ func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, clie
 	} else {
 		if _, err := os.Stat(p2p.clientFilePath); err != nil {
 			logrus.Warnf("client file path:%s not found", p2p.clientFilePath)
-			if e := cutil.Link(p2p.serviceFilePath, p2p.clientFilePath); e != nil {
+			if e := fileutils.Link(p2p.serviceFilePath, p2p.clientFilePath); e != nil {
 				logrus.Warnln("hard link failed, instead of use copy")
-				cutil.CopyFile(p2p.serviceFilePath, p2p.clientFilePath)
+				fileutils.CopyFile(p2p.serviceFilePath, p2p.clientFilePath)
 			}
 		}
 		src = p2p.clientFilePath

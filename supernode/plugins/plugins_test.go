@@ -21,9 +21,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/go-check/check"
-
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
+
+	"github.com/go-check/check"
 )
 
 func Test(t *testing.T) {

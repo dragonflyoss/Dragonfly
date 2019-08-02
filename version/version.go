@@ -28,7 +28,7 @@ import (
 	"text/template"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	"github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/util"
 )
 
 var (

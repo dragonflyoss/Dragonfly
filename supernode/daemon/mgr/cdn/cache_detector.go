@@ -4,7 +4,8 @@ import (
 	"context"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
 
 	"github.com/sirupsen/logrus"
@@ -49,7 +50,7 @@ func (cd *cacheDetector) detectCache(ctx context.Context, task *types.TaskInfo) 
 }
 
 func (cd *cacheDetector) parseBreakNum(ctx context.Context, task *types.TaskInfo, metaData *fileMetaData) int {
-	expired, err := cutil.IsExpired(task.RawURL, task.Headers, metaData.LastModified, metaData.ETag)
+	expired, err := httputils.IsExpired(task.RawURL, task.Headers, metaData.LastModified, metaData.ETag)
 	if err != nil {
 		logrus.Errorf("failed to check whether the task(%s) has expired: %v", task.ID, err)
 	}
@@ -66,7 +67,7 @@ func (cd *cacheDetector) parseBreakNum(ctx context.Context, task *types.TaskInfo
 		return 0
 	}
 
-	supportRange, err := cutil.IsSupportRange(task.TaskURL, task.Headers)
+	supportRange, err := httputils.IsSupportRange(task.TaskURL, task.Headers)
 	if err != nil {
 		logrus.Errorf("failed to check whether the task(%s) supports partial requests: %v", task.ID, err)
 	}
@@ -110,7 +111,7 @@ func checkSameFile(task *types.TaskInfo, metaData *fileMetaData) (result bool) {
 		logrus.Debugf("check same File for taskID(%s) get result: %t", task.ID, result)
 	}()
 
-	if cutil.IsNil(task) || cutil.IsNil(metaData) {
+	if task == nil || metaData == nil {
 		return false
 	}
 
@@ -126,7 +127,7 @@ func checkSameFile(task *types.TaskInfo, metaData *fileMetaData) (result bool) {
 		return false
 	}
 
-	if !cutil.IsEmptyStr(task.Md5) {
+	if !stringutils.IsEmptyStr(task.Md5) {
 		return metaData.Md5 == task.Md5
 	}
 

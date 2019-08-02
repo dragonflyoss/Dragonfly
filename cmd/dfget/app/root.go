@@ -24,14 +24,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/dflog"
-	"github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/dflog"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/printer"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 
-	errHandler "github.com/pkg/errors"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -72,12 +72,10 @@ func init() {
 func runDfget() error {
 	// initialize logger
 	if err := initClientLog(); err != nil {
-		util.Printer.Println(fmt.Sprintf("init log error: %v", err))
 		return err
 	}
 
 	if err := transParams(); err != nil {
-		util.Printer.Println(err.Error())
 		return err
 	}
 
@@ -85,25 +83,22 @@ func runDfget() error {
 	initProperties()
 
 	if err := handleNodes(); err != nil {
-		util.Printer.Println(err.Error())
 		return err
 	}
 
 	if err := checkParameters(); err != nil {
-		util.Printer.Println(err.Error())
 		return err
 	}
 	logrus.Infof("get cmd params:%q", os.Args)
 
 	if err := config.AssertConfig(cfg); err != nil {
-		util.Printer.Println(fmt.Sprintf("assert context error: %v", err))
-		return err
+		return errors.Wrap(err, "failed to assert context")
 	}
 	logrus.Infof("get init config:%v", cfg)
 
 	// enter the core process
 	err := core.Start(cfg)
-	util.Printer.Println(resultMsg(cfg, time.Now(), err))
+	printer.Println(resultMsg(cfg, time.Now(), err))
 	if err != nil {
 		os.Exit(err.Code)
 	}
@@ -112,7 +107,7 @@ func runDfget() error {
 
 func checkParameters() error {
 	if len(os.Args) < 2 {
-		return errors.New(-1, "Please use the command 'help' to show the help information.")
+		return errortypes.New(-1, "Please use the command 'help' to show the help information.")
 	}
 	return nil
 }
@@ -157,15 +152,15 @@ func transParams() error {
 
 	var err error
 	if cfg.LocalLimit, err = transLimit(localLimit); err != nil {
-		return errHandler.Wrapf(errors.ErrConvertFailed, "locallimit: %v", err)
+		return errors.Wrapf(errortypes.ErrConvertFailed, "locallimit: %v", err)
 	}
 
 	if cfg.MinRate, err = transLimit(minRate); err != nil {
-		return errHandler.Wrapf(errors.ErrConvertFailed, "minrate: %v", err)
+		return errors.Wrapf(errortypes.ErrConvertFailed, "minrate: %v", err)
 	}
 
 	if cfg.TotalLimit, err = transLimit(totalLimit); err != nil {
-		return errHandler.Wrapf(errors.ErrConvertFailed, "totallimit: %v", err)
+		return errors.Wrapf(errortypes.ErrConvertFailed, "totallimit: %v", err)
 	}
 
 	return nil
@@ -255,7 +250,7 @@ func initFlags() {
 
 // Helper functions.
 func transLimit(limit string) (int, error) {
-	if cutil.IsEmptyStr(limit) {
+	if stringutils.IsEmptyStr(limit) {
 		return 0, nil
 	}
 	l := len(limit)
@@ -277,7 +272,7 @@ func transLimit(limit string) (int, error) {
 }
 
 func transFilter(filter string) []string {
-	if cutil.IsEmptyStr(filter) {
+	if stringutils.IsEmptyStr(filter) {
 		return nil
 	}
 	return strings.Split(filter, "&")
@@ -298,7 +293,7 @@ func handleNodes() error {
 	return nil
 }
 
-func resultMsg(cfg *config.Config, end time.Time, e *errors.DfError) string {
+func resultMsg(cfg *config.Config, end time.Time, e *errortypes.DfError) string {
 	if e != nil {
 		return fmt.Sprintf("download FAIL(%d) cost:%.3fs length:%d reason:%d error:%v",
 			e.Code, end.Sub(cfg.StartTime).Seconds(), cfg.RV.FileLength,

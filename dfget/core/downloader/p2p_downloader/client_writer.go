@@ -22,12 +22,12 @@ import (
 	"os"
 	"time"
 
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/queue"
 
 	"github.com/sirupsen/logrus"
 )
@@ -37,7 +37,7 @@ type ClientWriter struct {
 	// clientQueue maintains a queue of tasks that need to be written to disk.
 	// The downloader will put the piece into this queue after it downloaded a piece successfully.
 	// And clientWriter will poll values from this queue constantly and write to disk.
-	clientQueue util.Queue
+	clientQueue queue.Queue
 	// finish indicates whether the task written is completed.
 	finish chan struct{}
 
@@ -49,7 +49,7 @@ type ClientWriter struct {
 	// serviceFile holds a file object for the serviceFilePath.
 	serviceFile *os.File
 
-	syncQueue util.Queue
+	syncQueue queue.Queue
 	// pieceIndex records the number of pieces currently downloaded.
 	pieceIndex int
 	// result records whether the write operation was successful.
@@ -62,7 +62,7 @@ type ClientWriter struct {
 	p2pPattern bool
 
 	// targetQueue maintains a queue of tasks that need to be written to target path.
-	targetQueue util.Queue
+	targetQueue queue.Queue
 	// targetWriter holds an instance of targetWriter.
 	targetWriter *TargetWriter
 
@@ -73,7 +73,7 @@ type ClientWriter struct {
 
 // NewClientWriter creates and initialize a ClientWriter instance.
 func NewClientWriter(clientFilePath, serviceFilePath string,
-	clientQueue util.Queue, api api.SupernodeAPI, cfg *config.Config) (*ClientWriter, error) {
+	clientQueue queue.Queue, api api.SupernodeAPI, cfg *config.Config) (*ClientWriter, error) {
 	clientWriter := &ClientWriter{
 		clientQueue:     clientQueue,
 		clientFilePath:  clientFilePath,
@@ -90,17 +90,17 @@ func NewClientWriter(clientFilePath, serviceFilePath string,
 func (cw *ClientWriter) init() (err error) {
 	cw.p2pPattern = helper.IsP2P(cw.cfg.Pattern)
 	if cw.p2pPattern {
-		if e := cutil.Link(cw.cfg.RV.TempTarget, cw.clientFilePath); e != nil {
+		if e := fileutils.Link(cw.cfg.RV.TempTarget, cw.clientFilePath); e != nil {
 			logrus.Warn(e)
 			cw.acrossWrite = true
 		}
 
-		cw.serviceFile, _ = cutil.OpenFile(cw.serviceFilePath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0755)
-		cutil.Link(cw.serviceFilePath, cw.clientFilePath)
+		cw.serviceFile, _ = fileutils.OpenFile(cw.serviceFilePath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0755)
+		fileutils.Link(cw.serviceFilePath, cw.clientFilePath)
 	}
 
 	cw.result = true
-	cw.targetQueue = util.NewQueue(0)
+	cw.targetQueue = queue.NewQueue(0)
 	cw.targetWriter, err = NewTargetWriter(cw.cfg.RV.TempTarget, cw.targetQueue, cw.cfg)
 	if err != nil {
 		return
@@ -191,7 +191,7 @@ func writePieceToFile(piece *Piece, file *os.File) error {
 	return err
 }
 
-func startSyncWriter(queue util.Queue) util.Queue {
+func startSyncWriter(q queue.Queue) queue.Queue {
 	return nil
 }
 

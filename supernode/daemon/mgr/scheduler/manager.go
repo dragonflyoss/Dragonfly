@@ -6,8 +6,8 @@ import (
 	"sort"
 	"time"
 
-	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 
@@ -43,7 +43,7 @@ func (sm *Manager) Schedule(ctx context.Context, taskID, clientID, peerID string
 		return nil, err
 	}
 	if len(pieceAvailable) == 0 {
-		return nil, errors.Wrapf(errorType.ErrPeerWait, "taskID: %s", taskID)
+		return nil, errors.Wrapf(errortypes.ErrPeerWait, "taskID: %s", taskID)
 	}
 	logrus.Debugf("scheduler get available pieces %v for taskID(%s)", pieceAvailable, taskID)
 
@@ -55,7 +55,7 @@ func (sm *Manager) Schedule(ctx context.Context, taskID, clientID, peerID string
 	logrus.Debugf("scheduler get running pieces %v for taskID(%s)", pieceRunning, taskID)
 	runningCount := len(pieceRunning)
 	if runningCount >= config.PeerDownLimit {
-		return nil, errors.Wrapf(errorType.PeerContinue, "taskID: %s,clientID: %s", taskID, clientID)
+		return nil, errors.Wrapf(errortypes.PeerContinue, "taskID: %s,clientID: %s", taskID, clientID)
 	}
 
 	// prioritize pieces
@@ -146,7 +146,7 @@ func (sm *Manager) getPieceResults(ctx context.Context, taskID, clientID, peerID
 			// get peerIDs by pieceNum
 			peerIDs, err := sm.progressMgr.GetPeerIDsByPieceNum(ctx, taskID, pieceNums[i])
 			if err != nil {
-				return nil, errors.Wrapf(errorType.ErrUnknowError, "failed to get peerIDs for pieceNum: %d of taskID: %s", pieceNums[i], taskID)
+				return nil, errors.Wrapf(errortypes.ErrUnknowError, "failed to get peerIDs for pieceNum: %d of taskID: %s", pieceNums[i], taskID)
 			}
 			dstPID = sm.tryGetPID(ctx, taskID, pieceNums[i], peerIDs)
 		}
@@ -205,7 +205,7 @@ func (sm *Manager) tryGetPID(ctx context.Context, taskID string, pieceNum int, p
 
 		// if the v is in the blackList, try the next one.
 		blackInfo, err := sm.progressMgr.GetBlackInfoByPeerID(ctx, peerIDs[i])
-		if err != nil && !errorType.IsDataNotFound(err) {
+		if err != nil && !errortypes.IsDataNotFound(err) {
 			logrus.Errorf("failed to get blackInfo for peerID %s: %v", peerIDs[i], err)
 			continue
 		}
@@ -230,7 +230,7 @@ func (sm *Manager) deletePeerIDByPieceNum(ctx context.Context, taskID string, pi
 }
 
 // isExistInMap returns whether the key exists in the mmap
-func isExistInMap(mmap *cutil.SyncMap, key string) bool {
+func isExistInMap(mmap *syncmap.SyncMap, key string) bool {
 	if mmap == nil {
 		return false
 	}

@@ -3,7 +3,7 @@ package util
 import (
 	"sync"
 
-	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 
 	"github.com/pkg/errors"
 )
@@ -28,7 +28,7 @@ func (s *Store) Put(key string, value interface{}) error {
 func (s *Store) Get(key string) (interface{}, error) {
 	v, ok := s.metaMap.Load(key)
 	if !ok {
-		return nil, errors.Wrapf(errorType.ErrDataNotFound, "key (%s)", key)
+		return nil, errors.Wrapf(errortypes.ErrDataNotFound, "key (%s)", key)
 	}
 
 	return v, nil
@@ -38,7 +38,7 @@ func (s *Store) Get(key string) (interface{}, error) {
 func (s *Store) Delete(key string) error {
 	_, ok := s.metaMap.Load(key)
 	if !ok {
-		return errors.Wrapf(errorType.ErrDataNotFound, "key (%s)", key)
+		return errors.Wrapf(errortypes.ErrDataNotFound, "key (%s)", key)
 	}
 
 	s.metaMap.Delete(key)

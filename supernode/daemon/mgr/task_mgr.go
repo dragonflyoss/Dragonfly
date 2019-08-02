@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 )
 
@@ -28,7 +28,7 @@ type TaskMgr interface {
 	Get(ctx context.Context, taskID string) (*types.TaskInfo, error)
 
 	// GetAccessTime gets all task accessTime.
-	GetAccessTime(ctx context.Context) (*cutil.SyncMap, error)
+	GetAccessTime(ctx context.Context) (*syncmap.SyncMap, error)
 
 	// List returns the list tasks with filter.
 	List(ctx context.Context, filter map[string]string) ([]*types.TaskInfo, error)

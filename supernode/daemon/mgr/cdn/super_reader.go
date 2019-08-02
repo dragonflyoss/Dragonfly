@@ -8,11 +8,10 @@ import (
 	"hash"
 	"io"
 
-	"github.com/pkg/errors"
-
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/util"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -112,10 +111,10 @@ func readContent(ctx context.Context, reader io.Reader, pieceLen int32, pieceMd5
 			curContent += bufSize
 
 			// calculate the md5
-			if !cutil.IsNil(pieceMd5) {
+			if !util.IsNil(pieceMd5) {
 				pieceMd5.Write(pieceContent)
 			}
-			if !cutil.IsNil(fileMd5) {
+			if !util.IsNil(fileMd5) {
 				fileMd5.Write(pieceContent)
 			}
 		} else {
@@ -126,10 +125,10 @@ func readContent(ctx context.Context, reader io.Reader, pieceLen int32, pieceMd5
 			curContent += readLen
 
 			// calculate the md5
-			if !cutil.IsNil(pieceMd5) {
+			if !util.IsNil(pieceMd5) {
 				pieceMd5.Write(pieceContent[:readLen])
 			}
-			if !cutil.IsNil(fileMd5) {
+			if !util.IsNil(fileMd5) {
 				fileMd5.Write(pieceContent[:readLen])
 			}
 		}
@@ -151,7 +150,7 @@ func readTailer(ctx context.Context, reader io.Reader, pieceMd5 hash.Hash) error
 		return fmt.Errorf("unexpected tailer: %v", tailer[0])
 	}
 
-	if !cutil.IsNil(pieceMd5) {
+	if !util.IsNil(pieceMd5) {
 		pieceMd5.Write(tailer)
 	}
 	return nil

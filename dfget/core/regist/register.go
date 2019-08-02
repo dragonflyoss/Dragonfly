@@ -20,19 +20,22 @@ import (
 	"os"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/constants"
-	"github.com/dragonflyoss/Dragonfly/common/errors"
-	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
+	"github.com/dragonflyoss/Dragonfly/pkg/constants"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/util"
 	"github.com/dragonflyoss/Dragonfly/version"
+
 	"github.com/sirupsen/logrus"
 )
 
 // SupernodeRegister encapsulates the Register steps into a struct.
 type SupernodeRegister interface {
-	Register(peerPort int) (*RegisterResult, *errors.DfError)
+	Register(peerPort int) (*RegisterResult, *errortypes.DfError)
 }
 
 type supernodeRegister struct {
@@ -51,7 +54,7 @@ func NewSupernodeRegister(cfg *config.Config, api api.SupernodeAPI) SupernodeReg
 }
 
 // Register processes the flow of register.
-func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errors.DfError) {
+func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errortypes.DfError) {
 	var (
 		resp       *types.RegisterResponse
 		e          error
@@ -64,7 +67,7 @@ func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errors.DfE
 	nodes, nLen := s.cfg.Node, len(s.cfg.Node)
 	req := s.constructRegisterRequest(peerPort)
 	for i = 0; i < nLen; i++ {
-		req.SupernodeIP = util.ExtractHost(nodes[i])
+		req.SupernodeIP = netutils.ExtractHost(nodes[i])
 		resp, e = s.api.Register(nodes[i], req)
 		logrus.Infof("do register to %s, res:%s error:%v", nodes[i], resp, e)
 		if e != nil {
@@ -95,15 +98,15 @@ func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errors.DfE
 	return result, nil
 }
 
-func (s *supernodeRegister) checkResponse(resp *types.RegisterResponse, e error) *errors.DfError {
+func (s *supernodeRegister) checkResponse(resp *types.RegisterResponse, e error) *errortypes.DfError {
 	if e != nil {
-		return errors.New(constants.HTTPError, e.Error())
+		return errortypes.New(constants.HTTPError, e.Error())
 	}
 	if resp == nil {
-		return errors.New(constants.HTTPError, "empty response, unknown error")
+		return errortypes.New(constants.HTTPError, "empty response, unknown error")
 	}
 	if resp.Code != constants.Success {
-		return errors.New(resp.Code, resp.Msg)
+		return errortypes.New(resp.Code, resp.Msg)
 	}
 	return nil
 }
@@ -145,7 +148,7 @@ func (s *supernodeRegister) constructRegisterRequest(port int) *types.RegisterRe
 }
 
 func getTaskPath(taskFileName string) string {
-	if !util.IsEmptyStr(taskFileName) {
+	if !stringutils.IsEmptyStr(taskFileName) {
 		return config.PeerHTTPPathPrefix + taskFileName
 	}
 	return ""

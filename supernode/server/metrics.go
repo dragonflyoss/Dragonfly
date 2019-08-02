@@ -3,7 +3,7 @@ package server
 import (
 	"net/http"
 
-	"github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/util"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 
 	"github.com/prometheus/client_golang/prometheus"
