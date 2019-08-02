@@ -10,7 +10,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/common/util"
 )
 
-// NewConfig create a instant with default values.
+// NewConfig create an instant with default values.
 func NewConfig() *Config {
 	return &Config{
 		BaseProperties: NewBaseProperties(),
@@ -67,7 +67,7 @@ func (c *Config) IsSuperPID(peerID string) bool {
 	return peerID == c.superNodePID
 }
 
-// NewBaseProperties create a instant with default values.
+// NewBaseProperties create an instant with default values.
 func NewBaseProperties() *BaseProperties {
 	home := filepath.Join(string(filepath.Separator), "home", "admin", "supernode")
 	return &BaseProperties{
