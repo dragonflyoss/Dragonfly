@@ -46,8 +46,8 @@ const (
 )
 
 const (
-	// Namespace is the prefix of the metricsutils' name of dragonfly
+	// Namespace is the prefix of metrics namespace of dragonfly
 	Namespace = "dragonfly"
-	// Subsystem represents metricsutils for dfdaemon
+	// Subsystem represents metrics for dfdaemon
 	Subsystem = "dfdaemon"
 )

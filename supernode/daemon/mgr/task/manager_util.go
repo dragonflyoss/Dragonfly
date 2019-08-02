@@ -30,6 +30,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/pkg/timeutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
+	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/peer"
 	"github.com/dragonflyoss/Dragonfly/supernode/util"
 
 	"github.com/pkg/errors"
@@ -110,7 +111,7 @@ func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateReq
 	task.PieceTotal = int32((fileLength + (int64(pieceSize) - 1)) / int64(pieceSize))
 
 	tm.taskStore.Put(taskID, task)
-	tm.metrics.tasks.WithLabelValues(taskID, task.CdnStatus).Inc()
+	tm.metrics.tasks.WithLabelValues(task.CdnStatus).Inc()
 	return task, nil
 }
 
@@ -162,8 +163,8 @@ func (tm *Manager) updateTask(taskID string, updateTaskInfo *types.TaskInfo) err
 
 		// only update the task CdnStatus when the new CDNStatus and
 		// the origin CDNStatus both not equals success
-		tm.metrics.tasks.WithLabelValues(taskID, task.CdnStatus).Dec()
-		tm.metrics.tasks.WithLabelValues(taskID, updateTaskInfo.CdnStatus).Inc()
+		tm.metrics.tasks.WithLabelValues(task.CdnStatus).Dec()
+		tm.metrics.tasks.WithLabelValues(updateTaskInfo.CdnStatus).Inc()
 		task.CdnStatus = updateTaskInfo.CdnStatus
 		return nil
 	}
@@ -178,27 +179,15 @@ func (tm *Manager) updateTask(taskID string, updateTaskInfo *types.TaskInfo) err
 		task.RealMd5 = updateTaskInfo.RealMd5
 	}
 
-	// only update the task info when the new CDNStatus equals success
-	// and the origin CDNStatus not equals success.
-	if isSuccessCDN(updateTaskInfo.CdnStatus) {
-		if updateTaskInfo.FileLength != 0 {
-			task.FileLength = updateTaskInfo.FileLength
-		}
-
-		if !stringutils.IsEmptyStr(updateTaskInfo.RealMd5) {
-			task.RealMd5 = updateTaskInfo.RealMd5
-		}
-
-		var pieceTotal int32
-		if updateTaskInfo.FileLength > 0 {
-			pieceTotal = int32((updateTaskInfo.FileLength + int64(task.PieceSize-1)) / int64(task.PieceSize))
-		}
-		if pieceTotal != 0 {
-			task.PieceTotal = pieceTotal
-		}
+	var pieceTotal int32
+	if updateTaskInfo.FileLength > 0 {
+		pieceTotal = int32((updateTaskInfo.FileLength + int64(task.PieceSize-1)) / int64(task.PieceSize))
 	}
-	tm.metrics.tasks.WithLabelValues(taskID, task.CdnStatus).Dec()
-	tm.metrics.tasks.WithLabelValues(taskID, updateTaskInfo.CdnStatus).Inc()
+	if pieceTotal != 0 {
+		task.PieceTotal = pieceTotal
+	}
+	tm.metrics.tasks.WithLabelValues(task.CdnStatus).Dec()
+	tm.metrics.tasks.WithLabelValues(updateTaskInfo.CdnStatus).Inc()
 	task.CdnStatus = updateTaskInfo.CdnStatus
 
 	return nil
@@ -342,6 +331,10 @@ func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, tas
 		return true, finishInfo, nil
 	}
 
+	// Get peerName to represent peer in metrics.
+	p, _ := tm.peerMgr.Get(context.Background(), dfgetTask.PeerID)
+	peerName := peer.GeneratePeerName(p)
+
 	// get scheduler pieceResult
 	logrus.Debugf("start scheduler for taskID: %s clientID: %s", task.ID, clientID)
 	startTime := time.Now()
@@ -349,7 +342,7 @@ func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, tas
 	if err != nil {
 		return false, nil, err
 	}
-	tm.metrics.scheduleDurationMilliSeconds.WithLabelValues(task.ID).Observe(timeutils.SinceInMilliseconds(startTime))
+	tm.metrics.scheduleDurationMilliSeconds.WithLabelValues(peerName).Observe(timeutils.SinceInMilliseconds(startTime))
 	logrus.Debugf("get scheduler result length(%d) with taskID(%s) and clientID(%s)", len(pieceResult), task.ID, clientID)
 
 	var pieceInfos []*types.PieceInfo

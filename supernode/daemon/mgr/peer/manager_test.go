@@ -56,7 +56,7 @@ func (s *PeerMgrTestSuite) TestPeerMgr(c *check.C) {
 	c.Check(err, check.IsNil)
 
 	c.Assert(1, check.Equals,
-		int(prom_testutil.ToFloat64(peers.WithLabelValues("foo"))))
+		int(prom_testutil.ToFloat64(peers.WithLabelValues("foo-192.168.10.11"))))
 
 	// get
 	id := resp.ID
@@ -82,7 +82,7 @@ func (s *PeerMgrTestSuite) TestPeerMgr(c *check.C) {
 	c.Check(err, check.IsNil)
 
 	c.Assert(0, check.Equals,
-		int(prom_testutil.ToFloat64(peers.WithLabelValues("foo"))))
+		int(prom_testutil.ToFloat64(peers.WithLabelValues("foo-192.168.10.11"))))
 
 	// get
 	info, err = manager.Get(context.Background(), id)

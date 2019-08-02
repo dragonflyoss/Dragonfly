@@ -129,20 +129,20 @@ func (rs *RouterTestSuite) TestVersionHandler(c *check.C) {
 }
 
 func (rs *RouterTestSuite) TestHTTPMetrics(c *check.C) {
-	// ensure /metricsutils is accessible
-	code, _, err := httputils.Get("http://"+rs.addr+"/metricsutils", 0)
+	// ensure /metrics is accessible
+	code, _, err := httputils.Get("http://"+rs.addr+"/metrics", 0)
 	c.Check(err, check.IsNil)
 	c.Assert(code, check.Equals, 200)
 
 	counter := m.requestCounter
 	c.Assert(1, check.Equals,
-		int(prom_testutil.ToFloat64(counter.WithLabelValues(strconv.Itoa(http.StatusOK), "/metricsutils", "get"))))
+		int(prom_testutil.ToFloat64(counter.WithLabelValues(strconv.Itoa(http.StatusOK), "/metrics"))))
 
 	for i := 0; i < 5; i++ {
 		code, _, err := httputils.Get("http://"+rs.addr+"/_ping", 0)
 		c.Check(err, check.IsNil)
 		c.Assert(code, check.Equals, 200)
 		c.Assert(i+1, check.Equals,
-			int(prom_testutil.ToFloat64(counter.WithLabelValues(strconv.Itoa(http.StatusOK), "/_ping", "get"))))
+			int(prom_testutil.ToFloat64(counter.WithLabelValues(strconv.Itoa(http.StatusOK), "/_ping"))))
 	}
 }

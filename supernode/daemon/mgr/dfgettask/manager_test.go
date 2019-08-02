@@ -96,7 +96,7 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskAdd(c *check.C) {
 		c.Check(err, check.IsNil)
 		c.Assert(1, check.Equals,
 			int(prom_testutil.ToFloat64(
-				dfgetTasks.WithLabelValues(tc.dfgetTask.TaskID, tc.dfgetTask.CallSystem))))
+				dfgetTasks.WithLabelValues(tc.dfgetTask.CallSystem))))
 		dt, err := manager.Get(context.Background(), tc.dfgetTask.CID, tc.dfgetTask.TaskID)
 		c.Check(err, check.IsNil)
 		c.Check(dt, check.DeepEquals, tc.Expect)
@@ -207,7 +207,7 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskDelete(c *check.C) {
 		c.Check(err, check.IsNil)
 		c.Assert(0, check.Equals,
 			int(prom_testutil.ToFloat64(
-				dfgetTasks.WithLabelValues(tc.dfgetTask.TaskID, tc.dfgetTask.CallSystem))))
+				dfgetTasks.WithLabelValues(tc.dfgetTask.CallSystem))))
 
 		_, err = manager.Get(context.Background(), tc.dfgetTask.CID, tc.dfgetTask.TaskID)
 		c.Check(errortypes.IsDataNotFound(err), check.Equals, true)
