@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
-	"github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	dutil "github.com/dragonflyoss/Dragonfly/supernode/daemon/util"
 
@@ -32,12 +33,12 @@ func NewManager() (*Manager, error) {
 // Register a peer and generate a unique ID as returned.
 func (pm *Manager) Register(ctx context.Context, peerCreateRequest *types.PeerCreateRequest) (peerCreateResponse *types.PeerCreateResponse, err error) {
 	if peerCreateRequest == nil {
-		return nil, errors.Wrap(errorType.ErrEmptyValue, "peer create request")
+		return nil, errors.Wrap(errortypes.ErrEmptyValue, "peer create request")
 	}
 
 	ipString := peerCreateRequest.IP.String()
-	if !util.IsValidIP(ipString) {
-		return nil, errors.Wrapf(errorType.ErrInvalidValue, "peer IP: %s", ipString)
+	if !netutils.IsValidIP(ipString) {
+		return nil, errors.Wrapf(errortypes.ErrInvalidValue, "peer IP: %s", ipString)
 	}
 
 	id := generatePeerID(peerCreateRequest)
@@ -105,8 +106,8 @@ func (pm *Manager) List(ctx context.Context, filter *dutil.PageFilter) (
 // returns the underlying PeerInfo value.
 func (pm *Manager) getPeerInfo(peerID string) (*types.PeerInfo, error) {
 	// return error if peerID is empty
-	if util.IsEmptyStr(peerID) {
-		return nil, errors.Wrap(errorType.ErrEmptyValue, "peerID")
+	if stringutils.IsEmptyStr(peerID) {
+		return nil, errors.Wrap(errortypes.ErrEmptyValue, "peerID")
 	}
 
 	// get value form store
@@ -119,7 +120,7 @@ func (pm *Manager) getPeerInfo(peerID string) (*types.PeerInfo, error) {
 	if info, ok := v.(*types.PeerInfo); ok {
 		return info, nil
 	}
-	return nil, errors.Wrapf(errorType.ErrConvertFailed, "peerID %s: %v", peerID, v)
+	return nil, errors.Wrapf(errortypes.ErrConvertFailed, "peerID %s: %v", peerID, v)
 }
 
 func (pm *Manager) assertPeerInfoSlice(s []interface{}) ([]*types.PeerInfo, error) {
@@ -128,7 +129,7 @@ func (pm *Manager) assertPeerInfoSlice(s []interface{}) ([]*types.PeerInfo, erro
 		// type assertion
 		info, ok := v.(*types.PeerInfo)
 		if !ok {
-			return nil, errors.Wrapf(errorType.ErrConvertFailed, "value  %v", v)
+			return nil, errors.Wrapf(errortypes.ErrConvertFailed, "value  %v", v)
 		}
 		peerInfos = append(peerInfos, info)
 	}

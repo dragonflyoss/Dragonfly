@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	errTypes "github.com/dragonflyoss/Dragonfly/common/errors"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	dutil "github.com/dragonflyoss/Dragonfly/supernode/daemon/util"
 
 	"github.com/go-openapi/strfmt"
@@ -18,11 +18,11 @@ func (s *Server) registerPeer(ctx context.Context, rw http.ResponseWriter, req *
 	reader := req.Body
 	request := &types.PeerCreateRequest{}
 	if err := json.NewDecoder(reader).Decode(request); err != nil {
-		return errors.Wrap(errTypes.ErrInvalidValue, err.Error())
+		return errors.Wrap(errortypes.ErrInvalidValue, err.Error())
 	}
 
 	if err := request.Validate(strfmt.NewFormats()); err != nil {
-		return errors.Wrap(errTypes.ErrInvalidValue, err.Error())
+		return errors.Wrap(errortypes.ErrInvalidValue, err.Error())
 	}
 
 	resp, err := s.PeerMgr.Register(ctx, request)

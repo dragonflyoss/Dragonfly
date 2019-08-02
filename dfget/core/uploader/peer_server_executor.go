@@ -28,6 +28,7 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/version"
+
 	"github.com/sirupsen/logrus"
 )
 

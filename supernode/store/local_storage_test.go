@@ -27,7 +27,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	statutils "github.com/dragonflyoss/Dragonfly/pkg/stat"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/plugins"
 
@@ -346,13 +347,13 @@ func (s *LocalStorageSuite) checkStat(raw *Raw, c *check.C) {
 	driver := s.storeLocal.driver.(*localStorage)
 	pathTemp := path.Join(driver.BaseDir, raw.Bucket, raw.Key)
 	f, _ := os.Stat(pathTemp)
-	sys, _ := util.GetSys(f)
+	sys, _ := fileutils.GetSys(f)
 
 	c.Assert(info, check.DeepEquals, &StorageInfo{
 		Path:       path.Join(raw.Bucket, raw.Key),
 		Size:       f.Size(),
 		ModTime:    f.ModTime(),
-		CreateTime: util.Ctime(sys),
+		CreateTime: statutils.Ctime(sys),
 	})
 }
 

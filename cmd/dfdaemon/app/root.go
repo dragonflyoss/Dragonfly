@@ -23,11 +23,11 @@ import (
 	"path/filepath"
 	"reflect"
 
-	dferr "github.com/dragonflyoss/Dragonfly/common/errors"
-	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
+	dferr "github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
@@ -93,7 +93,7 @@ func init() {
 	rf.String("localrepo", filepath.Join(os.Getenv("HOME"), ".small-dragonfly/dfdaemon/data/"), "temp output dir of dfdaemon")
 	rf.String("callsystem", "com_ops_dragonfly", "caller name")
 	rf.String("dfpath", defaultDfgetPath, "dfget path")
-	rf.String("ratelimit", util.NetLimit(), "net speed limit,format:xxxM/K")
+	rf.String("ratelimit", netutils.NetLimit(), "net speed limit,format:xxxM/K")
 	rf.String("urlfilter", "Signature&Expires&OSSAccessKeyId", "filter specified url fields")
 	rf.Bool("notbs", true, "not try back source to download if throw exception")
 	rf.StringSlice("node", nil, "specify the addresses(host:port) of supernodes that will be passed to dfget.")

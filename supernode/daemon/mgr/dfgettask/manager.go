@@ -5,8 +5,9 @@ import (
 	"fmt"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	dutil "github.com/dragonflyoss/Dragonfly/supernode/daemon/util"
 
@@ -18,14 +19,14 @@ var _ mgr.DfgetTaskMgr = &Manager{}
 // Manager is an implementation of the interface of DfgetTaskMgr.
 type Manager struct {
 	dfgetTaskStore *dutil.Store
-	ptoc           *cutil.SyncMap
+	ptoc           *syncmap.SyncMap
 }
 
 // NewManager returns a new Manager.
 func NewManager() (*Manager, error) {
 	return &Manager{
 		dfgetTaskStore: dutil.NewStore(),
-		ptoc:           cutil.NewSyncMap(),
+		ptoc:           syncmap.NewSyncMap(),
 	}, nil
 }
 
@@ -34,12 +35,12 @@ func NewManager() (*Manager, error) {
 // NOTE: We should create a new dfgetTask for each download process,
 //       even if the downloads initiated by the same machine.
 func (dtm *Manager) Add(ctx context.Context, dfgetTask *types.DfGetTask) error {
-	if cutil.IsEmptyStr(dfgetTask.Path) {
-		return errors.Wrapf(errorType.ErrEmptyValue, "Path")
+	if stringutils.IsEmptyStr(dfgetTask.Path) {
+		return errors.Wrapf(errortypes.ErrEmptyValue, "Path")
 	}
 
-	if cutil.IsEmptyStr(dfgetTask.PeerID) {
-		return errors.Wrapf(errorType.ErrEmptyValue, "PeerID")
+	if stringutils.IsEmptyStr(dfgetTask.PeerID) {
+		return errors.Wrapf(errortypes.ErrEmptyValue, "PeerID")
 	}
 
 	key, err := generateKey(dfgetTask.CID, dfgetTask.TaskID)
@@ -48,7 +49,7 @@ func (dtm *Manager) Add(ctx context.Context, dfgetTask *types.DfGetTask) error {
 	}
 
 	// the default status of DfgetTask is WAITING
-	if cutil.IsEmptyStr(dfgetTask.Status) {
+	if stringutils.IsEmptyStr(dfgetTask.Status) {
 		dfgetTask.Status = types.DfGetTaskStatusWAITING
 	}
 
@@ -119,17 +120,17 @@ func (dtm *Manager) getDfgetTask(clientID, taskID string) (*types.DfGetTask, err
 	if dfgetTask, ok := v.(*types.DfGetTask); ok {
 		return dfgetTask, nil
 	}
-	return nil, errors.Wrapf(errorType.ErrConvertFailed, "clientID: %s, taskID: %s: %v", clientID, taskID, v)
+	return nil, errors.Wrapf(errortypes.ErrConvertFailed, "clientID: %s, taskID: %s: %v", clientID, taskID, v)
 }
 
 // generateKey generates a key for a dfgetTask.
 func generateKey(cID, taskID string) (string, error) {
-	if cutil.IsEmptyStr(cID) {
-		return "", errors.Wrapf(errorType.ErrEmptyValue, "cID")
+	if stringutils.IsEmptyStr(cID) {
+		return "", errors.Wrapf(errortypes.ErrEmptyValue, "cID")
 	}
 
-	if cutil.IsEmptyStr(taskID) {
-		return "", errors.Wrapf(errorType.ErrEmptyValue, "taskID")
+	if stringutils.IsEmptyStr(taskID) {
+		return "", errors.Wrapf(errortypes.ErrEmptyValue, "taskID")
 	}
 
 	return fmt.Sprintf("%s%s%s", cID, "@", taskID), nil

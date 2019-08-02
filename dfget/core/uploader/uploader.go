@@ -30,10 +30,10 @@ import (
 	"time"
 	"unsafe"
 
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
+	"github.com/dragonflyoss/Dragonfly/pkg/queue"
 
 	"github.com/sirupsen/logrus"
 )
@@ -47,8 +47,8 @@ var (
 )
 
 var (
-	aliveQueue  = util.NewQueue(0)
-	uploaderAPI = api.NewUploaderAPI(cutil.DefaultTimeout)
+	aliveQueue  = queue.NewQueue(0)
+	uploaderAPI = api.NewUploaderAPI(httputils.DefaultTimeout)
 )
 
 // -----------------------------------------------------------------------------

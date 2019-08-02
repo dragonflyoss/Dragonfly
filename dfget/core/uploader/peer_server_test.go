@@ -28,12 +28,13 @@ import (
 
 	"github.com/go-check/check"
 
-	"github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 	"github.com/dragonflyoss/Dragonfly/version"
 )
 
@@ -207,7 +208,7 @@ func (s *PeerServerTestSuite) TestAmendRange(c *check.C) {
 	for _, v := range cases {
 		err := amendRange(v.size, v.needPad, v.up)
 		if v.expectedErr {
-			c.Assert(err, check.Equals, errors.ErrRangeNotSatisfiable)
+			c.Assert(err, check.Equals, errortypes.ErrRangeNotSatisfiable)
 		} else {
 			c.Assert(err, check.IsNil)
 			c.Assert(v.up, check.DeepEquals, v.expected)
@@ -322,7 +323,7 @@ func (s *PeerServerTestSuite) TestShutdown(c *check.C) {
 	}
 
 	ps.shutdown()
-	c.Assert(cutil.PathExist(tmpFile), check.Equals, false)
+	c.Assert(fileutils.PathExist(tmpFile), check.Equals, false)
 	c.Assert(ps.isFinished(), check.Equals, true)
 	c.Assert(getPortFromMeta(cfg.RV.MetaPath), check.Equals, 0)
 }
@@ -382,7 +383,7 @@ func (s *PeerServerTestSuite) TestDeleteExpiredFile(c *check.C) {
 			finished, v.expire, v.deleted)
 
 		c.Assert(deleted, check.Equals, v.deleted, cmt)
-		c.Assert(cutil.PathExist(filePath), check.Equals, !v.deleted, cmt)
+		c.Assert(fileutils.PathExist(filePath), check.Equals, !v.deleted, cmt)
 		if v.task != nil {
 			c.Assert(mark[v.task.taskID], check.Equals, v.deleted, cmt)
 			_, ok := ps.syncTaskMap.Load(v.name)
@@ -527,7 +528,7 @@ func (s *PeerServerTestSuite) TestOneFinishHandler(c *check.C) {
 	for _, v := range cases {
 		res, err := testHandlerHelper(srv, &HandlerHelper{
 			method: http.MethodGet,
-			url:    config.LocalHTTPPathClient + "finish?" + cutil.ParseQuery(v.req),
+			url:    config.LocalHTTPPathClient + "finish?" + httputils.ParseQuery(v.req),
 		})
 		c.Assert(err, check.IsNil)
 		c.Assert(res.Code, check.Equals, v.code)

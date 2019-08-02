@@ -20,7 +20,7 @@ import (
 	"context"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/util"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/mock"
 
@@ -115,7 +115,7 @@ func (s *TaskUtilTestSuite) TestAddOrUpdateTask(c *check.C) {
 
 	for _, v := range cases {
 		task, err := s.taskManager.addOrUpdateTask(context.Background(), v.req)
-		c.Check(cutil.IsNil(err), check.Equals, v.errNil)
+		c.Check(util.IsNil(err), check.Equals, v.errNil)
 		taskInfo, err := s.taskManager.getTask(task.ID)
 		c.Check(err, check.IsNil)
 		c.Check(taskInfo, check.DeepEquals, v.task)

@@ -7,7 +7,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 )
 
 // NewConfig create an instant with default values.
@@ -26,7 +26,7 @@ type Config struct {
 
 // Load loads config properties from the giving file.
 func (c *Config) Load(path string) error {
-	return util.LoadYaml(path, c)
+	return fileutils.LoadYaml(path, c)
 }
 
 func (c *Config) String() string {

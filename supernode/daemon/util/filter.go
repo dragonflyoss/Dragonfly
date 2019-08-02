@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
-	"github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 
 	"github.com/pkg/errors"
 )
@@ -57,14 +57,14 @@ func ParseFilter(req *http.Request, sortKeyMap map[string]bool) (pageFilter *Pag
 	// pageNum
 	pageNum, err := stoi(v.Get(PAGENUM))
 	if err != nil {
-		return nil, errors.Wrapf(errorType.ErrInvalidValue, "pageNum %d is not a number: %v", pageNum, err)
+		return nil, errors.Wrapf(errortypes.ErrInvalidValue, "pageNum %d is not a number: %v", pageNum, err)
 	}
 	pageFilter.PageNum = pageNum
 
 	// pageSize
 	pageSize, err := stoi(v.Get(PAGESIZE))
 	if err != nil {
-		return nil, errors.Wrapf(errorType.ErrInvalidValue, "pageSize %d is not a number: %v", pageSize, err)
+		return nil, errors.Wrapf(errortypes.ErrInvalidValue, "pageSize %d is not a number: %v", pageSize, err)
 	}
 	pageFilter.PageSize = pageSize
 
@@ -89,7 +89,7 @@ func ParseFilter(req *http.Request, sortKeyMap map[string]bool) (pageFilter *Pag
 }
 
 func stoi(str string) (int, error) {
-	if util.IsEmptyStr(str) {
+	if stringutils.IsEmptyStr(str) {
 		return 0, nil
 	}
 
@@ -105,17 +105,17 @@ func stoi(str string) (int, error) {
 func ValidateFilter(pageFilter *PageFilter, sortKeyMap map[string]bool) error {
 	// pageNum
 	if pageFilter.PageNum < 0 {
-		return errors.Wrapf(errorType.ErrInvalidValue, "pageNum %d is not a natural number", pageFilter.PageNum)
+		return errors.Wrapf(errortypes.ErrInvalidValue, "pageNum %d is not a natural number", pageFilter.PageNum)
 	}
 
 	// pageSize
 	if pageFilter.PageSize < 0 {
-		return errors.Wrapf(errorType.ErrInvalidValue, "pageSize %d is not a natural number", pageFilter.PageSize)
+		return errors.Wrapf(errortypes.ErrInvalidValue, "pageSize %d is not a natural number", pageFilter.PageSize)
 	}
 
 	// sortDirect
 	if _, ok := sortDirectMap[strings.ToUpper(pageFilter.SortDirect)]; !ok {
-		return errors.Wrapf(errorType.ErrInvalidValue, "unexpected sortDirect %s", pageFilter.SortDirect)
+		return errors.Wrapf(errortypes.ErrInvalidValue, "unexpected sortDirect %s", pageFilter.SortDirect)
 	}
 
 	// sortKey
@@ -124,7 +124,7 @@ func ValidateFilter(pageFilter *PageFilter, sortKeyMap map[string]bool) error {
 	}
 	for _, value := range pageFilter.SortKey {
 		if v, ok := sortKeyMap[value]; !ok || !v {
-			return errors.Wrapf(errorType.ErrInvalidValue, "unexpected sortKey %s", value)
+			return errors.Wrapf(errortypes.ErrInvalidValue, "unexpected sortKey %s", value)
 		}
 	}
 

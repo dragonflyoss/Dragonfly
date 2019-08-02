@@ -23,8 +23,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 	"github.com/go-check/check"
 )
 
@@ -61,13 +61,13 @@ func (s *DownloaderTestSuite) TestMoveFile(c *check.C) {
 	md5str := helper.CreateTestFileWithMD5(src, "hello")
 
 	err := MoveFile(src, dst, "x")
-	c.Assert(util.PathExist(src), check.Equals, true)
-	c.Assert(util.PathExist(dst), check.Equals, false)
+	c.Assert(fileutils.PathExist(src), check.Equals, true)
+	c.Assert(fileutils.PathExist(dst), check.Equals, false)
 	c.Assert(err, check.NotNil)
 
 	err = MoveFile(src, dst, md5str)
-	c.Assert(util.PathExist(src), check.Equals, false)
-	c.Assert(util.PathExist(dst), check.Equals, true)
+	c.Assert(fileutils.PathExist(src), check.Equals, false)
+	c.Assert(fileutils.PathExist(dst), check.Equals, true)
 	c.Assert(err, check.IsNil)
 	content, _ := ioutil.ReadFile(dst)
 	c.Assert(string(content), check.Equals, "hello")
