@@ -32,6 +32,6 @@ func New() *http.ServeMux {
 	s.HandleFunc("/args", getArgs)
 	s.HandleFunc("/env", getEnv)
 	s.HandleFunc("/debug/version", version.Handler)
-	s.HandleFunc("/metricsutils", promhttp.Handler().ServeHTTP)
+	s.HandleFunc("/metrics", promhttp.Handler().ServeHTTP)
 	return s
 }

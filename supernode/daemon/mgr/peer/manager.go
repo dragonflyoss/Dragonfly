@@ -44,7 +44,7 @@ type metrics struct {
 func newMetrics(register prometheus.Registerer) *metrics {
 	return &metrics{
 		peers: metricsutils.NewGauge(config.SubsystemSupernode, "peers",
-			"The number of supernode peers", []string{"hostname"}, register),
+			"The number of supernode peers", []string{"peer"}, register),
 	}
 }
 
@@ -83,7 +83,7 @@ func (pm *Manager) Register(ctx context.Context, peerCreateRequest *types.PeerCr
 		Created:  strfmt.DateTime(time.Now()),
 	}
 	pm.peerStore.Put(id, peerInfo)
-	pm.metrics.peers.WithLabelValues(peerInfo.HostName.String()).Inc()
+	pm.metrics.peers.WithLabelValues(GeneratePeerName(peerInfo)).Inc()
 
 	return &types.PeerCreateResponse{
 		ID: id,
@@ -98,7 +98,7 @@ func (pm *Manager) DeRegister(ctx context.Context, peerID string) error {
 	}
 
 	pm.peerStore.Delete(peerID)
-	pm.metrics.peers.WithLabelValues(peerInfo.HostName.String()).Dec()
+	pm.metrics.peers.WithLabelValues(GeneratePeerName(peerInfo)).Dec()
 	return nil
 }
 
@@ -199,4 +199,9 @@ func getLessFunc(listResult []interface{}, desc bool) (less func(i, j int) bool)
 // Use timestamp to ensure the uniqueness.
 func generatePeerID(peerInfo *types.PeerCreateRequest) string {
 	return fmt.Sprintf("%s-%s-%d", peerInfo.HostName.String(), peerInfo.IP.String(), time.Now().UnixNano())
+}
+
+// GeneratePeerName extracts the hostname and ip from peerInfo.
+func GeneratePeerName(info *types.PeerInfo) string {
+	return info.HostName.String() + "-" + info.IP.String()
 }

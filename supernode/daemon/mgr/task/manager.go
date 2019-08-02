@@ -53,7 +53,7 @@ type metrics struct {
 func newMetrics(register prometheus.Registerer) *metrics {
 	return &metrics{
 		tasks: metricsutils.NewGauge(config.SubsystemSupernode, "tasks",
-			"The status of Supernode tasks", []string{"taskid", "cdnstatus"}, register),
+			"The status of Supernode tasks", []string{"cdnstatus"}, register),
 
 		triggerCdnCount: metricsutils.NewCounter(config.SubsystemSupernode, "trigger_cdn_total",
 			"The number of triggering cdn", []string{}, register),
@@ -62,8 +62,8 @@ func newMetrics(register prometheus.Registerer) *metrics {
 			"The number of triggering cdn failure", []string{}, register),
 
 		scheduleDurationMilliSeconds: metricsutils.NewHistogram(config.SubsystemSupernode, "schedule_duration_milliseconds",
-			"duration for task scheduling in milliseconds", []string{"taskid"},
-			prometheus.ExponentialBuckets(0.02, 2, 7), register),
+			"Duration for task scheduling in milliseconds", []string{"peer"},
+			prometheus.ExponentialBuckets(0.02, 2, 6), register),
 	}
 }
 

@@ -36,11 +36,11 @@ func CheckRespStatus(c *check.C, resp *http.Response, status int) {
 	}
 }
 
-// CheckMetric find the specific metric from /metricsutils endpoint and it will compare the metric
+// CheckMetric find the specific metric from /metrics endpoint and it will compare the metric
 // value with expected value.
 func CheckMetric(c *check.C, metric string, value float64) {
 	var val float64
-	resp, err := request.Get("/metricsutils")
+	resp, err := request.Get("/metrics")
 	c.Assert(err, check.IsNil)
 	defer resp.Body.Close()
 	data, err := ioutil.ReadAll(resp.Body)
@@ -50,7 +50,7 @@ func CheckMetric(c *check.C, metric string, value float64) {
 		if strings.Contains(line, metric) {
 			vals := strings.Split(line, " ")
 			if len(vals) != 2 {
-				c.Errorf("bad metricsutils format")
+				c.Errorf("bad metrics format")
 			}
 			val, err = strconv.ParseFloat(vals[1], 64)
 			c.Assert(err, check.IsNil)

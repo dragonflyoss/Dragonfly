@@ -42,7 +42,7 @@ type metrics struct {
 func newMetrics(register prometheus.Registerer) *metrics {
 	return &metrics{
 		dfgetTasks: metricsutils.NewGauge(config.SubsystemSupernode, "dfgettasks",
-			"The number of dfget tasks", []string{"taskid", "callsystem"}, register),
+			"The number of dfget tasks", []string{"callsystem"}, register),
 	}
 }
 
@@ -89,7 +89,7 @@ func (dtm *Manager) Add(ctx context.Context, dfgetTask *types.DfGetTask) error {
 
 	dtm.ptoc.Add(generatePeerKey(dfgetTask.PeerID, dfgetTask.TaskID), dfgetTask.CID)
 	dtm.dfgetTaskStore.Put(key, dfgetTask)
-	dtm.metrics.dfgetTasks.WithLabelValues(dfgetTask.TaskID, dfgetTask.CallSystem).Inc()
+	dtm.metrics.dfgetTasks.WithLabelValues(dfgetTask.CallSystem).Inc()
 
 	return nil
 }
@@ -121,7 +121,7 @@ func (dtm *Manager) Delete(ctx context.Context, clientID, taskID string) error {
 		return err
 	}
 	dtm.ptoc.Delete(generatePeerKey(dfgetTask.PeerID, dfgetTask.TaskID))
-	dtm.metrics.dfgetTasks.WithLabelValues(dfgetTask.TaskID, dfgetTask.CallSystem).Dec()
+	dtm.metrics.dfgetTasks.WithLabelValues(dfgetTask.CallSystem).Dec()
 	return dtm.dfgetTaskStore.Delete(key)
 }
 
