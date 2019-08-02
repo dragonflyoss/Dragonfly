@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/digest"
@@ -35,12 +36,21 @@ import (
 )
 
 // addOrUpdateTask adds a new task or update the exist task to taskStore.
-func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateRequest) (*types.TaskInfo, error) {
+func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateRequest, failAccessInterval time.Duration) (*types.TaskInfo, error) {
 	taskURL := req.TaskURL
 	if stringutils.IsEmptyStr(req.TaskURL) {
 		taskURL = netutils.FilterURLParam(req.RawURL, req.Filter)
 	}
 	taskID := generateTaskID(taskURL, req.Md5, req.Identifier)
+
+	if key, err := tm.taskURLUnReachableStore.Get(taskID); err == nil {
+		if unReachableStartTime, ok := key.(time.Time); ok &&
+			time.Since(unReachableStartTime) < failAccessInterval {
+			return nil, errors.Wrapf(errortypes.ErrURLNotReachable, "cache taskID: %s, url: %s", taskID, req.RawURL)
+		}
+
+		tm.taskURLUnReachableStore.Delete(taskID)
+	}
 
 	// using the existing task if it already exists corresponding to taskID
 	var task *types.TaskInfo
@@ -74,7 +84,11 @@ func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateReq
 	// get fileLength with req.Headers
 	fileLength, err := getHTTPFileLength(taskID, task.RawURL, req.Headers)
 	if err != nil {
+		if errortypes.IsURLNotReachable(err) {
+			tm.taskURLUnReachableStore.Add(taskID, time.Now())
+		}
 		logrus.Errorf("failed to get file length from http client for taskID(%s): %v", taskID, err)
+		return nil, err
 	}
 	task.HTTPFileLength = fileLength
 	logrus.Infof("get file length %d from http client for taskID(%s)", fileLength, taskID)
@@ -485,7 +499,7 @@ func isWait(CDNStatus string) bool {
 func getHTTPFileLength(taskID, url string, headers map[string]string) (int64, error) {
 	fileLength, code, err := getContentLength(url, headers)
 	if err != nil {
-		return -1, err
+		return -1, errors.Wrapf(errortypes.ErrUnknowError, "failed to get http file Length: %v", err)
 	}
 
 	if code == http.StatusUnauthorized || code == http.StatusProxyAuthRequired {
@@ -493,6 +507,9 @@ func getHTTPFileLength(taskID, url string, headers map[string]string) (int64, er
 	}
 	if code != http.StatusOK {
 		logrus.Warnf("failed to get http file length with unexpected code: %d", code)
+		if code == http.StatusNotFound {
+			return -1, errors.Wrapf(errortypes.ErrURLNotReachable, "taskID: %s, url: %s", taskID, url)
+		}
 		return -1, nil
 	}
 

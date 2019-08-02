@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v2"
 
@@ -85,6 +86,7 @@ func NewBaseProperties() *BaseProperties {
 		MaxBandwidth:            200,
 		EnableProfiler:          false,
 		Debug:                   false,
+		FailAccessInterval:      3,
 	}
 }
 
@@ -166,6 +168,11 @@ type BaseProperties struct {
 	// AdvertiseIP is used to set the ip that we advertise to other peer in the p2p-network.
 	// By default, the first non-loop address is advertised.
 	AdvertiseIP string `yaml:"advertiseIP"`
+
+	// FailAccessInterval is the interval time after failed to access the URL.
+	// unit: minutes
+	// default: 3
+	FailAccessInterval time.Duration `yaml:"failAccessInterval"`
 
 	// cIDPrefix s a prefix string used to indicate that the CID is supernode.
 	cIDPrefix string
