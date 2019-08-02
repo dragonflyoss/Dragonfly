@@ -34,6 +34,10 @@ func NewResultInfoWithError(err error) ResultInfo {
 		return NewResultInfoWithCodeError(constants.CodePeerContinue, err)
 	}
 
+	if errortypes.IsURLNotReachable(err) {
+		return NewResultInfoWithCodeError(constants.CodeURLNotReachable, err)
+	}
+
 	// IsConvertFailed
 	return NewResultInfoWithCodeError(constants.CodeSystemError, err)
 }
