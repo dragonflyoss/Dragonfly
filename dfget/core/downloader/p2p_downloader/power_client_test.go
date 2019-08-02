@@ -179,7 +179,7 @@ func (s *PowerClientTestSuite) upServer(port int) {
 	go http.Serve(s.ln, nil)
 }
 
-// downloadMockAPI is an mock implementation of interface DownloadAPI.
+// downloadMockAPI is a mock implementation of interface DownloadAPI.
 type downloadMockAPI struct {
 }
 

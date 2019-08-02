@@ -240,7 +240,7 @@ func GetAllIPs() (ipList []string, err error) {
 	return
 }
 
-// ConvertTimeStringToInt converts a string time to a int64 timestamp.
+// ConvertTimeStringToInt converts a string time to an int64 timestamp.
 func ConvertTimeStringToInt(timeStr string) (int64, error) {
 	formatTime, err := time.ParseInLocation(http.TimeFormat, timeStr, time.UTC)
 	if err != nil {
@@ -250,7 +250,7 @@ func ConvertTimeStringToInt(timeStr string) (int64, error) {
 	return formatTime.Unix() * int64(1000), nil
 }
 
-// ConvertTimeIntToString converts a int64 timestamp to a string time.
+// ConvertTimeIntToString converts an int64 timestamp to a string time.
 func ConvertTimeIntToString(timestamp int64) (string, error) {
 	localTime := time.Unix(timestamp/int64(1000), 0)
 	timeString := localTime.UTC().Format(http.TimeFormat)
