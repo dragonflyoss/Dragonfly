@@ -185,9 +185,6 @@ type Config struct {
 	// DFDaemon indicates whether the caller is from dfdaemon
 	DFDaemon bool `json:"dfdaemon,omitempty"`
 
-	// Version show version.
-	Version bool `json:"version,omitempty"`
-
 	// ShowBar show progress bar, it's conflict with `--console`.
 	ShowBar bool `json:"showBar,omitempty"`
 
@@ -236,7 +233,36 @@ type Config struct {
 }
 
 func (cfg *Config) String() string {
-	js, _ := json.Marshal(cfg)
+	var baseConfig = struct {
+		URL             string    `json:"url"`
+		Output          string    `json:"output"`
+		LocalLimit      int       `json:"localLimit,omitempty"`
+		MinRate         int       `json:"minRate,omitempty"`
+		TotalLimit      int       `json:"totalLimit,omitempty"`
+		Timeout         int       `json:"timeout,omitempty"`
+		Md5             string    `json:"md5,omitempty"`
+		Identifier      string    `json:"identifier,omitempty"`
+		CallSystem      string    `json:"callSystem,omitempty"`
+		Pattern         string    `json:"pattern,omitempty"`
+		Filter          []string  `json:"filter,omitempty"`
+		Node            []string  `json:"node,omitempty"`
+		Notbs           bool      `json:"notbs,omitempty"`
+		DFDaemon        bool      `json:"dfdaemon,omitempty"`
+		ClientQueueSize int       `json:"clientQueueSize,omitempty"`
+		StartTime       time.Time `json:"startTime"`
+		Sign            string    `json:"sign"`
+		User            string    `json:"user"`
+		WorkHome        string    `json:"workHome"`
+		ConfigFiles     []string  `json:"configFile"`
+	}{
+		cfg.URL, cfg.Output, cfg.LocalLimit, cfg.MinRate,
+		cfg.TotalLimit, cfg.Timeout, cfg.Md5, cfg.Identifier,
+		cfg.CallSystem, cfg.Pattern, cfg.Filter, cfg.Node,
+		cfg.Notbs, cfg.DFDaemon, cfg.ClientQueueSize,
+		cfg.StartTime, cfg.Sign, cfg.User, cfg.WorkHome,
+		cfg.ConfigFiles,
+	}
+	js, _ := json.Marshal(baseConfig)
 	return string(js)
 }
 

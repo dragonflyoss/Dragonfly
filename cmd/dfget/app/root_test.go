@@ -45,7 +45,6 @@ func (suit *dfgetSuit) Test_initFlagsNoArguments() {
 	suit.Equal(cfg.TotalLimit, 0)
 	suit.Equal(cfg.Notbs, false)
 	suit.Equal(cfg.DFDaemon, false)
-	suit.Equal(cfg.Version, false)
 	suit.Equal(cfg.ShowBar, false)
 	suit.Equal(cfg.Console, false)
 	suit.Equal(cfg.Verbose, false)
