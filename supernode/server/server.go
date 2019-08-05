@@ -68,7 +68,7 @@ func New(cfg *config.Config, register prometheus.Registerer) (*Server, error) {
 		return nil, err
 	}
 
-	dfgetTaskMgr, err := dfgettask.NewManager(register)
+	dfgetTaskMgr, err := dfgettask.NewManager(cfg, register)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,8 @@ func New(cfg *config.Config, register prometheus.Registerer) (*Server, error) {
 		return nil, err
 	}
 
-	taskMgr, err := task.NewManager(cfg, peerMgr, dfgetTaskMgr, progressMgr, cdnMgr, schedulerMgr, originClient, register)
+	taskMgr, err := task.NewManager(cfg, peerMgr, dfgetTaskMgr, progressMgr, cdnMgr,
+		schedulerMgr, originClient, register)
 	if err != nil {
 		return nil, err
 	}

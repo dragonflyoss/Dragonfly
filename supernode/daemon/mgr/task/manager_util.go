@@ -30,7 +30,6 @@ import (
 	"github.com/dragonflyoss/Dragonfly/pkg/timeutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
-	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/peer"
 	"github.com/dragonflyoss/Dragonfly/supernode/util"
 
 	"github.com/pkg/errors"
@@ -332,9 +331,7 @@ func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, tas
 	}
 
 	// Get peerName to represent peer in metrics.
-	p, _ := tm.peerMgr.Get(context.Background(), dfgetTask.PeerID)
-	peerName := peer.GeneratePeerName(p)
-
+	peer, _ := tm.peerMgr.Get(context.Background(), dfgetTask.PeerID)
 	// get scheduler pieceResult
 	logrus.Debugf("start scheduler for taskID: %s clientID: %s", task.ID, clientID)
 	startTime := time.Now()
@@ -342,7 +339,7 @@ func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, tas
 	if err != nil {
 		return false, nil, err
 	}
-	tm.metrics.scheduleDurationMilliSeconds.WithLabelValues(peerName).Observe(timeutils.SinceInMilliseconds(startTime))
+	tm.metrics.scheduleDurationMilliSeconds.WithLabelValues(peer.IP.String()).Observe(timeutils.SinceInMilliseconds(startTime))
 	logrus.Debugf("get scheduler result length(%d) with taskID(%s) and clientID(%s)", len(pieceResult), task.ID, clientID)
 
 	var pieceInfos []*types.PieceInfo

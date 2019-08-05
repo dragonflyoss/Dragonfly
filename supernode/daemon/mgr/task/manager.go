@@ -45,6 +45,7 @@ var _ mgr.TaskMgr = &Manager{}
 
 type metrics struct {
 	tasks                        *prometheus.GaugeVec
+	tasksRegisterCount           *prometheus.CounterVec
 	triggerCdnCount              *prometheus.CounterVec
 	triggerCdnFailCount          *prometheus.CounterVec
 	scheduleDurationMilliSeconds *prometheus.HistogramVec
@@ -53,13 +54,16 @@ type metrics struct {
 func newMetrics(register prometheus.Registerer) *metrics {
 	return &metrics{
 		tasks: metricsutils.NewGauge(config.SubsystemSupernode, "tasks",
-			"The status of Supernode tasks", []string{"cdnstatus"}, register),
+			"Current status of Supernode tasks", []string{"cdnstatus"}, register),
+
+		tasksRegisterCount: metricsutils.NewCounter(config.SubsystemSupernode, "tasks_registered_total",
+			"Total times of registering tasks", []string{}, register),
 
 		triggerCdnCount: metricsutils.NewCounter(config.SubsystemSupernode, "trigger_cdn_total",
-			"The number of triggering cdn", []string{}, register),
+			"Total times of triggering cdn", []string{}, register),
 
 		triggerCdnFailCount: metricsutils.NewCounter(config.SubsystemSupernode, "trigger_cdn_failed_total",
-			"The number of triggering cdn failure", []string{}, register),
+			"Total failure times of triggering cdn", []string{}, register),
 
 		scheduleDurationMilliSeconds: metricsutils.NewHistogram(config.SubsystemSupernode, "schedule_duration_milliseconds",
 			"Duration for task scheduling in milliseconds", []string{"peer"},
@@ -87,7 +91,8 @@ type Manager struct {
 
 // NewManager returns a new Manager Object.
 func NewManager(cfg *config.Config, peerMgr mgr.PeerMgr, dfgetTaskMgr mgr.DfgetTaskMgr,
-	progressMgr mgr.ProgressMgr, cdnMgr mgr.CDNMgr, schedulerMgr mgr.SchedulerMgr, originClient httpclient.OriginHTTPClient, register prometheus.Registerer) (*Manager, error) {
+	progressMgr mgr.ProgressMgr, cdnMgr mgr.CDNMgr, schedulerMgr mgr.SchedulerMgr,
+	originClient httpclient.OriginHTTPClient, register prometheus.Registerer) (*Manager, error) {
 	return &Manager{
 		cfg:                     cfg,
 		taskStore:               dutil.NewStore(),
@@ -118,6 +123,7 @@ func (tm *Manager) Register(ctx context.Context, req *types.TaskCreateRequest) (
 		logrus.Infof("failed to add or update task with req %+v: %v", req, err)
 		return nil, err
 	}
+	tm.metrics.tasksRegisterCount.WithLabelValues().Inc()
 	logrus.Debugf("success to get task info: %+v", task)
 	// TODO: defer rollback the task update
 

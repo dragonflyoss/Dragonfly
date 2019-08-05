@@ -26,7 +26,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// metrics defines three prometheus metrics for monitoring http handler status
+// metrics defines some prometheus metrics for monitoring supernode
 type metrics struct {
 	requestCounter  *prometheus.CounterVec
 	requestDuration *prometheus.HistogramVec
