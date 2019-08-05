@@ -82,11 +82,8 @@ func (rs *RouterTestSuite) TestDebugHandler(c *check.C) {
 		{"/debug/pprof/heap", 200},
 		{"/debug/pprof/mutex", 200},
 		{"/debug/pprof/threadcreate", 200},
-
-		// these paths exist but will get 404 because of unknown profile
-		{"/debug/pprof/cmdline", 404},
-		{"/debug/pprof/profile", 404},
-		{"/debug/pprof/trace", 404},
+		{"/debug/pprof/cmdline", 200},
+		{"/debug/pprof/trace", 200},
 
 		// path not exists
 		{"/debug/pprof/foo", 404},
