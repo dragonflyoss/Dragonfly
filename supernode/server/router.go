@@ -50,6 +50,10 @@ func initRoute(s *Server) *mux.Router {
 	}
 
 	if s.Config.Debug || s.Config.EnableProfiler {
+		r.PathPrefix("/debug/pprof/cmdline").HandlerFunc(pprof.Cmdline)
+		r.PathPrefix("/debug/pprof/profile").HandlerFunc(pprof.Profile)
+		r.PathPrefix("/debug/pprof/symbol").HandlerFunc(pprof.Symbol)
+		r.PathPrefix("/debug/pprof/trace").HandlerFunc(pprof.Trace)
 		r.PathPrefix("/debug/pprof/").HandlerFunc(pprof.Index)
 	}
 	return r
