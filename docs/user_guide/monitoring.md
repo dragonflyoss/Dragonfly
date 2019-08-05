@@ -13,7 +13,7 @@ First, please ensure you know how to setup Dragonfly environment. If you don't, 
 ``` bash
 make build
 # start supernode and dfdaemon
-bin/linux_amd64/supernode --advertise-ip 127.0.0.1
+bin/linux_amd64/supernode
 bin/linux_amd64/dfdaemon
 ```
 

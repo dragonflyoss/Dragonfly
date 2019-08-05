@@ -16,15 +16,15 @@ You can install from the latest packages we provided.
 
     Available packages:
 
-    - [Linux 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.4.2/df-client_0.4.2_linux_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.4.2/df-client_0.4.2_linux_amd64.tar.gz`
+    - [Linux 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.4.3/df-client_0.4.3_linux_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.4.3/df-client_0.4.3_linux_amd64.tar.gz`
 
-    - [MacOS 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.4.2/df-client_0.4.2_darwin_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.4.2/df-client_0.4.2_darwin_amd64.tar.gz`
+    - [MacOS 64-bit](https://github.com/dragonflyoss/Dragonfly/releases/download/v0.4.3/df-client_0.4.3_darwin_amd64.tar.gz): `https://github.com/dragonflyoss/Dragonfly/releases/download/v0.4.3/df-client_0.4.3_darwin_amd64.tar.gz`
 
 2. Unzip the package.
 
     ```bash
     # Replace `xxx` with the installation directory.
-    tar -zxf df-client_0.4.2_linux_amd64.tar.gz -C xxx
+    tar -zxf df-client_0.4.3_linux_amd64.tar.gz -C xxx
     ```
 
 3. Add the directory of `df-client` to your `PATH` environment variable to make sure you can directly use `dfget` and `dfdaemon` command.
