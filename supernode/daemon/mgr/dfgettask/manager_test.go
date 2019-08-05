@@ -22,6 +22,7 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
 
 	"github.com/go-check/check"
 	"github.com/prometheus/client_golang/prometheus"
@@ -37,11 +38,18 @@ func init() {
 }
 
 type DfgetTaskMgrTestSuite struct {
+	cfg *config.Config
+}
+
+func (s *DfgetTaskMgrTestSuite) SetUpSuite(c *check.C) {
+	s.cfg = config.NewConfig()
+	s.cfg.SetCIDPrefix("127.0.0.1")
 }
 
 func (s *DfgetTaskMgrTestSuite) TestDfgetTaskAdd(c *check.C) {
-	manager, _ := NewManager(prometheus.NewRegistry())
+	manager, _ := NewManager(s.cfg, prometheus.NewRegistry())
 	dfgetTasks := manager.metrics.dfgetTasks
+	dfgetTasksRegisterCount := manager.metrics.dfgetTasksRegisterCount
 
 	var testCases = []struct {
 		dfgetTask *types.DfGetTask
@@ -96,7 +104,11 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskAdd(c *check.C) {
 		c.Check(err, check.IsNil)
 		c.Assert(1, check.Equals,
 			int(prom_testutil.ToFloat64(
-				dfgetTasks.WithLabelValues(tc.dfgetTask.CallSystem))))
+				dfgetTasks.WithLabelValues(tc.dfgetTask.CallSystem, tc.dfgetTask.Status))))
+
+		c.Assert(1, check.Equals,
+			int(prom_testutil.ToFloat64(
+				dfgetTasksRegisterCount.WithLabelValues(tc.dfgetTask.CallSystem))))
 		dt, err := manager.Get(context.Background(), tc.dfgetTask.CID, tc.dfgetTask.TaskID)
 		c.Check(err, check.IsNil)
 		c.Check(dt, check.DeepEquals, tc.Expect)
@@ -104,7 +116,9 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskAdd(c *check.C) {
 }
 
 func (s *DfgetTaskMgrTestSuite) TestDfgetTaskUpdate(c *check.C) {
-	manager, _ := NewManager(prometheus.NewRegistry())
+	manager, _ := NewManager(s.cfg, prometheus.NewRegistry())
+	dfgetTasksFailCount := manager.metrics.dfgetTasksFailCount
+
 	var testCases = []struct {
 		dfgetTask  *types.DfGetTask
 		taskStatus string
@@ -163,13 +177,19 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskUpdate(c *check.C) {
 		err = manager.UpdateStatus(context.Background(), tc.dfgetTask.CID, tc.dfgetTask.TaskID, tc.taskStatus)
 		c.Check(err, check.IsNil)
 
+		if tc.taskStatus == types.DfGetTaskStatusFAILED {
+			c.Assert(1, check.Equals,
+				int(prom_testutil.ToFloat64(
+					dfgetTasksFailCount.WithLabelValues(tc.dfgetTask.CallSystem))))
+		}
+
 		dt, err := manager.Get(context.Background(), tc.dfgetTask.CID, tc.dfgetTask.TaskID)
 		c.Check(dt, check.DeepEquals, tc.Expect)
 	}
 }
 
 func (s *DfgetTaskMgrTestSuite) TestDfgetTaskDelete(c *check.C) {
-	manager, _ := NewManager(prometheus.NewRegistry())
+	manager, _ := NewManager(s.cfg, prometheus.NewRegistry())
 	dfgetTasks := manager.metrics.dfgetTasks
 
 	var testCases = []struct {
@@ -207,7 +227,7 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskDelete(c *check.C) {
 		c.Check(err, check.IsNil)
 		c.Assert(0, check.Equals,
 			int(prom_testutil.ToFloat64(
-				dfgetTasks.WithLabelValues(tc.dfgetTask.CallSystem))))
+				dfgetTasks.WithLabelValues(tc.dfgetTask.CallSystem, tc.dfgetTask.Status))))
 
 		_, err = manager.Get(context.Background(), tc.dfgetTask.CID, tc.dfgetTask.TaskID)
 		c.Check(errortypes.IsDataNotFound(err), check.Equals, true)

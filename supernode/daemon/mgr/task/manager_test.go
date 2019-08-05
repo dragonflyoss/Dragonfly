@@ -30,6 +30,7 @@ import (
 	"github.com/go-check/check"
 	"github.com/golang/mock/gomock"
 	"github.com/prometheus/client_golang/prometheus"
+	prom_testutil "github.com/prometheus/client_golang/prometheus/testutil"
 )
 
 func Test(t *testing.T) {
@@ -76,6 +77,7 @@ func (s *TaskMgrTestSuite) TearDownSuite(c *check.C) {
 }
 
 func (s *TaskMgrTestSuite) TestCheckTaskStatus(c *check.C) {
+	tasksRegisterCount := s.taskManager.metrics.tasksRegisterCount
 	s.taskManager.taskStore = dutil.NewStore()
 	req := &types.TaskCreateRequest{
 		CID:        "cid",
@@ -87,6 +89,8 @@ func (s *TaskMgrTestSuite) TestCheckTaskStatus(c *check.C) {
 	}
 	resp, err := s.taskManager.Register(context.Background(), req)
 	c.Check(err, check.IsNil)
+	c.Assert(1, check.Equals,
+		int(prom_testutil.ToFloat64(tasksRegisterCount.WithLabelValues())))
 
 	isSuccess, err := s.taskManager.CheckTaskStatus(context.Background(), resp.ID)
 	c.Check(err, check.IsNil)
