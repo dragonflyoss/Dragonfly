@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -47,7 +48,7 @@ func (tc *testCase) WithRule(regx string, direct bool, useHTTPS bool) *testCase 
 	}
 
 	var r *config.Proxy
-	r, tc.Error = config.NewProxy(regx, useHTTPS, direct)
+	r, tc.Error = config.NewProxy(regx, useHTTPS, direct, nil)
 	tc.Rules = append(tc.Rules, r)
 	return tc
 }
@@ -62,7 +63,7 @@ func (tc *testCase) Test(t *testing.T) {
 	if !a.Nil(tc.Error) {
 		return
 	}
-	tp, err := New(WithRules(tc.Rules))
+	tp, err := New(WithProxyDownloaders(newProxyDownloaderWithRules(tc.Rules)))
 	if !a.Nil(err) {
 		return
 	}
@@ -71,7 +72,8 @@ func (tc *testCase) Test(t *testing.T) {
 		if !a.Nil(err) {
 			continue
 		}
-		if !a.Equal(tp.shouldUseDfget(req), !item.Direct) {
+		_, useDfget := tp.shouldUseDfget(req)
+		if !a.Equal(useDfget, !item.Direct) {
 			fmt.Println(item.URL)
 		}
 		if item.UseHTTPS {
@@ -101,4 +103,16 @@ func TestMatch(t *testing.T) {
 		WithTest("http://h/a/d", false, true).  // should match /a/d and use https
 		WithTest("http://h/a/e", false, false). // should match /a, not /a/e
 		Test(t)
+}
+
+// This function is for test utils.
+func newProxyDownloaderWithRules(rules []*config.Proxy) []*proxyDownloader {
+	pds := make([]*proxyDownloader, len(rules))
+	for i, r := range rules {
+		pds[i] = &proxyDownloader{
+			Proxy:      r,
+			downloader: nil,
+		}
+	}
+	return pds
 }

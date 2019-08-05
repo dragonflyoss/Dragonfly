@@ -79,6 +79,9 @@ type Properties struct {
 	// Proxies is the list of rules for the transparent proxy. If no rules
 	// are provided, all requests will be proxied directly. Request will be
 	// proxied with the first matching rule.
+	// You can also define custom dfget flags for each proxy. These extra flags
+	// will append to global dfget flags and extra flags can overwrite global flags
+	// if they have same parameters.
 	Proxies []*Proxy `yaml:"proxies" json:"proxies"`
 
 	// HijackHTTPS is the list of hosts whose https requests should be hijacked
@@ -97,11 +100,11 @@ type Properties struct {
 	MaxProcs int `yaml:"maxprocs" json:"maxprocs"`
 
 	// dfget config
-	DfgetFlags []string `yaml:"dfget_flags" json:"dfget_flags"`
-	SuperNodes []string `yaml:"supernodes" json:"supernodes"`
-	RateLimit  string   `yaml:"ratelimit" json:"ratelimit"`
-	DFRepo     string   `yaml:"localrepo" json:"localrepo"`
-	DFPath     string   `yaml:"dfpath" json:"dfpath"`
+	GlobalDfgetFlags []string `yaml:"dfget_flags" json:"dfget_flags"`
+	SuperNodes       []string `yaml:"supernodes" json:"supernodes"`
+	RateLimit        string   `yaml:"ratelimit" json:"ratelimit"`
+	DFRepo           string   `yaml:"localrepo" json:"localrepo"`
+	DFPath           string   `yaml:"dfpath" json:"dfpath"`
 }
 
 // Validate validates the config
@@ -138,10 +141,11 @@ func (p *Properties) Validate() error {
 }
 
 // DFGetConfig returns config for dfget downloader
-func (p *Properties) DFGetConfig() DFGetConfig {
+func (p *Properties) DFGetConfig(extraFlags []string) DFGetConfig {
 	// init DfgetFlags
-	var dfgetFlags []string
-	dfgetFlags = append(dfgetFlags, p.DfgetFlags...)
+	dfgetFlags := make([]string, len(p.GlobalDfgetFlags))
+	copy(dfgetFlags, p.GlobalDfgetFlags)
+	dfgetFlags = append(dfgetFlags, extraFlags...)
 	dfgetFlags = append(dfgetFlags, "--dfdaemon")
 	if p.Verbose {
 		dfgetFlags = append(dfgetFlags, "--verbose")
@@ -372,22 +376,24 @@ func certPoolFromFiles(files ...string) (*x509.CertPool, error) {
 
 // Proxy describe a regular expression matching rule for how to proxy a request
 type Proxy struct {
-	Regx     *Regexp `yaml:"regx" json:"regx"`
-	UseHTTPS bool    `yaml:"use_https" json:"use_https"`
-	Direct   bool    `yaml:"direct" json:"direct"`
+	Regx       *Regexp  `yaml:"regx" json:"regx"`
+	UseHTTPS   bool     `yaml:"use_https" json:"use_https"`
+	Direct     bool     `yaml:"direct" json:"direct"`
+	DfgetFlags []string `yaml:"dfget_flags" json:"dfget_flags"`
 }
 
 // NewProxy returns a new proxy rule with given attributes
-func NewProxy(regx string, useHTTPS bool, direct bool) (*Proxy, error) {
+func NewProxy(regx string, useHTTPS bool, direct bool, dfgetFlags []string) (*Proxy, error) {
 	exp, err := NewRegexp(regx)
 	if err != nil {
 		return nil, errors.Wrap(err, "invalid regexp")
 	}
 
 	return &Proxy{
-		Regx:     exp,
-		UseHTTPS: useHTTPS,
-		Direct:   direct,
+		Regx:       exp,
+		UseHTTPS:   useHTTPS,
+		Direct:     direct,
+		DfgetFlags: dfgetFlags,
 	}, nil
 }
 

@@ -24,12 +24,12 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/downloader"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/exception"
+
 	"github.com/pborman/uuid"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-
-	"github.com/dragonflyoss/Dragonfly/dfdaemon/downloader"
-	"github.com/dragonflyoss/Dragonfly/dfdaemon/exception"
 )
 
 var (
@@ -41,10 +41,10 @@ var (
 // It uses http.fileTransport to serve requests that need to use dfget,
 // and uses http.Transport to serve the other requests.
 type DFRoundTripper struct {
-	Round          *http.Transport
-	Round2         http.RoundTripper
-	ShouldUseDfget func(req *http.Request) bool
-	Downloader     downloader.Interface
+	Round            *http.Transport
+	Round2           http.RoundTripper
+	ShouldUseDfget   func(req *http.Request) (downloader.Interface, bool)
+	GlobalDownloader downloader.Interface
 }
 
 // New return the default DFRoundTripper.
@@ -61,8 +61,8 @@ func New(opts ...Option) (*DFRoundTripper, error) {
 		}
 	}
 
-	if rt.Downloader == nil {
-		return nil, errors.Errorf("nil downloader")
+	if rt.GlobalDownloader == nil {
+		return nil, errors.Errorf("global downloader doesn't exist")
 	}
 
 	return rt, nil
@@ -96,16 +96,16 @@ func defaultHTTPTransport(cfg *tls.Config) *http.Transport {
 	}
 }
 
-// WithDownloader sets the downloader for the roundTripper
+// WithDownloader sets the global downloader for the roundTripper
 func WithDownloader(d downloader.Interface) Option {
 	return func(rt *DFRoundTripper) error {
-		rt.Downloader = d
+		rt.GlobalDownloader = d
 		return nil
 	}
 }
 
 // WithCondition configures how to decide whether to use dfget or not
-func WithCondition(c func(r *http.Request) bool) Option {
+func WithCondition(c func(r *http.Request) (downloader.Interface, bool)) Option {
 	return func(rt *DFRoundTripper) error {
 		rt.ShouldUseDfget = c
 		return nil
@@ -115,12 +115,16 @@ func WithCondition(c func(r *http.Request) bool) Option {
 // RoundTrip only process first redirect at present
 // fix resource release
 func (roundTripper *DFRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	if roundTripper.ShouldUseDfget(req) {
+	if d, useDfget := roundTripper.ShouldUseDfget(req); useDfget {
 		// delete the Accept-Encoding header to avoid returning the same cached
 		// result for different requests
 		req.Header.Del("Accept-Encoding")
 		logrus.Debugf("round trip with dfget: %s", req.URL.String())
-		if res, err := roundTripper.download(req, req.URL.String()); err == nil || !exception.IsNotAuth(err) {
+		// if it is not downloaded by proxy downloader, just use global downloader
+		if d == nil {
+			d = roundTripper.GlobalDownloader
+		}
+		if res, err := roundTripper.download(d, req, req.URL.String()); err == nil || !exception.IsNotAuth(err) {
 			return res, err
 		}
 	}
@@ -132,8 +136,8 @@ func (roundTripper *DFRoundTripper) RoundTrip(req *http.Request) (*http.Response
 }
 
 // download uses dfget to download
-func (roundTripper *DFRoundTripper) download(req *http.Request, urlString string) (*http.Response, error) {
-	dstPath, err := roundTripper.downloadByGetter(urlString, req.Header, uuid.New())
+func (roundTripper *DFRoundTripper) download(downloader downloader.Interface, req *http.Request, urlString string) (*http.Response, error) {
+	dstPath, err := downloadByGetter(downloader, urlString, req.Header, uuid.New())
 	if err != nil {
 		logrus.Errorf("download fail: %v", err)
 		return nil, err
@@ -155,13 +159,13 @@ func (roundTripper *DFRoundTripper) download(req *http.Request, urlString string
 }
 
 // downloadByGetter is to download file by DFGetter
-func (roundTripper *DFRoundTripper) downloadByGetter(url string, header map[string][]string, name string) (string, error) {
+func downloadByGetter(downloader downloader.Interface, url string, header map[string][]string, name string) (string, error) {
 	logrus.Infof("start download url:%s to %s in repo", url, name)
-	return roundTripper.Downloader.Download(url, header, name)
+	return downloader.Download(url, header, name)
 }
 
 // needUseGetter is the default value for ShouldUseDfget, which downloads all
 // images layers with dfget.
-func needUseGetter(req *http.Request) bool {
-	return req.Method == http.MethodGet && layerReg.MatchString(req.URL.Path)
+func needUseGetter(req *http.Request) (downloader.Interface, bool) {
+	return nil, req.Method == http.MethodGet && layerReg.MatchString(req.URL.Path)
 }

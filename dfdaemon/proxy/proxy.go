@@ -88,9 +88,12 @@ func WithDirectHandler(h *http.ServeMux) Option {
 	}
 }
 
-// WithRules sets the proxy rules
-func WithRules(rules []*config.Proxy) Option {
-	return func(p *Proxy) error { return p.SetRules(rules) }
+// WithProxyDownloaders sets the proxy downloaders
+func WithProxyDownloaders(proxyDownloaders []*proxyDownloader) Option {
+	return func(p *Proxy) error {
+		p.proxyDownloaders = proxyDownloaders
+		return nil
+	}
 }
 
 // WithDownloaderFactory sets the factory function to get a downloader
@@ -119,10 +122,10 @@ func New(opts ...Option) (*Proxy, error) {
 // NewFromConfig returns a new transparent proxy from the given properties
 func NewFromConfig(c config.Properties) (*Proxy, error) {
 	opts := []Option{
-		WithRules(c.Proxies),
+		WithProxyDownloaders(newProxyDownloaders(&c)),
 		WithRegistryMirror(c.RegistryMirror),
 		WithDownloaderFactory(func() downloader.Interface {
-			return dfget.NewGetter(c.DFGetConfig())
+			return dfget.NewGetter(c.DFGetConfig(nil))
 		}),
 	}
 
@@ -162,8 +165,8 @@ func NewFromConfig(c config.Properties) (*Proxy, error) {
 type Proxy struct {
 	// reverse proxy upstream url for the default registry
 	registry *config.RegistryMirror
-	// proxy rules
-	rules []*config.Proxy
+	// downloaders for each proxy
+	proxyDownloaders []*proxyDownloader
 	// httpsHosts is the list of hosts whose https requests will be hijacked
 	httpsHosts []*config.HijackHost
 	// cert is the certificate used to hijack https proxy requests
@@ -199,12 +202,6 @@ func (proxy *Proxy) remoteConfig(host string) *tls.Config {
 			return config
 		}
 	}
-	return nil
-}
-
-// SetRules change the rule lists of the proxy to the given rules
-func (proxy *Proxy) SetRules(rules []*config.Proxy) error {
-	proxy.rules = rules
 	return nil
 }
 
@@ -245,23 +242,23 @@ func (proxy *Proxy) roundTripper(tlsConfig *tls.Config) http.RoundTripper {
 	return rt
 }
 
-// shouldUseDfget returns whether we should use dfget to proxy a request. It
-// also change the scheme of the given request if the matched rule has
-// UseHTTPS = true
-func (proxy *Proxy) shouldUseDfget(req *http.Request) bool {
+// shouldUseDfget returns whether we should use dfget to proxy a request
+// and the downloader instance. It also change the scheme of the given
+// request if the matched rule has UseHTTPS = true.
+func (proxy *Proxy) shouldUseDfget(req *http.Request) (downloader.Interface, bool) {
 	if req.Method != http.MethodGet {
-		return false
+		return nil, false
 	}
 
-	for _, rule := range proxy.rules {
-		if rule.Match(req.URL.String()) {
-			if rule.UseHTTPS {
+	for _, proxyDownloader := range proxy.proxyDownloaders {
+		if proxyDownloader.Match(req.URL.String()) {
+			if proxyDownloader.UseHTTPS {
 				req.URL.Scheme = "https"
 			}
-			return !rule.Direct
+			return proxyDownloader, !proxyDownloader.Direct
 		}
 	}
-	return false
+	return nil, false
 }
 
 // tunnelHTTPS handles a CONNECT request and proxy an https request through an
