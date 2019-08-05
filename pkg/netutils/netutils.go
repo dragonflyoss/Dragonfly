@@ -211,16 +211,11 @@ func IsValidIP(ip string) bool {
 	if strings.TrimSpace(ip) == "" {
 		return false
 	}
-
-	// str is a regex which matches a digital
-	// greater than or equal to 0 and less than or equal to 255
-	str := "(?:25[0-5]|2[0-4]\\d|[01]?\\d?\\d)"
-	result, err := regexp.MatchString("^(?:"+str+"\\.){3}"+str+"$", ip)
-	if err != nil {
+	ipNet := net.ParseIP(ip)
+	if ipNet == nil {
 		return false
 	}
-
-	return result
+	return true
 }
 
 // GetAllIPs returns all non-loopback addresses.
