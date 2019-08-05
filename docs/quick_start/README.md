@@ -11,24 +11,20 @@ All steps in this document are done on the same machine using the docker contain
 ## Step 1: Deploy Dragonfly Server (SuperNode)
 
 ```bash
-docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 -v /home/admin/supernode:/home/admin/supernode dragonflyoss/supernode:0.4.2
+docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 -v /home/admin/supernode:/home/admin/supernode dragonflyoss/supernode:0.4.3
 ```
-
-**NOTE**:
-
-- If dfclient cannot connect to supernode directly, you can specify parameter `--advertise-ip` when supernode starts. This ip address must be accessible from dfclient. If this parameter is not specified, supernode will advertise its first non-loop address.
 
 ## Step 2：Deploy Dragonfly Client (dfclient)
 
 ```bash
 SUPERNODE_IP=`docker inspect supernode -f '{{.NetworkSettings.Networks.bridge.IPAddress}}'`
-docker run -d --name dfclient --restart=always -p 65001:65001 -v $HOME/.small-dragonfly:/root/.small-dragonfly dragonflyoss/dfclient:0.4.2 --registry https://index.docker.io --node $SUPERNODE_IP
+docker run -d --name dfclient --restart=always -p 65001:65001 -v $HOME/.small-dragonfly:/root/.small-dragonfly dragonflyoss/dfclient:0.4.3 --registry https://index.docker.io --node $SUPERNODE_IP
 ```
 
 **NOTE**:
 
 - The `--registry` parameter specifies the mirrored image registry address, and `https://index.docker.io` is the address of official image registry, you can also set it to the other **non-https image registries**.
-- The `--node` parameter specifies the supernode's ip address. Here we use `docker inspect` to get the ip of supernode container. Since the supernode container exposes its ports, you can specify this parameter to node ip address as well.
+- The `--node` parameter specifies the supernode's address in the format of **HOST:IP**. And the default value `8002` will be used if the port is not specified. Here we use `docker inspect` to get the ip of supernode container as the host value. Since the supernode container exposes its ports, you can specify this parameter to node ip address as well.
 
 ## Step 3. Configure Docker Daemon
 
