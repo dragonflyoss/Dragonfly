@@ -240,10 +240,10 @@ Yes, Dragonfly supports users to pull private image which needs username/passwor
 }
 ```
 
-In the above content the `auth_value` base64("${usename}:${password}"). Since users definitely have their own username/password for private images, then use the following command to generate `$auth_value` and fill the generated result in `config.json`:
+In the above content the `auth_value` base64("${username}:${password}"). Since users definitely have their own username/password for private images, then use the following command to generate `$auth_value` and fill the generated result in `config.json`:
 
 ```shell
-echo "${usename}:${password}" | base64
+echo "${username}:${password}" | base64
 ```
 
 ## How to check if block piece is distributed among dfgets nodes
