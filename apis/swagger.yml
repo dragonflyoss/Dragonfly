@@ -414,6 +414,13 @@ paths:
           required: true
           description: "ID of task"
           type: string
+        - name: full
+          in: query
+          type: "boolean"
+          default: false
+          description: |
+            supernode will also delete the cdn files when the value of full equals true.
+
       responses:
         204:
           description: "no error"
@@ -509,6 +516,43 @@ paths:
         200:
           description: "no error"
         404: 
+            $ref: "#/responses/404ErrorResponse"
+        500:
+            $ref: "#/responses/500ErrorResponse"
+
+  /tasks/{id}/pieces/{pieceRange}/error:
+    post:
+      summary: "report a piece error"
+      description: |
+        When a peer failed to download a piece from supernode or
+        failed to validate the pieceMD5,
+        and then dfget should report the error info to supernode.
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: "ID of task"
+          type: string
+        - name: pieceRange
+          in: path
+          required: true
+          description: |
+            the range of specific piece in the task, example "0-45565".
+          type: string
+        - name: "PieceErrorRequest"
+          in: "body"
+          description: |
+            request body which contains piece error information.
+          schema:
+            $ref: "#/definitions/PieceErrorRequest"
+      responses:
+        200:
+          description: "no error"
+        404:
             $ref: "#/responses/404ErrorResponse"
         500:
             $ref: "#/responses/500ErrorResponse"
@@ -1095,6 +1139,47 @@ definitions:
         description: |
           the range of specific piece in the task, example "0-45565".
 
+  PieceErrorRequest:
+    type: "object"
+    description: "Peer's detailed information in supernode."
+    properties:
+      taskId:
+        type: "string"
+        description: |
+            the taskID of the piece.
+      srcCid:
+        type: "string"
+        description: |
+          the CID of the src Peer.
+      dstPid:
+        type: "string"
+        description: |
+          the peer ID of the target Peer.
+      dstIP:
+        type: "string"
+        description: |
+          the peer ID of the target Peer.
+      range:
+        type: "string"
+        description: |
+          the range of specific piece in the task, example "0-45565".
+      realMd5:
+        type: "string"
+        description: |
+          the MD5 information of piece which calculated by the piece content
+          which downloaded from the target peer.
+      expectedMd5:
+        type: "string"
+        description: |
+          the MD5 value of piece which returned by the supernode that
+          in order to verify the correctness of the piece content which
+          downloaded from the other peers.
+      errorType:
+        type: "string"
+        description: |
+          the error type when failed to download from supernode that dfget will report to supernode
+        enum: ["FILE_NOT_EXIST", "FILE_MD5_NOT_MATCH"]
+
   PreheatInfo:
     type: "object"
     description: |
@@ -1283,7 +1368,6 @@ definitions:
       message:
         type: "string"
         description: "detailed error message"
-      
 
 responses:
   401ErrorResponse:

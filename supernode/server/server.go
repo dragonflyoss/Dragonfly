@@ -29,6 +29,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/dfgettask"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/gc"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/peer"
+	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/pieceerror"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/progress"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/scheduler"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/task"
@@ -44,14 +45,15 @@ var dfgetLogger *logrus.Logger
 
 // Server is supernode server struct.
 type Server struct {
-	Config       *config.Config
-	PeerMgr      mgr.PeerMgr
-	TaskMgr      mgr.TaskMgr
-	DfgetTaskMgr mgr.DfgetTaskMgr
-	ProgressMgr  mgr.ProgressMgr
-	GCMgr        mgr.GCMgr
+	Config        *config.Config
+	PeerMgr       mgr.PeerMgr
+	TaskMgr       mgr.TaskMgr
+	DfgetTaskMgr  mgr.DfgetTaskMgr
+	ProgressMgr   mgr.ProgressMgr
+	GCMgr         mgr.GCMgr
+	PieceErrorMgr mgr.PieceErrorMgr
 
-	OriginClient httpclient.OriginHTTPClient
+	originClient httpclient.OriginHTTPClient
 }
 
 // New creates a brand new server instance.
@@ -103,19 +105,26 @@ func New(cfg *config.Config, logger *logrus.Logger, register prometheus.Register
 		return nil, err
 	}
 
-	GCMgr, err := gc.NewManager(cfg, taskMgr, peerMgr, dfgetTaskMgr, progressMgr, cdnMgr)
+	gcMgr, err := gc.NewManager(cfg, taskMgr, peerMgr, dfgetTaskMgr, progressMgr, cdnMgr)
+	if err != nil {
+		return nil, err
+	}
+
+	pieceErrorMgr, err := pieceerror.NewManager(cfg, gcMgr, cdnMgr)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Server{
-		Config:       cfg,
-		PeerMgr:      peerMgr,
-		TaskMgr:      taskMgr,
-		DfgetTaskMgr: dfgetTaskMgr,
-		ProgressMgr:  progressMgr,
-		GCMgr:        GCMgr,
-		OriginClient: originClient,
+		Config:        cfg,
+		PeerMgr:       peerMgr,
+		TaskMgr:       taskMgr,
+		DfgetTaskMgr:  dfgetTaskMgr,
+		ProgressMgr:   progressMgr,
+		GCMgr:         gcMgr,
+		PieceErrorMgr: pieceErrorMgr,
+
+		originClient: originClient,
 	}, nil
 }
 
@@ -131,7 +140,10 @@ func (s *Server) Start() error {
 		return err
 	}
 
+	// start to handle piece error
+	s.PieceErrorMgr.StartHandleError(context.Background())
 	s.GCMgr.StartGC(context.Background())
+
 	server := &http.Server{
 		Handler:           router,
 		ReadTimeout:       time.Minute * 10,

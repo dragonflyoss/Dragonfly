@@ -21,10 +21,10 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/binary"
-	"fmt"
 	"hash"
 	"sync"
 
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
 
@@ -65,7 +65,7 @@ func (cw *superWriter) writerPool(ctx context.Context, wg *sync.WaitGroup, n int
 				}
 
 				// report piece status
-				pieceSum := fmt.Sprintf("%x", pieceMd5.Sum(nil))
+				pieceSum := fileutils.GetMd5Sum(pieceMd5, nil)
 				pieceMd5Value := getPieceMd5Value(pieceSum, job.pieceContentSize+config.PieceWrapSize)
 				if cw.cdnReporter != nil {
 					if err := cw.cdnReporter.reportPieceStatus(ctx, job.taskID, job.pieceNum, pieceMd5Value, config.PieceSUCCESS); err != nil {

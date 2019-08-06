@@ -19,6 +19,7 @@ package cdn
 import (
 	"context"
 	"crypto/md5"
+	"fmt"
 	"path"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
@@ -33,8 +34,16 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
 	"github.com/dragonflyoss/Dragonfly/supernode/util"
 
+	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
+)
+
+const (
+	PieceMd5SourceDefault = "default"
+	PieceMd5SourceMemory  = "memory"
+	PieceMd5SourceMeta    = "meta"
+	PieceMd5SourceFile    = "file"
 )
 
 var _ mgr.CDNMgr = &Manager{}
@@ -168,7 +177,67 @@ func (cm *Manager) GetStatus(ctx context.Context, taskID string) (cdnStatus stri
 	return "", nil
 }
 
-// Delete deletes the cdn meta with specified taskID.
+// GetPieceMD5 gets the piece Md5 accorrding to the specified taskID and pieceNum.
+func (cm *Manager) GetPieceMD5(ctx context.Context, taskID string, pieceNum int, pieceRange, source string) (pieceMd5 string, err error) {
+	if stringutils.IsEmptyStr(source) ||
+		source == PieceMd5SourceDefault ||
+		source == PieceMd5SourceMemory {
+		return cm.pieceMD5Manager.getPieceMD5(taskID, pieceNum)
+	}
+
+	if source == PieceMd5SourceMeta {
+		// get file meta data
+		fileMeta, err := cm.metaDataManager.readFileMetaData(ctx, taskID)
+		if err != nil {
+			return "", errors.Wrapf(err, "failed to get file meta data taskID(%s)", taskID)
+		}
+
+		// get piece md5s from meta data file
+		pieceMD5s, err := cm.metaDataManager.readPieceMD5s(ctx, taskID, fileMeta.RealMd5)
+		if err != nil {
+			return "", errors.Wrapf(err, "failed to get piece MD5s from meta data taskID(%s)", taskID)
+		}
+
+		if len(pieceMD5s) < pieceNum {
+			return "", fmt.Errorf("not enough piece MD5 for pieceNum(%d)", pieceNum)
+		}
+
+		return pieceMD5s[pieceNum], nil
+	}
+
+	if source == PieceMd5SourceFile {
+		// get piece length
+		start, end, err := util.ParsePieceIndex(pieceRange)
+		if err != nil {
+			return "", errors.Wrapf(err, "failed to parse piece range(%s)", pieceRange)
+		}
+		pieceLength := end - start + 1
+
+		// get piece content reader
+		pieceRaw := getDownloadRawFunc(taskID)
+		pieceRaw.Offset = start
+		pieceRaw.Length = pieceLength
+		reader, err := cm.cacheStore.Get(ctx, pieceRaw)
+		if err != nil {
+			return "", errors.Wrapf(err, "failed to get file reader taskID(%s)", taskID)
+		}
+
+		// get piece Md5 by read source file
+		return getMD5ByReadFile(reader, int32(pieceLength))
+	}
+
+	return "", nil
+}
+
+// CheckFile checks the file whether exists.
+func (cm *Manager) CheckFile(ctx context.Context, taskID string) bool {
+	if _, err := cm.cacheStore.Stat(ctx, getDownloadRaw(taskID)); err != nil {
+		return false
+	}
+	return true
+}
+
+// Delete the cdn meta with specified taskID.
 func (cm *Manager) Delete(ctx context.Context, taskID string, force bool) error {
 	if !force {
 		return cm.pieceMD5Manager.removePieceMD5sByTaskID(taskID)

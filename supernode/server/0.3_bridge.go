@@ -121,7 +121,7 @@ func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http
 		TaskURL:     request.TaskURL,
 		SupernodeIP: request.SuperNodeIP,
 	}
-	s.OriginClient.RegisterTLSConfig(taskCreateRequest.RawURL, request.Insecure, request.RootCAs)
+	s.originClient.RegisterTLSConfig(taskCreateRequest.RawURL, request.Insecure, request.RootCAs)
 	resp, err := s.TaskMgr.Register(ctx, taskCreateRequest)
 	if err != nil {
 		logrus.Errorf("failed to register task %+v: %v", taskCreateRequest, err)

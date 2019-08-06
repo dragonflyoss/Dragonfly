@@ -18,10 +18,10 @@ package limitreader
 
 import (
 	"crypto/md5"
-	"fmt"
 	"hash"
 	"io"
 
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/ratelimiter"
 )
 
@@ -93,7 +93,7 @@ func (lr *LimitReader) Read(p []byte) (n int, err error) {
 // Md5 calculates the md5 of all contents read
 func (lr *LimitReader) Md5() string {
 	if lr.md5sum != nil {
-		return fmt.Sprintf("%x", lr.md5sum.Sum(nil))
+		return fileutils.GetMd5Sum(lr.md5sum, nil)
 	}
 	return ""
 }

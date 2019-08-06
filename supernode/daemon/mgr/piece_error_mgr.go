@@ -18,17 +18,17 @@ package mgr
 
 import (
 	"context"
+
+	"github.com/dragonflyoss/Dragonfly/apis/types"
 )
 
-// GCMgr as an interface defines all operations about gc operation.
-type GCMgr interface {
-	// StartGC start to execute GC with a new goroutine.
-	StartGC(ctx context.Context)
+// PieceErrorMgr as an interface defines all operations to handle piece errors.
+type PieceErrorMgr interface {
+	// StartHandleError start a goroutine to handle the piece error.
+	StartHandleError(ctx context.Context)
 
-	// GCTask to do the gc task job with specified taskID.
-	// The CDN file will be deleted when the full is true.
-	GCTask(ctx context.Context, taskID string, full bool)
-
-	// GCPeer to do the gc peer job when a peer offline.
-	GCPeer(ctx context.Context, peerID string)
+	// HandlePieceError the peer should report the error with related info when
+	// it failed to download a piece from supernode.
+	// And the supernode should handle the piece Error and do some repair operations.
+	HandlePieceError(ctx context.Context, pieceErrorRequest *types.PieceErrorRequest) error
 }
