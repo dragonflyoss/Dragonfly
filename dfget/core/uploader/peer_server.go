@@ -350,12 +350,12 @@ func parseParams(rangeVal, pieceNumStr, pieceSizeStr string) (*uploadParam, erro
 	}
 
 	if strings.Count(rangeVal, "=") != 1 {
-		return nil, fmt.Errorf("invaild range: %s", rangeVal)
+		return nil, fmt.Errorf("invalid range: %s", rangeVal)
 	}
 	rangeStr := strings.Split(rangeVal, "=")[1]
 
 	if strings.Count(rangeStr, "-") != 1 {
-		return nil, fmt.Errorf("invaild range: %s", rangeStr)
+		return nil, fmt.Errorf("invalid range: %s", rangeStr)
 	}
 	rangeArr := strings.Split(rangeStr, "-")
 	if up.start, err = strconv.ParseInt(rangeArr[0], 10, 64); err != nil {
