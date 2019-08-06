@@ -20,6 +20,7 @@ import (
 	"bufio"
 	"crypto/md5"
 	"fmt"
+	"hash"
 	"io"
 	"io/ioutil"
 	"os"
@@ -208,7 +209,12 @@ func Md5Sum(name string) string {
 		return ""
 	}
 
-	return fmt.Sprintf("%x", h.Sum(nil))
+	return GetMd5Sum(h, nil)
+}
+
+// GetMd5Sum gets md5 sum as a string and appends the current hash to b.
+func GetMd5Sum(md5 hash.Hash, b []byte) string {
+	return fmt.Sprintf("%x", md5.Sum(b))
 }
 
 // GetSys returns the underlying data source of the os.FileInfo.

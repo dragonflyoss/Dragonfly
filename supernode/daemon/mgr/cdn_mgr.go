@@ -41,6 +41,12 @@ type CDNMgr interface {
 	// GetStatus gets the status of the file.
 	GetStatus(ctx context.Context, taskID string) (cdnStatus string, err error)
 
+	// GetPieceMD5 gets the piece Md5 accorrding to the specified taskID and pieceNum.
+	GetPieceMD5(ctx context.Context, taskID string, pieceNum int, pieceRange, source string) (pieceMd5 string, err error)
+
+	// CheckFile checks the file whether exists.
+	CheckFile(ctx context.Context, taskID string) bool
+
 	// Delete the cdn meta with specified taskID.
 	// The file on the disk will be deleted when the force is true.
 	Delete(ctx context.Context, taskID string, force bool) error

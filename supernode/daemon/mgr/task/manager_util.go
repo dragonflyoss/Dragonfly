@@ -328,7 +328,7 @@ func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, tas
 				"taskID(%s) clientID(%s) status(%s): %v", task.ID, clientID, types.DfGetTaskStatusSUCCESS, err)
 		}
 		finishInfo := make(map[string]interface{})
-		finishInfo["md5"] = task.Md5
+		finishInfo["md5"] = task.RealMd5
 		finishInfo["fileLength"] = task.FileLength
 		return true, finishInfo, nil
 	}
@@ -382,11 +382,17 @@ func (tm *Manager) pieceResultToPieceInfo(ctx context.Context, pr *mgr.PieceResu
 		return nil, err
 	}
 
+	pieceMD5, err := tm.cdnMgr.GetPieceMD5(ctx, pr.TaskID, pr.PieceNum, "", "default")
+	if err != nil {
+		logrus.Warnf("failed to get piece MD5 taskID(%s) pieceNum(%d): %v", pr.TaskID, pr.PieceNum, err)
+		pieceMD5 = ""
+	}
 	return &types.PieceInfo{
 		PID:        pr.DstPID,
 		Path:       dfgetTask.Path,
 		PeerIP:     peer.IP.String(),
 		PeerPort:   peer.Port,
+		PieceMD5:   pieceMD5,
 		PieceRange: util.CalculatePieceRange(pr.PieceNum, pieceSize),
 		PieceSize:  pieceSize,
 	}, nil
@@ -519,7 +525,7 @@ func isWait(CDNStatus string) bool {
 }
 
 func (tm *Manager) getHTTPFileLength(taskID, url string, headers map[string]string) (int64, error) {
-	fileLength, code, err := tm.OriginClient.GetContentLength(url, headers)
+	fileLength, code, err := tm.originClient.GetContentLength(url, headers)
 	if err != nil {
 		return -1, errors.Wrapf(errortypes.ErrUnknowError, "failed to get http file Length: %v", err)
 	}
