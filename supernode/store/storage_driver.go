@@ -30,13 +30,13 @@ import (
 // the different pieces of the same file concurrently.
 type StorageDriver interface {
 	// Get data from the storage based on raw information.
-	// If the length<=0, the driver should return all data from the raw.offest.
+	// If the length<=0, the driver should return all data from the raw.offset.
 	// Otherwise, just return the data which starts from raw.offset and the length is raw.length.
 	Get(ctx context.Context, raw *Raw) (io.Reader, error)
 
 	// Get data from the storage based on raw information.
 	// The data should be returned in bytes.
-	// If the length<=0, the storage driver should return all data from the raw.offest.
+	// If the length<=0, the storage driver should return all data from the raw.offset.
 	// Otherwise, just return the data which starts from raw.offset and the length is raw.length.
 	GetBytes(ctx context.Context, raw *Raw) ([]byte, error)
 
