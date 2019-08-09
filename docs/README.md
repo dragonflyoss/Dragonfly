@@ -40,7 +40,7 @@ Ecosystem documents show connections between Dragonfly and popular tool or syste
 
 ## Developer Guide
 
-Develop Guide helps (potential) developers/contributors to understand the thoery inside Dragonfly rather than the interface it exposes. With better understanding of how Dragonfly is designed, developer could learn source code of Dragonfly much easier and know how to debug, test and hack.
+Develop Guide helps (potential) developers/contributors to understand the theory inside Dragonfly rather than the interface it exposes. With better understanding of how Dragonfly is designed, developer could learn source code of Dragonfly much easier and know how to debug, test and hack.
 
 ### Design Doc
 
