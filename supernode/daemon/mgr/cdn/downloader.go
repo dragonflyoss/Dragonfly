@@ -2,7 +2,6 @@ package cdn
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	errorType "github.com/dragonflyoss/Dragonfly/pkg/errortypes"
@@ -36,18 +35,5 @@ func (cm *Manager) download(ctx context.Context, taskID, url string, headers map
 	}
 
 	logrus.Infof("start to download for taskId(%s) with fileUrl: %s header: %v checkCode: %d", taskID, url, headers, checkCode)
-	return getWithURL(url, headers, checkCode)
-}
-
-func getWithURL(url string, headers map[string]string, checkCode int) (*http.Response, error) {
-	// TODO: add timeout
-	resp, err := httputils.HTTPGet(url, headers)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode == checkCode {
-		return resp, nil
-	}
-	return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	return cm.originClient.Download(url, headers, checkCode)
 }

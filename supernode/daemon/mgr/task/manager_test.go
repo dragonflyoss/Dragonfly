@@ -25,10 +25,10 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/mock"
 	dutil "github.com/dragonflyoss/Dragonfly/supernode/daemon/util"
+	cMock "github.com/dragonflyoss/Dragonfly/supernode/httpclient/mock"
 
 	"github.com/go-check/check"
 	"github.com/golang/mock/gomock"
-	"github.com/prashantv/gostub"
 )
 
 func Test(t *testing.T) {
@@ -46,9 +46,9 @@ type TaskMgrTestSuite struct {
 	mockPeerMgr      *mock.MockPeerMgr
 	mockProgressMgr  *mock.MockProgressMgr
 	mockSchedulerMgr *mock.MockSchedulerMgr
+	mockOriginClient *cMock.MockOriginHTTPClient
 
-	taskManager       *Manager
-	contentLengthStub *gostub.Stubs
+	taskManager *Manager
 }
 
 func (s *TaskMgrTestSuite) SetUpSuite(c *check.C) {
@@ -59,22 +59,19 @@ func (s *TaskMgrTestSuite) SetUpSuite(c *check.C) {
 	s.mockDfgetTaskMgr = mock.NewMockDfgetTaskMgr(s.mockCtl)
 	s.mockProgressMgr = mock.NewMockProgressMgr(s.mockCtl)
 	s.mockSchedulerMgr = mock.NewMockSchedulerMgr(s.mockCtl)
+	s.mockOriginClient = cMock.NewMockOriginHTTPClient(s.mockCtl)
 
 	s.mockCDNMgr.EXPECT().TriggerCDN(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
 	s.mockDfgetTaskMgr.EXPECT().Add(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	s.mockProgressMgr.EXPECT().InitProgress(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-
+	s.mockOriginClient.EXPECT().GetContentLength(gomock.Any(), gomock.Any()).Return(int64(1000), 200, nil)
 	cfg := config.NewConfig()
-	s.taskManager, _ = NewManager(cfg, s.mockPeerMgr, s.mockDfgetTaskMgr,
-		s.mockProgressMgr, s.mockCDNMgr, s.mockSchedulerMgr)
 
-	s.contentLengthStub = gostub.Stub(&getContentLength, func(url string, headers map[string]string) (int64, int, error) {
-		return 1000, 200, nil
-	})
+	s.taskManager, _ = NewManager(cfg, s.mockPeerMgr, s.mockDfgetTaskMgr,
+		s.mockProgressMgr, s.mockCDNMgr, s.mockSchedulerMgr, s.mockOriginClient)
 }
 
 func (s *TaskMgrTestSuite) TearDownSuite(c *check.C) {
-	s.contentLengthStub.Reset()
 	s.mockCtl.Finish()
 }
 
@@ -164,5 +161,4 @@ func (s *TaskMgrTestSuite) TestUpdateTaskInfo(c *check.C) {
 	c.Check(err, check.IsNil)
 	c.Check(task.CdnStatus, check.Equals, types.TaskInfoCdnStatusSUCCESS)
 	c.Check(task.FileLength, check.Equals, int64(2000))
-
 }
