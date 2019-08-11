@@ -147,22 +147,27 @@ func (p *Properties) DFGetConfig() DFGetConfig {
 		dfgetFlags = append(dfgetFlags, "--verbose")
 	}
 
-	return DFGetConfig{
+	dfgetConfig := DFGetConfig{
 		DfgetFlags: dfgetFlags,
 		SuperNodes: p.SuperNodes,
 		RateLimit:  p.RateLimit,
 		DFRepo:     p.DFRepo,
 		DFPath:     p.DFPath,
 	}
+	if p.HijackHTTPS != nil {
+		dfgetConfig.HostsConfig = p.HijackHTTPS.Hosts
+	}
+	return dfgetConfig
 }
 
 // DFGetConfig configures how dfdaemon calls dfget
 type DFGetConfig struct {
-	DfgetFlags []string `yaml:"dfget_flags"`
-	SuperNodes []string `yaml:"supernodes"`
-	RateLimit  string   `yaml:"ratelimit"`
-	DFRepo     string   `yaml:"localrepo"`
-	DFPath     string   `yaml:"dfpath"`
+	DfgetFlags  []string      `yaml:"dfget_flags"`
+	SuperNodes  []string      `yaml:"supernodes"`
+	RateLimit   string        `yaml:"ratelimit"`
+	DFRepo      string        `yaml:"localrepo"`
+	DFPath      string        `yaml:"dfpath"`
+	HostsConfig []*HijackHost `yaml:"hosts" json:"hosts"`
 }
 
 // RegistryMirror configures the mirror of the official docker registry
@@ -261,7 +266,7 @@ func (u *URL) MarshalYAML() (interface{}, error) {
 // CertPool is a wrapper around x509.CertPool, which can be unmarshalled and
 // constructed from a list of filenames
 type CertPool struct {
-	files []string
+	Files []string
 	*x509.CertPool
 }
 
@@ -276,11 +281,11 @@ func (cp *CertPool) UnmarshalJSON(b []byte) error {
 }
 
 func (cp *CertPool) unmarshal(unmarshal func(interface{}) error) error {
-	if err := unmarshal(&cp.files); err != nil {
+	if err := unmarshal(&cp.Files); err != nil {
 		return err
 	}
 
-	pool, err := certPoolFromFiles(cp.files...)
+	pool, err := certPoolFromFiles(cp.Files...)
 	if err != nil {
 		return err
 	}
@@ -291,12 +296,12 @@ func (cp *CertPool) unmarshal(unmarshal func(interface{}) error) error {
 
 // MarshalJSON implements json.Marshaller to print the cert pool
 func (cp *CertPool) MarshalJSON() ([]byte, error) {
-	return json.Marshal(cp.files)
+	return json.Marshal(cp.Files)
 }
 
 // MarshalYAML implements yaml.Marshaller to print the cert pool
 func (cp *CertPool) MarshalYAML() (interface{}, error) {
-	return cp.files, nil
+	return cp.Files, nil
 }
 
 // Regexp is simple wrapper around regexp.Regexp to make it unmarshallable from a string

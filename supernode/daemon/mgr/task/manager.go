@@ -6,13 +6,13 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
-	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
 	"github.com/dragonflyoss/Dragonfly/pkg/timeutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	dutil "github.com/dragonflyoss/Dragonfly/supernode/daemon/util"
+	"github.com/dragonflyoss/Dragonfly/supernode/httpclient"
 	"github.com/dragonflyoss/Dragonfly/supernode/util"
 
 	"github.com/pkg/errors"
@@ -24,10 +24,6 @@ const (
 )
 
 var _ mgr.TaskMgr = &Manager{}
-
-// using a variable getContentLength to reference the function util.GetContentLength,
-// and it helps using stub functions in the test with gostub.
-var getContentLength = httputils.GetContentLength
 
 // Manager is an implementation of the interface of TaskMgr.
 type Manager struct {
@@ -43,11 +39,12 @@ type Manager struct {
 	progressMgr  mgr.ProgressMgr
 	cdnMgr       mgr.CDNMgr
 	schedulerMgr mgr.SchedulerMgr
+	OriginClient httpclient.OriginHTTPClient
 }
 
 // NewManager returns a new Manager Object.
 func NewManager(cfg *config.Config, peerMgr mgr.PeerMgr, dfgetTaskMgr mgr.DfgetTaskMgr,
-	progressMgr mgr.ProgressMgr, cdnMgr mgr.CDNMgr, schedulerMgr mgr.SchedulerMgr) (*Manager, error) {
+	progressMgr mgr.ProgressMgr, cdnMgr mgr.CDNMgr, schedulerMgr mgr.SchedulerMgr, originClient httpclient.OriginHTTPClient) (*Manager, error) {
 	return &Manager{
 		cfg:                     cfg,
 		taskStore:               dutil.NewStore(),
@@ -59,6 +56,7 @@ func NewManager(cfg *config.Config, peerMgr mgr.PeerMgr, dfgetTaskMgr mgr.DfgetT
 		schedulerMgr:            schedulerMgr,
 		accessTimeMap:           syncmap.NewSyncMap(),
 		taskURLUnReachableStore: syncmap.NewSyncMap(),
+		OriginClient:            originClient,
 	}, nil
 }
 

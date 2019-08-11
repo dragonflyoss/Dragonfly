@@ -20,10 +20,10 @@ import (
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/mock"
+	cMock "github.com/dragonflyoss/Dragonfly/supernode/httpclient/mock"
 
 	"github.com/go-check/check"
 	"github.com/golang/mock/gomock"
-	"github.com/prashantv/gostub"
 )
 
 func init() {
@@ -37,9 +37,9 @@ type TaskUtilTestSuite struct {
 	mockPeerMgr      *mock.MockPeerMgr
 	mockProgressMgr  *mock.MockProgressMgr
 	mockSchedulerMgr *mock.MockSchedulerMgr
+	mockOriginClient *cMock.MockOriginHTTPClient
 
-	taskManager       *Manager
-	contentLengthStub *gostub.Stubs
+	taskManager *Manager
 }
 
 func (s *TaskUtilTestSuite) SetUpSuite(c *check.C) {
@@ -50,16 +50,15 @@ func (s *TaskUtilTestSuite) SetUpSuite(c *check.C) {
 	s.mockDfgetTaskMgr = mock.NewMockDfgetTaskMgr(s.mockCtl)
 	s.mockProgressMgr = mock.NewMockProgressMgr(s.mockCtl)
 	s.mockSchedulerMgr = mock.NewMockSchedulerMgr(s.mockCtl)
-	s.taskManager, _ = NewManager(config.NewConfig(), s.mockPeerMgr, s.mockDfgetTaskMgr,
-		s.mockProgressMgr, s.mockCDNMgr, s.mockSchedulerMgr)
+	s.mockOriginClient = cMock.NewMockOriginHTTPClient(s.mockCtl)
 
-	s.contentLengthStub = gostub.Stub(&getContentLength, func(url string, headers map[string]string) (int64, int, error) {
-		return 1000, 200, nil
-	})
+	s.taskManager, _ = NewManager(config.NewConfig(), s.mockPeerMgr, s.mockDfgetTaskMgr,
+		s.mockProgressMgr, s.mockCDNMgr, s.mockSchedulerMgr, s.mockOriginClient)
+	s.mockOriginClient.EXPECT().GetContentLength(gomock.Any(), gomock.Any()).Return(int64(1000), 200, nil)
 }
 
 func (s *TaskUtilTestSuite) TearDownSuite(c *check.C) {
-	s.contentLengthStub.Reset()
+	s.mockCtl.Finish()
 }
 
 func (s *TaskUtilTestSuite) TestEqualsTask(c *check.C) {

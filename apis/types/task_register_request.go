@@ -60,6 +60,10 @@ type TaskRegisterRequest struct {
 	//
 	Identifier string `json:"identifier,omitempty"`
 
+	// tells whether skip secure verify when supernode download the remote source file.
+	//
+	Insecure bool `json:"insecure,omitempty"`
+
 	// md5 checksum for the resource to distribute. dfget catches this parameter from dfget's CLI
 	// and passes it to supernode. When supernode finishes downloading file/image from the source location,
 	// it will validate the source file with this md5 value to check whether this is a valid file.
@@ -85,6 +89,10 @@ type TaskRegisterRequest struct {
 	// The resource url is provided by command line parameter.
 	//
 	RawURL string `json:"rawURL,omitempty"`
+
+	// The root ca cert from client used to download the remote source file.
+	//
+	RootCAs []strfmt.Base64 `json:"rootCAs"`
 
 	// The address of supernode that the client can connect to
 	SuperNodeIP string `json:"superNodeIp,omitempty"`
@@ -115,6 +123,10 @@ func (m *TaskRegisterRequest) Validate(formats strfmt.Registry) error {
 	}
 
 	if err := m.validatePort(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateRootCAs(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -175,6 +187,21 @@ func (m *TaskRegisterRequest) validatePort(formats strfmt.Registry) error {
 
 	if err := validate.MaximumInt("port", "body", int64(m.Port), 65000, false); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (m *TaskRegisterRequest) validateRootCAs(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.RootCAs) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.RootCAs); i++ {
+
+		// Format "byte" (base64 string) is already validated when unmarshalled
+
 	}
 
 	return nil
