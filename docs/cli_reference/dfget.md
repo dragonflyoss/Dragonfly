@@ -33,6 +33,7 @@ download SUCCESS(0) cost:0.026s length:141898 reason:0
 
 ```
       --alivetime duration    Alive duration for which uploader keeps no accessing by any uploading requests, after this period uploader will automically exit (default 5m0s)
+      --cacerts strings       The cacert file which is used to verify remote server when supernode interact with the source.
       --callsystem string     The name of dfget caller which is for debugging. Once set, it will be passed to all components around the request to make debugging easy
       --clientqueue int       specify the size of client queue which controls the number of pieces that can be processed simultaneously (default 6)
       --console               show log on console, it's conflict with '--showbar'
@@ -44,6 +45,7 @@ download SUCCESS(0) cost:0.026s length:141898 reason:0
       --header strings        http header, eg: --header='Accept: *' --header='Host: abc'
   -h, --help                  help for dfget
   -i, --identifier string     The usage of identifier is making different downloading tasks generate different downloading task IDs even if they have the same URLs. conflict with --md5.
+      --insecure              identify whether supernode should skip secure verify when interact with the source.
       --ip string             IP address that server will listen on
   -s, --locallimit string     network bandwidth rate limit for single download task, in format of 20M/m/K/k
   -m, --md5 string            md5 value input from user for the requested downloading file to enhance security
