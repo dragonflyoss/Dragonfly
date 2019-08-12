@@ -6,7 +6,7 @@ If you are using Dragonfly in your production environment to handle production i
 
 ## Prerequisites
 
-Assuming that experiement requires us to prepare three host machines, one to play a role of supernode, and the other two for dfclient. Then the topology of the three nodes cluster is like the following:
+Assuming that experiment requires us to prepare three host machines, one to play a role of supernode, and the other two for dfclient. Then the topology of the three nodes cluster is like the following:
 
 ![quick start cluster topology](../images/quick-start-topo.png)
 
