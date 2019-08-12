@@ -1,6 +1,6 @@
 # Customize dfget properties 
 
-This topic explains how to cutomize the dragonfly dfget startup parameters. 
+This topic explains how to customize the dragonfly dfget startup parameters. 
 
 **NOTE**: By default, dragonfly config files locate `/etc/dragonfly`. You can create `dfget.yml` for configing dfget startup params. When deploying with Docker, you can mount default path. 
 

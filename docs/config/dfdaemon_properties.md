@@ -1,8 +1,13 @@
 # Customize dfdaemon properties
 
-This topic explains how to cutomize the dragonfly dfdeamon startup parameters. 
+This topic explains how to customize the dragonfly dfdaemon startup parameters. 
 
-**NOTE**: By default, dragonfly config files locate `/etc/dragonfly`. You can create `dfdeamon.yml` for configing dfdaemon startup params. When deploying with Docker, you can mount default path. Properties holds all configurable properties of dfdaemon including `dfget/dfget_server` Properties.
+**NOTE**: Properties holds all configurable properties of dfdaemon including `dfget/dfget_server` properties. By default, dragonfly config files locate `/etc/dragonfly`. You can create `dfdaemon.yml` for configuring dfdaemon startup params. When deploying with Docker, you can mount default path. 
+
+```sh
+docker run -d --net=host --name dfclient -p 65001:65001 -v /etc/dragonfly:/etc/dragonfly -v /root/.small-dragonfly:/root/.small-dragonfly dragonflyoss/dfclient:0.4.3 --registry ${http://RegistryUrl:port} --node=127.0.0.1
+```
+If designating port with `--port=${port}` for starting supernode docker, dfdaemon startup parameter `--node` must designate port, such as `--node=127.0.0.1:${port}`   
 
 ## Parameter instructions
 
