@@ -310,7 +310,7 @@ func GetRangeSE(rangeHTTPHeader string, length int64) ([]*RangeStruct, error) {
 	if strings.ContainsAny(rangeHTTPHeader, "=") {
 		rangeSlice := strings.Split(rangeHTTPHeader, "=")
 		if len(rangeSlice) != 2 {
-			return nil, errors.Wrapf(errortypes.ErrInvalidValue, "invaild range: %s, should be like bytes=0-1023", rangeStr)
+			return nil, errors.Wrapf(errortypes.ErrInvalidValue, "invalid range: %s, should be like bytes=0-1023", rangeStr)
 		}
 		rangeStr = rangeSlice[1]
 	}
@@ -329,7 +329,7 @@ func GetRangeSE(rangeHTTPHeader string, length int64) ([]*RangeStruct, error) {
 
 	for i := 0; i < rangeCount; i++ {
 		if strings.Count(rangeArr[i], "-") != 1 {
-			return nil, errors.Wrapf(errortypes.ErrInvalidValue, "invaild range: %s, should be like 0-1023", rangeArr[i])
+			return nil, errors.Wrapf(errortypes.ErrInvalidValue, "invalid range: %s, should be like 0-1023", rangeArr[i])
 		}
 
 		// -{length}
@@ -413,7 +413,7 @@ func handlePairRange(rangeStr string, length int64) (*RangeStruct, error) {
 	}
 
 	if endIndex < startIndex {
-		return nil, errors.Wrapf(errortypes.ErrInvalidValue, "range: %s, the start is lager the end", rangeStr)
+		return nil, errors.Wrapf(errortypes.ErrInvalidValue, "range: %s, the start is larger the end", rangeStr)
 	}
 
 	return &RangeStruct{
