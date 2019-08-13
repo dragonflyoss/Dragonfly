@@ -37,7 +37,7 @@ dfget_flags: ["--node","192.168.33.21","--verbose","--ip","192.168.33.23",
                    "-f","filterParam1&filterParam2"]  
 registry_mirror:  
 　　# url for the registry mirror  
-　　remote: https:index.docker.io  
+　　remote: https://index.docker.io  
 　　# whether to ignore https certificate errors  
 　　insecure: false  
 　　# optional certificates if the remote server uses self-signed certificates  
