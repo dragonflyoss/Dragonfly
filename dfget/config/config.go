@@ -372,7 +372,7 @@ type RuntimeVariable struct {
 
 	// ServerAliveTime specify the alive duration for which
 	// uploader keeps no accessing by any uploading requests.
-	// After this period, the uploader will automically exit.
+	// After this period, the uploader will automatically exit.
 	ServerAliveTime time.Duration
 }
 
