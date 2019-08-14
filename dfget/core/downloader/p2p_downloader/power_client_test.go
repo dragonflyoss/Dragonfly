@@ -23,6 +23,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
@@ -188,6 +189,6 @@ func NewMockDownloadAPI() api.DownloadAPI {
 	return &downloadMockAPI{}
 }
 
-func (d *downloadMockAPI) Download(ip string, port int, req *api.DownloadRequest) (*http.Response, error) {
+func (d *downloadMockAPI) Download(ip string, port int, req *api.DownloadRequest, timeout time.Duration) (*http.Response, error) {
 	return downloadMock()
 }

@@ -76,6 +76,7 @@ const (
 const (
 	// SubsystemSupernode represents metrics from supernode
 	SubsystemSupernode = "supernode"
+
 	// SubsystemDfget represents metrics from dfget
 	SubsystemDfget = "dfget"
 )
@@ -96,4 +97,14 @@ const (
 
 	// DefaultPeerGCDelay is the delay time to execute the GC after the peer has reported the offline.
 	DefaultPeerGCDelay = 3 * time.Minute
+)
+
+const (
+	// DefaultSystemReservedBandwidth is the default network bandwidth reserved for system software.
+	// unit: MB/s
+	DefaultSystemReservedBandwidth = 20
+
+	// DefaultMaxBandwidth is the default network bandwidth that supernode can use.
+	// unit: MB/s
+	DefaultMaxBandwidth = 200
 )

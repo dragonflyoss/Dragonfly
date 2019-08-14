@@ -78,7 +78,7 @@ func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateReq
 		task = newTask
 	}
 
-	if task.FileLength != 0 {
+	if task.HTTPFileLength != 0 {
 		return task, nil
 	}
 

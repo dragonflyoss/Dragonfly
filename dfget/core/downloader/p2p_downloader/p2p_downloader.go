@@ -99,6 +99,11 @@ type P2PDownloader struct {
 	// pullRateTime the time when the pull rate API is called to
 	// control the time interval between two calls to the API.
 	pullRateTime time.Time
+
+	// dfget will sleep some time which between minTimeout and maxTimeout
+	// unit: Millisecond
+	minTimeout int
+	maxTimeout int
 }
 
 var _ downloader.Downloader = &P2PDownloader{}
@@ -113,6 +118,8 @@ func NewP2PDownloader(cfg *config.Config,
 		API:            api,
 		Register:       register,
 		RegisterResult: result,
+		minTimeout:     50,
+		maxTimeout:     100,
 	}
 	p2p.init()
 	return p2p
@@ -241,9 +248,16 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 		if p2p.queue.Len() > 0 {
 			break
 		}
-		sleepTime := time.Duration(rand.Intn(1400)+600) * time.Millisecond
+
+		sleepTime := time.Duration(rand.Intn(p2p.maxTimeout-p2p.minTimeout)+p2p.minTimeout) * time.Millisecond
 		logrus.Infof("pull piece task(%+v) result:%s and sleep %.3fs", item, res, sleepTime.Seconds())
 		time.Sleep(sleepTime)
+
+		// gradually increase the sleep time, up to [800-1600]
+		if p2p.minTimeout < 800 {
+			p2p.minTimeout *= 2
+			p2p.maxTimeout *= 2
+		}
 	}
 
 	// FIXME: try to abstract the judgement to make it more readable.

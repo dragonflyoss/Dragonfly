@@ -277,3 +277,19 @@ func isExist(mmap map[string]bool, key string) bool {
 	}
 	return false
 }
+
+// CalculateTimeout calculate the timeout(in seconds) according to the fileLength and the min rate of network.
+//
+// The 0 will be returned when both minRate and defaultMinRate both are <=0.
+func CalculateTimeout(fileLength int64, minRate int, defaultMinRate int, reservedTime time.Duration) time.Duration {
+	// ensure the minRate to avoid trigger panic when minRate equals zero
+	if fileLength <= 0 ||
+		(minRate <= 0 && defaultMinRate <= 0) {
+		return 0
+	}
+	if minRate <= 0 {
+		minRate = defaultMinRate
+	}
+
+	return time.Duration(fileLength/int64(minRate))*time.Second + reservedTime
+}

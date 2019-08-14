@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
@@ -112,6 +113,14 @@ func (s *PeerServerExecutorTestSuite) TestStartPeerServerProcess(c *check.C) {
 	port, e = StartPeerServerProcess(cfg)
 	c.Assert(port, check.Equals, s.port)
 	c.Assert(e, check.IsNil)
+}
+
+func (s *PeerServerExecutorTestSuite) TestReadPort(c *check.C) {
+	port := 39480
+	reader := strings.NewReader("dfget uploader server port is " + strconv.Itoa(port) + "\n")
+	result, err := readPort(reader)
+	c.Check(err, check.IsNil)
+	c.Check(result, check.Equals, port)
 }
 
 // ---------------------------------------------------------------------------

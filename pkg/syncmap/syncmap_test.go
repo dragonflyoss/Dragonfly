@@ -18,9 +18,14 @@ package syncmap
 
 import (
 	"sort"
+	"testing"
 
 	"github.com/go-check/check"
 )
+
+func Test(t *testing.T) {
+	check.TestingT(t)
+}
 
 type SyncMapUtilSuite struct{}
 

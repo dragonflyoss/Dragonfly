@@ -71,7 +71,10 @@ func runServer() error {
 	if err != nil {
 		return err
 	}
-	printer.Printf("dfget uploader server port is %d.", port)
+
+	// NOTE: Please update the dfget.PeerServerExecutor.readPort
+	// because it will get the port from the stdout after call the `dfget server`.
+	printer.Printf("dfget uploader server port is %d", port)
 	uploader.WaitForShutdown()
 	return nil
 }
