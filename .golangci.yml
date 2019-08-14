@@ -1,0 +1,28 @@
+run:
+  deadline: 3m
+  modules-download-mode: readonly
+
+linters-settings:
+  gocyclo:
+    min-complexity: 20
+  goconst:
+    min-len: 3
+    min-occurrences: 5
+
+linters:
+  disable-all: true
+  enable:
+    - gofmt
+    - goimports
+    - golint
+    - misspell
+    - govet
+    - goconst
+    - deadcode
+    - gocyclo
+
+# output configuration options
+output:
+  format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true

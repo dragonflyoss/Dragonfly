@@ -7,7 +7,7 @@ jobs:
     docker:
       # this image is build from Dockerfile
       # https://github.com/pouchcontainer/pouchlinter/blob/master/Dockerfile
-      - image: pouchcontainer/pouchlinter:v0.2.1
+      - image: pouchcontainer/pouchlinter:v0.2.2
     working_directory: /go/src/github.com/dragonflyoss/Dragonfly
     steps:
       - checkout
@@ -32,6 +32,7 @@ jobs:
       - run:
           name: use opensource tool client9/misspell to correct commonly misspelled English words
           command: |
+            go get -u github.com/client9/misspell/cmd/misspell
             find  ./* -name  "*" | xargs misspell -error
       - run:
           name: use ShellCheck (https://github.com/koalaman/shellcheck) to check the validateness of shell scripts in pouch repo
@@ -42,9 +43,12 @@ jobs:
           command: |
             make check-go-mod
 
-  gocode-check-via-gometalinter-swagger:
+  gocode-check-via-golangci-lint-swagger:
     docker:
-      - image: pouchcontainer/pouchlinter:v0.2.1
+      - image: pouchcontainer/pouchlinter:v0.2.2
+        environment:
+          GO111MODULE: "on"
+          GOPROXY: "https://goproxy.io"
     working_directory: /go/src/github.com/dragonflyoss/Dragonfly
     steps:
       - checkout
@@ -53,15 +57,9 @@ jobs:
           command: |
             swagger validate "/go/src/github.com/dragonflyoss/Dragonfly/apis/swagger.yml"
       - run:
-          name: use gometalinter to check gocode of this project.
+          name: use golangci-lint to check gocode of this project.
           command: |
-            make go-mod-vendor
-            gometalinter --disable-all --cyclo-over=20 --skip vendor -E gofmt -E goimports -E golint -E misspell -E vet -E goconst -E gocyclo ./...
-      - run:
-          name: detect deadcode without test folder
-          command: |
-            make go-mod-vendor
-            gometalinter --disable-all --skip vendor --skip test -E deadcode ./...
+            golangci-lint run
 
   unit-test-golang:
     docker:
@@ -103,5 +101,5 @@ workflows:
     jobs:
       - markdownlint-misspell-shellcheck
       - unit-test-golang
-      - gocode-check-via-gometalinter-swagger
+      - gocode-check-via-golangci-lint-swagger
       - api-integration-test

@@ -113,7 +113,7 @@ func (api *supernodeAPI) ReportPiece(node string, req *types.ReportPieceRequest)
 		logrus.Errorf("failed to report piece{taskid:%s,range:%s},err: %v", req.TaskID, req.PieceRange, e)
 		return nil, e
 	}
-	if resp != nil && resp.Code != constants.CodeGetPieceReport {
+	if resp.Code != constants.CodeGetPieceReport {
 		logrus.Errorf("failed to report piece{taskid:%s,range:%s} to supernode: api response code is %d not equal to %d", req.TaskID, req.PieceRange, resp.Code, constants.CodeGetPieceReport)
 	}
 	return
@@ -131,7 +131,7 @@ func (api *supernodeAPI) ServiceDown(node string, taskID string, cid string) (
 		logrus.Errorf("failed to send service down,err: %v", e)
 		return nil, e
 	}
-	if resp != nil && resp.Code != constants.CodeGetPeerDown {
+	if resp.Code != constants.CodeGetPeerDown {
 		logrus.Errorf("failed to send service down to supernode: api response code is %d not equal to %d", resp.Code, constants.CodeGetPeerDown)
 	}
 	return
