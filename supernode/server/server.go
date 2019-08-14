@@ -40,6 +40,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+var dfgetLogger *logrus.Logger
+
 // Server is supernode server struct.
 type Server struct {
 	Config       *config.Config
@@ -53,9 +55,12 @@ type Server struct {
 }
 
 // New creates a brand new server instance.
-func New(cfg *config.Config, register prometheus.Registerer) (*Server, error) {
+func New(cfg *config.Config, logger *logrus.Logger, register prometheus.Registerer) (*Server, error) {
+	var err error
 	// register supernode build information
 	version.NewBuildInfo("supernode", register)
+
+	dfgetLogger = logger
 
 	sm, err := store.NewManager(cfg)
 	if err != nil {

@@ -24,6 +24,7 @@ import (
 	"os"
 	"path"
 
+	api_types "github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
@@ -110,13 +111,17 @@ type ServiceDownFuncType func(ip string, taskID string, cid string) (*types.Base
 // ClientErrorFuncType function type of SupernodeAPI#ReportClientError
 type ClientErrorFuncType func(ip string, req *types.ClientErrorRequest) (*types.BaseResponse, error)
 
+// ClientErrorFuncType function type of SupernodeAPI#ReportMetricsType
+type ReportMetricsFuncType func(node string, req *api_types.TaskMetricsRequest) (*types.BaseResponse, error)
+
 // MockSupernodeAPI mock SupernodeAPI
 type MockSupernodeAPI struct {
-	RegisterFunc    RegisterFuncType
-	PullFunc        PullFuncType
-	ReportFunc      ReportFuncType
-	ServiceDownFunc ServiceDownFuncType
-	ClientErrorFunc ClientErrorFuncType
+	RegisterFunc      RegisterFuncType
+	PullFunc          PullFuncType
+	ReportFunc        ReportFuncType
+	ServiceDownFunc   ServiceDownFuncType
+	ClientErrorFunc   ClientErrorFuncType
+	ReportMetricsFunc ReportMetricsFuncType
 }
 
 var _ api.SupernodeAPI = &MockSupernodeAPI{}
@@ -161,6 +166,13 @@ func (m *MockSupernodeAPI) ServiceDown(ip string, taskID string, cid string) (
 func (m *MockSupernodeAPI) ReportClientError(ip string, req *types.ClientErrorRequest) (resp *types.BaseResponse, e error) {
 	if m.ClientErrorFunc != nil {
 		return m.ClientErrorFunc(ip, req)
+	}
+	return nil, nil
+}
+
+func (m *MockSupernodeAPI) ReportMetrics(ip string, req *api_types.TaskMetricsRequest) (resp *types.BaseResponse, e error) {
+	if m.ClientErrorFunc != nil {
+		return m.ReportMetricsFunc(ip, req)
 	}
 	return nil, nil
 }
