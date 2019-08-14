@@ -584,6 +584,25 @@ paths:
         500:
           $ref: "#/responses/500ErrorResponse"   
 
+  /task/metrics:
+    post:
+      summary: "upload dfclient download metrics"
+      description: |
+        This endpoint is mainly for observability. Dfget is a short-live job
+        and we use this endpoint to upload dfget download related metrics.
+      parameters:
+        - name: "body"
+          in: "body"
+          description: "request body which contains dfget download related information"
+          schema:
+            $ref: "#/definitions/TaskMetricsRequest"
+      responses:
+        200:
+          description: "no error"
+          schema:
+            $ref: "#/definitions/ResultInfo"
+        500:
+          $ref: "#/responses/500ErrorResponse"
 
 definitions:
   Error:
@@ -1197,6 +1216,60 @@ definitions:
           this field to supernode and supernode can do some checking and filtering via
           black/white list mechanism to guarantee security, or some other purposes like debugging.
         minLength: 1
+
+  TaskMetricsRequest:
+    type: "object"
+    description: ""
+    properties:
+      IP:
+        type: "string"
+        description: "IP address which peer client carries"
+        format: "string"
+      port:
+        type: "integer"
+        description: |
+          when registering, dfget will setup one uploader process.
+          This one acts as a server for peer pulling tasks.
+          This port is which this server listens on.
+        format: "int32"
+        minimum: 15000
+        maximum: 65000
+      taskId:
+        type: "string"
+        description: "IP address which peer client carries"
+        format: "string"
+      cID:
+        type: "string"
+        description: |
+          CID means the client ID. It maps to the specific dfget process.
+          When user wishes to download an image/file, user would start a dfget process to do this.
+          This dfget is treated a client and carries a client ID.
+          Thus, multiple dfget processes on the same peer have different CIDs.
+      callSystem:
+        type: "string"
+        description: |
+          This attribute represents where the dfget requests come from. Dfget will pass
+          this field to supernode and supernode can do some checking and filtering via
+          black/white list mechanism to guarantee security, or some other purposes like debugging.
+        minLength: 1
+      duration:
+        type: "number"
+        format: float64
+        description: |
+          Duration for dfget task.
+      success:
+        type: "boolean"
+        description: "whether the download task success or not"
+      backsourceReason:
+        type: "string"
+        description: |
+          when registering, dfget will setup one uploader process.
+          This one acts as a server for peer pulling tasks.
+          This port is which this server listens on.
+      fileLength:
+        type: "integer"
+        format: "int64"
+        description: "The length of the file dfget requests to download in bytes."
 
   ErrorResponse:
     type: "object"

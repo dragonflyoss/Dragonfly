@@ -127,8 +127,15 @@ func runSuperNode() error {
 	if err := fileutils.CreateDirectory(options.HomeDir); err != nil {
 		return fmt.Errorf("failed to create home dir %s: %v", options.HomeDir, err)
 	}
-	// initialize log.
-	if err := initLog(); err != nil {
+
+	// initialize supernode logger.
+	if err := initLog(logrus.StandardLogger(), "app.log"); err != nil {
+		return err
+	}
+
+	// initialize dfget logger.
+	dfgetLogger := logrus.New()
+	if err := initLog(dfgetLogger, "dfget.log"); err != nil {
 		return err
 	}
 
@@ -151,7 +158,7 @@ func runSuperNode() error {
 
 	logrus.Info("start to run supernode")
 
-	d, err := daemon.New(cfg)
+	d, err := daemon.New(cfg, dfgetLogger)
 	if err != nil {
 		logrus.Errorf("failed to initialize daemon in supernode: %v", err)
 		return err
@@ -166,9 +173,9 @@ func runSuperNode() error {
 	return d.Run()
 }
 
-// initLog initializes log Level and log format of daemon.
-func initLog() error {
-	logFilePath := path.Join(options.HomeDir, "logs", "app.log")
+// initLog initializes log Level and log format
+func initLog(logger *logrus.Logger, logPath string) error {
+	logFilePath := path.Join(options.HomeDir, "logs", logPath)
 
 	opts := []dflog.Option{
 		dflog.WithLogFile(logFilePath),
@@ -177,8 +184,11 @@ func initLog() error {
 	}
 
 	logrus.Debugf("use log file %s", logFilePath)
+	if err := dflog.Init(logger, opts...); err != nil {
+		return errors.Wrap(err, "init log")
+	}
 
-	return errors.Wrap(dflog.Init(logrus.StandardLogger(), opts...), "init log")
+	return nil
 }
 
 // initConfig load configuration from config file.

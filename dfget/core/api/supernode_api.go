@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"time"
 
+	api_types "github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/constants"
 	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
@@ -35,6 +36,7 @@ const (
 	peerReportPiecePath   = "/peer/piece/suc"
 	peerClientErrorPath   = "/peer/piece/error"
 	peerServiceDownPath   = "/peer/service/down"
+	metricsReportPath     = "/task/metrics"
 )
 
 // NewSupernodeAPI creates a new instance of SupernodeAPI with default value.
@@ -53,6 +55,7 @@ type SupernodeAPI interface {
 	ReportPiece(node string, req *types.ReportPieceRequest) (resp *types.BaseResponse, e error)
 	ServiceDown(node string, taskID string, cid string) (resp *types.BaseResponse, e error)
 	ReportClientError(node string, req *types.ClientErrorRequest) (resp *types.BaseResponse, e error)
+	ReportMetrics(node string, req *api_types.TaskMetricsRequest) (resp *types.BaseResponse, e error)
 }
 
 type supernodeAPI struct {
@@ -149,6 +152,26 @@ func (api *supernodeAPI) ReportClientError(node string, req *types.ClientErrorRe
 	return
 }
 
+func (api *supernodeAPI) ReportMetrics(node string, req *api_types.TaskMetricsRequest) (resp *types.BaseResponse, err error) {
+	var (
+		code int
+		body []byte
+	)
+	url := fmt.Sprintf("%s://%s%s",
+		api.Scheme, node, metricsReportPath)
+	if code, body, err = api.HTTPClient.PostJSON(url, req, api.Timeout); err != nil {
+		return nil, err
+	}
+	if !httputils.HTTPStatusOk(code) {
+		return nil, fmt.Errorf("%d:%s", code, body)
+	}
+	resp = new(types.BaseResponse)
+	if err = json.Unmarshal(body, resp); err != nil {
+		return nil, err
+	}
+	return resp, err
+}
+
 func (api *supernodeAPI) get(url string, resp interface{}) error {
 	var (
 		code int
@@ -164,6 +187,5 @@ func (api *supernodeAPI) get(url string, resp interface{}) error {
 	if !httputils.HTTPStatusOk(code) {
 		return fmt.Errorf("%d:%s", code, body)
 	}
-	e = json.Unmarshal(body, resp)
-	return e
+	return json.Unmarshal(body, resp)
 }

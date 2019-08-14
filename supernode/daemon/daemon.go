@@ -43,12 +43,12 @@ type Daemon struct {
 }
 
 // New creates a new Daemon.
-func New(cfg *config.Config) (*Daemon, error) {
+func New(cfg *config.Config, dfgetLogger *logrus.Logger) (*Daemon, error) {
 	if err := plugins.Initialize(cfg); err != nil {
 		return nil, err
 	}
 
-	s, err := server.New(cfg, prometheus.DefaultRegisterer)
+	s, err := server.New(cfg, dfgetLogger, prometheus.DefaultRegisterer)
 	if err != nil {
 		return nil, err
 	}

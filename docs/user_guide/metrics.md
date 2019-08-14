@@ -1,6 +1,6 @@
 # Prometheus Metrics
 
-This doc contains all the metrics that Dragonfly components currently support. Now we only support metrics for Dfdaemon and SuperNode. And we will support dfget metrics in the future. For Dfdaemon and SuperNode, the metrics path is fixed to /metrics. The following metrics are exported.
+This doc contains all the metrics that Dragonfly components currently support. Now we support metrics for Dfdaemon, SuperNode and Dfget. For Dfdaemon and SuperNode, the metrics path is fixed to /metrics. The following metrics are exported.
 
 ## Supernode
 
@@ -21,7 +21,7 @@ This doc contains all the metrics that Dragonfly components currently support. N
 - dragonfly_supernode_cdn_cache_hit_total{} - total times of hitting cdn cache. counter type.
 - dragonfly_supernode_cdn_download_total{} - total times of cdn downloading. counter type.
 - dragonfly_supernode_cdn_download_failed_total{} - total failure times of cdn downloading. counter type.
-- dragonfly_supernode_pieces_downloaded_size_bytes{} - total size of pieces downloaded from supernode in bytes. counter type.
+- dragonfly_supernode_pieces_downloaded_size_bytes_total{} - total size of pieces downloaded from supernode in bytes. counter type.
 
 ## Dfdaemon
 
@@ -29,4 +29,7 @@ This doc contains all the metrics that Dragonfly components currently support. N
 
 ## Dfget
 
-TODO
+- dragonfly_dfget_download_duration_seconds{callsystem, peer} - dfget download duration in seconds.
+- dragonfly_dfget_download_size_bytes_total{callsystem, peer} - total size of files downloaded by dfget in bytes. counter type.
+- dragonfly_dfget_download_total{callsystem, peer} - total times of dfget downloading. counter type.
+- dragonfly_dfget_download_failed_total{callsystem, peer, reason} - total times of failed dfget downloading. counter type.

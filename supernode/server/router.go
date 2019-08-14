@@ -57,6 +57,7 @@ func initRoute(s *Server) *mux.Router {
 
 		// metrics
 		{Method: http.MethodGet, Path: "/metrics", HandlerFunc: handleMetrics},
+		{Method: http.MethodPost, Path: "/task/metrics", HandlerFunc: m.handleMetricsReport},
 	}
 
 	// register API
