@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"testing"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
@@ -28,6 +29,10 @@ import (
 	"github.com/go-check/check"
 	"github.com/valyala/fasthttp"
 )
+
+func Test(t *testing.T) {
+	check.TestingT(t)
+}
 
 type HTTPUtilTestSuite struct {
 	port int

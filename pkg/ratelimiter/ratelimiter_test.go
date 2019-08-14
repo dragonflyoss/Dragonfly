@@ -17,10 +17,15 @@
 package ratelimiter
 
 import (
+	"testing"
 	"time"
 
 	"github.com/go-check/check"
 )
+
+func Test(t *testing.T) {
+	check.TestingT(t)
+}
 
 type RateLimiterSuite struct{}
 

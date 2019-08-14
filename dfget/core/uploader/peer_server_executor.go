@@ -90,7 +90,7 @@ func (pe *peerServerExecutor) StartPeerServerProcess(cfg *config.Config) (port i
 		return 0, err
 	}
 	if err = cmd.Start(); err == nil {
-		port, err = pe.readPort(stdout)
+		port, err = readPort(stdout)
 	}
 	if err == nil && pe.checkPeerServerExist(cfg, port) <= 0 {
 		err = fmt.Errorf("invalid server on port:%d", port)
@@ -100,7 +100,7 @@ func (pe *peerServerExecutor) StartPeerServerProcess(cfg *config.Config) (port i
 	return
 }
 
-func (pe *peerServerExecutor) readPort(r io.Reader) (int, error) {
+func readPort(r io.Reader) (int, error) {
 	done := make(chan error)
 	var port int32
 
@@ -112,8 +112,9 @@ func (pe *peerServerExecutor) readPort(r io.Reader) (int, error) {
 			done <- err
 		}
 
-		content := strings.TrimSpace(string(buf[:n]))
-		portValue, err := strconv.Atoi(content)
+		content := string(buf[:n])
+		contentSlice := strings.Split(content, " ")
+		portValue, err := strconv.Atoi(strings.TrimSpace(contentSlice[len(contentSlice)-1]))
 		// avoid data race
 		atomic.StoreInt32(&port, int32(portValue))
 		done <- err

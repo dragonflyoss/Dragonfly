@@ -20,10 +20,15 @@ import (
 	"math/rand"
 	"sync"
 	"sync/atomic"
+	"testing"
 	"time"
 
 	"github.com/go-check/check"
 )
+
+func Test(t *testing.T) {
+	check.TestingT(t)
+}
 
 type DFGetUtilSuite struct{}
 

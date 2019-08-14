@@ -18,7 +18,6 @@ package httputils
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -226,17 +225,16 @@ func HTTPWithHeaders(method, url string, headers map[string]string, timeout time
 		return nil, err
 	}
 
-	if timeout > 0 {
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
-		req = req.WithContext(ctx)
-		defer cancel()
-	}
-
 	for k, v := range headers {
 		req.Header.Add(k, v)
 	}
 
-	return http.DefaultClient.Do(req)
+	c := &http.Client{}
+	if timeout > 0 {
+		c.Timeout = timeout
+	}
+
+	return c.Do(req)
 }
 
 // HTTPStatusOk reports whether the http response code is 200.
