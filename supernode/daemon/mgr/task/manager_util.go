@@ -84,11 +84,15 @@ func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateReq
 	// get fileLength with req.Headers
 	fileLength, err := tm.getHTTPFileLength(taskID, task.RawURL, req.Headers)
 	if err != nil {
+		logrus.Errorf("failed to get file length from http client for taskID(%s): %v", taskID, err)
+
 		if errortypes.IsURLNotReachable(err) {
 			tm.taskURLUnReachableStore.Add(taskID, time.Now())
+			return nil, err
 		}
-		logrus.Errorf("failed to get file length from http client for taskID(%s): %v", taskID, err)
-		return nil, err
+		if errortypes.IsAuthenticationRequired(err) {
+			return nil, err
+		}
 	}
 	task.HTTPFileLength = fileLength
 	logrus.Infof("get file length %d from http client for taskID(%s)", fileLength, taskID)
