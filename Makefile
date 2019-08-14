@@ -117,7 +117,6 @@ go-mod-tidy:
 	@go mod tidy
 .PHONY: go-mod-tidy
 
-# we need this because currently gometalinter can't work in go mod environment.
 go-mod-vendor:
 	@echo "Begin to vendor go mod dependency"
 	@go mod vendor
