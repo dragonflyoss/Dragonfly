@@ -324,6 +324,11 @@ func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, tas
 	pieceSuccess, _ := tm.progressMgr.GetPieceProgressByCID(ctx, task.ID, clientID, "success")
 	logrus.Debugf("taskID: %s, get successful pieces: %v", task.ID, pieceSuccess)
 	if cdnSuccess && (int32(len(pieceSuccess)) == task.PieceTotal) {
+		// update dfget task status to success
+		if err := tm.dfgetTaskMgr.UpdateStatus(ctx, clientID, task.ID, types.DfGetTaskStatusSUCCESS); err != nil {
+			logrus.Errorf("failed to update dfget task status with "+
+				"taskID(%s) clientID(%s) status(%s): %v", task.ID, clientID, types.DfGetTaskStatusSUCCESS, err)
+		}
 		finishInfo := make(map[string]interface{})
 		finishInfo["md5"] = task.Md5
 		finishInfo["fileLength"] = task.FileLength
