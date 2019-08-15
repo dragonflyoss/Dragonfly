@@ -32,7 +32,7 @@ download SUCCESS(0) cost:0.026s length:141898 reason:0
 ### Options
 
 ```
-      --alivetime duration    Alive duration for which uploader keeps no accessing by any uploading requests, after this period uploader will automically exit (default 5m0s)
+      --alivetime duration    Alive duration for which uploader keeps no accessing by any uploading requests, after this period uploader will automatically exit (default 5m0s)
       --cacerts strings       The cacert file which is used to verify remote server when supernode interact with the source.
       --callsystem string     The name of dfget caller which is for debugging. Once set, it will be passed to all components around the request to make debugging easy
       --clientqueue int       specify the size of client queue which controls the number of pieces that can be processed simultaneously (default 6)
