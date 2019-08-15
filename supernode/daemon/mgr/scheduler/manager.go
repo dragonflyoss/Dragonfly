@@ -172,6 +172,18 @@ func (sm *Manager) getPieceResults(ctx context.Context, taskID, clientID, peerID
 			continue
 		}
 
+		// We limit the number of simultaneous connections that supernode can accept for each task.
+		if sm.cfg.IsSuperPID(dstPID) {
+			updated, err := sm.progressMgr.UpdateSuperLoad(ctx, taskID, 1, int32(sm.cfg.PeerDownLimit))
+			if err != nil {
+				logrus.Warnf("failed to update super load taskID(%s) clientID(%s): %v", taskID, clientID, err)
+				continue
+			}
+			if !updated {
+				continue
+			}
+		}
+
 		if err := sm.progressMgr.UpdateClientProgress(ctx, taskID, clientID, dstPID, pieceNums[i], config.PieceRUNNING); err != nil {
 			logrus.Warnf("scheduler: failed to update client progress running for pieceNum(%d) taskID(%s) clientID(%s) dstPID(%s)", pieceNums[i], taskID, clientID, dstPID)
 			continue

@@ -51,39 +51,47 @@ var _ mgr.ProgressMgr = &Manager{}
 // Manager is an implementation of the interface of ProgressMgr.
 type Manager struct {
 	// superProgress maintains the super progress.
-	// key:taskID,value:*superState
+	// key:taskID string, value:superState *superState
 	superProgress *stateSyncMap
 
 	// clientProgress maintains the client progress.
-	// key:CID,value:*clientState
+	// key:CID string, value:clientState *clientState
 	clientProgress *stateSyncMap
 
 	// peerProgress maintains the peer progress.
-	// key:PeerID,value:*peerState
+	// key:PeerID string, value:peerState *peerState
 	peerProgress *stateSyncMap
 
 	// pieceProgress maintains the information about
 	// which peers the piece currently exists on
-	// key:pieceNum@taskID,value:*pieceState
+	// key:pieceNum@taskID string, value:pieceState *pieceState
 	pieceProgress *stateSyncMap
 
 	// clientBlackInfo maintains the blacklist of the PID.
-	// key:srcPID,value:map[dstPID]*Atomic
+	// key:srcPID string, value:dstPIDMap map[dstPID]*Atomic
 	clientBlackInfo *syncmap.SyncMap
+
+	// superLoad maintains the load num downloaded from the supernode for each task.
+	// key:taskID string, value:superLoadState *superLoadState
+	superLoad *stateSyncMap
 
 	cfg *config.Config
 }
 
 // NewManager returns a new Manager.
 func NewManager(cfg *config.Config) (*Manager, error) {
-	return &Manager{
+	manager := &Manager{
 		cfg:             cfg,
 		superProgress:   newStateSyncMap(),
 		clientProgress:  newStateSyncMap(),
 		peerProgress:    newStateSyncMap(),
 		pieceProgress:   newStateSyncMap(),
 		clientBlackInfo: syncmap.NewSyncMap(),
-	}, nil
+		superLoad:       newStateSyncMap(),
+	}
+
+	manager.startMonitorSuperLoad()
+	return manager, nil
 }
 
 // InitProgress inits the correlation information between peers and pieces, etc.
