@@ -41,7 +41,7 @@ For Dragonfly's developer, if your code is only used in a single module, then th
 
 ## Run Test Cases Automatically
 
-Test cases can be run via `Makefile` of this repo, or just manully.
+Test cases can be run via `Makefile` of this repo, or just manually.
 
 To run the test automatically, the following prerequisites are needed:
 
