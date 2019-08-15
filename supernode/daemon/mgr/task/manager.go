@@ -272,6 +272,15 @@ func (tm *Manager) UpdatePieceStatus(ctx context.Context, taskID, pieceRange str
 			pieceRange, taskID, pieceUpdateRequest.ClientID)
 	}
 
+	// when a peer success to download a piece from supernode,
+	// and the load of supernode for the taskID should be decremented by one.
+	if tm.cfg.IsSuperPID(pieceUpdateRequest.DstPID) {
+		_, err := tm.progressMgr.UpdateSuperLoad(ctx, taskID, -1, -1)
+		if err != nil {
+			logrus.Warnf("failed to update superLoad taskID(%s) clientID(%s): %v", taskID, pieceUpdateRequest.ClientID, err)
+		}
+	}
+
 	// get dfgetTask according to the CID
 	srcDfgetTask, err := tm.dfgetTaskMgr.Get(ctx, pieceUpdateRequest.ClientID, taskID)
 	if err != nil {
