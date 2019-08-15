@@ -247,7 +247,7 @@ func initFlags() {
 	flagSet.DurationVar(&cfg.RV.DataExpireTime, "expiretime", config.DataExpireTime,
 		"caching duration for which cached file keeps no accessed by any process, after this period cache file will be deleted")
 	flagSet.DurationVar(&cfg.RV.ServerAliveTime, "alivetime", config.ServerAliveTime,
-		"Alive duration for which uploader keeps no accessing by any uploading requests, after this period uploader will automically exit")
+		"Alive duration for which uploader keeps no accessing by any uploading requests, after this period uploader will automatically exit")
 
 	flagSet.MarkDeprecated("exceed", "please use '--timeout' or '-e' instead")
 }
