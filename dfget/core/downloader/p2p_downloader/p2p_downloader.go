@@ -31,7 +31,6 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/constants"
-	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 	"github.com/dragonflyoss/Dragonfly/pkg/printer"
@@ -258,8 +257,8 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 
 	logrus.Errorf("pull piece task fail:%v and will migrate", res)
 	var registerRes *regist.RegisterResult
-	var registerErr *errortypes.DfError
-	if registerRes, registerErr = p2p.Register.Register(p2p.cfg.RV.PeerPort); registerErr != nil {
+	registerRes, registerErr := p2p.Register.Register(p2p.cfg.RV.PeerPort)
+	if registerErr != nil {
 		return nil, registerErr
 	}
 	p2p.pieceSizeHistory[1] = registerRes.PieceSize
