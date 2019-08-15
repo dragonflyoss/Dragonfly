@@ -26,13 +26,14 @@ import (
 	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // versionMatcher defines to parse version url path.
 const versionMatcher = "/v{version:[0-9.]+}"
 
-var m = newMetrics()
+var m = newMetrics(prometheus.DefaultRegisterer)
 
 func initRoute(s *Server) *mux.Router {
 	r := mux.NewRouter()
@@ -54,6 +55,7 @@ func initRoute(s *Server) *mux.Router {
 		{Method: http.MethodGet, Path: "/peers/{id}", HandlerFunc: s.getPeer},
 		{Method: http.MethodGet, Path: "/peers", HandlerFunc: s.listPeers},
 
+		// metrics
 		{Method: http.MethodGet, Path: "/metrics", HandlerFunc: handleMetrics},
 	}
 

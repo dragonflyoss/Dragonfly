@@ -28,7 +28,9 @@ import (
 	"text/template"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	"github.com/dragonflyoss/Dragonfly/pkg/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/metricsutils"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (
@@ -106,11 +108,12 @@ func Print(program string) string {
 }
 
 // NewBuildInfo register a collector which exports metrics about version and build information.
-func NewBuildInfo(program string) {
-	buildInfo := util.NewGauge(program, "build_info",
+func NewBuildInfo(program string, registerer prometheus.Registerer) {
+	buildInfo := metricsutils.NewGauge(program, "build_info",
 		fmt.Sprintf("A metric with a constant '1' value labeled by version, revision, os, "+
 			"arch and goversion from which %s was built.", program),
 		[]string{"version", "revision", "os", "arch", "goversion"},
+		registerer,
 	)
 	buildInfo.WithLabelValues(version, revision, os, arch, goVersion).Set(1)
 }

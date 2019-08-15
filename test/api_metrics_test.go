@@ -57,26 +57,26 @@ func (s *APIMetricsSuite) TestMetrics(c *check.C) {
 
 // TestMetricsRequestTotal tests http-related metrics.
 func (s *APIMetricsSuite) TestHttpMetrics(c *check.C) {
-	requestCounter := `dragonfly_supernode_http_requests_total{code="%d",handler="%s",method="%s"}`
-	responseSizeSum := `dragonfly_supernode_http_response_size_bytes_sum{code="%d",handler="%s",method="%s"}`
-	responseSizeCount := `dragonfly_supernode_http_response_size_bytes_count{code="%d",handler="%s",method="%s"}`
-	requestSizeCount := `dragonfly_supernode_http_request_size_bytes_count{code="%d",handler="%s",method="%s"}`
+	requestCounter := `dragonfly_supernode_http_requests_total{code="%d",handler="%s"}`
+	responseSizeSum := `dragonfly_supernode_http_response_size_bytes_sum{handler="%s"}`
+	responseSizeCount := `dragonfly_supernode_http_response_size_bytes_count{handler="%s"}`
+	requestSizeCount := `dragonfly_supernode_http_request_size_bytes_count{handler="%s"}`
 
 	resp, err := request.Get("/_ping")
 	c.Assert(err, check.IsNil)
 	CheckRespStatus(c, resp, 200)
 
 	// Get httpRequest counter value equals 1.
-	CheckMetric(c, fmt.Sprintf(requestCounter, 200, "/_ping", "get"), 1)
+	CheckMetric(c, fmt.Sprintf(requestCounter, 200, "/_ping"), 1)
 
 	// Get httpResponse size sum value equals 2.
-	CheckMetric(c, fmt.Sprintf(responseSizeSum, 200, "/_ping", "get"), 2)
+	CheckMetric(c, fmt.Sprintf(responseSizeSum, "/_ping"), 2)
 
 	// Get httpResponse size count value equals 1.
-	CheckMetric(c, fmt.Sprintf(responseSizeCount, 200, "/_ping", "get"), 1)
+	CheckMetric(c, fmt.Sprintf(responseSizeCount, "/_ping"), 1)
 
 	// Get httpRequest size count value equals 1.
-	CheckMetric(c, fmt.Sprintf(requestSizeCount, 200, "/_ping", "get"), 1)
+	CheckMetric(c, fmt.Sprintf(requestSizeCount, "/_ping"), 1)
 }
 
 // TestBuildInfoMetrics tests build info metric.

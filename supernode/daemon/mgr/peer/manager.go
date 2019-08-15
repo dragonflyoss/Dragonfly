@@ -23,26 +23,42 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/metricsutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	dutil "github.com/dragonflyoss/Dragonfly/supernode/daemon/util"
 
 	"github.com/go-openapi/strfmt"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var _ mgr.PeerMgr = &Manager{}
 
+type metrics struct {
+	peers *prometheus.GaugeVec
+}
+
+func newMetrics(register prometheus.Registerer) *metrics {
+	return &metrics{
+		peers: metricsutils.NewGauge(config.SubsystemSupernode, "peers",
+			"Current status of peers", []string{"peer"}, register),
+	}
+}
+
 // Manager is an implement of the interface of PeerMgr.
 type Manager struct {
 	peerStore *dutil.Store
+	metrics   *metrics
 }
 
 // NewManager return a new Manager Object.
-func NewManager() (*Manager, error) {
+func NewManager(register prometheus.Registerer) (*Manager, error) {
 	return &Manager{
 		peerStore: dutil.NewStore(),
+		metrics:   newMetrics(register),
 	}, nil
 }
 
@@ -67,6 +83,7 @@ func (pm *Manager) Register(ctx context.Context, peerCreateRequest *types.PeerCr
 		Created:  strfmt.DateTime(time.Now()),
 	}
 	pm.peerStore.Put(id, peerInfo)
+	pm.metrics.peers.WithLabelValues(peerInfo.IP.String()).Inc()
 
 	return &types.PeerCreateResponse{
 		ID: id,
@@ -75,11 +92,13 @@ func (pm *Manager) Register(ctx context.Context, peerCreateRequest *types.PeerCr
 
 // DeRegister a peer from p2p network.
 func (pm *Manager) DeRegister(ctx context.Context, peerID string) error {
-	if _, err := pm.getPeerInfo(peerID); err != nil {
+	peerInfo, err := pm.getPeerInfo(peerID)
+	if err != nil {
 		return err
 	}
 
 	pm.peerStore.Delete(peerID)
+	pm.metrics.peers.WithLabelValues(peerInfo.IP.String()).Dec()
 	return nil
 }
 

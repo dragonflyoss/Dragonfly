@@ -28,6 +28,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 )
 
@@ -83,6 +84,8 @@ func New(opts ...Option) (*Server, error) {
 		},
 		proxy: p,
 	}
+	// register dfdaemon build information
+	version.NewBuildInfo("dfdaemon", prometheus.DefaultRegisterer)
 
 	for _, opt := range opts {
 		if err := opt(s); err != nil {
@@ -121,8 +124,6 @@ func (s *Server) Start() error {
 	} else {
 		logrus.Infof("start dfdaemon http server on %s", s.server.Addr)
 	}
-	// register dfdaemon build information
-	version.NewBuildInfo("dfdaemon")
 	return s.server.ListenAndServe()
 }
 

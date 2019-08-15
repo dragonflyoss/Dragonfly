@@ -22,6 +22,7 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/metricsutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
 	"github.com/dragonflyoss/Dragonfly/pkg/timeutils"
@@ -32,6 +33,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/util"
 
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 )
 
@@ -40,6 +42,34 @@ const (
 )
 
 var _ mgr.TaskMgr = &Manager{}
+
+type metrics struct {
+	tasks                        *prometheus.GaugeVec
+	tasksRegisterCount           *prometheus.CounterVec
+	triggerCdnCount              *prometheus.CounterVec
+	triggerCdnFailCount          *prometheus.CounterVec
+	scheduleDurationMilliSeconds *prometheus.HistogramVec
+}
+
+func newMetrics(register prometheus.Registerer) *metrics {
+	return &metrics{
+		tasks: metricsutils.NewGauge(config.SubsystemSupernode, "tasks",
+			"Current status of Supernode tasks", []string{"cdnstatus"}, register),
+
+		tasksRegisterCount: metricsutils.NewCounter(config.SubsystemSupernode, "tasks_registered_total",
+			"Total times of registering tasks", []string{}, register),
+
+		triggerCdnCount: metricsutils.NewCounter(config.SubsystemSupernode, "trigger_cdn_total",
+			"Total times of triggering cdn", []string{}, register),
+
+		triggerCdnFailCount: metricsutils.NewCounter(config.SubsystemSupernode, "trigger_cdn_failed_total",
+			"Total failure times of triggering cdn", []string{}, register),
+
+		scheduleDurationMilliSeconds: metricsutils.NewHistogram(config.SubsystemSupernode, "schedule_duration_milliseconds",
+			"Duration for task scheduling in milliseconds", []string{"peer"},
+			prometheus.ExponentialBuckets(0.02, 2, 6), register),
+	}
+}
 
 // Manager is an implementation of the interface of TaskMgr.
 type Manager struct {
@@ -56,11 +86,13 @@ type Manager struct {
 	cdnMgr       mgr.CDNMgr
 	schedulerMgr mgr.SchedulerMgr
 	OriginClient httpclient.OriginHTTPClient
+	metrics      *metrics
 }
 
 // NewManager returns a new Manager Object.
 func NewManager(cfg *config.Config, peerMgr mgr.PeerMgr, dfgetTaskMgr mgr.DfgetTaskMgr,
-	progressMgr mgr.ProgressMgr, cdnMgr mgr.CDNMgr, schedulerMgr mgr.SchedulerMgr, originClient httpclient.OriginHTTPClient) (*Manager, error) {
+	progressMgr mgr.ProgressMgr, cdnMgr mgr.CDNMgr, schedulerMgr mgr.SchedulerMgr,
+	originClient httpclient.OriginHTTPClient, register prometheus.Registerer) (*Manager, error) {
 	return &Manager{
 		cfg:                     cfg,
 		taskStore:               dutil.NewStore(),
@@ -73,6 +105,7 @@ func NewManager(cfg *config.Config, peerMgr mgr.PeerMgr, dfgetTaskMgr mgr.DfgetT
 		accessTimeMap:           syncmap.NewSyncMap(),
 		taskURLUnReachableStore: syncmap.NewSyncMap(),
 		OriginClient:            originClient,
+		metrics:                 newMetrics(register),
 	}, nil
 }
 
@@ -90,6 +123,7 @@ func (tm *Manager) Register(ctx context.Context, req *types.TaskCreateRequest) (
 		logrus.Infof("failed to add or update task with req %+v: %v", req, err)
 		return nil, err
 	}
+	tm.metrics.tasksRegisterCount.WithLabelValues().Inc()
 	logrus.Debugf("success to get task info: %+v", task)
 	// TODO: defer rollback the task update
 

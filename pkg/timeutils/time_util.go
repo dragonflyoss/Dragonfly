@@ -24,3 +24,8 @@ import (
 func GetCurrentTimeMillis() int64 {
 	return time.Now().UnixNano() / time.Millisecond.Nanoseconds()
 }
+
+// SinceInMilliseconds gets the time since the specified start in milliseconds.
+func SinceInMilliseconds(start time.Time) float64 {
+	return float64(time.Since(start).Nanoseconds()) / float64(time.Millisecond.Nanoseconds())
+}

@@ -22,27 +22,53 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/metricsutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	dutil "github.com/dragonflyoss/Dragonfly/supernode/daemon/util"
 
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var _ mgr.DfgetTaskMgr = &Manager{}
 
+type metrics struct {
+	dfgetTasks              *prometheus.GaugeVec
+	dfgetTasksRegisterCount *prometheus.CounterVec
+	dfgetTasksFailCount     *prometheus.CounterVec
+}
+
+func newMetrics(register prometheus.Registerer) *metrics {
+	return &metrics{
+		dfgetTasks: metricsutils.NewGauge(config.SubsystemSupernode, "dfgettasks",
+			"Current status of dfgettasks", []string{"callsystem", "status"}, register),
+
+		dfgetTasksRegisterCount: metricsutils.NewCounter(config.SubsystemSupernode, "dfgettasks_registered_total",
+			"Total times of registering dfgettasks", []string{"callsystem"}, register),
+
+		dfgetTasksFailCount: metricsutils.NewCounter(config.SubsystemSupernode, "dfgettasks_failed_total",
+			"Total failure times of dfgettasks", []string{"callsystem"}, register),
+	}
+}
+
 // Manager is an implementation of the interface of DfgetTaskMgr.
 type Manager struct {
+	cfg            *config.Config
 	dfgetTaskStore *dutil.Store
 	ptoc           *syncmap.SyncMap
+	metrics        *metrics
 }
 
 // NewManager returns a new Manager.
-func NewManager() (*Manager, error) {
+func NewManager(cfg *config.Config, register prometheus.Registerer) (*Manager, error) {
 	return &Manager{
+		cfg:            cfg,
 		dfgetTaskStore: dutil.NewStore(),
 		ptoc:           syncmap.NewSyncMap(),
+		metrics:        newMetrics(register),
 	}, nil
 }
 
@@ -73,6 +99,13 @@ func (dtm *Manager) Add(ctx context.Context, dfgetTask *types.DfGetTask) error {
 
 	dtm.ptoc.Add(generatePeerKey(dfgetTask.PeerID, dfgetTask.TaskID), dfgetTask.CID)
 	dtm.dfgetTaskStore.Put(key, dfgetTask)
+
+	// If dfget task is created by supernode cdn, don't update metrics.
+	if !dtm.cfg.IsSuperPID(dfgetTask.PeerID) || !dtm.cfg.IsSuperCID(dfgetTask.CID) {
+		dtm.metrics.dfgetTasks.WithLabelValues(dfgetTask.CallSystem, dfgetTask.Status).Inc()
+		dtm.metrics.dfgetTasksRegisterCount.WithLabelValues(dfgetTask.CallSystem).Inc()
+	}
+
 	return nil
 }
 
@@ -103,7 +136,7 @@ func (dtm *Manager) Delete(ctx context.Context, clientID, taskID string) error {
 		return err
 	}
 	dtm.ptoc.Delete(generatePeerKey(dfgetTask.PeerID, dfgetTask.TaskID))
-
+	dtm.metrics.dfgetTasks.WithLabelValues(dfgetTask.CallSystem, dfgetTask.Status).Dec()
 	return dtm.dfgetTaskStore.Delete(key)
 }
 
@@ -115,7 +148,14 @@ func (dtm *Manager) UpdateStatus(ctx context.Context, clientID, taskID, status s
 	}
 
 	if dfgetTask.Status != types.DfGetTaskStatusSUCCESS {
+		dtm.metrics.dfgetTasks.WithLabelValues(dfgetTask.CallSystem, dfgetTask.Status).Dec()
+		dtm.metrics.dfgetTasks.WithLabelValues(dfgetTask.CallSystem, status).Inc()
 		dfgetTask.Status = status
+	}
+
+	// Add the total failed count.
+	if dfgetTask.Status == types.DfGetTaskStatusFAILED {
+		dtm.metrics.dfgetTasksFailCount.WithLabelValues(dfgetTask.CallSystem).Inc()
 	}
 
 	return nil
