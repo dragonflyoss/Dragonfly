@@ -34,6 +34,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
 	"github.com/dragonflyoss/Dragonfly/version"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 )
 
@@ -48,7 +49,10 @@ type Server struct {
 }
 
 // New creates a brand new server instance.
-func New(cfg *config.Config) (*Server, error) {
+func New(cfg *config.Config, register prometheus.Registerer) (*Server, error) {
+	// register supernode build information
+	version.NewBuildInfo("supernode", register)
+
 	sm, err := store.NewManager(cfg)
 	if err != nil {
 		return nil, err
@@ -59,13 +63,12 @@ func New(cfg *config.Config) (*Server, error) {
 	}
 
 	originClient := httpclient.NewOriginClient()
-
-	peerMgr, err := peer.NewManager()
+	peerMgr, err := peer.NewManager(register)
 	if err != nil {
 		return nil, err
 	}
 
-	dfgetTaskMgr, err := dfgettask.NewManager()
+	dfgetTaskMgr, err := dfgettask.NewManager(cfg, register)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +88,8 @@ func New(cfg *config.Config) (*Server, error) {
 		return nil, err
 	}
 
-	taskMgr, err := task.NewManager(cfg, peerMgr, dfgetTaskMgr, progressMgr, cdnMgr, schedulerMgr, originClient)
+	taskMgr, err := task.NewManager(cfg, peerMgr, dfgetTaskMgr, progressMgr, cdnMgr,
+		schedulerMgr, originClient, register)
 	if err != nil {
 		return nil, err
 	}
@@ -112,8 +116,6 @@ func (s *Server) Start() error {
 		return err
 	}
 
-	// register supernode build information
-	version.NewBuildInfo("supernode")
 	server := &http.Server{
 		Handler:           router,
 		ReadTimeout:       time.Minute * 10,

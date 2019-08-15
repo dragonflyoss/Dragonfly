@@ -27,6 +27,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/timeutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	"github.com/dragonflyoss/Dragonfly/supernode/util"
@@ -109,6 +110,7 @@ func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateReq
 	task.PieceTotal = int32((fileLength + (int64(pieceSize) - 1)) / int64(pieceSize))
 
 	tm.taskStore.Put(taskID, task)
+	tm.metrics.tasks.WithLabelValues(task.CdnStatus).Inc()
 	return task, nil
 }
 
@@ -160,6 +162,8 @@ func (tm *Manager) updateTask(taskID string, updateTaskInfo *types.TaskInfo) err
 
 		// only update the task CdnStatus when the new CDNStatus and
 		// the origin CDNStatus both not equals success
+		tm.metrics.tasks.WithLabelValues(task.CdnStatus).Dec()
+		tm.metrics.tasks.WithLabelValues(updateTaskInfo.CdnStatus).Inc()
 		task.CdnStatus = updateTaskInfo.CdnStatus
 		return nil
 	}
@@ -181,6 +185,8 @@ func (tm *Manager) updateTask(taskID string, updateTaskInfo *types.TaskInfo) err
 	if pieceTotal != 0 {
 		task.PieceTotal = pieceTotal
 	}
+	tm.metrics.tasks.WithLabelValues(task.CdnStatus).Dec()
+	tm.metrics.tasks.WithLabelValues(updateTaskInfo.CdnStatus).Inc()
 	task.CdnStatus = updateTaskInfo.CdnStatus
 
 	return nil
@@ -227,7 +233,9 @@ func (tm *Manager) triggerCdnSyncAction(ctx context.Context, task *types.TaskInf
 
 	go func() {
 		updateTaskInfo, err := tm.cdnMgr.TriggerCDN(ctx, task)
+		tm.metrics.triggerCdnCount.WithLabelValues().Inc()
 		if err != nil {
+			tm.metrics.triggerCdnFailCount.WithLabelValues().Inc()
 			logrus.Errorf("taskID(%s) trigger cdn get error: %v", task.ID, err)
 		}
 		tm.updateTask(task.ID, updateTaskInfo)
@@ -322,12 +330,16 @@ func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, tas
 		return true, finishInfo, nil
 	}
 
+	// Get peerName to represent peer in metrics.
+	peer, _ := tm.peerMgr.Get(context.Background(), dfgetTask.PeerID)
 	// get scheduler pieceResult
 	logrus.Debugf("start scheduler for taskID: %s clientID: %s", task.ID, clientID)
+	startTime := time.Now()
 	pieceResult, err := tm.schedulerMgr.Schedule(ctx, task.ID, clientID, dfgetTask.PeerID)
 	if err != nil {
 		return false, nil, err
 	}
+	tm.metrics.scheduleDurationMilliSeconds.WithLabelValues(peer.IP.String()).Observe(timeutils.SinceInMilliseconds(startTime))
 	logrus.Debugf("get scheduler result length(%d) with taskID(%s) and clientID(%s)", len(pieceResult), task.ID, clientID)
 
 	var pieceInfos []*types.PieceInfo
