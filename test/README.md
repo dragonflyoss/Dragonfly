@@ -60,7 +60,7 @@ GOPATH=/go
 Using `make -n test`, let us take a look at what `make test` has done.
 
 ```
-#make -n test
+# make -n test
 bash -c "env PATH=/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/usr/X11R6/bin:/usr/local/go/bin:/opt/satools:/root/bin hack/make.sh \
 check build unit-test integration-test cri-test"
 ```
@@ -136,7 +136,7 @@ Then integration test could be run as following:
 * run a single test suite(all the test function will be run):
 
 ``` shell
-#go test -check.f APIPingSuite
+# go test -check.f APIPingSuite
 OK: 3 passed
 PASS
 ok      github.com/dragonflyoss/Dragonfly/test    3.081s
