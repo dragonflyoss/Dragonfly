@@ -3,11 +3,11 @@
 # Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
 jobs:
-  markdownlint-misspell-shellcheck:
+  linters-check:
     docker:
       # this image is build from Dockerfile
       # https://github.com/pouchcontainer/pouchlinter/blob/master/Dockerfile
-      - image: pouchcontainer/pouchlinter:v0.2.2
+      - image: pouchcontainer/pouchlinter:v0.2.3
     working_directory: /go/src/github.com/dragonflyoss/Dragonfly
     steps:
       - checkout
@@ -32,7 +32,6 @@ jobs:
       - run:
           name: use opensource tool client9/misspell to correct commonly misspelled English words
           command: |
-            go get -u github.com/client9/misspell/cmd/misspell
             find  ./* -name  "*" | xargs misspell -error
       - run:
           name: use ShellCheck (https://github.com/koalaman/shellcheck) to check the validateness of shell scripts in pouch repo
@@ -42,16 +41,6 @@ jobs:
           name: validate go mod files
           command: |
             make check-go-mod
-
-  gocode-check-via-golangci-lint-swagger:
-    docker:
-      - image: pouchcontainer/pouchlinter:v0.2.2
-        environment:
-          GO111MODULE: "on"
-          GOPROXY: "https://goproxy.io"
-    working_directory: /go/src/github.com/dragonflyoss/Dragonfly
-    steps:
-      - checkout
       - run:
           name: validate swagger.yml
           command: |
@@ -59,7 +48,7 @@ jobs:
       - run:
           name: use golangci-lint to check gocode of this project.
           command: |
-            golangci-lint run
+            make golangci-lint
 
   unit-test-golang:
     docker:
@@ -99,7 +88,6 @@ workflows:
   version: 2
   ci:
     jobs:
-      - markdownlint-misspell-shellcheck
+      - linters-check
       - unit-test-golang
-      - gocode-check-via-golangci-lint-swagger
       - api-integration-test

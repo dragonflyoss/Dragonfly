@@ -5,9 +5,6 @@ run:
 linters-settings:
   gocyclo:
     min-complexity: 20
-  goconst:
-    min-len: 3
-    min-occurrences: 5
 
 linters:
   disable-all: true
