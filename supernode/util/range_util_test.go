@@ -32,6 +32,47 @@ func init() {
 	check.Suite(&RangeUtilSuite{})
 }
 
+func (suite *RangeUtilSuite) TestCalculatePieceSize(c *check.C) {
+	var cases = []struct {
+		rangeStr string
+		expected int64
+	}{
+		{
+			rangeStr: "foo",
+			expected: 0,
+		},
+		{
+			rangeStr: "aaa-bbb",
+			expected: 0,
+		},
+		{
+			rangeStr: "3-2",
+			expected: 0,
+		},
+		{
+			rangeStr: "1 -3",
+			expected: 0,
+		},
+		{
+			rangeStr: "0-0",
+			expected: 1,
+		},
+		{
+			rangeStr: "6-8",
+			expected: 3,
+		},
+		{
+			rangeStr: "0-40000",
+			expected: 40001,
+		},
+	}
+
+	for _, v := range cases {
+		result := CalculatePieceSize(v.rangeStr)
+		c.Assert(result, check.Equals, v.expected)
+	}
+}
+
 func (suite *RangeUtilSuite) TestCalculatePieceNum(c *check.C) {
 	var cases = []struct {
 		rangeStr string
