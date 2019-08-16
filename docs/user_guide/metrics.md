@@ -21,6 +21,7 @@ This doc contains all the metrics that Dragonfly components currently support. N
 - dragonfly_supernode_cdn_cache_hit_total{} - total times of hitting cdn cache. counter type.
 - dragonfly_supernode_cdn_download_total{} - total times of cdn downloading. counter type.
 - dragonfly_supernode_cdn_download_failed_total{} - total failure times of cdn downloading. counter type.
+- dragonfly_supernode_pieces_downloaded_size_bytes{} - total size of pieces downloaded from supernode in bytes. counter type.
 
 ## Dfdaemon
 

@@ -28,10 +28,11 @@ import (
 
 // metrics defines some prometheus metrics for monitoring supernode
 type metrics struct {
-	requestCounter  *prometheus.CounterVec
-	requestDuration *prometheus.HistogramVec
-	requestSize     *prometheus.HistogramVec
-	responseSize    *prometheus.HistogramVec
+	requestCounter       *prometheus.CounterVec
+	requestDuration      *prometheus.HistogramVec
+	requestSize          *prometheus.HistogramVec
+	responseSize         *prometheus.HistogramVec
+	pieceDownloadedBytes *prometheus.CounterVec
 }
 
 func newMetrics(register prometheus.Registerer) *metrics {
@@ -50,6 +51,9 @@ func newMetrics(register prometheus.Registerer) *metrics {
 		responseSize: metricsutils.NewHistogram(config.SubsystemSupernode, "http_response_size_bytes",
 			"Histogram of response size for HTTP requests.", []string{"handler"},
 			prometheus.ExponentialBuckets(100, 10, 8), register,
+		),
+		pieceDownloadedBytes: metricsutils.NewCounter(config.SubsystemSupernode, "pieces_downloaded_size_bytes",
+			"total bytes of pieces downloaded from supernode", []string{}, register,
 		),
 	}
 }

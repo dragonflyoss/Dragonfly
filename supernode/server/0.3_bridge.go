@@ -209,6 +209,11 @@ func (s *Server) reportPiece(ctx context.Context, rw http.ResponseWriter, req *h
 		return err
 	}
 
+	// If piece is downloaded from supernode, add metrics.
+	if s.Config.IsSuperCID(dstCID) {
+		m.pieceDownloadedBytes.WithLabelValues().Add(float64(sutil.CalculatePieceSize(pieceRange)))
+	}
+
 	request := &types.PieceUpdateRequest{
 		ClientID:    srcCID,
 		DstPID:      dstDfgetTask.PeerID,
