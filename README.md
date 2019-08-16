@@ -32,8 +32,8 @@ Dragonfly is an open source intelligent P2P based image and file distribution sy
 
 - **Simple**: well-defined user-facing API (HTTP), non-invasive to all container engines;
 - **Efficient**: CDN support, P2P based file distribution to save enterprise bandwidth;
-- **Intelligent**: host level speed limit, intelligent flow control due to host dection;
-- **Secure**: block transmission encrytion, HTTPS connection support.
+- **Intelligent**: host level speed limit, intelligent flow control due to host detection;
+- **Secure**: block transmission encryption, HTTPS connection support.
 
 Dragonfly is now hosted by the [Cloud Native Computing Foundation](https://cncf.io) (CNCF) as a Sandbox Level Project. Originally it was born to solve all kinds of distribution at very large scales, such as application distribution, cache distribution, log distribution, image distribution, and so on.
 
