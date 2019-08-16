@@ -29,17 +29,20 @@ import (
 	"time"
 )
 
-// UnixScheme is a scheme for unix.
-const UnixScheme = "unix"
+const (
 
-// TCPScheme is a scheme for TCP.
-const TCPScheme = "tcp"
+	// UnixScheme is a scheme for unix.
+	UnixScheme = "unix"
 
-// HTTPScheme is a scheme for HTTP.
-const HTTPScheme = "http"
+	// TCPScheme is a scheme for TCP.
+	TCPScheme = "tcp"
 
-// HTTPSScheme is a scheme for HTTPS.
-const HTTPSScheme = "https"
+	// HTTPScheme is a scheme for HTTP.
+	HTTPScheme = "http"
+
+	// HTTPSScheme is a scheme for HTTPS.
+	HTTPSScheme = "https"
+)
 
 // ParseHost inputs a host address string, and output four type:
 // url.URL, basePath, address without scheme and an error.
