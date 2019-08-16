@@ -37,7 +37,7 @@ You can get it from [DockerHub](https://hub.docker.com/) directly.
 1. Obtain the latest Docker image ID of the SuperNode.
 
     ```sh
-    docker pull dragonflyoss/supernode:0.4.2
+    docker pull dragonflyoss/supernode:0.4.3
     ```
 
 Or you can build your own supernode image.
@@ -57,7 +57,7 @@ Or you can build your own supernode image.
 3. Build the Docker image.
 
     ```sh
-    TAG="0.4.2"
+    TAG="0.4.3"
     make docker-build-supernode DF_VERSION=$TAG
     ```
 
@@ -72,7 +72,7 @@ Or you can build your own supernode image.
 **NOTE**: Replace ${supernodeDockerImageId} with the ID obtained at the previous step.
 
 ```sh
-docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 -v /home/admin/supernode:/home/admin/supernode dragonflyoss/supernode:0.4.2 --download-port=8001
+docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 -v /home/admin/supernode:/home/admin/supernode dragonflyoss/supernode:0.4.3 --download-port=8001
 
 or
 
@@ -102,10 +102,8 @@ docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 -v /ho
 4. Start the SuperNode.
 
     ```sh
-    supernode --home-dir=/home/admin/supernode --port=8002 --download-port=8001 --advertise-ip=127.0.0.1
+    supernode --home-dir=/home/admin/supernode --port=8002 --download-port=8001
     ```
-
-    **NOTE**: `advertise-ip` should be the ip that clients can connect to, `127.0.0.1` here is an example for testing, and it can only be used if the server and client are in the same machine.
 
 5. Add the following configuration items to the Nginx configuration file.
 
