@@ -403,7 +403,7 @@ func (ps *peerServer) calculateRateLimit(clientRate int) int {
 	total := 0
 
 	// define a function that Range will call it sequentially
-	// for each key and value present in the map
+	// for each key and value present on the map
 	f := func(key, value interface{}) bool {
 		if task, ok := value.(*taskConfig); ok {
 			if !task.finished {
