@@ -6,7 +6,7 @@ For `Dragonfly`, the following versions are tentatively defined as project miles
 The following three versions are being planned currently:
 
 1. v0.4.x, improved performance and stability.
-2. v0.5.x, ready for production usage.
+2. v0.5.x, more adoptive with cloud env.
 3. v1.0.x, GA version.
 
 ## v0.4.x
@@ -57,7 +57,7 @@ Related PR: [#594](https://github.com/dragonflyoss/Dragonfly/pull/594)
 
 ## v0.5.x
 
-This version will focus on enhancing the Dragonfly's features to support more features to ready for production usage. Including:
+This version will focus on enhancing the Dragonfly's features to make it more adoptive with cloud env. Including:
 
 * Support for more deployment options
 * Support multi-server computing framework.
