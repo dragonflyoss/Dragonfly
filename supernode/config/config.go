@@ -18,13 +18,19 @@ package config
 
 import (
 	"fmt"
+
+	"net/rpc"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
-	"gopkg.in/yaml.v2"
-
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+
+	"github.com/go-openapi/strfmt"
+	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 )
 
 // NewConfig create an instant with default values.
@@ -39,6 +45,17 @@ type Config struct {
 	*BaseProperties `yaml:"base"`
 	Plugins         map[PluginType][]*PluginProperties `yaml:"plugins"`
 	Storages        map[string]interface{}             `yaml:"storages"`
+}
+
+// SupernodeInfo store the supernode's info get from etcd.
+type SupernodeInfo struct {
+	IP           string
+	ListenPort   int
+	DownloadPort int
+	RPCPort      int
+	HostName     strfmt.Hostname
+	PID          string
+	RPCClient    *rpc.Client
 }
 
 // Load loads config properties from the giving file.
@@ -84,6 +101,33 @@ func (c *Config) IsSuperPID(peerID string) bool {
 	return peerID == c.superNodePID
 }
 
+// GetOtherSupernodeInfo gets the other supernodes information in supernode ha cluster
+func (c *Config) GetOtherSupernodeInfo() []SupernodeInfo {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+	return *c.OtherSupernodes
+}
+
+// SetOtherSupernodeInfo sets the other supernodes information in supernode ha cluster
+func (c *Config) SetOtherSupernodeInfo(otherSupernodes []SupernodeInfo) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	c.OtherSupernodes = &otherSupernodes
+}
+
+// GetOtherSupernodeInfoByPID get other supernode's info by peerID
+func (c *Config) GetOtherSupernodeInfoByPID(peerID string) (*SupernodeInfo, error) {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
+	for _, node := range *c.OtherSupernodes {
+		if node.PID == peerID {
+			return &node, nil
+			break
+		}
+	}
+	return nil, errors.Wrapf(errortypes.ErrDataNotFound, "peerID: %s", peerID)
+}
+
 // NewBaseProperties create an instant with default values.
 func NewBaseProperties() *BaseProperties {
 	home := filepath.Join(string(filepath.Separator), "home", "admin", "supernode")
@@ -107,6 +151,9 @@ func NewBaseProperties() *BaseProperties {
 		GCMetaInterval:          DefaultGCMetaInterval,
 		TaskExpireTime:          DefaultTaskExpireTime,
 		PeerGCDelay:             DefaultPeerGCDelay,
+		UseHA:                   false,
+		HAConfig:                []string{"127.0.0.1:2379"},
+		HARpcPort:               9000,
 	}
 }
 
@@ -212,6 +259,29 @@ type BaseProperties struct {
 
 	// superNodePID is the ID of supernode, which is the same as peer ID of dfget.
 	superNodePID string
+
+	// UseHA is the mark of whether the supernode use the ha model.
+	// ha means if the active supernode is off,the standby supernode can take over active supernode's work.
+	// and the whole system can work as before.
+	// default:false.
+	UseHA bool `yaml:"useHa"`
+
+	// HAConfig is available when UseHa is true.
+	// HAConfig configs the tool's ip and port we use to implement ha.
+	// default:[] string {127.0.0.1:2379}.
+	HAConfig []string `yaml:"haConfig"`
+
+	//HAStandbyPort is available when UseHa is true.
+	//HAStandbyPort configs the port the supernode use when its status is standby
+	//HAStandbyPort is the port to receive the active supernode's request copy to implement state synchronization
+	HARpcPort int `yaml:"haStandbyPort"`
+
+	//OtherSupernodes records other supernode info in the p2p System.
+	OtherSupernodes *[]SupernodeInfo `yaml:"otherSupernode"`
+
+	//lock is thr read-write lock to use change supernodeInfo,
+	//if OtherSupernode changes when use,supernode may panic
+	lock sync.RWMutex `yaml:"lock"`
 }
 
 // TransLimit trans rateLimit from MB/s to B/s.

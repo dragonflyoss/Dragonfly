@@ -39,6 +39,9 @@ type PeerCreateRequest struct {
 
 	// version number of dfget binary.
 	Version string `json:"version,omitempty"`
+
+	// to keep supernode status syc.we should make every peer's peerID consistent
+	PeerID string `json:"peerID,omitempty"`
 }
 
 // Validate validates this peer create request

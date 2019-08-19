@@ -81,6 +81,12 @@ func (d *Daemon) RegisterSuperNode() error {
 
 // Run runs the daemon.
 func (d *Daemon) Run() error {
+	if d.config.UseHA == true {
+		if err := d.server.HaMgr.HADaemon(context.Background()); err != nil {
+			logrus.Errorf("failed to start a HA daemon progress,err: %v", err)
+			return err
+		}
+	}
 	if err := d.server.Start(); err != nil {
 		logrus.Errorf("failed to start HTTP server: %v", err)
 		return err
