@@ -97,8 +97,8 @@ paths:
       summary: "Get pieces in task"
       description: |
         When dfget starts to download pieces of a task, it should get fixed
-        number of pieces in a task and the use pieces information to download
-        the pirces. The request piece number is set in query.
+        number of pieces in a task and then use pieces information to download
+        the pieces. The request piece number is set in query.
       produces:
         - "application/json"
       parameters:
@@ -429,8 +429,8 @@ paths:
       summary: "Get pieces in task"
       description: |
         When dfget starts to download pieces of a task, it should get fixed
-        number of pieces in a task and the use pieces information to download
-        the pirces. The request piece number is set in query.
+        number of pieces in a task and then use pieces information to download
+        the pieces. The request piece number is set in query.
       produces:
         - "application/json"
       parameters:
@@ -1189,7 +1189,7 @@ definitions:
         description: |
           tells whether it is a call from dfdaemon. dfdaemon is a long running
           process which works for container engines. It translates the image
-          pulling request into raw requests into those dfget recganises.
+          pulling request into raw requests into those dfget recognizes.
       callSystem:
         type: "string"
         description: |
