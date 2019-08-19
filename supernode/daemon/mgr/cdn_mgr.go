@@ -41,6 +41,7 @@ type CDNMgr interface {
 	// GetStatus get the status of the file.
 	GetStatus(ctx context.Context, taskID string) (cdnStatus string, err error)
 
-	// Delete the file from disk with specified taskID.
-	Delete(ctx context.Context, taskID string) error
+	// Delete the cdn meta with specified taskID.
+	// The file on the disk will be deleted when the force is true.
+	Delete(ctx context.Context, taskID string, force bool) error
 }

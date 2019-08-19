@@ -208,7 +208,7 @@ func (sm *Manager) tryGetPID(ctx context.Context, taskID string, pieceNum int, p
 		}
 
 		// if the service has been down, and then it should not be needed.
-		if peerState.ServiceDownTime != nil && *(peerState.ServiceDownTime) > 0 {
+		if peerState.ServiceDownTime > 0 {
 			sm.deletePeerIDByPieceNum(ctx, taskID, pieceNum, peerIDs[i])
 			continue
 		}

@@ -19,6 +19,7 @@ package dfgettask
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
@@ -31,9 +32,14 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/sirupsen/logrus"
 )
 
 var _ mgr.DfgetTaskMgr = &Manager{}
+
+const (
+	keyJoinChar = "@"
+)
 
 type metrics struct {
 	dfgetTasks              *prometheus.GaugeVec
@@ -119,6 +125,62 @@ func (dtm *Manager) GetCIDByPeerIDAndTaskID(ctx context.Context, peerID, taskID 
 	return dtm.ptoc.GetAsString(generatePeerKey(peerID, taskID))
 }
 
+// GetCIDsByTaskID returns cids as a string slice with specified taskID.
+func (dtm *Manager) GetCIDsByTaskID(ctx context.Context, taskID string) ([]string, error) {
+	var result []string
+	suffixString := keyJoinChar + taskID
+	rangeFunc := func(k, v interface{}) bool {
+		key, ok := k.(string)
+		if !ok {
+			return true
+		}
+
+		if !strings.HasSuffix(key, suffixString) {
+			return true
+		}
+		cid, err := dtm.ptoc.GetAsString(key)
+		if err != nil {
+			logrus.Warnf("failed to get cid from ptoc with key(%s): %v", key, err)
+			return true
+		}
+
+		result = append(result, cid)
+		return true
+	}
+	dtm.ptoc.Range(rangeFunc)
+
+	return result, nil
+}
+
+// GetCIDAndTaskIDsByPeerID returns a cid<->taskID map by specified peerID.
+func (dtm *Manager) GetCIDAndTaskIDsByPeerID(ctx context.Context, peerID string) (map[string]string, error) {
+	var result = make(map[string]string)
+	prefixStr := peerID + keyJoinChar
+	rangeFunc := func(k, v interface{}) bool {
+		key, ok := k.(string)
+		if !ok {
+			return true
+		}
+
+		if !strings.HasPrefix(key, prefixStr) {
+			return true
+		}
+		cid, err := dtm.ptoc.GetAsString(key)
+		if err != nil {
+			logrus.Warnf("failed to get cid from ptoc with key(%s): %v", key, err)
+			return true
+		}
+
+		// get TaskID from the key
+		splitResult := strings.Split(key, keyJoinChar)
+		result[cid] = splitResult[len(splitResult)-1]
+		return true
+	}
+	dtm.ptoc.Range(rangeFunc)
+
+	return result, nil
+}
+
 // List returns the list of dfgetTask.
 func (dtm *Manager) List(ctx context.Context, filter map[string]string) (dfgetTaskList []*types.DfGetTask, err error) {
 	return nil, nil
@@ -189,9 +251,9 @@ func generateKey(cID, taskID string) (string, error) {
 		return "", errors.Wrapf(errortypes.ErrEmptyValue, "taskID")
 	}
 
-	return fmt.Sprintf("%s%s%s", cID, "@", taskID), nil
+	return fmt.Sprintf("%s%s%s", cID, keyJoinChar, taskID), nil
 }
 
 func generatePeerKey(peerID, taskID string) string {
-	return fmt.Sprintf("%s@%s", peerID, taskID)
+	return fmt.Sprintf("%s%s%s", peerID, keyJoinChar, taskID)
 }

@@ -16,6 +16,10 @@
 
 package config
 
+import (
+	"time"
+)
+
 const (
 	// DefaultSupernodeConfigFilePath the default supernode config path.
 	DefaultSupernodeConfigFilePath = "/etc/dragonfly/supernode.yml"
@@ -74,4 +78,22 @@ const (
 	SubsystemSupernode = "supernode"
 	// SubsystemDfget represents metrics from dfget
 	SubsystemDfget = "dfget"
+)
+
+const (
+	// DefaultFailAccessInterval is the interval time after failed to access the URL.
+	DefaultFailAccessInterval = 3 * time.Minute
+
+	// DefaultGCInitialDelay is the delay time from the start to the first GC execution.
+	DefaultGCInitialDelay = 6 * time.Second
+
+	// DefaultGCMetaInterval is the interval time to execute the GC meta.
+	DefaultGCMetaInterval = 2 * time.Minute
+
+	// DefaultTaskExpireTime when a task is not accessed within the taskExpireTime,
+	// and it will be treated to be expired.
+	DefaultTaskExpireTime = 3 * time.Minute
+
+	// DefaultPeerGCDelay is the delay time to execute the GC after the peer has reported the offline.
+	DefaultPeerGCDelay = 3 * time.Minute
 )

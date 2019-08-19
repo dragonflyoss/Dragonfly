@@ -18,11 +18,13 @@ package progress
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
+	"github.com/dragonflyoss/Dragonfly/pkg/timeutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 
@@ -223,15 +225,6 @@ func (pm *Manager) GetPieceProgressByCID(ctx context.Context, taskID, clientID, 
 	return getAvailablePieces(clientBitset, cdnBitset, runningPieces)
 }
 
-// DeletePieceProgressByCID deletes the pieces progress with specified clientID.
-func (pm *Manager) DeletePieceProgressByCID(ctx context.Context, taskID, clientID string) (err error) {
-	if pm.cfg.IsSuperCID(clientID) {
-		return pm.superProgress.remove(taskID)
-	}
-
-	return pm.clientProgress.remove(clientID)
-}
-
 // GetPeerIDsByPieceNum gets all peerIDs with specified taskID and pieceNum.
 // It will return nil when no peers is available.
 func (pm *Manager) GetPeerIDsByPieceNum(ctx context.Context, taskID string, pieceNum int) (peerIDs []string, err error) {
@@ -247,21 +240,6 @@ func (pm *Manager) GetPeerIDsByPieceNum(ctx context.Context, taskID string, piec
 	return ps.getAvailablePeers(), nil
 }
 
-// DeletePeerIDByPieceNum deletes the peerID which means that
-// the peer no longer provides the service for the pieceNum of taskID.
-func (pm *Manager) DeletePeerIDByPieceNum(ctx context.Context, taskID string, pieceNum int, peerID string) error {
-	key, err := generatePieceProgressKey(taskID, pieceNum)
-	if err != nil {
-		return err
-	}
-	ps, err := pm.pieceProgress.getAsPieceState(key)
-	if err != nil {
-		return err
-	}
-
-	return ps.delete(peerID)
-}
-
 // GetPeerStateByPeerID gets peer state with specified peerID.
 func (pm *Manager) GetPeerStateByPeerID(ctx context.Context, peerID string) (*mgr.PeerState, error) {
 	peerState, err := pm.peerProgress.getAsPeerState(peerID)
@@ -271,21 +249,26 @@ func (pm *Manager) GetPeerStateByPeerID(ctx context.Context, peerID string) (*mg
 
 	return &mgr.PeerState{
 		PeerID:            peerID,
-		ServiceDownTime:   &peerState.serviceDownTime,
+		ServiceDownTime:   peerState.serviceDownTime,
 		ClientErrorCount:  peerState.clientErrorCount,
 		ServiceErrorCount: peerState.serviceErrorCount,
 		ProducerLoad:      peerState.producerLoad,
 	}, nil
 }
 
-// DeletePeerStateByPeerID deletes the peerState by PeerID.
-func (pm *Manager) DeletePeerStateByPeerID(ctx context.Context, peerID string) error {
-	// delete client blackinfo
-	// TODO: delete the blackinfo that refer to peerID
-	pm.clientBlackInfo.Delete(peerID)
+// UpdatePeerServiceDown do update operation when a peer server offline.
+func (pm *Manager) UpdatePeerServiceDown(ctx context.Context, peerID string) (err error) {
+	peerState, err := pm.peerProgress.getAsPeerState(peerID)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get peer state peerID(%s): %v", peerID, err)
+	}
 
-	// delete peer progress
-	return pm.peerProgress.remove(peerID)
+	if peerState.serviceDownTime > 0 {
+		return fmt.Errorf("failed to update the service down info because this peer(%s) has been offline", peerID)
+	}
+
+	peerState.serviceDownTime = timeutils.GetCurrentTimeMillis()
+	return nil
 }
 
 // GetPeersByTaskID gets all peers info with specified taskID.
