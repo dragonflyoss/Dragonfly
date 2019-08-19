@@ -22,6 +22,7 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
+	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/ha"
 	"github.com/dragonflyoss/Dragonfly/supernode/plugins"
 	"github.com/dragonflyoss/Dragonfly/supernode/server"
 
@@ -82,6 +83,10 @@ func (d *Daemon) RegisterSuperNode() error {
 // Run runs the daemon.
 func (d *Daemon) Run() error {
 	if d.config.UseHA == true {
+		if err := ha.StartRPCServer(d.config, d.server.CdnMgr, d.server.DfgetTaskMgr, d.server.ProgressMgr, d.server.TaskMgr, d.server.PeerMgr); err != nil {
+			logrus.Errorf("failed to open rpc port,err: %v", err)
+			return err
+		}
 		if err := d.server.HaMgr.HADaemon(context.Background()); err != nil {
 			logrus.Errorf("failed to start a HA daemon progress,err: %v", err)
 			return err

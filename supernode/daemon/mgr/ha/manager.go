@@ -79,7 +79,7 @@ func (ha *Manager) TriggerOtherSupernodeDownload(ctx context.Context, req *apiTy
 	if index == -1 {
 		return nil
 	}
-	err := ha.config.GetOtherSupernodeInfo()[index].RPCClient.Call("RpcManager.RpcOnlyTriggerCDNDownload", req, nil)
+	err := ha.config.GetOtherSupernodeInfo()[index].RPCClient.Call("RPCManager.RPCOnlyTriggerCDNDownload", req, nil)
 	if err != nil {
 		logrus.Errorf("failed to trigger CDN download via rpc,err: %v", err)
 		return err

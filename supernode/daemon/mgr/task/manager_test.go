@@ -48,6 +48,7 @@ type TaskMgrTestSuite struct {
 	mockPeerMgr      *mock.MockPeerMgr
 	mockProgressMgr  *mock.MockProgressMgr
 	mockSchedulerMgr *mock.MockSchedulerMgr
+	mockHaMgr        *mock.MockHaMgr
 	mockOriginClient *cMock.MockOriginHTTPClient
 
 	taskManager *Manager
@@ -61,6 +62,7 @@ func (s *TaskMgrTestSuite) SetUpSuite(c *check.C) {
 	s.mockDfgetTaskMgr = mock.NewMockDfgetTaskMgr(s.mockCtl)
 	s.mockProgressMgr = mock.NewMockProgressMgr(s.mockCtl)
 	s.mockSchedulerMgr = mock.NewMockSchedulerMgr(s.mockCtl)
+	s.mockHaMgr = mock.NewMockHaMgr(s.mockCtl)
 	s.mockOriginClient = cMock.NewMockOriginHTTPClient(s.mockCtl)
 
 	s.mockCDNMgr.EXPECT().TriggerCDN(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
@@ -69,7 +71,7 @@ func (s *TaskMgrTestSuite) SetUpSuite(c *check.C) {
 	s.mockOriginClient.EXPECT().GetContentLength(gomock.Any(), gomock.Any()).Return(int64(1000), 200, nil)
 	cfg := config.NewConfig()
 	s.taskManager, _ = NewManager(cfg, s.mockPeerMgr, s.mockDfgetTaskMgr,
-		s.mockProgressMgr, s.mockCDNMgr, s.mockSchedulerMgr, s.mockOriginClient, prometheus.NewRegistry())
+		s.mockProgressMgr, s.mockCDNMgr, s.mockSchedulerMgr, s.mockOriginClient, prometheus.NewRegistry(), s.mockHaMgr)
 }
 
 func (s *TaskMgrTestSuite) TearDownSuite(c *check.C) {
@@ -87,7 +89,8 @@ func (s *TaskMgrTestSuite) TestCheckTaskStatus(c *check.C) {
 		RawURL:     "http://aa.bb.com",
 		PeerID:     "fooPeerID",
 	}
-	resp, err := s.taskManager.Register(context.Background(), req)
+	httpReq := &types.TaskRegisterRequest{}
+	resp, err := s.taskManager.Register(context.Background(), req, httpReq)
 	c.Check(err, check.IsNil)
 	c.Assert(1, check.Equals,
 		int(prom_testutil.ToFloat64(tasksRegisterCount.WithLabelValues())))
@@ -118,7 +121,8 @@ func (s *TaskMgrTestSuite) TestUpdateTaskInfo(c *check.C) {
 		RawURL:     "http://aa.bb.com",
 		PeerID:     "fooPeerID",
 	}
-	resp, err := s.taskManager.Register(context.Background(), req)
+	httpReq := &types.TaskRegisterRequest{}
+	resp, err := s.taskManager.Register(context.Background(), req, httpReq)
 	c.Check(err, check.IsNil)
 
 	// return error when taskInfo equals nil

@@ -41,6 +41,7 @@ type TaskUtilTestSuite struct {
 	mockPeerMgr      *mock.MockPeerMgr
 	mockProgressMgr  *mock.MockProgressMgr
 	mockSchedulerMgr *mock.MockSchedulerMgr
+	mockHaMgr        *mock.MockHaMgr
 	mockOriginClient *cMock.MockOriginHTTPClient
 
 	taskManager *Manager
@@ -55,8 +56,9 @@ func (s *TaskUtilTestSuite) SetUpSuite(c *check.C) {
 	s.mockProgressMgr = mock.NewMockProgressMgr(s.mockCtl)
 	s.mockSchedulerMgr = mock.NewMockSchedulerMgr(s.mockCtl)
 	s.mockOriginClient = cMock.NewMockOriginHTTPClient(s.mockCtl)
+	s.mockHaMgr = mock.NewMockHaMgr(s.mockCtl)
 	s.taskManager, _ = NewManager(config.NewConfig(), s.mockPeerMgr, s.mockDfgetTaskMgr,
-		s.mockProgressMgr, s.mockCDNMgr, s.mockSchedulerMgr, s.mockOriginClient, prometheus.NewRegistry())
+		s.mockProgressMgr, s.mockCDNMgr, s.mockSchedulerMgr, s.mockOriginClient, prometheus.NewRegistry(), s.mockHaMgr)
 
 	s.mockOriginClient.EXPECT().GetContentLength(gomock.Any(), gomock.Any()).Return(int64(1000), 200, nil)
 }
@@ -173,7 +175,8 @@ func (s *TaskUtilTestSuite) TestTriggerCdnSyncAction(c *check.C) {
 	}
 
 	for _, tc := range cases {
-		err = s.taskManager.triggerCdnSyncAction(context.Background(), tc.task)
+		httpReq := &types.TaskRegisterRequest{}
+		err = s.taskManager.triggerCdnSyncAction(context.Background(), tc.task, false, httpReq)
 		c.Assert(err, check.Equals, tc.err)
 		if !tc.skip {
 			c.Assert(tc.total, check.Equals,

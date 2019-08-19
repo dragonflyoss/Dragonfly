@@ -38,7 +38,7 @@ type TaskMgr interface {
 	// Register a task represents that someone wants to download a file.
 	// Supernode will get the task file meta and return taskID.
 	// NOTE: If supernode cannot find the task file, the CDN download will be triggered.
-	Register(ctx context.Context, taskCreateRequest *types.TaskCreateRequest) (taskCreateResponse *types.TaskCreateResponse, err error)
+	Register(ctx context.Context, req *types.TaskCreateRequest, httpReq *types.TaskRegisterRequest) (taskCreateResponse *types.TaskCreateResponse, err error)
 
 	// Get the task Info with specified taskID.
 	Get(ctx context.Context, taskID string) (*types.TaskInfo, error)
@@ -71,4 +71,10 @@ type TaskMgr interface {
 	// We use a sting called pieceRange to identify a piece.
 	// A pieceRange separated by a dash, like this: 0-45565, etc.
 	UpdatePieceStatus(ctx context.Context, taskID, pieceRange string, pieceUpdateRequest *types.PieceUpdateRequest) error
+
+	// OnlyTriggerDownload triggers a cdn download for HA
+	OnlyTriggerDownload(ctx context.Context, req *types.TaskCreateRequest, httpREQ *types.TaskRegisterRequest) error
+
+	// IsDownloadLocal judges wether the task download from this supernode for HA
+	IsDownloadLocal(ctx context.Context, taskID string) (isLocal bool, cdnPeerID string)
 }

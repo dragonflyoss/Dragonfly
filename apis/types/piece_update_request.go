@@ -31,6 +31,15 @@ type PieceUpdateRequest struct {
 	//
 	// Enum: [FAILED SUCCESS INVALID SEMISUC]
 	PieceStatus string `json:"pieceStatus,omitempty"`
+
+	// Dst peer's cid for HA
+	DstCid string `json:"dstCid,omitempty"`
+
+	// whether send the request to other supernode for HA
+	SendCopy bool `json:"sendCopy,omitempty"`
+
+	// which supernode to send request copy for HA
+	SendCopyPeerID string `json:"sendCopyPeerID,omitempty"`
 }
 
 // Validate validates this piece update request

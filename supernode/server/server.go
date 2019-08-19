@@ -101,7 +101,7 @@ func New(cfg *config.Config, register prometheus.Registerer) (*Server, error) {
 	}
 
 	taskMgr, err := task.NewManager(cfg, peerMgr, dfgetTaskMgr, progressMgr, cdnMgr,
-		schedulerMgr, originClient, register)
+		schedulerMgr, originClient, register, haMgr)
 	if err != nil {
 		return nil, err
 	}

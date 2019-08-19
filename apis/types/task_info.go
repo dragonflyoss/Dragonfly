@@ -82,6 +82,12 @@ type TaskInfo struct {
 	// --filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.
 	//
 	TaskURL string `json:"taskURL,omitempty"`
+
+	// CDNPeerID marks which supernode the file in.
+	CDNPeerID string `json:"cdnPeerID,omitempty"`
+
+	// NotifySupernodesPID record supernodes should notify after updateTaskInfo
+	NotifySupernodesPID []string `json:"notifySupernodesPID"`
 }
 
 // Validate validates this task info
