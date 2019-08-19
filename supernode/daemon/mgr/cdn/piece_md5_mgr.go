@@ -77,3 +77,7 @@ func (pmm *pieceMD5Mgr) getPieceMD5sByTaskID(taskID string) (pieceMD5s []string,
 	}
 	return pieceMD5s, nil
 }
+
+func (pmm *pieceMD5Mgr) removePieceMD5sByTaskID(taskID string) error {
+	return pmm.taskPieceMD5s.Remove(taskID)
+}

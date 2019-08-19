@@ -29,6 +29,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	dutil "github.com/dragonflyoss/Dragonfly/supernode/daemon/util"
+	"github.com/dragonflyoss/Dragonfly/supernode/util"
 
 	"github.com/go-openapi/strfmt"
 	"github.com/pkg/errors"
@@ -98,13 +99,22 @@ func (pm *Manager) DeRegister(ctx context.Context, peerID string) error {
 	}
 
 	pm.peerStore.Delete(peerID)
+	// NOTE: DeRegister will be called asynchronously.
 	pm.metrics.peers.WithLabelValues(peerInfo.IP.String()).Dec()
 	return nil
 }
 
 // Get returns the peerInfo of the specified peerID.
 func (pm *Manager) Get(ctx context.Context, peerID string) (*types.PeerInfo, error) {
+	util.GetLock(peerID, true)
+	defer util.ReleaseLock(peerID, true)
+
 	return pm.getPeerInfo(peerID)
+}
+
+// GetAllPeerIDs returns all peerIDs.
+func (pm *Manager) GetAllPeerIDs(ctx context.Context) (peerIDs []string) {
+	return pm.peerStore.ListKeyAsStringSlice()
 }
 
 // List returns all filtered peerInfo by filter.
