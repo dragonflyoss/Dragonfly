@@ -58,9 +58,8 @@ func (suite *ConfigSuite) TestConfig_String(c *check.C) {
 	c.Assert(strings.Contains(cfg.String(), expected), check.Equals, true)
 	cfg.LocalLimit = 20971520
 	cfg.Pattern = "p2p"
-	cfg.Version = true
 	expected = "\"url\":\"\",\"output\":\"\",\"localLimit\":20971520," +
-		"\"pattern\":\"p2p\",\"version\":true"
+		"\"pattern\":\"p2p\""
 	c.Assert(strings.Contains(cfg.String(), expected), check.Equals, true)
 }
 
