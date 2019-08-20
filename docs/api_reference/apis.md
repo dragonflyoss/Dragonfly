@@ -199,8 +199,8 @@ GET /peer/task
 
 #### Description
 When dfget starts to download pieces of a task, it should get fixed
-number of pieces in a task and the use pieces information to download
-the pirces. The request piece number is set in query.
+number of pieces in a task and then use pieces information to download
+the pieces. The request piece number is set in query.
 
 
 #### Parameters
@@ -570,8 +570,8 @@ GET /tasks/{id}/pieces
 
 #### Description
 When dfget starts to download pieces of a task, it should get fixed
-number of pieces in a task and the use pieces information to download
-the pirces. The request piece number is set in query.
+number of pieces in a task and then use pieces information to download
+the pieces. The request piece number is set in query.
 
 
 #### Parameters
@@ -675,7 +675,7 @@ A download process initiated by dfget or other clients.
 |---|---|---|
 |**cID**  <br>*optional*|CID means the client ID. It maps to the specific dfget process. <br>When user wishes to download an image/file, user would start a dfget process to do this. <br>This dfget is treated a client and carries a client ID. <br>Thus, multiple dfget processes on the same peer have different CIDs.|string|
 |**callSystem**  <br>*optional*|This attribute represents where the dfget requests come from. Dfget will pass<br>this field to supernode and supernode can do some checking and filtering via<br>black/white list mechanism to guarantee security, or some other purposes like debugging.  <br>**Minimum length** : `1`|string|
-|**dfdaemon**  <br>*optional*|tells whether it is a call from dfdaemon. dfdaemon is a long running<br>process which works for container engines. It translates the image<br>pulling request into raw requests into those dfget recganises.|boolean|
+|**dfdaemon**  <br>*optional*|tells whether it is a call from dfdaemon. dfdaemon is a long running<br>process which works for container engines. It translates the image<br>pulling request into raw requests into those dfget recognizes.|boolean|
 |**path**  <br>*optional*|path is used in one peer A for uploading functionality. When peer B hopes<br>to get piece C from peer A, B must provide a URL for piece C.<br>Then when creating a task in supernode, peer A must provide this URL in request.|string|
 |**peerID**  <br>*optional*|PeerID uniquely identifies a peer, and the cID uniquely identifies a <br>download task belonging to a peer. One peer can initiate multiple download tasks, <br>which means that one peer corresponds to multiple cIDs.|string|
 |**pieceSize**  <br>*optional*|The size of pieces which is calculated as per the following strategy<br>1. If file's total size is less than 200MB, then the piece size is 4MB by default.<br>2. Otherwise, it equals to the smaller value between totalSize/100MB + 2 MB and 15MB.|integer (int32)|
