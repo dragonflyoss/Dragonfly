@@ -17,7 +17,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -78,7 +77,7 @@ func checkBoilerplate(content string) error {
 		return fmt.Errorf("the file is missing a boilerplate")
 	}
 	if index < len(boilerplate) {
-		return errors.New("boilerplate has missing lines")
+		return fmt.Errorf("boilerplate has missing lines")
 	}
 	return nil
 }
@@ -86,7 +85,7 @@ func checkBoilerplate(content string) error {
 // verifyFile verifies if a file contains the boilerplate
 func verifyFile(filePath string) error {
 	if len(filePath) == 0 {
-		return errors.New("empty file name")
+		return fmt.Errorf("empty file name")
 	}
 
 	// check file extension is go
@@ -112,18 +111,13 @@ func verifyFile(filePath string) error {
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("usage: go run check-boilerplate.go <path-to-file> <path-to-file> ...")
+		fmt.Fprintln(os.Stderr, "usage: go run check-boilerplate.go <path-to-file> <path-to-file> ...")
 		os.Exit(1)
 	}
 
-	hasErr := false
 	for _, filePath := range os.Args[1:] {
 		if err := verifyFile(filePath); err != nil {
-			fmt.Printf("error validating %q: %v\n", filePath, err)
-			hasErr = true
+			fmt.Fprintf(os.Stderr, "error validating %q: %v\n", filePath, err)
 		}
-	}
-	if hasErr {
-		os.Exit(1)
 	}
 }

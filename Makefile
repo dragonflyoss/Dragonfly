@@ -105,12 +105,17 @@ integration-test:
 	@go test ./test
 .PHONY: integration-test
 
-check:
+check: boilerplate-check
 	@echo "Begin to check code formats."
 	./hack/check.sh
 	@echo "Begin to check dockerd whether is startup"
 	./hack/check-docker.sh
 .PHONY: check
+
+boilerplate-check:
+	@echo "Begin to check code boilerplate."
+	./hack/boilerplate-check.sh
+.PHONY: boilerplate-check
 
 go-mod-tidy:
 	@echo "Begin to tidy up go.mod and go.sum"
