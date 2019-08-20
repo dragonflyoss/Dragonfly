@@ -257,8 +257,9 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 
 	logrus.Errorf("pull piece task fail:%v and will migrate", res)
 	var registerRes *regist.RegisterResult
-	if registerRes, err = p2p.Register.Register(p2p.cfg.RV.PeerPort); err != nil {
-		return nil, err
+	registerRes, registerErr := p2p.Register.Register(p2p.cfg.RV.PeerPort)
+	if registerErr != nil {
+		return nil, registerErr
 	}
 	p2p.pieceSizeHistory[1] = registerRes.PieceSize
 	item.Status = constants.TaskStatusStart

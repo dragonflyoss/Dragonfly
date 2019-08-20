@@ -3,11 +3,11 @@
 # Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
 jobs:
-  markdownlint-misspell-shellcheck:
+  linters-check:
     docker:
       # this image is build from Dockerfile
       # https://github.com/pouchcontainer/pouchlinter/blob/master/Dockerfile
-      - image: pouchcontainer/pouchlinter:v0.2.1
+      - image: pouchcontainer/pouchlinter:v0.2.3
     working_directory: /go/src/github.com/dragonflyoss/Dragonfly
     steps:
       - checkout
@@ -41,27 +41,14 @@ jobs:
           name: validate go mod files
           command: |
             make check-go-mod
-
-  gocode-check-via-gometalinter-swagger:
-    docker:
-      - image: pouchcontainer/pouchlinter:v0.2.1
-    working_directory: /go/src/github.com/dragonflyoss/Dragonfly
-    steps:
-      - checkout
       - run:
           name: validate swagger.yml
           command: |
             swagger validate "/go/src/github.com/dragonflyoss/Dragonfly/apis/swagger.yml"
       - run:
-          name: use gometalinter to check gocode of this project.
+          name: use golangci-lint to check gocode of this project.
           command: |
-            make go-mod-vendor
-            gometalinter --disable-all --cyclo-over=20 --skip vendor -E gofmt -E goimports -E golint -E misspell -E vet -E goconst -E gocyclo ./...
-      - run:
-          name: detect deadcode without test folder
-          command: |
-            make go-mod-vendor
-            gometalinter --disable-all --skip vendor --skip test -E deadcode ./...
+            make golangci-lint
 
   unit-test-golang:
     docker:
@@ -101,7 +88,6 @@ workflows:
   version: 2
   ci:
     jobs:
-      - markdownlint-misspell-shellcheck
+      - linters-check
       - unit-test-golang
-      - gocode-check-via-gometalinter-swagger
       - api-integration-test
