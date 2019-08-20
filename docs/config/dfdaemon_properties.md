@@ -2,7 +2,7 @@
 
 This topic explains how to customize the dragonfly dfdaemon startup parameters. 
 
-**NOTE**: Properties holds all configurable properties of dfdaemon including `dfget/dfget_server` properties. By default, dragonfly config files locate `/etc/dragonfly`. You can create `dfdaemon.yml` for configuring dfdaemon startup params. When deploying with Docker, you can mount default path. 
+**NOTE**: Properties holds all configurable properties of dfdaemon including `dfget` properties. By default, dragonfly config files locate `/etc/dragonfly`. You can create `dfdaemon.yml` for configuring dfdaemon startup params. When deploying with Docker, you can mount default path. 
 
 ```sh
 docker run -d --net=host --name dfclient -p 65001:65001 -v /etc/dragonfly:/etc/dragonfly -v /root/.small-dragonfly:/root/.small-dragonfly dragonflyoss/dfclient:0.4.3 --registry ${http://RegistryUrl:port} --node=127.0.0.1
@@ -13,19 +13,24 @@ If designating port with `--port=${port}` for starting supernode docker, dfdaemo
 
 The following startup parameters are supported for `dfdaemon`
 
-- dfget_flags	 		dfget properties.
-- registry_mirror		Registry mirror settings.
-- proxies				Proxies is the list of rules for the transparent proxy.
-- hijack_https			HijackHTTPS is the list of hosts whose https requests should be hijacked
-by dfdaemon. The first matched rule will be used
-- supernodes			Specify the addresses(host:port) of supernodes, it is just to be compatible with previous versions
-- ratelimit				Net speed limit,format:xxxM/K
-- localrepo				Temp output dir of dfdaemon, by defualt `.small-dragonfly/dfdaemon/data/`
-- dfpath				dfget path
-- verbose				Open detail info switch
-- maxprocs				the maximum number of CPUs that the dfdaemon can use
+| Parameter  | Description |
+| ------------- | ------------- |
+| dfget_flags |	dfget properties |
+| dfpath | dfget path |
+| hijack_https | HijackHTTPS is the list of hosts whose https requests should be hijacked by dfdaemon. The first matched rule will be used |
+| localrepo | Temp output dir of dfdaemon, by defualt `.small-dragonfly/dfdaemon/data/` |
+| maxprocs| The maximum number of CPUs that the dfdaemon can use |
+| proxies | Proxies is the list of rules for the transparent proxy |
+| ratelimit | Net speed limit,format:xxxM/K |
+| registry_mirror | Registry mirror settings |
+| supernodes | Specify the addresses(host:port) of supernodes, it is just to be compatible with previous versions |
+| verbose | Open detail info switch |
 
 ## Examples
+
+Parameters are configured in `/etc/dragonfly/dfdaemon.yml`.
+
+```yaml
 　　# node: specify the addresses  
 　　# ip: IP address that server will listen on  
 　　# port: port number that server will listen on  
@@ -61,6 +66,7 @@ hijack_https:
 　　　　insecure: false  
 　　　　# optional certificates if the host uses self-signed certificates  
 　　　　certs: []  
+```
 
 ## SEE ALSO
 
