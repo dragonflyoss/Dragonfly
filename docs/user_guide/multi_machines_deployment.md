@@ -10,7 +10,7 @@ Assuming that experiment requires us to prepare three host machines, one to play
 
 ![quick start cluster topology](../images/quick-start-topo.png)
 
-Then, we must provice:
+Then, we must provide:
 
 1. three host nodes in a LAN, and we assume that 3 machine IPs are replaced by the following names.
 
