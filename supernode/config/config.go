@@ -18,9 +18,10 @@ package config
 
 import (
 	"fmt"
-
+	"math/rand"
 	"net/rpc"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -105,7 +106,10 @@ func (c *Config) IsSuperPID(peerID string) bool {
 func (c *Config) GetOtherSupernodeInfo() []SupernodeInfo {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
-	return *c.OtherSupernodes
+	s := randSlice(*c.OtherSupernodes)
+	fmt.Println(s)
+	return s
+
 }
 
 // SetOtherSupernodeInfo sets the other supernodes information in supernode ha cluster
@@ -287,4 +291,19 @@ type BaseProperties struct {
 // TransLimit trans rateLimit from MB/s to B/s.
 func TransLimit(rateLimit int) int {
 	return rateLimit * 1024 * 1024
+}
+
+// randSlice randoms the other supernodes info
+func randSlice(supernodes []SupernodeInfo) []SupernodeInfo {
+	length := len(supernodes)
+	if length < 2 {
+		return supernodes
+	}
+	swap := reflect.Swapper(supernodes)
+	rand.Seed(time.Now().Unix())
+	for i := length - 1; i >= 0; i-- {
+		j := rand.Intn(length)
+		swap(i, j)
+	}
+	return supernodes
 }

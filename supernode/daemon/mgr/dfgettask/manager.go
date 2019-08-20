@@ -95,7 +95,6 @@ func (dtm *Manager) Add(ctx context.Context, dfgetTask *types.DfGetTask) error {
 	if err != nil {
 		return err
 	}
-
 	// the default status of DfgetTask is WAITING
 	if stringutils.IsEmptyStr(dfgetTask.Status) {
 		dfgetTask.Status = types.DfGetTaskStatusWAITING
@@ -192,7 +191,6 @@ func (dtm *Manager) Delete(ctx context.Context, clientID, taskID string) error {
 	if err != nil {
 		return err
 	}
-
 	dfgetTask, err := dtm.getDfgetTask(clientID, taskID)
 	if err != nil {
 		return err

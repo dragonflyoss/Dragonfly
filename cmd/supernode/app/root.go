@@ -102,6 +102,15 @@ func setupFlags(cmd *cobra.Command, opt *Options) {
 
 	flagSet.StringVar(&opt.AdvertiseIP, "advertise-ip", "",
 		"the supernode ip that we advertise to other peer in the p2p-network")
+
+	flagSet.BoolVarP(&opt.UseHA, "use-ha", "H", opt.UseHA,
+		"set whether to use supernode HA")
+
+	flagSet.StringSliceVar(&opt.HAConfig, "etcd-address", opt.HAConfig,
+		"if you use supernode HA,you should set the etcd address to implement ha")
+
+	flagSet.IntVar(&opt.HARpcPort, "rpc-port", opt.HARpcPort,
+		"if you use supernode HA,you should set the rpc port to implement ha")
 }
 
 // runSuperNode prepares configs, setups essential details and runs supernode daemon.

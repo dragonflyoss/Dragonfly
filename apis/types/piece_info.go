@@ -46,6 +46,8 @@ type PieceInfo struct {
 	// 2. Otherwise, it equals to the smaller value between totalSize/100MB + 2 MB and 15MB.
 	//
 	PieceSize int32 `json:"pieceSize,omitempty"`
+
+	Cid string `json:cid,omitempty"`
 }
 
 // Validate validates this piece info

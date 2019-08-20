@@ -159,6 +159,9 @@ func (tm *Manager) updateTask(taskID string, updateTaskInfo *types.TaskInfo) err
 		return err
 	}
 
+	if updateTaskInfo.CDNPeerID != "" {
+		task.CDNPeerID = updateTaskInfo.CDNPeerID
+	}
 	if !isSuccessCDN(updateTaskInfo.CdnStatus) {
 		// when the origin CDNStatus equals success, do not update it to unsuccessful
 		if isSuccessCDN(task.CdnStatus) {
@@ -193,6 +196,26 @@ func (tm *Manager) updateTask(taskID string, updateTaskInfo *types.TaskInfo) err
 	tm.metrics.tasks.WithLabelValues(task.CdnStatus).Dec()
 	tm.metrics.tasks.WithLabelValues(updateTaskInfo.CdnStatus).Inc()
 	task.CdnStatus = updateTaskInfo.CdnStatus
+
+	if tm.cfg.UseHA {
+		for _, peerID := range task.NotifySupernodesPID {
+			node, err := tm.cfg.GetOtherSupernodeInfoByPID(peerID)
+			if err != nil {
+				continue
+			}
+			req := ha.RPCUpdateTaskInfoRequest{
+				CdnStatus:  updateTaskInfo.CdnStatus,
+				FileLength: updateTaskInfo.FileLength,
+				RealMd5:    updateTaskInfo.RealMd5,
+				TaskID:     taskID,
+				CDNPeerID:  updateTaskInfo.CDNPeerID,
+			}
+			if err := node.RPCClient.Call("RPCManager.RPCUpdateTaskInfo", req, nil); err != nil {
+				logrus.Errorf("failed to update task %s status in supernopde %s,err: %v", taskID, node.PID, err)
+				continue
+			}
+		}
+	}
 
 	return nil
 }
@@ -255,6 +278,7 @@ func (tm *Manager) triggerCdnSyncAction(ctx context.Context, task *types.TaskInf
 
 	if err := tm.updateTask(task.ID, &types.TaskInfo{
 		CdnStatus: types.TaskInfoCdnStatusRUNNING,
+		CDNPeerID: tm.cfg.GetSuperPID(),
 	}); err != nil {
 		return err
 	}
@@ -388,6 +412,12 @@ func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, tas
 			pieceInfo.PeerIP = dfgetTask.SupernodeIP
 		}
 
+		cid, err := tm.dfgetTaskMgr.GetCIDByPeerIDAndTaskID(ctx, pieceInfo.PID, task.ID)
+		pieceInfo.Cid = cid
+		if err != nil {
+			continue
+		}
+
 		pieceInfos = append(pieceInfos, pieceInfo)
 	}
 
@@ -408,7 +438,6 @@ func (tm *Manager) pieceResultToPieceInfo(ctx context.Context, pr *mgr.PieceResu
 	if err != nil {
 		return nil, err
 	}
-
 	return &types.PieceInfo{
 		PID:        pr.DstPID,
 		Path:       dfgetTask.Path,
@@ -583,6 +612,7 @@ func (tm *Manager) addCdnResourceFromOtherSupernodes(ctx context.Context, task *
 			if err != nil {
 				continue
 			}
+			httpREQ.SuperNodeIP = srcNode.IP
 			if err := tm.haMgr.SendPostCopy(context.TODO(), httpREQ, "/peer/registry", srcNode); err != nil {
 				//if task is
 				logrus.Errorf("failed to send register copy to supernode %s,err: %v", srcNode.PID, err)
@@ -636,6 +666,7 @@ func (tm *Manager) sendRegisterCopyToOtherSupernode(ctx context.Context, task *t
 		if err != nil {
 			return err
 		}
+		httpREQ.SuperNodeIP = node.IP
 		if err := tm.haMgr.SendPostCopy(context.TODO(), httpREQ, "/peer/registry", node); err != nil {
 			return err
 		}

@@ -74,7 +74,6 @@ func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http
 	if err := json.NewDecoder(reader).Decode(request); err != nil {
 		return errors.Wrap(errortypes.ErrInvalidValue, err.Error())
 	}
-
 	if err := request.Validate(strfmt.NewFormats()); err != nil {
 		return errors.Wrap(errortypes.ErrInvalidValue, err.Error())
 	}
@@ -169,7 +168,6 @@ func (s *Server) pullPieceTask(ctx context.Context, rw http.ResponseWriter, req 
 			Data: data,
 		})
 	}
-
 	if isFinished {
 		return EncodeResponse(rw, http.StatusOK, &types.ResultInfo{
 			Code: constants.CodePeerFinish,
@@ -187,16 +185,12 @@ func (s *Server) pullPieceTask(ctx context.Context, rw http.ResponseWriter, req 
 	}
 
 	for _, v := range pieceInfos {
-		cid, err := s.DfgetTaskMgr.GetCIDByPeerIDAndTaskID(ctx, v.PID, taskID)
-		if err != nil {
-			continue
-		}
 		datas = append(datas, &PullPieceTaskResponseContinueData{
 			Range:     v.PieceRange,
 			PieceNum:  sutil.CalculatePieceNum(v.PieceRange),
 			PieceSize: v.PieceSize,
 			PieceMd5:  v.PieceMD5,
-			Cid:       cid,
+			Cid:       v.Cid,
 			PeerIP:    v.PeerIP,
 			PeerPort:  int(v.PeerPort),
 			Path:      v.Path,
@@ -249,7 +243,6 @@ func (s *Server) reportServiceDown(ctx context.Context, rw http.ResponseWriter, 
 	params := req.URL.Query()
 	taskID := params.Get("taskId")
 	cID := params.Get("cid")
-
 	local, cdnPID := s.TaskMgr.IsDownloadLocal(ctx, taskID)
 	if s.Config.UseHA && !local {
 		node, err := s.Config.GetOtherSupernodeInfoByPID(cdnPID)
@@ -261,11 +254,7 @@ func (s *Server) reportServiceDown(ctx context.Context, rw http.ResponseWriter, 
 			TaskID: taskID,
 			CID:    cID,
 		}
-		err = node.RPCClient.Call("RPCManager.RPCDfgetServerDown", request, nil)
-		if err != nil {
-			logrus.Errorf("failed to send server down request to supernode %s,err: %v", node.PID, err)
-			return err
-		}
+		node.RPCClient.Call("RPCManager.RPCDfgetServerDown", request, nil)
 	}
 
 	// get peerID according to the CID and taskID
