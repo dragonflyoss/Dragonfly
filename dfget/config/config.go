@@ -191,9 +191,6 @@ type Config struct {
 	// Insecure indicates whether skip secure verify when supernode interact with the source.
 	Insecure bool `json:"insecure,omitempty"`
 
-	// Version show version.
-	Version bool `json:"version,omitempty"`
-
 	// ShowBar show progress bar, it's conflict with `--console`.
 	ShowBar bool `json:"showBar,omitempty"`
 
@@ -203,9 +200,6 @@ type Config struct {
 	// Verbose indicates whether to be verbose.
 	// If set true, log level will be 'debug'.
 	Verbose bool `json:"verbose,omitempty"`
-
-	// Help show help information.
-	Help bool `json:"help,omitempty"`
 
 	// ClientQueueSize is the size of client queue
 	// which controls the number of pieces that can be processed simultaneously.
