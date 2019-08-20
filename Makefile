@@ -117,7 +117,6 @@ go-mod-tidy:
 	@go mod tidy
 .PHONY: go-mod-tidy
 
-# we need this because currently gometalinter can't work in go mod environment.
 go-mod-vendor:
 	@echo "Begin to vendor go mod dependency"
 	@go mod vendor
@@ -154,3 +153,7 @@ df.crt: df.key
 	openssl req -new -key df.key -out df.csr
 	openssl x509 -req -sha256 -days 365 -in df.csr -signkey df.key -out df.crt
 	rm df.csr
+
+golangci-lint:
+	./hack/golangci-lint.sh
+.PHONY: golangci-lint

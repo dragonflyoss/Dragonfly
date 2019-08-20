@@ -63,7 +63,7 @@ build-docker() {
         -e GOARCH="${GOARCH}"                                             \
         -e CGO_ENABLED=0                                                  \
         -e GO111MODULE=on                                                 \
-        -e GOPROXY=https://goproxy.io                                     \
+        -e GOPROXY="${GOPROXY}"                                           \
         -w /go/src/${PKG}                                                 \
         ${BUILD_IMAGE}                                                    \
         go build -o "/go/bin/$1" -ldflags "${LDFLAGS}" ./cmd/"$2" 

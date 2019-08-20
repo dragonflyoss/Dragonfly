@@ -28,6 +28,8 @@ import (
 	"github.com/go-check/check"
 )
 
+const localhost = "127.0.0.1"
+
 func Test(t *testing.T) {
 	check.TestingT(t)
 }
@@ -55,43 +57,39 @@ func init() {
 // unit tests for SupernodeAPI
 
 func (s *SupernodeAPITestSuite) TestSupernodeAPI_Register(c *check.C) {
-	ip := "127.0.0.1"
-
 	s.mock.PostJSONFunc = s.mock.CreatePostJSONFunc(0, nil, nil)
-	r, e := s.api.Register(ip, createRegisterRequest())
+	r, e := s.api.Register(localhost, createRegisterRequest())
 	c.Assert(r, check.IsNil)
 	c.Assert(e.Error(), check.Equals, "0:")
 
 	s.mock.PostJSONFunc = s.mock.CreatePostJSONFunc(0, nil,
 		fmt.Errorf("test"))
-	r, e = s.api.Register(ip, createRegisterRequest())
+	r, e = s.api.Register(localhost, createRegisterRequest())
 	c.Assert(r, check.IsNil)
 	c.Assert(e.Error(), check.Equals, "test")
 
 	res := types.RegisterResponse{BaseResponse: &types.BaseResponse{}}
 	s.mock.PostJSONFunc = s.mock.CreatePostJSONFunc(200, []byte(res.String()), nil)
-	r, e = s.api.Register(ip, createRegisterRequest())
+	r, e = s.api.Register(localhost, createRegisterRequest())
 	c.Assert(r, check.NotNil)
 	c.Assert(r.Code, check.Equals, 0)
 
 	res.Code = constants.Success
 	res.Data = &types.RegisterResponseData{FileLength: int64(32)}
 	s.mock.PostJSONFunc = s.mock.CreatePostJSONFunc(200, []byte(res.String()), nil)
-	r, e = s.api.Register(ip, createRegisterRequest())
+	r, e = s.api.Register(localhost, createRegisterRequest())
 	c.Assert(r, check.NotNil)
 	c.Assert(r.Code, check.Equals, constants.Success)
 	c.Assert(r.Data.FileLength, check.Equals, res.Data.FileLength)
 }
 
 func (s *SupernodeAPITestSuite) TestSupernodeAPI_PullPieceTask(c *check.C) {
-	ip := "127.0.0.1"
-
 	res := &types.PullPieceTaskResponse{BaseResponse: &types.BaseResponse{}}
 	res.Code = constants.CodePeerFinish
 	res.Data = []byte(`{"fileLength":2}`)
 	s.mock.GetFunc = s.mock.CreateGetFunc(200, []byte(res.String()), nil)
 
-	r, e := s.api.PullPieceTask(ip, nil)
+	r, e := s.api.PullPieceTask(localhost, nil)
 
 	c.Assert(e, check.IsNil)
 	c.Assert(r.Code, check.Equals, res.Code)
@@ -99,31 +97,26 @@ func (s *SupernodeAPITestSuite) TestSupernodeAPI_PullPieceTask(c *check.C) {
 }
 
 func (s *SupernodeAPITestSuite) TestSupernodeAPI_ReportPiece(c *check.C) {
-	ip := "127.0.0.1"
 	req := &types.ReportPieceRequest{
 		TaskID:     "sssss",
 		PieceRange: "0-11",
 	}
 	s.mock.GetFunc = s.mock.CreateGetFunc(200, []byte(`{"Code":700}`), nil)
-	r, e := s.api.ReportPiece(ip, req)
+	r, e := s.api.ReportPiece(localhost, req)
 	c.Check(e, check.IsNil)
 	c.Check(r.Code, check.Equals, 700)
 }
 
 func (s *SupernodeAPITestSuite) TestSupernodeAPI_ServiceDown(c *check.C) {
-	ip := "127.0.0.1"
-
 	s.mock.GetFunc = s.mock.CreateGetFunc(200, []byte(`{"Code":200}`), nil)
-	r, e := s.api.ServiceDown(ip, "", "")
+	r, e := s.api.ServiceDown(localhost, "", "")
 	c.Check(e, check.IsNil)
 	c.Check(r.Code, check.Equals, 200)
 }
 
 func (s *SupernodeAPITestSuite) TestSupernodeAPI_ReportClientError(c *check.C) {
-	ip := "127.0.0.1"
-
 	s.mock.GetFunc = s.mock.CreateGetFunc(200, []byte(`{"Code":700}`), nil)
-	r, e := s.api.ReportClientError(ip, nil)
+	r, e := s.api.ReportClientError(localhost, nil)
 	c.Check(e, check.IsNil)
 	c.Check(r.Code, check.Equals, 700)
 }
