@@ -49,6 +49,10 @@ jobs:
           name: use golangci-lint to check gocode of this project.
           command: |
             make golangci-lint
+      - run:
+          name: boilerplate check
+          command: |
+            make boilerplate-check
 
   unit-test-golang:
     docker:

@@ -32,14 +32,6 @@ check() {
     echo "CHECK: go vet, check code syntax"
     packages=$(go list ./... | sed 's/^_//')
     echo "${packages}" | xargs go vet 2>&1
-
-    # boilerplate check
-    echo "CHECK: boilerpalte, check code boilerplate"
-    result=$(git ls-files | xargs go run ./hack/boilerplate/check-boilerplate.go)
-    if [[ ${#result} -gt 0 ]]; then
-        echo "${result}"
-        return 1
-    fi
 }
 
 check
