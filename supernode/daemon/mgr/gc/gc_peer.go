@@ -40,7 +40,7 @@ func (gcm *Manager) gcPeers(ctx context.Context) {
 			continue
 		}
 
-		if peerState.ServiceDownTime != 0 &&
+		if peerState.ServiceDownTime == 0 ||
 			timeutils.GetCurrentTimeMillis()-peerState.ServiceDownTime < int64(gcm.cfg.PeerGCDelay) {
 			continue
 		}
