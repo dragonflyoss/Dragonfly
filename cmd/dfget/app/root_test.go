@@ -153,7 +153,7 @@ func (suit *dfgetSuit) TestResultMsg() {
 	end := cfg.StartTime.Add(100 * time.Millisecond)
 
 	msg := resultMsg(cfg, end, nil)
-	suit.Equal(msg, "download SUCCESS(0) cost:0.100s length:-1 reason:0")
+	suit.Equal(msg, "download SUCCESS cost:0.100s length:-1 reason:0")
 
 	msg = resultMsg(cfg, end, errortypes.New(1, "TestFail"))
 	suit.Equal(msg, "download FAIL(1) cost:0.100s length:-1 reason:0 error:"+

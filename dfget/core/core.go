@@ -79,8 +79,9 @@ func Start(cfg *config.Config) *errortypes.DfError {
 
 // prepare the RV-related information and create the corresponding files.
 func prepare(cfg *config.Config) (err error) {
-	fmt.Printf("dfget version:%s", version.DFGetVersion)
-	fmt.Printf("workspace:%s sign:%s", cfg.WorkHome, cfg.Sign)
+	printer.Printf("dfget version:%s", version.DFGetVersion)
+	printer.Printf("workspace:%s", cfg.WorkHome)
+	printer.Printf("sign:%s", cfg.Sign)
 	logrus.Infof("target file path:%s", cfg.Output)
 
 	rv := &cfg.RV
@@ -160,7 +161,7 @@ func registerToSuperNode(cfg *config.Config, register regist.SupernodeRegister) 
 		panic(e.Error())
 	}
 	cfg.RV.FileLength = result.FileLength
-	fmt.Printf("client:%s connected to node:%s", cfg.RV.LocalIP, result.Node)
+	printer.Printf("client:%s connected to node:%s", cfg.RV.LocalIP, result.Node)
 	return result, nil
 }
 
@@ -170,7 +171,7 @@ func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 	if cfg.BackSourceReason > 0 {
 		getter = backDown.NewBackDownloader(cfg, result)
 	} else {
-		fmt.Printf("start download by dragonfly")
+		printer.Printf("start download by dragonfly...")
 		getter = p2pDown.NewP2PDownloader(cfg, supernodeAPI, register, result)
 	}
 
