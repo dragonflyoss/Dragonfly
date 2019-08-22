@@ -100,7 +100,6 @@ func init() {
 
 // bindRootFlags binds flags on rootCmd to the given viper instance
 func bindRootFlags(v *viper.Viper) error {
-	v.RegisterAlias("supernodes", "node")
 	if err := v.BindPFlags(rootCmd.Flags()); err != nil {
 		return err
 	}
@@ -121,6 +120,7 @@ func readConfigFile(v *viper.Viper, cmd *cobra.Command) error {
 		}
 		return err
 	}
+	v.RegisterAlias("supernodes", "node")
 
 	return nil
 }
