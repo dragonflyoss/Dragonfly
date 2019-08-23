@@ -43,7 +43,7 @@ func (gcm *Manager) gcPeers(ctx context.Context) {
 
 		if peerState.ServiceDownTime == 0 {
 			cIDs, _ := gcm.dfgetTaskMgr.GetCIDAndTaskIDsByPeerID(ctx, peerID)
-			//if task is not gc
+			//if related task is not expired
 			if len(cIDs) > 0 {
 				continue
 			}
