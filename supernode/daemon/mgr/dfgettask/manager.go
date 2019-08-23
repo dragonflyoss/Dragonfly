@@ -198,7 +198,9 @@ func (dtm *Manager) Delete(ctx context.Context, clientID, taskID string) error {
 		return err
 	}
 	dtm.ptoc.Delete(generatePeerKey(dfgetTask.PeerID, dfgetTask.TaskID))
-	dtm.metrics.dfgetTasks.WithLabelValues(dfgetTask.CallSystem, dfgetTask.Status).Dec()
+	if !dtm.cfg.IsSuperCID(clientID) {
+		dtm.metrics.dfgetTasks.WithLabelValues(dfgetTask.CallSystem, dfgetTask.Status).Dec()
+	}
 	return dtm.dfgetTaskStore.Delete(key)
 }
 
