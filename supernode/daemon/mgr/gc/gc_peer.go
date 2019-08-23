@@ -19,6 +19,7 @@ package gc
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/dragonflyoss/Dragonfly/pkg/timeutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/util"
@@ -40,11 +41,18 @@ func (gcm *Manager) gcPeers(ctx context.Context) {
 			continue
 		}
 
-		if peerState.ServiceDownTime != 0 &&
-			timeutils.GetCurrentTimeMillis()-peerState.ServiceDownTime < int64(gcm.cfg.PeerGCDelay) {
-			continue
+		if peerState.ServiceDownTime == 0 {
+			cIDs, _ := gcm.dfgetTaskMgr.GetCIDAndTaskIDsByPeerID(ctx, peerID)
+			//if related task is not expired
+			if len(cIDs) > 0 {
+				continue
+			}
 		}
 
+		if peerState.ServiceDownTime != 0 &&
+			timeutils.GetCurrentTimeMillis()-peerState.ServiceDownTime < int64(gcm.cfg.PeerGCDelay/time.Millisecond) {
+			continue
+		}
 		if !gcm.gcPeer(ctx, peerID) {
 			logrus.Warnf("gc peers: failed to gc peer peerID(%s): %v", peerID, err)
 			continue
