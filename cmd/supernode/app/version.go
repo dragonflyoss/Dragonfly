@@ -17,7 +17,7 @@
 package app
 
 import (
-	"fmt"
+	"github.com/dragonflyoss/Dragonfly/pkg/printer"
 
 	"github.com/dragonflyoss/Dragonfly/version"
 
@@ -35,7 +35,7 @@ var versionCmd = &cobra.Command{
 	SilenceErrors: true,
 	SilenceUsage:  true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println(version.Print("supernode"))
+		printer.Printf(version.Print("supernode"))
 		return nil
 	},
 	Example: versionExample(),

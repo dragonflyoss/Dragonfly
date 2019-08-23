@@ -17,12 +17,12 @@
 package app
 
 import (
-	"fmt"
 	"path"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
 	"github.com/dragonflyoss/Dragonfly/pkg/dflog"
+	"github.com/dragonflyoss/Dragonfly/pkg/printer"
 
 	"github.com/spf13/cobra"
 )
@@ -70,7 +70,7 @@ func runServer() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(port)
+	printer.Printf("dfget uploader server port is %d.", port)
 	uploader.WaitForShutdown()
 	return nil
 }

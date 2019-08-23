@@ -31,6 +31,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 	"github.com/dragonflyoss/Dragonfly/pkg/limitreader"
 	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/printer"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 
 	"github.com/sirupsen/logrus"
@@ -89,7 +90,7 @@ func (bd *BackDownloader) Run() error {
 		return err
 	}
 
-	fmt.Printf("download from source")
+	printer.Printf("start download %s from the source station", path.Base(bd.Target))
 	logrus.Infof("start download %s from the source station", path.Base(bd.Target))
 
 	defer bd.Cleanup()
