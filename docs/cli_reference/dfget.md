@@ -22,10 +22,11 @@ dfget [flags]
 $ dfget -u https://www.taobao.com -o /tmp/test/b.test --notbs --expiretime 20s
 --2019-02-02 18:56:34--  https://www.taobao.com
 dfget version:0.3.0
-workspace:/root/.small-dragonfly sign:96414-1549104994.143
+workspace:/root/.small-dragonfly 
+sign:96414-1549104994.143
 client:127.0.0.1 connected to node:127.0.0.1
-start download by dragonfly
-download SUCCESS(0) cost:0.026s length:141898 reason:0
+start download by dragonfly...
+download SUCCESS cost:0.026s length:141898 reason:0
 
 ```
 
