@@ -116,7 +116,7 @@ Download from the p2p network in pieces with a loop
 
 - Dfget should report the info and status of the piece downloaded when each success/fail to download a piece from the P2P network.
   - Supernode will update the bitmap information for the P2P network for better scheduling work.
-- Dfget will not download the the entire file at once but in pieces. So the Supernode will schedule several pieces of information each time for Dfget to download.
+- Dfget will not download the entire file at once but in pieces. So the Supernode will schedule several pieces of information each time for Dfget to download.
   - The scheduler will determine the next scheduling behavior according to certain scheduling rules.
   - Supernode will update the status of DfgetTask when success/fail to download some pieces or the entire download process ends in success/failure.
 

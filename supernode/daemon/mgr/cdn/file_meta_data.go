@@ -183,7 +183,7 @@ func (mm *fileMetaDataManager) writePieceMD5s(ctx context.Context, taskID, fileM
 
 	// append fileMD5
 	pieceMD5s = append(pieceMD5s, fileMD5)
-	// append the the SHA-1 checksum of pieceMD5s
+	// append the SHA-1 checksum of pieceMD5s
 	pieceMD5s = append(pieceMD5s, digest.Sha1(pieceMD5s))
 
 	pieceMD5Str := strings.Join(pieceMD5s, "\n")
