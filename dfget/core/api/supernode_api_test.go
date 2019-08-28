@@ -71,6 +71,7 @@ func (s *SupernodeAPITestSuite) TestSupernodeAPI_Register(c *check.C) {
 	res := types.RegisterResponse{BaseResponse: &types.BaseResponse{}}
 	s.mock.PostJSONFunc = s.mock.CreatePostJSONFunc(200, []byte(res.String()), nil)
 	r, e = s.api.Register(localhost, createRegisterRequest())
+	c.Assert(e, check.IsNil)
 	c.Assert(r, check.NotNil)
 	c.Assert(r.Code, check.Equals, 0)
 
@@ -78,6 +79,7 @@ func (s *SupernodeAPITestSuite) TestSupernodeAPI_Register(c *check.C) {
 	res.Data = &types.RegisterResponseData{FileLength: int64(32)}
 	s.mock.PostJSONFunc = s.mock.CreatePostJSONFunc(200, []byte(res.String()), nil)
 	r, e = s.api.Register(localhost, createRegisterRequest())
+	c.Assert(e, check.IsNil)
 	c.Assert(r, check.NotNil)
 	c.Assert(r.Code, check.Equals, constants.Success)
 	c.Assert(r.Data.FileLength, check.Equals, res.Data.FileLength)
@@ -140,6 +142,7 @@ func (s *SupernodeAPITestSuite) TestSupernodeAPI_get(c *check.C) {
 	c.Assert(e.Error(), check.Equals, "0:test", check.Commentf(m))
 
 	r, e, m = f(0, "x", fmt.Errorf("test error"))
+	c.Assert(r.A, check.Equals, 0, check.Commentf(m))
 	c.Assert(e.Error(), check.Equals, "test error", check.Commentf(m))
 
 	r, e, m = f(200, "x", nil)

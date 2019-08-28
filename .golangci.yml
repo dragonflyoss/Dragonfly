@@ -17,6 +17,7 @@ linters:
     - goconst
     - deadcode
     - gocyclo
+    - staticcheck
 
 # output configuration options
 output:
