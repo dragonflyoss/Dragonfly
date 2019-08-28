@@ -173,8 +173,8 @@ func serverGC(cfg *config.Config, interval time.Duration) {
 }
 
 func captureQuitSignal() {
-	c := make(chan os.Signal)
-	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGSTOP)
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
 	s := <-c
 	logrus.Infof("capture stop signal: %s, will shutdown...", s)
 

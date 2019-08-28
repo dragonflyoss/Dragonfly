@@ -108,6 +108,7 @@ func (client *APIClient) hijack(ctx context.Context, path string, query url.Valu
 		tcpConn.SetKeepAlivePeriod(30 * time.Second)
 	}
 
+	//lint:ignore SA1019 we do not migrate this to 'net/http.Client' as it does not implement Hijack now.
 	clientconn := httputil.NewClientConn(conn, nil)
 	defer clientconn.Close()
 
@@ -141,6 +142,8 @@ func (client *APIClient) sendRequest(ctx context.Context, method, path string, q
 	if err != nil {
 		return nil, err
 	}
+
+	req = req.WithContext(ctx)
 
 	resp, err := cancellableDo(ctx, client.HTTPCli, req)
 	if err != nil {
@@ -181,8 +184,6 @@ func cancellableDo(ctx context.Context, client *http.Client, req *http.Request) 
 
 	select {
 	case <-ctx.Done():
-		tr := client.Transport.(*http.Transport)
-		tr.CancelRequest(req)
 		<-ctxResp
 		return nil, ctx.Err()
 
