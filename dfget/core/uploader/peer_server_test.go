@@ -77,10 +77,10 @@ func (s *PeerServerTestSuite) TearDownSuite(c *check.C) {
 func (s *PeerServerTestSuite) TestGetTaskFile(c *check.C) {
 	// normal test
 	f, _, err := s.srv.getTaskFile(commonFile)
-	defer f.Close()
 	// check get file correctly
 	c.Assert(err, check.IsNil)
 	c.Assert(f, check.NotNil)
+	defer f.Close()
 	// check read file correctly
 	result, err := ioutil.ReadAll(f)
 	c.Assert(err, check.IsNil)

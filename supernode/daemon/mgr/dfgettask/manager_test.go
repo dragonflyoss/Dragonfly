@@ -184,6 +184,7 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskUpdate(c *check.C) {
 		}
 
 		dt, err := manager.Get(context.Background(), tc.dfgetTask.CID, tc.dfgetTask.TaskID)
+		c.Check(err, check.IsNil)
 		c.Check(dt, check.DeepEquals, tc.Expect)
 	}
 }
