@@ -109,6 +109,14 @@ unit-test: build-dirs  ## Run unit test
 	./hack/unit-test.sh
 .PHONY: unit-test
 
+fuzzit-local-regression:
+	./fuzzit.sh local-regression
+.PHONY: fuzzit-local-regression
+
+fuzzit-fuzzing:
+	./fuzzit.sh fuzzing
+.PHONY: fuzzit-fuzzing
+
 # TODO: output the log file when the test is failed
 integration-test:  ## Run integration test
 	@go test ./test

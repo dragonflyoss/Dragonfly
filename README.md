@@ -9,6 +9,7 @@
 [![Build Status](https://travis-ci.org/dragonflyoss/Dragonfly.svg?branch=master)](https://travis-ci.org/dragonflyoss/Dragonfly)
 [![CircleCI](https://circleci.com/gh/dragonflyoss/Dragonfly.svg?style=svg)](https://circleci.com/gh/dragonflyoss/Dragonfly)
 [![codecov](https://codecov.io/gh/dragonflyoss/Dragonfly/branch/master/graph/badge.svg)](https://codecov.io/gh/dragonflyoss/Dragonfly)
+[![fuzzit](https://app.fuzzit.dev/badge?org_id=dragonfly)](https://app.fuzzit.dev/orgs/dragonfly/dashboard)
 
 ![Dragonfly](docs/images/logo/dragonfly-linear.png)
 
