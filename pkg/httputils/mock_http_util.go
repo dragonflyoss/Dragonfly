@@ -102,7 +102,7 @@ func (m *MockHTTPClient) CreateGetFunc(code int, res []byte, e error) getFunc {
 }
 
 // CreatePostJSONWithHeadersFunc returns a mock postJSONWithHeadersFunc func
-/// which will always return the specific results.
+// which will always return the specific results.
 func (m *MockHTTPClient) CreatePostJSONWithHeadersFunc(code int, res []byte, e error) postJSONWithHeadersFunc {
 	return func(string, map[string]string, interface{}, time.Duration) (int, []byte, error) {
 		return code, res, e
