@@ -153,7 +153,7 @@ Here are some dependents with specific version:
 * shellCheck : latest
 * docker: latest
 
-When you develop the Dragonfly project at the local environment, you should use subcommands of Makefile to help yourself to check and build the latest version of Dragonfly. For the convenience of developers， we use the docker to build Dragonfly. It can reduce problems of the developing environment.
+When you develop the Dragonfly project at the local environment, you should use subcommands of Makefile to help yourself to check and build the latest version of Dragonfly. For the convenience of developers, we use the docker to build Dragonfly. It can reduce problems of the developing environment.
 
 ### Golang Dependency Management
 
