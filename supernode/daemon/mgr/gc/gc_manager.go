@@ -75,6 +75,7 @@ func NewManager(cfg *config.Config, taskMgr mgr.TaskMgr, peerMgr mgr.PeerMgr, df
 func (gcm *Manager) StartGC(ctx context.Context) {
 	logrus.Debugf("start the gc job")
 
+	// start a goroutine to gc the tasks
 	go func() {
 		// delay to execute GC after gcm.initialDelay
 		time.Sleep(gcm.cfg.GCInitialDelay)
@@ -82,8 +83,31 @@ func (gcm *Manager) StartGC(ctx context.Context) {
 		// execute the GC by fixed delay
 		ticker := time.NewTicker(gcm.cfg.GCMetaInterval)
 		for range ticker.C {
-			go gcm.gcTasks(ctx)
-			go gcm.gcPeers(ctx)
+			gcm.gcTasks(ctx)
+		}
+	}()
+
+	// start a goroutine to gc the peers
+	go func() {
+		// delay to execute GC after gcm.initialDelay
+		time.Sleep(gcm.cfg.GCInitialDelay)
+
+		// execute the GC by fixed delay
+		ticker := time.NewTicker(gcm.cfg.GCMetaInterval)
+		for range ticker.C {
+			gcm.gcPeers(ctx)
+		}
+	}()
+
+	// start a goroutine to gc the disks
+	go func() {
+		// delay to execute GC after gcm.initialDelay
+		time.Sleep(gcm.cfg.GCInitialDelay)
+
+		// execute the GC by fixed delay
+		ticker := time.NewTicker(gcm.cfg.GCDiskInterval)
+		for range ticker.C {
+			gcm.gcDisk(ctx)
 		}
 	}()
 }

@@ -69,6 +69,8 @@ type DfError struct {
 	Msg  string
 }
 
+type ErrAssertFunc func(err error) bool
+
 // New function creates a DfError.
 func New(code int, msg string) *DfError {
 	return &DfError{

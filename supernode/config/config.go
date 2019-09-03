@@ -106,8 +106,13 @@ func NewBaseProperties() *BaseProperties {
 		FailAccessInterval:      DefaultFailAccessInterval,
 		GCInitialDelay:          DefaultGCInitialDelay,
 		GCMetaInterval:          DefaultGCMetaInterval,
+		GCDiskInterval:          DefaultGCDiskInterval,
+		YoungGCThreshold:        DefaultYoungGCThreshold,
+		FullGCThreshold:         DefaultFullGCThreshold,
+		IntervalThreshold:       DefaultIntervalThreshold,
 		TaskExpireTime:          DefaultTaskExpireTime,
 		PeerGCDelay:             DefaultPeerGCDelay,
+		CleanRatio:              DefaultCleanRatio,
 	}
 }
 
@@ -193,10 +198,18 @@ type BaseProperties struct {
 	// default: 3
 	FailAccessInterval time.Duration `yaml:"failAccessInterval"`
 
+	// cIDPrefix is a prefix string used to indicate that the CID is supernode.
+	cIDPrefix string
+
+	// superNodePID is the ID of supernode, which is the same as peer ID of dfget.
+	superNodePID string
+
+	// gc related
+
 	// GCInitialDelay is the delay time from the start to the first GC execution.
 	GCInitialDelay time.Duration `yaml:"gcInitialDelay"`
 
-	// GCMetaInterval is the interval time to execute the GC meta.
+	// GCMetaInterval is the interval time to execute GC meta.
 	GCMetaInterval time.Duration `yaml:"gcMetaInterval"`
 
 	// TaskExpireTime when a task is not accessed within the taskExpireTime,
@@ -206,9 +219,27 @@ type BaseProperties struct {
 	// PeerGCDelay is the delay time to execute the GC after the peer has reported the offline.
 	PeerGCDelay time.Duration `yaml:"peerGCDelay"`
 
-	// cIDPrefix is a prefix string used to indicate that the CID is supernode.
-	cIDPrefix string
+	// GCDiskInterval is the interval time to execute GC disk.
+	GCDiskInterval time.Duration `yaml:"gcDiskInterval"`
 
-	// superNodePID is the ID of supernode, which is the same as peer ID of dfget.
-	superNodePID string
+	// YoungGCThreshold if the available disk space is more than YoungGCThreshold
+	// and there is no need to GC disk.
+	//
+	// default: 100GB
+	YoungGCThreshold fileutils.Fsize `yaml:"youngGCThreshold"`
+
+	// FullGCThreshold if the available disk space is less than FullGCThreshold
+	// and the supernode should gc all task files which are not being used.
+	//
+	// default: 5GB
+	FullGCThreshold fileutils.Fsize `yaml:"fullGCThreshold"`
+
+	// IntervalThreshold is the threshold of the interval at which the task file is accessed.
+	IntervalThreshold time.Duration `yaml:"IntervalThreshold"`
+
+	// CleanRatio the ratio to clean the disk and based on 10.
+	// And the value of CleanRatio should be [1-10].
+	//
+	// default: 1
+	CleanRatio int
 }

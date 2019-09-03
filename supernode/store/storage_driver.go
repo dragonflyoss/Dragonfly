@@ -19,7 +19,10 @@ package store
 import (
 	"context"
 	"io"
+	"path/filepath"
 	"time"
+
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 )
 
 // StorageDriver defines an interface to manage the data stored in the driver.
@@ -57,6 +60,13 @@ type StorageDriver interface {
 	// If that, and return some info that in the form of struct StorageInfo.
 	// If not, return the ErrNotFound.
 	Stat(ctx context.Context, raw *Raw) (*StorageInfo, error)
+
+	// GetAvailSpace returns the available disk space in B.
+	GetAvailSpace(ctx context.Context, raw *Raw) (fileutils.Fsize, error)
+
+	// Walk walks the file tree rooted at root which determined by raw.Bucket and raw.Key,
+	// calling walkFn for each file or directory in the tree, including root.
+	Walk(ctx context.Context, raw *Raw) error
 }
 
 // Raw identifies a piece of data uniquely.
@@ -66,6 +76,7 @@ type Raw struct {
 	Key    string
 	Offset int64
 	Length int64
+	WalkFn filepath.WalkFunc
 }
 
 // StorageInfo includes partial meta information of the data.

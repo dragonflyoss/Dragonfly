@@ -155,7 +155,6 @@ func runSuperNode() error {
 	cfg.SetCIDPrefix(cfg.AdvertiseIP)
 
 	logrus.Debugf("get supernode config: %+v", cfg)
-
 	logrus.Info("start to run supernode")
 
 	d, err := daemon.New(cfg, dfgetLogger)
