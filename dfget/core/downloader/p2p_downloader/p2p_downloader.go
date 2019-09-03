@@ -191,7 +191,7 @@ func (p2p *P2PDownloader) Run() error {
 			}
 		}
 
-		// NOTE: Should we call it directly here？
+		// NOTE: Should we call it directly here?
 		// Maybe we should return an error and let the caller decide whether to call it.
 		if p2p.cfg.BackSourceReason != 0 {
 			backDownloader := backDown.NewBackDownloader(p2p.cfg, p2p.RegisterResult)
