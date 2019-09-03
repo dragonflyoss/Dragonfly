@@ -32,6 +32,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/printer"
+	"github.com/dragonflyoss/Dragonfly/pkg/rate"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 
 	"github.com/pkg/errors"
@@ -52,27 +53,30 @@ import (
 // 		nodes:
 // 		    - 127.0.0.1
 // 		    - 10.10.10.1
-// 		localLimit: 20971520
-// 		totalLimit: 20971520
+// 		localLimit: 20M
+// 		totalLimit: 20M
 // 		clientQueueSize: 6
 type Properties struct {
 	// Nodes specify supernodes.
-	Nodes []string `yaml:"nodes"`
+	Nodes []string `yaml:"nodes,omitempty" json:"nodes,omitempty"`
 
-	// LocalLimit rate limit about a single download task,format: 20M/m/K/k.
-	LocalLimit int `yaml:"localLimit"`
+	// LocalLimit rate limit about a single download task, format: G(B)/g/M(B)/m/K(B)/k/B
+	// pure number will also be parsed as Byte.
+	LocalLimit rate.Rate `yaml:"localLimit,omitempty" json:"localLimit,omitempty"`
 
-	// Minimal rate about a single download task,format: 20M/m/K/k.
-	MinRate int `yaml:"minRate"`
+	// Minimal rate about a single download task, format: G(B)/g/M(B)/m/K(B)/k/B
+	// pure number will also be parsed as Byte.
+	MinRate rate.Rate `yaml:"minRate,omitempty" json:"minRate,omitempty"`
 
-	// TotalLimit rate limit about the whole host,format: 20M/m/K/k.
-	TotalLimit int `yaml:"totalLimit"`
+	// TotalLimit rate limit about the whole host, format: G(B)/g/M(B)/m/K(B)/k/B
+	// pure number will also be parsed as Byte.
+	TotalLimit rate.Rate `yaml:"totalLimit,omitempty" json:"totalLimit,omitempty"`
 
 	// ClientQueueSize is the size of client queue
 	// which controls the number of pieces that can be processed simultaneously.
 	// It is only useful when the Pattern equals "source".
 	// The default value is 6.
-	ClientQueueSize int `yaml:"clientQueueSize"`
+	ClientQueueSize int `yaml:"clientQueueSize" json:"clientQueueSize,omitempty"`
 }
 
 // NewProperties create a new properties with default values.
@@ -142,17 +146,20 @@ type Config struct {
 	// Output full output path.
 	Output string `json:"output"`
 
-	// LocalLimit rate limit about a single download task,format: 20M/m/K/k.
-	LocalLimit int `json:"localLimit,omitempty"`
+	// LocalLimit rate limit about a single download task, format: G(B)/g/M(B)/m/K(B)/k/B
+	// pure number will also be parsed as Byte.
+	LocalLimit rate.Rate `json:"localLimit,omitempty"`
 
-	// Minimal rate about a single download task,format: 20M/m/K/k.
-	MinRate int `json:"minRate,omitempty"`
+	// Minimal rate about a single download task, format: G(B)/g/M(B)/m/K(B)/k/B
+	// pure number will also be parsed as Byte.
+	MinRate rate.Rate `json:"minRate,omitempty"`
 
-	// TotalLimit rate limit about the whole host,format: 20M/m/K/k.
-	TotalLimit int `json:"totalLimit,omitempty"`
+	// TotalLimit rate limit about the whole host, format: G(B)/g/M(B)/m/K(B)/k/B
+	// pure number will also be parsed as Byte.
+	TotalLimit rate.Rate `json:"totalLimit,omitempty"`
 
 	// Timeout download timeout(second).
-	Timeout int `json:"timeout,omitempty"`
+	Timeout time.Duration `json:"timeout,omitempty"`
 
 	// Md5 expected file md5.
 	Md5 string `json:"md5,omitempty"`
@@ -208,25 +215,25 @@ type Config struct {
 	ClientQueueSize int `json:"clientQueueSize,omitempty"`
 
 	// Start time.
-	StartTime time.Time `json:"startTime"`
+	StartTime time.Time `json:"-"`
 
 	// Sign the value is 'Pid + float64(time.Now().UnixNano())/float64(time.Second) format: "%d-%.3f"'.
 	// It is unique for downloading task, and is used for debugging.
-	Sign string `json:"sign"`
+	Sign string `json:"-"`
 
 	// Username of the system currently logged in.
-	User string `json:"user"`
+	User string `json:"-"`
 
 	// WorkHome work home path,
 	// default: `$HOME/.small-dragonfly`.
-	WorkHome string `json:"workHome"`
+	WorkHome string `json:"-"`
 
 	// Config file paths,
 	// default:["/etc/dragonfly/dfget.yml","/etc/dragonfly.conf"].
 	//
 	// NOTE: It is recommended to use `/etc/dragonfly/dfget.yml` as default,
 	// and the `/etc/dragonfly.conf` is just to ensure compatibility with previous versions.
-	ConfigFiles []string `json:"configFile"`
+	ConfigFiles []string `json:"-"`
 
 	// RV stores the variables that are initialized and used at downloading task executing.
 	RV RuntimeVariable `json:"-"`
@@ -260,6 +267,8 @@ func NewConfig() *Config {
 	cfg.RV.SystemDataDir = path.Join(cfg.WorkHome, "data")
 	cfg.RV.FileLength = -1
 	cfg.ConfigFiles = []string{DefaultYamlConfigFile, DefaultIniConfigFile}
+	cfg.LocalLimit = DefaultLocalLimit
+	cfg.MinRate = DefaultMinRate
 	return cfg
 }
 

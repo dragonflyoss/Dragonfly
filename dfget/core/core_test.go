@@ -101,13 +101,6 @@ func (s *CoreTestSuite) TestRegisterToSupernode(c *check.C) {
 	cfg.Node = []string{"x"}
 	cfg.URL = "http://taobao.com"
 	cfg.BackSourceReason = config.BackSourceReasonNone
-	// f(config.BackSourceReasonNone, false, nil)
-
-	cfg.Node = []string{"x"}
-	cfg.URL = "http://lowzj.com"
-	f(config.BackSourceReasonNone, true, &regist.RegisterResult{
-		Node: "x", RemainderNodes: []string{}, URL: cfg.URL, TaskID: "a",
-		FileLength: 100, PieceSize: 10})
 }
 
 func (s *CoreTestSuite) TestAdjustSupernodeList(c *check.C) {

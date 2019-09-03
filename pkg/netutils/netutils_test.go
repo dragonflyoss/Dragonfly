@@ -22,6 +22,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/pkg/rate"
+
 	"github.com/go-check/check"
 )
 
@@ -62,7 +64,7 @@ func (suite *NetUtilSuite) TestGetIPAndPortFromNode(c *check.C) {
 func (suite *NetUtilSuite) TestNetLimit(c *check.C) {
 	speed := NetLimit()
 	if runtime.NumCPU() < 24 {
-		c.Assert(speed, check.Equals, "20M")
+		c.Assert(*speed, check.Equals, 20*rate.MB)
 	}
 }
 
@@ -226,8 +228,8 @@ func (suite *NetUtilSuite) TestConvertTimeIntToString(c *check.C) {
 func (suite *NetUtilSuite) TestCalculateTimeout(c *check.C) {
 	var cases = []struct {
 		fileLength     int64
-		minRate        int
-		defaultMinRate int
+		minRate        rate.Rate
+		defaultMinRate rate.Rate
 		reservedTime   time.Duration
 		expectedResult time.Duration
 	}{

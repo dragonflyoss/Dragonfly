@@ -137,7 +137,7 @@ func (pe *peerServerExecutor) checkPeerServerExist(cfg *config.Config, port int)
 	}
 
 	// check the peer server whether is available
-	result, err := checkServer(cfg.RV.LocalIP, port, cfg.RV.DataDir, taskFileName, cfg.TotalLimit)
+	result, err := checkServer(cfg.RV.LocalIP, port, cfg.RV.DataDir, taskFileName, int(cfg.TotalLimit))
 	logrus.Infof("local http result:%s err:%v, port:%d path:%s",
 		result, err, port, config.LocalHTTPPathCheck)
 
