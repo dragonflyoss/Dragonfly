@@ -11,7 +11,7 @@ It is warmly welcomed if you have interest to hack on Dragonfly. First, we encou
 
 ## Reporting security issues
 
-Security issues are always treated seriously. As our usual principle, we discourage anyone to spread security issues. If you find a security issue of Dragonfly, please do not discuss it in public and even do not open a public issue. Instead we encourage you to send us a private email to  [dragonfly-dev@service.alibaba.com](mailto:dragonfly-dev@service.alibaba.com) to report this.
+Security issues are always treated seriously. As our usual principle, we discourage anyone to spread security issues. If you find a security issue of Dragonfly, please do not discuss it in public and even do not open a public issue. Instead we encourage you to send us a private email to [dragonfly-dev@service.alibaba.com](mailto:dragonfly-dev@service.alibaba.com) to report this.
 
 ## Reporting general issues
 
