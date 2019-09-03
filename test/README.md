@@ -85,7 +85,7 @@ GOROOT=/usr/local/go
 GOPATH=/go
 ```
 
-Then copy or clone Dragonfly source code to the GOPATH：
+Then copy or clone Dragonfly source code to the GOPATH:
 
 ``` shell
 # pwd

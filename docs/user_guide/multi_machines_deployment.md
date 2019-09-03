@@ -28,7 +28,7 @@ Deploy the Dragonfly server (Supernode) on the machine `dfsupernode`.
 docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 -v /home/admin/supernode:/home/admin/supernode dragonflyoss/supernode:0.4.3 --download-port=8001
 ```
 
-## Step 2：Deploy Dragonfly Client (dfclient)
+## Step 2: Deploy Dragonfly Client (dfclient)
 
 The following operations should be performed both on the client machine `dfclient0`, `dfclient1`.
 
@@ -70,13 +70,13 @@ We need to modify the Docker Daemon configuration to use the Dragonfly as a pull
 
 **Tip:** For more information on `/etc/docker/daemon.json`, see [Docker documentation](https://docs.docker.com/registry/recipes/mirror/#configure-the-cache).
 
-2. Restart Docker Daemon。
+2. Restart Docker Daemon.
 
 ```bash
 systemctl restart docker
 ```
 
-## Step 4：Pull images with Dragonfly
+## Step 4: Pull images with Dragonfly
 
 Through the above steps, we can start to validate if Dragonfly works as expected.
 
@@ -86,7 +86,7 @@ And you can pull the image as usual on either `dfclient0` or `dfclient1`, for ex
 docker pull nginx:latest
 ```
 
-## Step 5：Validate Dragonfly
+## Step 5: Validate Dragonfly
 
 You can execute the following command to check if the nginx image is distributed via Dragonfly.
 
