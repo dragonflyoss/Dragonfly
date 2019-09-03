@@ -25,7 +25,7 @@ import (
 )
 
 // versionDescription is used to describe version command in detail and auto generate command doc.
-var versionDescription = "Display the version and build information of Dragonfly supernode， " +
+var versionDescription = "Display the version and build information of Dragonfly supernode, " +
 	"including GoVersion, OS, Arch, Version, BuildDate and GitCommit."
 
 var versionCmd = &cobra.Command{
