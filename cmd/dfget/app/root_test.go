@@ -18,18 +18,15 @@ package app
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
-	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/rate"
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
@@ -41,11 +38,10 @@ type dfgetSuit struct {
 
 func (suit *dfgetSuit) Test_initFlagsNoArguments() {
 	suit.Nil(cfg.Node)
-	suit.Equal(cfg.LocalLimit, 0)
-	suit.Equal(cfg.TotalLimit, 0)
+	suit.Equal(cfg.LocalLimit, 20*rate.MB)
+	suit.Equal(cfg.TotalLimit, rate.Rate(0))
 	suit.Equal(cfg.Notbs, false)
 	suit.Equal(cfg.DFDaemon, false)
-	suit.Equal(cfg.ShowBar, false)
 	suit.Equal(cfg.Console, false)
 	suit.Equal(cfg.Verbose, false)
 	suit.Equal(cfg.URL, "")
@@ -59,7 +55,7 @@ func (suit *dfgetSuit) Test_initProperties() {
 	iniFile := filepath.Join(dirName, "dragonfly.ini")
 	yamlFile := filepath.Join(dirName, "dragonfly.yaml")
 	iniContent := []byte("[node]\naddress=1.1.1.1")
-	yamlContent := []byte("nodes:\n  - 1.1.1.2\nlocalLimit: 1024000")
+	yamlContent := []byte("nodes:\n  - 1.1.1.2\nlocalLimit: 1000K")
 	ioutil.WriteFile(iniFile, iniContent, os.ModePerm)
 	ioutil.WriteFile(yamlFile, yamlContent, os.ModePerm)
 
@@ -75,52 +71,23 @@ func (suit *dfgetSuit) Test_initProperties() {
 		{configs: []string{iniFile, yamlFile},
 			expected: newProp(0, 0, 0, "1.1.1.1")},
 		{configs: []string{yamlFile, iniFile},
-			expected: newProp(1024000, 0, 0, "1.1.1.2")},
+			expected: newProp(int(rate.MB*20), 0, 0, "1.1.1.2")},
 		{configs: []string{filepath.Join(dirName, "x"), yamlFile},
-			expected: newProp(1024000, 0, 0, "1.1.1.2")},
+			expected: newProp(int(rate.MB*20), 0, 0, "1.1.1.2")},
 	}
 
 	for _, v := range cases {
 		cfg = config.NewConfig()
 		buf.Reset()
 		cfg.ConfigFiles = v.configs
-		localLimitStr := strconv.FormatInt(int64(v.expected.LocalLimit/1024), 10)
-		totalLimitStr := strconv.FormatInt(int64(v.expected.TotalLimit/1024), 10)
 		rootCmd.Flags().Parse([]string{
-			"--locallimit", fmt.Sprintf("%sk", localLimitStr),
-			"--totallimit", fmt.Sprintf("%sk", totalLimitStr)})
+			"--locallimit", v.expected.LocalLimit.String(),
+			"--totallimit", v.expected.TotalLimit.String()})
 		initProperties()
 		suit.EqualValues(cfg.Node, v.expected.Nodes)
 		suit.Equal(cfg.LocalLimit, v.expected.LocalLimit)
 		suit.Equal(cfg.TotalLimit, v.expected.TotalLimit)
 		suit.Equal(cfg.ClientQueueSize, v.expected.ClientQueueSize)
-	}
-}
-
-func (suit *dfgetSuit) Test_transLimit() {
-	var cases = map[string]struct {
-		i   int
-		err string
-	}{
-		"20M":   {20971520, ""},
-		"20m":   {20971520, ""},
-		"10k":   {10240, ""},
-		"10K":   {10240, ""},
-		"10x":   {0, "invalid unit 'x' of '10x', 'KkMm' are supported"},
-		"10.0x": {0, "invalid syntax"},
-		"ab":    {0, "invalid syntax"},
-		"abM":   {0, "invalid syntax"},
-	}
-
-	for k, v := range cases {
-		i, e := transLimit(k)
-		suit.Equal(i, v.i)
-		if stringutils.IsEmptyStr(v.err) {
-			suit.Nil(e)
-		} else {
-			suit.NotNil(e)
-			suit.True(strings.Contains(e.Error(), v.err), true)
-		}
 	}
 }
 
@@ -170,10 +137,10 @@ func newProp(local int, total int, size int, nodes ...string) *config.Properties
 		p.Nodes = nodes
 	}
 	if local != 0 {
-		p.LocalLimit = local
+		p.LocalLimit = rate.Rate(local)
 	}
 	if total != 0 {
-		p.TotalLimit = total
+		p.TotalLimit = rate.Rate(total)
 	}
 	if size != 0 {
 		p.ClientQueueSize = size

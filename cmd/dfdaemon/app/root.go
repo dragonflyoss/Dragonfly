@@ -22,12 +22,14 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfdaemon"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
 	dferr "github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/rate"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
@@ -92,7 +94,7 @@ func init() {
 	// dfget download config
 	rf.String("localrepo", filepath.Join(os.Getenv("HOME"), ".small-dragonfly/dfdaemon/data/"), "temp output dir of dfdaemon")
 	rf.String("dfpath", defaultDfgetPath, "dfget path")
-	rf.String("ratelimit", netutils.NetLimit(), "net speed limit,format:xxxM/K")
+	rf.Var(netutils.NetLimit(), "ratelimit", "net speed limit")
 	rf.StringSlice("node", nil, "specify the addresses(host:port) of supernodes that will be passed to dfget.")
 
 	exitOnError(bindRootFlags(viper.GetViper()), "bind root command flags")
@@ -152,6 +154,8 @@ func getConfigFromViper(v *viper.Viper) (*config.Properties, error) {
 			reflect.TypeOf(config.Regexp{}),
 			reflect.TypeOf(config.URL{}),
 			reflect.TypeOf(config.CertPool{}),
+			reflect.TypeOf(time.Second),
+			reflect.TypeOf(rate.B),
 		)
 	}); err != nil {
 		return nil, errors.Wrap(err, "unmarshal yaml")
