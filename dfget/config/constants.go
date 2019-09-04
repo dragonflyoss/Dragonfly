@@ -112,8 +112,9 @@ const (
 	LocalHTTPPathRate   = "/rate/"
 	LocalHTTPPing       = "/server/ping"
 
-	DataExpireTime  = 3 * time.Minute
-	ServerAliveTime = 5 * time.Minute
+	DataExpireTime        = 3 * time.Minute
+	ServerAliveTime       = 5 * time.Minute
+	DefaultDownlodTimeout = 5 * time.Minute
 
 	DefaultSupernodePort = 8002
 )

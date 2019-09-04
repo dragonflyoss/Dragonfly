@@ -19,22 +19,28 @@ package netutils
 import (
 	"fmt"
 	"runtime"
+	"testing"
+	"time"
 
 	"github.com/go-check/check"
 )
 
-type UtilSuite struct{}
-
-func init() {
-	check.Suite(&UtilSuite{})
+func Test(t *testing.T) {
+	check.TestingT(t)
 }
 
-func (suite *UtilSuite) TestExtractHost(c *check.C) {
+type NetUtilSuite struct{}
+
+func init() {
+	check.Suite(&NetUtilSuite{})
+}
+
+func (suite *NetUtilSuite) TestExtractHost(c *check.C) {
 	host := ExtractHost("1:0")
 	c.Assert(host, check.Equals, "1")
 }
 
-func (suite *UtilSuite) TestGetIPAndPortFromNode(c *check.C) {
+func (suite *NetUtilSuite) TestGetIPAndPortFromNode(c *check.C) {
 	var cases = []struct {
 		node         string
 		defaultPort  int
@@ -53,14 +59,14 @@ func (suite *UtilSuite) TestGetIPAndPortFromNode(c *check.C) {
 	}
 }
 
-func (suite *UtilSuite) TestNetLimit(c *check.C) {
+func (suite *NetUtilSuite) TestNetLimit(c *check.C) {
 	speed := NetLimit()
 	if runtime.NumCPU() < 24 {
 		c.Assert(speed, check.Equals, "20M")
 	}
 }
 
-func (suite *UtilSuite) TestFilterURLParam(c *check.C) {
+func (suite *NetUtilSuite) TestFilterURLParam(c *check.C) {
 	var cases = []struct {
 		url      string
 		filter   []string
@@ -118,7 +124,7 @@ func (suite *UtilSuite) TestFilterURLParam(c *check.C) {
 	}
 }
 
-func (suite *UtilSuite) TestIsValidURL(c *check.C) {
+func (suite *NetUtilSuite) TestIsValidURL(c *check.C) {
 	var cases = map[string]bool{
 		"":                      false,
 		"abcdefg":               false,
@@ -151,7 +157,7 @@ func (suite *UtilSuite) TestIsValidURL(c *check.C) {
 	}
 }
 
-func (suite *UtilSuite) TestIsValidIP(c *check.C) {
+func (suite *NetUtilSuite) TestIsValidIP(c *check.C) {
 	var cases = []struct {
 		ip       string
 		expected bool
@@ -183,7 +189,7 @@ func (suite *UtilSuite) TestIsValidIP(c *check.C) {
 	}
 }
 
-func (suite *UtilSuite) TestConvertHeaders(c *check.C) {
+func (suite *NetUtilSuite) TestConvertHeaders(c *check.C) {
 	cases := []struct {
 		h []string
 		e map[string]string
@@ -203,16 +209,60 @@ func (suite *UtilSuite) TestConvertHeaders(c *check.C) {
 	}
 }
 
-func (suite *UtilSuite) TestConvertTimeStringToInt(c *check.C) {
+func (suite *NetUtilSuite) TestConvertTimeStringToInt(c *check.C) {
 	timeStr := "Fri, 15 Jun 2018 14:40:41 GMT"
 	result, err := ConvertTimeStringToInt(timeStr)
 	c.Check(err, check.IsNil)
 	c.Check(result, check.Equals, int64(1529073641000))
 }
 
-func (suite *UtilSuite) TestConvertTimeIntToString(c *check.C) {
+func (suite *NetUtilSuite) TestConvertTimeIntToString(c *check.C) {
 	timestamp := int64(1529073641000)
 	result, err := ConvertTimeIntToString(timestamp)
 	c.Check(err, check.IsNil)
 	c.Check(result, check.Equals, "Fri, 15 Jun 2018 14:40:41 GMT")
+}
+
+func (suite *NetUtilSuite) TestCalculateTimeout(c *check.C) {
+	var cases = []struct {
+		fileLength     int64
+		minRate        int
+		defaultMinRate int
+		reservedTime   time.Duration
+		expectedResult time.Duration
+	}{
+		{
+			fileLength:     1000,
+			minRate:        20,
+			defaultMinRate: 50,
+			reservedTime:   0,
+			expectedResult: time.Duration(50) * time.Second,
+		},
+		{
+			fileLength:     1000,
+			minRate:        50,
+			defaultMinRate: 20,
+			reservedTime:   100 * time.Millisecond,
+			expectedResult: time.Duration(20)*time.Second + 100*time.Millisecond,
+		},
+		{
+			fileLength:     1000,
+			minRate:        0,
+			defaultMinRate: 50,
+			reservedTime:   0,
+			expectedResult: time.Duration(20) * time.Second,
+		},
+		{
+			fileLength:     1000,
+			minRate:        0,
+			defaultMinRate: 0,
+			reservedTime:   0,
+			expectedResult: 0,
+		},
+	}
+
+	for _, ca := range cases {
+		result := CalculateTimeout(ca.fileLength, ca.minRate, ca.defaultMinRate, ca.reservedTime)
+		c.Assert(result, check.DeepEquals, ca.expectedResult)
+	}
 }
