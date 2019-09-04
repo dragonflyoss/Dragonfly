@@ -183,6 +183,21 @@ func (mr *MockProgressMgrMockRecorder) GetBlackInfoByPeerID(ctx, peerID interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBlackInfoByPeerID", reflect.TypeOf((*MockProgressMgr)(nil).GetBlackInfoByPeerID), ctx, peerID)
 }
 
+// UpdateSuperLoad mocks base method
+func (m *MockProgressMgr) UpdateSuperLoad(ctx context.Context, taskID string, delta, limit int32) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateSuperLoad", ctx, taskID, delta, limit)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateSuperLoad indicates an expected call of UpdateSuperLoad
+func (mr *MockProgressMgrMockRecorder) UpdateSuperLoad(ctx, taskID, delta, limit interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSuperLoad", reflect.TypeOf((*MockProgressMgr)(nil).UpdateSuperLoad), ctx, taskID, delta, limit)
+}
+
 // DeleteTaskID mocks base method
 func (m *MockProgressMgr) DeleteTaskID(ctx context.Context, taskID string) error {
 	m.ctrl.T.Helper()

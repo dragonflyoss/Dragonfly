@@ -17,6 +17,8 @@
 package progress
 
 import (
+	"time"
+
 	"github.com/dragonflyoss/Dragonfly/pkg/atomiccount"
 	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
 
@@ -61,6 +63,14 @@ type peerState struct {
 	serviceDownTime int64
 }
 
+type superLoadState struct {
+	// superLoad maintains the load num downloaded from the supernode for each task.
+	loadValue *atomiccount.AtomicInt
+
+	// loadModTime will record the time when the load be modified.
+	loadModTime time.Time
+}
+
 func newSuperState() *superState {
 	return &superState{
 		pieceBitSet: &bitset.BitSet{},
@@ -79,5 +89,12 @@ func newPeerState() *peerState {
 		producerLoad:      atomiccount.NewAtomicInt(0),
 		clientErrorCount:  atomiccount.NewAtomicInt(0),
 		serviceErrorCount: atomiccount.NewAtomicInt(0),
+	}
+}
+
+func newSuperLoadState() *superLoadState {
+	return &superLoadState{
+		loadValue:   atomiccount.NewAtomicInt(0),
+		loadModTime: time.Now(),
 	}
 }

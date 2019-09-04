@@ -23,7 +23,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// stateSyncMap is a thread-safe map.
+// stateSyncMap is a thread-safe map for progress state.
 type stateSyncMap struct {
 	*syncmap.SyncMap
 }
@@ -97,6 +97,20 @@ func (mmap *stateSyncMap) getAsPieceState(key string) (*pieceState, error) {
 	}
 
 	if value, ok := v.(*pieceState); ok {
+		return value, nil
+	}
+	return nil, errors.Wrapf(errortypes.ErrConvertFailed, "key %s: %v", key, v)
+}
+
+// getAsSuperLoadState returns result as *superLoadState.
+// The ErrConvertFailed error will be returned if the assertion fails.
+func (mmap *stateSyncMap) getAsSuperLoadState(key string) (*superLoadState, error) {
+	v, err := mmap.get(key)
+	if err != nil {
+		return nil, errors.Wrapf(err, "key: %s", key)
+	}
+
+	if value, ok := v.(*superLoadState); ok {
 		return value, nil
 	}
 	return nil, errors.Wrapf(errortypes.ErrConvertFailed, "key %s: %v", key, v)

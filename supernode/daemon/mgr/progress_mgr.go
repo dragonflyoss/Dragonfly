@@ -70,10 +70,10 @@ type ProgressMgr interface {
 	// GetPeerStateByPeerID gets peer state with specified peerID.
 	GetPeerStateByPeerID(ctx context.Context, peerID string) (peerState *PeerState, err error)
 
-	// UpdatePeerServiceDown do update operation when a peer server offline.
+	// UpdateSuperLoad updates the superload of taskID by adding the delta.
+	// The updated will be `false` if failed to do update operation.
 	//
-	// This function will update the service down time for the peerID.
-	// And the supernode will not dispatch tasks to this peer.
+	// It's considered as a failure when then superload is greater than limit after adding delta.
 	UpdatePeerServiceDown(ctx context.Context, peerID string) (err error)
 
 	// GetPeersByTaskID gets all peers info with specified taskID.
@@ -81,6 +81,11 @@ type ProgressMgr interface {
 
 	// GetBlackInfoByPeerID gets black info with specified peerID.
 	GetBlackInfoByPeerID(ctx context.Context, peerID string) (dstPIDMap *syncmap.SyncMap, err error)
+
+	// UpdateSuperLoad update the superLoad with delta.
+	//
+	// The value will be rolled back if it exceeds the limit after updated and returns false.
+	UpdateSuperLoad(ctx context.Context, taskID string, delta, limit int32) (updated bool, err error)
 
 	// DeleteTaskID deletes the super progress with specified taskID.
 	DeleteTaskID(ctx context.Context, taskID string) (err error)
