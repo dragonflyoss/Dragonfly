@@ -24,6 +24,7 @@ import (
 
 // DeleteTaskID deletes the super progress with specified taskID.
 func (pm *Manager) DeleteTaskID(ctx context.Context, taskID string) (err error) {
+	pm.superLoad.remove(taskID)
 	return pm.superProgress.remove(taskID)
 }
 

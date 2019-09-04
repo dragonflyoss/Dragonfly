@@ -144,7 +144,7 @@ type BaseProperties struct {
 	// PeerDownLimit is the download limit of a peer. When a peer starts to download a file/image,
 	// it will download file/image in the form of pieces. PeerDownLimit mean that a peer can only
 	// stand starting PeerDownLimit concurrent downloading tasks.
-	// default: 4
+	// default: 5
 	PeerDownLimit int `yaml:"peerDownLimit"`
 
 	// When dfget node starts to play a role of peer, it will provide services for other peers

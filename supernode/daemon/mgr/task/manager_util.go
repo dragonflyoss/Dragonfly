@@ -345,6 +345,9 @@ func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, tas
 	tm.metrics.scheduleDurationMilliSeconds.WithLabelValues(peer.IP.String()).Observe(timeutils.SinceInMilliseconds(startTime))
 	logrus.Debugf("get scheduler result length(%d) with taskID(%s) and clientID(%s)", len(pieceResult), task.ID, clientID)
 
+	if len(pieceResult) == 0 {
+		return false, nil, errortypes.ErrPeerWait
+	}
 	var pieceInfos []*types.PieceInfo
 	for _, v := range pieceResult {
 		logrus.Debugf("get scheduler result item: %+v with taskID(%s) and clientID(%s)", v, task.ID, clientID)
