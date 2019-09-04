@@ -264,6 +264,8 @@ func (tm *Manager) GetPieces(ctx context.Context, taskID, clientID string, req *
 
 // UpdatePieceStatus update the piece status with specified parameters.
 func (tm *Manager) UpdatePieceStatus(ctx context.Context, taskID, pieceRange string, pieceUpdateRequest *types.PieceUpdateRequest) error {
+	logrus.Debugf("get update piece status request: %+v with taskID(%s) pieceRange(%s)", pieceUpdateRequest, taskID, pieceRange)
+
 	// calculate the pieceNum according to the pieceRange
 	pieceNum := util.CalculatePieceNum(pieceRange)
 	if pieceNum == -1 {

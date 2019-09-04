@@ -43,7 +43,7 @@ func (s *DownloaderTestSuite) TestDoDownloadTimeout(c *check.C) {
 	md := &MockDownloader{100}
 
 	err := DoDownloadTimeout(md, 0*time.Millisecond)
-	c.Assert(err, check.NotNil)
+	c.Assert(err, check.IsNil)
 
 	err = DoDownloadTimeout(md, 50*time.Millisecond)
 	c.Assert(err, check.NotNil)

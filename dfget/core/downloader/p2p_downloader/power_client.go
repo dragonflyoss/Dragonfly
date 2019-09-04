@@ -31,6 +31,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 	"github.com/dragonflyoss/Dragonfly/pkg/limitreader"
+	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/queue"
 	"github.com/dragonflyoss/Dragonfly/pkg/ratelimiter"
 
@@ -115,10 +116,12 @@ func (pc *PowerClient) downloadPiece() (content *bytes.Buffer, e error) {
 
 	// send download request
 	startTime := time.Now()
-	resp, err := pc.downloadAPI.Download(dstIP, peerPort, pc.createDownloadRequest())
+	timeout := netutils.CalculateTimeout(int64(pc.pieceTask.PieceSize), pc.cfg.MinRate, config.DefaultMinRate, 10*time.Second)
+	resp, err := pc.downloadAPI.Download(dstIP, peerPort, pc.createDownloadRequest(), timeout)
 	if err != nil {
 		return nil, err
 	}
+	logrus.Debugf("success to get resp timeSince(%v)", time.Since(startTime))
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusRequestedRangeNotSatisfiable {
 		return nil, errortypes.ErrRangeNotSatisfiable

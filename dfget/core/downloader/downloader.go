@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 
 	"github.com/sirupsen/logrus"
@@ -40,7 +41,8 @@ type Downloader interface {
 // the given timeout duration.
 func DoDownloadTimeout(downloader Downloader, timeout time.Duration) error {
 	if timeout <= 0 {
-		return fmt.Errorf("download timeout(%.3fs)", timeout.Seconds())
+		logrus.Warnf("invalid download timeout(%.3fs)", timeout.Seconds())
+		timeout = config.DefaultDownlodTimeout
 	}
 
 	var ch = make(chan error)
