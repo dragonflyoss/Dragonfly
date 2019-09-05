@@ -29,7 +29,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// BufferSize define the buffer size when reading and writing file
+// BufferSize define the buffer size when reading and writing file.
 const BufferSize = 8 * 1024 * 1024
 
 // CreateDirectory creates directory recursively.
@@ -190,7 +190,7 @@ func IsRegularFile(name string) bool {
 	return f.Mode().IsRegular()
 }
 
-// Md5Sum generate md5 for a given file
+// Md5Sum generate md5 for a given file.
 func Md5Sum(name string) string {
 	if !IsRegularFile(name) {
 		return ""

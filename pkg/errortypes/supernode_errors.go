@@ -18,7 +18,7 @@
 package errortypes
 
 var (
-	// ErrSystemError represents the error is a system error..
+	// ErrSystemError represents the error is a system error.
 	ErrSystemError = DfError{codeSystemError, "system error"}
 
 	// ErrCDNFail represents the cdn status is fail.

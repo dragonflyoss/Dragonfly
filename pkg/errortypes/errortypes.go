@@ -24,7 +24,7 @@ import (
 )
 
 var (
-	// ErrDataNotFound represents the data cannot be found..
+	// ErrDataNotFound represents the data cannot be found.
 	ErrDataNotFound = DfError{codeDataNotFound, "data not found"}
 
 	// ErrEmptyValue represents the value is empty or nil.
