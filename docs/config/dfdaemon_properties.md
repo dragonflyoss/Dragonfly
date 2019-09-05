@@ -19,7 +19,7 @@ The following startup parameters are supported for `dfdaemon`
 | dfget_flags |	dfget properties |
 | dfpath | dfget path |
 | hijack_https | HijackHTTPS is the list of hosts whose https requests should be hijacked by dfdaemon. The first matched rule will be used |
-| localrepo | Temp output dir of dfdaemon, by defualt `.small-dragonfly/dfdaemon/data/` |
+| localrepo | Temp output dir of dfdaemon, by default `.small-dragonfly/dfdaemon/data/` |
 | maxprocs| The maximum number of CPUs that the dfdaemon can use |
 | proxies | Proxies is the list of rules for the transparent proxy |
 | ratelimit | Net speed limit,format:xxxM/K |
