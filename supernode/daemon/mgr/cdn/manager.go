@@ -23,19 +23,40 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/limitreader"
+	"github.com/dragonflyoss/Dragonfly/pkg/metricsutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/ratelimiter"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
+	"github.com/dragonflyoss/Dragonfly/supernode/httpclient"
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
 	"github.com/dragonflyoss/Dragonfly/supernode/util"
 
-	"github.com/dragonflyoss/Dragonfly/supernode/httpclient"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 )
 
 var _ mgr.CDNMgr = &Manager{}
+
+type metrics struct {
+	cdnCacheHitCount     *prometheus.CounterVec
+	cdnDownloadCount     *prometheus.CounterVec
+	cdnDownloadFailCount *prometheus.CounterVec
+}
+
+func newMetrics(register prometheus.Registerer) *metrics {
+	return &metrics{
+		cdnCacheHitCount: metricsutils.NewCounter(config.SubsystemSupernode, "cdn_cache_hit_total",
+			"Total times of hitting cdn cache", []string{}, register),
+
+		cdnDownloadCount: metricsutils.NewCounter(config.SubsystemSupernode, "cdn_download_total",
+			"Total times of cdn download", []string{}, register),
+
+		cdnDownloadFailCount: metricsutils.NewCounter(config.SubsystemSupernode, "cdn_download_failed_total",
+			"Total failure times of cdn download", []string{}, register),
+	}
+}
 
 // Manager is an implementation of the interface of CDNMgr.
 type Manager struct {
@@ -51,10 +72,12 @@ type Manager struct {
 	originClient    httpclient.OriginHTTPClient
 	pieceMD5Manager *pieceMD5Mgr
 	writer          *superWriter
+	metrics         *metrics
 }
 
 // NewManager returns a new Manager.
-func NewManager(cfg *config.Config, cacheStore *store.Store, progressManager mgr.ProgressMgr, originClient httpclient.OriginHTTPClient) (*Manager, error) {
+func NewManager(cfg *config.Config, cacheStore *store.Store, progressManager mgr.ProgressMgr,
+	originClient httpclient.OriginHTTPClient, register prometheus.Registerer) (*Manager, error) {
 	rateLimiter := ratelimiter.NewRateLimiter(ratelimiter.TransRate(config.TransLimit(cfg.MaxBandwidth-cfg.SystemReservedBandwidth)), 2)
 	metaDataManager := newFileMetaDataManager(cacheStore)
 	pieceMD5Manager := newpieceMD5Mgr()
@@ -71,6 +94,7 @@ func NewManager(cfg *config.Config, cacheStore *store.Store, progressManager mgr
 		detector:        newCacheDetector(cacheStore, metaDataManager, originClient),
 		originClient:    originClient,
 		writer:          newSuperWriter(cacheStore, cdnReporter),
+		metrics:         newMetrics(register),
 	}, nil
 }
 
@@ -95,6 +119,7 @@ func (cm *Manager) TriggerCDN(ctx context.Context, task *types.TaskInfo) (*types
 
 	if startPieceNum == -1 {
 		logrus.Infof("cache full hit for taskId:%s on local", task.ID)
+		cm.metrics.cdnCacheHitCount.WithLabelValues().Inc()
 		return updateTaskInfo, nil
 	}
 
@@ -107,7 +132,9 @@ func (cm *Manager) TriggerCDN(ctx context.Context, task *types.TaskInfo) (*types
 
 	// start to download the source file
 	resp, err := cm.download(ctx, task.ID, task.RawURL, task.Headers, startPieceNum, httpFileLength, pieceContSize)
+	cm.metrics.cdnDownloadCount.WithLabelValues().Inc()
 	if err != nil {
+		cm.metrics.cdnDownloadFailCount.WithLabelValues().Inc()
 		return getUpdateTaskInfoWithStatusOnly(types.TaskInfoCdnStatusFAILED), err
 	}
 	defer resp.Body.Close()

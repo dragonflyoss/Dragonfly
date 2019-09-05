@@ -87,7 +87,7 @@ func New(cfg *config.Config, register prometheus.Registerer) (*Server, error) {
 		return nil, err
 	}
 
-	cdnMgr, err := cdn.NewManager(cfg, storeLocal, progressMgr, originClient)
+	cdnMgr, err := cdn.NewManager(cfg, storeLocal, progressMgr, originClient, register)
 	if err != nil {
 		return nil, err
 	}
