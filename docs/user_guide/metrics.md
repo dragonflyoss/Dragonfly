@@ -16,8 +16,11 @@ This doc contains all the metrics that Dragonfly components currently support. N
 - dragonfly_supernode_dfgettasks_registered_total{callsystem} - total times of registering new dfgettasks. counter type.
 - dragonfly_supernode_dfgettasks_failed_total{callsystem} - total times of failed dfgettasks. counter type.
 - dragonfly_supernode_schedule_duration_milliseconds{peer} - duration for task scheduling in milliseconds
-- dragonfly_supernode_trigger_cdn_total{} - total times of triggering cdn.
-- dragonfly_supernode_trigger_cdn_failed_total{} - total failed times of triggering cdn.
+- dragonfly_supernode_cdn_trigger_total{} - total times of triggering cdn. counter type.
+- dragonfly_supernode_cdn_trigger_total{} - total failed times of triggering cdn. counter type.
+- dragonfly_supernode_cdn_cache_hit_total{} - total times of hitting cdn cache. counter type.
+- dragonfly_supernode_cdn_download_total{} - total times of cdn downloading. counter type.
+- dragonfly_supernode_cdn_download_failed_total{} - total failure times of cdn downloading. counter type.
 
 ## Dfdaemon
 

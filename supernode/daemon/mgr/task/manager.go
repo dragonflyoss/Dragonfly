@@ -58,10 +58,10 @@ func newMetrics(register prometheus.Registerer) *metrics {
 		tasksRegisterCount: metricsutils.NewCounter(config.SubsystemSupernode, "tasks_registered_total",
 			"Total times of registering tasks", []string{}, register),
 
-		triggerCdnCount: metricsutils.NewCounter(config.SubsystemSupernode, "trigger_cdn_total",
+		triggerCdnCount: metricsutils.NewCounter(config.SubsystemSupernode, "cdn_trigger_total",
 			"Total times of triggering cdn", []string{}, register),
 
-		triggerCdnFailCount: metricsutils.NewCounter(config.SubsystemSupernode, "trigger_cdn_failed_total",
+		triggerCdnFailCount: metricsutils.NewCounter(config.SubsystemSupernode, "cdn_trigger_failed_total",
 			"Total failure times of triggering cdn", []string{}, register),
 
 		scheduleDurationMilliSeconds: metricsutils.NewHistogram(config.SubsystemSupernode, "schedule_duration_milliseconds",
