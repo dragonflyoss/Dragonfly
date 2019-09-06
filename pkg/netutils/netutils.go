@@ -41,7 +41,7 @@ const (
 
 var defaultRateLimit = "20M"
 
-// NetLimit parse speed of interface that it has prefix of eth.
+// NetLimit parses speed of interface that it has prefix of eth.
 func NetLimit() string {
 	defer func() {
 		if err := recover(); err != nil {
@@ -282,7 +282,7 @@ func isExist(mmap map[string]bool, key string) bool {
 //
 // The 0 will be returned when both minRate and defaultMinRate both are <=0.
 func CalculateTimeout(fileLength int64, minRate int, defaultMinRate int, reservedTime time.Duration) time.Duration {
-	// ensure the minRate to avoid trigger panic when minRate equals zero.
+	// ensure the minRate to avoid trigger panic when minRate equals zero
 	if fileLength <= 0 ||
 		(minRate <= 0 && defaultMinRate <= 0) {
 		return 0

@@ -102,6 +102,22 @@ func setupFlags(cmd *cobra.Command, opt *Options) {
 
 	flagSet.StringVar(&opt.AdvertiseIP, "advertise-ip", "",
 		"the supernode ip that we advertise to other peer in the p2p-network")
+
+	flagSet.DurationVar(&opt.FailAccessInterval, "fail-access-interval", opt.FailAccessInterval,
+		"FailAccessInterval is the interval time after failed to access the URL")
+
+	flagSet.DurationVar(&opt.GCInitialDelay, "gc-initial-delay", opt.GCInitialDelay,
+		"GCInitialDelay is the delay time from the start to the first GC execution")
+
+	flagSet.DurationVar(&opt.GCMetaInterval, "gc-meta-interval", opt.GCMetaInterval,
+		"GCMetaInterval is the interval time to execute the GC meta")
+
+	flagSet.DurationVar(&opt.TaskExpireTime, "task-expire-time", opt.TaskExpireTime,
+		"TaskExpireTime when a task is not accessed within the taskExpireTime,and it will be treated to be expired")
+
+	flagSet.DurationVar(&opt.PeerGCDelay, "peer-gc-delay", opt.PeerGCDelay,
+		"PeerGCDelay is the delay time to execute the GC after the peer has reported the offline")
+
 }
 
 // runSuperNode prepares configs, setups essential details and runs supernode daemon.
