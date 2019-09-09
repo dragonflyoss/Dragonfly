@@ -31,6 +31,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/httpclient"
 
 	"github.com/go-check/check"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func Test(t *testing.T) {
@@ -45,7 +46,7 @@ func init() {
 }
 
 func (s *CDNDownloadTestSuite) TestDownload(c *check.C) {
-	cm, _ := NewManager(config.NewConfig(), nil, nil, httpclient.NewOriginClient())
+	cm, _ := NewManager(config.NewConfig(), nil, nil, httpclient.NewOriginClient(), prometheus.DefaultRegisterer)
 	bytes := []byte("hello world")
 	bytesLength := int64(len(bytes))
 
