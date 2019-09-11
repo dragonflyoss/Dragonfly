@@ -41,7 +41,7 @@ const (
 
 var defaultRateLimit = "20M"
 
-// NetLimit parse speed of interface that it has prefix of eth
+// NetLimit parses speed of interface that it has prefix of eth.
 func NetLimit() string {
 	defer func() {
 		if err := recover(); err != nil {

@@ -140,7 +140,7 @@ func (rl *RateLimiter) blocking(requiredToken int64) {
 	time.Sleep(time.Duration(windowCount * rl.window * time.Millisecond.Nanoseconds()))
 }
 
-// TransRate trans the rate to multiples of 1000
+// TransRate trans the rate to multiples of 1000.
 // For NewRateLimiter, the production of rate should be division by 1000.
 func TransRate(rate int) int64 {
 	if rate <= 0 {
