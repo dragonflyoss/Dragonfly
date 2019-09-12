@@ -46,13 +46,6 @@ func (suite *AssertSuite) TestMin(c *check.C) {
 	c.Assert(Min(3, 2), check.Equals, int64(2))
 }
 
-func (suite *AssertSuite) TestIsEmptyStr(c *check.C) {
-	c.Assert(IsEmptyStr(""), check.Equals, true)
-	c.Assert(IsEmptyStr("  "), check.Equals, true)
-	c.Assert(IsEmptyStr("\n  "), check.Equals, true)
-	c.Assert(IsEmptyStr("x"), check.Equals, false)
-}
-
 func (suite *AssertSuite) TestIsNil(c *check.C) {
 	c.Assert(IsNil(nil), check.Equals, true)
 	c.Assert(IsNil(suite), check.Equals, false)
