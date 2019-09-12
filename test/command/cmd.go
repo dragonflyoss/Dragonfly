@@ -235,7 +235,7 @@ func (s *Starter) kill(cmd *exec.Cmd) {
 	}
 }
 
-// execCmd execute a command.
+// execCmd executes a command.
 // param running indicates that how much time the process can run at most,
 // after the running duration, the process will be killed automatically.
 // When the value of running is less than 0, it will not be killed automatically,

@@ -107,7 +107,7 @@ func Print(program string) string {
 	return strings.TrimSpace(buf.String())
 }
 
-// NewBuildInfo register a collector which exports metrics about version and build information.
+// NewBuildInfo registers a collector which exports metrics about version and build information.
 func NewBuildInfo(program string, registerer prometheus.Registerer) {
 	buildInfo := metricsutils.NewGauge(program, "build_info",
 		fmt.Sprintf("A metric with a constant '1' value labeled by version, revision, os, "+

@@ -36,7 +36,7 @@ func CheckRespStatus(c *check.C, resp *http.Response, status int) {
 	}
 }
 
-// CheckMetric find the specific metric from /metrics endpoint and it will compare the metric
+// CheckMetric finds the specific metric from /metrics endpoint and it will compare the metric
 // value with expected value.
 func CheckMetric(c *check.C, metric string, value float64) {
 	var val float64
