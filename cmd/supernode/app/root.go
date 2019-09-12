@@ -24,6 +24,7 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/pkg/dflog"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
@@ -122,6 +123,10 @@ func setupFlags(cmd *cobra.Command, opt *Options) {
 
 // runSuperNode prepares configs, setups essential details and runs supernode daemon.
 func runSuperNode() error {
+	// create home dir
+	if err := fileutils.CreateDirectory(options.HomeDir); err != nil {
+		return fmt.Errorf("failed to create home dir %s: %v", options.HomeDir, err)
+	}
 	// initialize log.
 	if err := initLog(); err != nil {
 		return err
