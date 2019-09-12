@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"reflect"
 	"strconv"
-	"unicode"
 )
 
 // Max returns the larger of x or y.
@@ -39,16 +38,6 @@ func Min(x, y int64) int64 {
 		return x
 	}
 	return y
-}
-
-// IsEmptyStr returns whether the string s is empty.
-func IsEmptyStr(s string) bool {
-	for _, v := range s {
-		if !unicode.IsSpace(v) {
-			return false
-		}
-	}
-	return true
 }
 
 // IsNil returns whether the value  is nil.
