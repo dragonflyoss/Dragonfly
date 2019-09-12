@@ -84,7 +84,7 @@ func WithMaxSizeMB(max uint) Option {
 	}
 }
 
-// WithConsole add a hook to output logs to stdout
+// WithConsole adds a hook to output logs to stdout
 func WithConsole() Option {
 	return func(l *logrus.Logger) error {
 		consoleLog := &logrus.Logger{
