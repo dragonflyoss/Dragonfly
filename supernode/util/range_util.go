@@ -26,6 +26,30 @@ const (
 	separator = "-"
 )
 
+// CalculatePieceSize calculates the size of piece
+// according to the parameter range.
+func CalculatePieceSize(rangeStr string) int64 {
+	ranges := strings.Split(rangeStr, separator)
+	if len(ranges) != 2 {
+		return 0
+	}
+
+	startIndex, err := strconv.ParseInt(ranges[0], 10, 64)
+	if err != nil {
+		return 0
+	}
+	endIndex, err := strconv.ParseInt(ranges[1], 10, 64)
+	if err != nil {
+		return 0
+	}
+	if endIndex < startIndex {
+		return 0
+	}
+
+	pieceSize := endIndex - startIndex + 1
+	return pieceSize
+}
+
 // CalculatePieceNum calculates the number of piece
 // according to the parameter range.
 func CalculatePieceNum(rangeStr string) int {
@@ -47,7 +71,6 @@ func CalculatePieceNum(rangeStr string) int {
 	}
 
 	pieceSize := endIndex - startIndex + 1
-
 	return int(startIndex / pieceSize)
 }
 
