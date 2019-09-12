@@ -140,16 +140,16 @@ func (sm *Manager) sortExecutor(ctx context.Context, pieceNums []int, centerNum 
 	})
 }
 
-func (sm *Manager) getPieceResults(ctx context.Context, taskID, clientID, peerID string, pieceNums []int, runningCount int) ([]*mgr.PieceResult, error) {
+func (sm *Manager) getPieceResults(ctx context.Context, taskID, clientID, srcPID string, pieceNums []int, runningCount int) ([]*mgr.PieceResult, error) {
 	// validate ClientErrorCount
 	var useSupernode bool
-	srcPeerState, err := sm.progressMgr.GetPeerStateByPeerID(ctx, peerID)
+	srcPeerState, err := sm.progressMgr.GetPeerStateByPeerID(ctx, srcPID)
 	if err != nil {
 		return nil, err
 	}
 	if srcPeerState.ClientErrorCount.Get() > config.FailCountLimit {
 		logrus.Warnf("scheduler: peerID: %s got errors for %d times which reaches error limit: %d for taskID(%s)",
-			peerID, srcPeerState.ClientErrorCount.Get(), config.FailCountLimit, taskID)
+			srcPID, srcPeerState.ClientErrorCount.Get(), config.FailCountLimit, taskID)
 		useSupernode = true
 	}
 
@@ -165,7 +165,7 @@ func (sm *Manager) getPieceResults(ctx context.Context, taskID, clientID, peerID
 			if err != nil {
 				return nil, errors.Wrapf(errortypes.ErrUnknowError, "failed to get peerIDs for pieceNum: %d of taskID: %s", pieceNums[i], taskID)
 			}
-			dstPID = sm.tryGetPID(ctx, taskID, pieceNums[i], peerIDs)
+			dstPID = sm.tryGetPID(ctx, taskID, pieceNums[i], srcPID, peerIDs)
 		}
 
 		if dstPID == "" {
@@ -205,7 +205,7 @@ func (sm *Manager) getPieceResults(ctx context.Context, taskID, clientID, peerID
 }
 
 // tryGetPID returns an available dstPID from ps.pieceContainer.
-func (sm *Manager) tryGetPID(ctx context.Context, taskID string, pieceNum int, peerIDs []string) (dstPID string) {
+func (sm *Manager) tryGetPID(ctx context.Context, taskID string, pieceNum int, srcPID string, peerIDs []string) (dstPID string) {
 	defer func() {
 		if dstPID == "" {
 			dstPID = sm.cfg.GetSuperPID()
@@ -239,7 +239,7 @@ func (sm *Manager) tryGetPID(ctx context.Context, taskID string, pieceNum int, p
 		}
 
 		// if the v is in the blackList, try the next one.
-		blackInfo, err := sm.progressMgr.GetBlackInfoByPeerID(ctx, peerIDs[i])
+		blackInfo, err := sm.progressMgr.GetBlackInfoByPeerID(ctx, srcPID)
 		if err != nil && !errortypes.IsDataNotFound(err) {
 			logrus.Warnf("scheduler: failed to get blackInfo for peerID %s: %v", peerIDs[i], err)
 			continue
