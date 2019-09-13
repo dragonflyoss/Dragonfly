@@ -141,9 +141,12 @@ If you want to monitor the io status and network traffic of supernodes, we recom
 
 ### Use Grafana Dashboard
 
-With metrics exposed in supernode, we can view these metrics in Grafana dashboards now by configuring [Prometheus Datasource](https://grafana.com/docs/features/datasources/prometheus/) first.
+With metrics exposed in supernode, we can view these metrics in Grafana dashboards now by configuring [Prometheus Data Source](https://grafana.com/docs/features/datasources/prometheus/) first.
 
 Example screenshots:
 
+![example_dashboard1.png](../images/dashboards/dashboard1.png)
 
-You can also import this dashboard json file into Grafana or just import it from .
+![example_dashboard2.png](../images/dashboards/dashboard2.png)
+
+You can also import this [dragonfly dashboard](./dragonfly.json) into Grafana or just import it from [Grafana Dashboards](https://grafana.com/grafana/dashboards/10852).
