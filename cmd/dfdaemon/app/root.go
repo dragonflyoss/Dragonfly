@@ -49,7 +49,7 @@ var rootCmd = &cobra.Command{
 			return errors.Wrap(err, "read config file")
 		}
 
-		cfg, err := getConfigFromViper(viper.GetViper())
+		cfg, err := getConfigFromViper(cmd, viper.GetViper())
 		if err != nil {
 			return errors.Wrap(err, "get config from viper")
 		}
@@ -95,7 +95,7 @@ func init() {
 	rf.String("localrepo", filepath.Join(os.Getenv("HOME"), ".small-dragonfly/dfdaemon/data/"), "temp output dir of dfdaemon")
 	rf.String("dfpath", defaultDfgetPath, "dfget path")
 	rf.Var(netutils.NetLimit(), "ratelimit", "net speed limit")
-	rf.StringSlice("node", nil, "specify the addresses(host:port) of supernodes that will be passed to dfget.")
+	rf.StringSlice("node", []string{"127.0.0.1:8002"}, "specify the addresses(host:port) of supernodes that will be passed to dfget.")
 
 	exitOnError(bindRootFlags(viper.GetViper()), "bind root command flags")
 }
@@ -122,7 +122,6 @@ func readConfigFile(v *viper.Viper, cmd *cobra.Command) error {
 		}
 		return err
 	}
-	v.RegisterAlias("supernodes", "node")
 
 	return nil
 }
@@ -145,8 +144,15 @@ func Execute() {
 	}
 }
 
-// getConfigFromViper returns dfdaemon config from the given viper instance.
-func getConfigFromViper(v *viper.Viper) (*config.Properties, error) {
+// getConfigFromViper returns dfdaemon config from the given viper instance
+func getConfigFromViper(cmd *cobra.Command, v *viper.Viper) (*config.Properties, error) {
+	// override supernodes in config file if --node is sepecified in cli.
+	// use default value if no supernodes is configured in config file
+	if cmd.Flags().Lookup("node").Changed ||
+		len(v.GetStringSlice("supernodes")) == 0 {
+		v.Set("supernodes", v.GetStringSlice("node"))
+	}
+
 	var cfg config.Properties
 	if err := v.Unmarshal(&cfg, func(dc *mapstructure.DecoderConfig) {
 		dc.TagName = "yaml"
@@ -160,6 +166,7 @@ func getConfigFromViper(v *viper.Viper) (*config.Properties, error) {
 	}); err != nil {
 		return nil, errors.Wrap(err, "unmarshal yaml")
 	}
+
 	return &cfg, cfg.Validate()
 }
 
