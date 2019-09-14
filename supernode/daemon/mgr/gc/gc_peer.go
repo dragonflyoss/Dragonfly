@@ -19,6 +19,7 @@ package gc
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/dragonflyoss/Dragonfly/pkg/timeutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/util"
@@ -41,7 +42,7 @@ func (gcm *Manager) gcPeers(ctx context.Context) {
 		}
 
 		if peerState.ServiceDownTime == 0 ||
-			timeutils.GetCurrentTimeMillis()-peerState.ServiceDownTime < int64(gcm.cfg.PeerGCDelay) {
+			timeutils.GetCurrentTimeMillis()-peerState.ServiceDownTime < int64(gcm.cfg.PeerGCDelay/time.Millisecond) {
 			continue
 		}
 
