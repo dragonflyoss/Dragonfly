@@ -299,7 +299,7 @@ func reportMetrics(cfg *config.Config, supernodeAPI api.SupernodeAPI, downloadTi
 		if err != nil {
 			logrus.Errorf("failed to report metrics to supernode %s: %v", node, err)
 		}
-		if resp.IsSuccess() {
+		if resp != nil && resp.IsSuccess() {
 			return
 		}
 	}
