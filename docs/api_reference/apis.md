@@ -431,6 +431,33 @@ get detailed information of a preheat task in supernode.
 * `application/json`
 
 
+<a name="task-metrics-post"></a>
+### upload dfclient download metrics
+```
+POST /task/metrics
+```
+
+
+#### Description
+This endpoint is mainly for observability. Dfget is a short-live job
+and we use this endpoint to upload dfget download related metrics.
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|
+|---|---|---|---|
+|**Body**|**body**  <br>*optional*|request body which contains dfget download related information|[TaskMetricsRequest](#taskmetricsrequest)|
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|[ResultInfo](#resultinfo)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
 <a name="tasks-post"></a>
 ### create a task
 ```
@@ -899,6 +926,22 @@ detailed information about task in supernode.
 |**rawURL**  <br>*optional*|The is the resource's URL which user uses dfget to download. The location of URL can be anywhere, LAN or WAN.<br>For image distribution, this is image layer's URL in image registry.<br>The resource url is provided by command line parameter.|string|
 |**realMd5**  <br>*optional*|when supernode finishes downloading file/image from the source location,<br>the md5 sum of the source file will be calculated as the value of the realMd5.<br>And it will be used to compare with md5 value to check whether this is a valid file.|string|
 |**taskURL**  <br>*optional*|taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via<br>--filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.|string|
+
+
+<a name="taskmetricsrequest"></a>
+### TaskMetricsRequest
+
+|Name|Description|Schema|
+|---|---|---|
+|**IP**  <br>*optional*|IP address which peer client carries|string (string)|
+|**backsourceReason**  <br>*optional*|when registering, dfget will setup one uploader process.<br>This one acts as a server for peer pulling tasks.<br>This port is which this server listens on.|string|
+|**cID**  <br>*optional*|CID means the client ID. It maps to the specific dfget process.<br>When user wishes to download an image/file, user would start a dfget process to do this.<br>This dfget is treated a client and carries a client ID.<br>Thus, multiple dfget processes on the same peer have different CIDs.|string|
+|**callSystem**  <br>*optional*|This attribute represents where the dfget requests come from. Dfget will pass<br>this field to supernode and supernode can do some checking and filtering via<br>black/white list mechanism to guarantee security, or some other purposes like debugging.  <br>**Minimum length** : `1`|string|
+|**duration**  <br>*optional*|Duration for dfget task.|number (float64)|
+|**fileLength**  <br>*optional*|The length of the file dfget requests to download in bytes.|integer (int64)|
+|**port**  <br>*optional*|when registering, dfget will setup one uploader process.<br>This one acts as a server for peer pulling tasks.<br>This port is which this server listens on.  <br>**Minimum value** : `15000`  <br>**Maximum value** : `65000`|integer (int32)|
+|**success**  <br>*optional*|whether the download task success or not|boolean|
+|**taskId**  <br>*optional*|IP address which peer client carries|string (string)|
 
 
 <a name="taskregisterrequest"></a>

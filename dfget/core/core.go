@@ -24,8 +24,10 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/downloader"
@@ -179,11 +181,10 @@ func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 	if timeout == 0 && cfg.Timeout > 0 {
 		timeout = time.Duration(cfg.Timeout) * time.Second
 	}
+	success := true
 	err := downloader.DoDownloadTimeout(getter, timeout)
-	success := "SUCCESS"
 	if err != nil {
-		logrus.Error(err)
-		success = "FAIL"
+		success = false
 	} else if cfg.RV.FileLength < 0 && fileutils.IsRegularFile(cfg.RV.RealTarget) {
 		if info, err := os.Stat(cfg.RV.RealTarget); err == nil {
 			cfg.RV.FileLength = info.Size()
@@ -191,10 +192,21 @@ func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 	}
 
 	reportFinishedTask(cfg, getter)
-
 	os.Remove(cfg.RV.TempTarget)
-	logrus.Infof("download %s cost:%.3fs length:%d reason:%d",
-		success, time.Since(cfg.StartTime).Seconds(), cfg.RV.FileLength, cfg.BackSourceReason)
+
+	downloadTime := time.Since(cfg.StartTime).Seconds()
+	// upload metrics to supernode only if pattern is p2p or cdn and result is not nil
+	if cfg.Pattern != config.PatternSource && result != nil {
+		reportMetrics(cfg, supernodeAPI, downloadTime, result.TaskID, success)
+	}
+
+	if success {
+		logrus.Infof("download SUCCESS from supernode %s cost:%.3fs length:%d",
+			cfg.Node, time.Since(cfg.StartTime).Seconds(), cfg.RV.FileLength)
+	} else {
+		logrus.Infof("download FAIL from supernode %s cost:%.3fs length:%d reason:%d",
+			cfg.Node, time.Since(cfg.StartTime).Seconds(), cfg.RV.FileLength, cfg.BackSourceReason)
+	}
 	return err
 }
 
@@ -268,4 +280,28 @@ func checkConnectSupernode(nodes []string) (localIP string) {
 		logrus.Errorf("Connect to node:%s error: %v", n, e)
 	}
 	return ""
+}
+
+func reportMetrics(cfg *config.Config, supernodeAPI api.SupernodeAPI, downloadTime float64, taskID string, success bool) {
+	req := &types.TaskMetricsRequest{
+		BacksourceReason: strconv.Itoa(cfg.BackSourceReason),
+		IP:               cfg.RV.LocalIP,
+		CID:              cfg.RV.Cid,
+		CallSystem:       cfg.CallSystem,
+		Duration:         downloadTime,
+		FileLength:       cfg.RV.FileLength,
+		Port:             int32(cfg.RV.PeerPort),
+		Success:          success,
+		TaskID:           taskID,
+	}
+	for _, node := range cfg.Node {
+		resp, err := supernodeAPI.ReportMetrics(node, req)
+		if err != nil {
+			logrus.Errorf("failed to report metrics to supernode %s: %v", node, err)
+		}
+		if resp != nil && resp.IsSuccess() {
+			return
+		}
+	}
+	return
 }

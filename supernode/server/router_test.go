@@ -36,6 +36,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	prom_testutil "github.com/prometheus/client_golang/prometheus/testutil"
+	"github.com/sirupsen/logrus"
 )
 
 func Test(t *testing.T) {
@@ -68,7 +69,7 @@ func (rs *RouterTestSuite) SetUpSuite(c *check.C) {
 		Plugins:  nil,
 		Storages: nil,
 	}
-	s, err := New(testConf, prometheus.NewRegistry())
+	s, err := New(testConf, logrus.StandardLogger(), prometheus.NewRegistry())
 	c.Check(err, check.IsNil)
 	version.DFVersion = &types.DragonflyVersion{
 		Version:   "test",

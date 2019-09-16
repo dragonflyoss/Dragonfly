@@ -25,14 +25,14 @@ import (
 	"github.com/dragonflyoss/Dragonfly/pkg/ratelimiter"
 )
 
-// NewLimitReader create LimitReader
+// NewLimitReader creates LimitReader
 // src: reader
 // rate: bytes/second
 func NewLimitReader(src io.Reader, rate int, calculateMd5 bool) *LimitReader {
 	return NewLimitReaderWithLimiter(newRateLimiterWithDefaultWindow(rate), src, calculateMd5)
 }
 
-// NewLimitReaderWithLimiter create LimitReader with a rateLimiter.
+// NewLimitReaderWithLimiter creates LimitReader with a rateLimiter.
 // src: reader
 // rate: bytes/second
 func NewLimitReaderWithLimiter(rl *ratelimiter.RateLimiter, src io.Reader, calculateMd5 bool) *LimitReader {
@@ -47,14 +47,14 @@ func NewLimitReaderWithLimiter(rl *ratelimiter.RateLimiter, src io.Reader, calcu
 	}
 }
 
-// NewLimitReaderWithMD5Sum create LimitReader with a md5 sum.
+// NewLimitReaderWithMD5Sum creates LimitReader with a md5 sum.
 // src: reader
 // rate: bytes/second
 func NewLimitReaderWithMD5Sum(src io.Reader, rate int, md5sum hash.Hash) *LimitReader {
 	return NewLimitReaderWithLimiterAndMD5Sum(src, newRateLimiterWithDefaultWindow(rate), md5sum)
 }
 
-// NewLimitReaderWithLimiterAndMD5Sum create LimitReader with rateLimiter and md5 sum.
+// NewLimitReaderWithLimiterAndMD5Sum creates LimitReader with rateLimiter and md5 sum.
 // src: reader
 // rate: bytes/second
 func NewLimitReaderWithLimiterAndMD5Sum(src io.Reader, rl *ratelimiter.RateLimiter, md5sum hash.Hash) *LimitReader {
@@ -90,7 +90,7 @@ func (lr *LimitReader) Read(p []byte) (n int, err error) {
 	return n, e
 }
 
-// Md5 calculate the md5 of all contents read
+// Md5 calculates the md5 of all contents read
 func (lr *LimitReader) Md5() string {
 	if lr.md5sum != nil {
 		return fmt.Sprintf("%x", lr.md5sum.Sum(nil))

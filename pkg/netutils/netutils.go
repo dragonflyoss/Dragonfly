@@ -119,7 +119,7 @@ func ExtractHost(hostAndPort string) string {
 	return fields[0]
 }
 
-// GetIPAndPortFromNode return ip and port by parsing the node value.
+// GetIPAndPortFromNode returns ip and port by parsing the node value.
 // It will return defaultPort as the value of port
 // when the node is a string without port or with an illegal port.
 func GetIPAndPortFromNode(node string, defaultPort int) (string, int) {
@@ -260,7 +260,7 @@ func ConvertTimeIntToString(timestamp int64) (string, error) {
 	return fmt.Sprintf("%s%s", timeString[:len(timeString)-3], layoutGMT), nil
 }
 
-// slice2Map translate a slice to a map with
+// slice2Map translates a slice to a map with
 // the value in slice as the key and true as the value.
 func slice2Map(value []string) map[string]bool {
 	mmap := make(map[string]bool)
@@ -278,7 +278,7 @@ func isExist(mmap map[string]bool, key string) bool {
 	return false
 }
 
-// CalculateTimeout calculate the timeout(in seconds) according to the fileLength and the min rate of network.
+// CalculateTimeout calculates the timeout(in seconds) according to the fileLength and the min rate of network.
 //
 // The 0 will be returned when both minRate and defaultMinRate both are <=0.
 func CalculateTimeout(fileLength int64, minRate int, defaultMinRate int, reservedTime time.Duration) time.Duration {
