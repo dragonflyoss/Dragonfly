@@ -82,7 +82,7 @@ type defaultHTTPClient struct {
 
 var _ SimpleHTTPClient = &defaultHTTPClient{}
 
-// PostJSON send a POST request whose content-type is 'application/json;charset=utf-8'.
+// PostJSON sends a POST request whose content-type is 'application/json;charset=utf-8'.
 // When timeout <= 0, it will block until receiving response from server.
 func (c *defaultHTTPClient) PostJSON(url string, body interface{}, timeout time.Duration) (
 	code int, resBody []byte, err error) {
@@ -99,7 +99,7 @@ func (c *defaultHTTPClient) Get(url string, timeout time.Duration) (
 	return fasthttp.Get(nil, url)
 }
 
-// PostJSONWithHeaders send a POST request with headers whose content-type is 'application/json;charset=utf-8'.
+// PostJSONWithHeaders sends a POST request with headers whose content-type is 'application/json;charset=utf-8'.
 // When timeout <= 0, it will block until receiving response from server.
 func (c *defaultHTTPClient) PostJSONWithHeaders(url string, headers map[string]string, body interface{}, timeout time.Duration) (
 	code int, resBody []byte, err error) {
@@ -169,7 +169,7 @@ func do(url string, headers map[string]string, timeout time.Duration, rsf reques
 // ---------------------------------------------------------------------------
 // util functions
 
-// PostJSON send a POST request whose content-type is 'application/json;charset=utf-8'.
+// PostJSON sends a POST request whose content-type is 'application/json;charset=utf-8'.
 func PostJSON(url string, body interface{}, timeout time.Duration) (int, []byte, error) {
 	return DefaultHTTPClient.PostJSON(url, body, timeout)
 }
@@ -208,17 +208,17 @@ func Do(url string, headers map[string]string, timeout time.Duration) (string, e
 	return result, nil
 }
 
-// HTTPGet send an HTTP GET request with headers.
+// HTTPGet sends an HTTP GET request with headers.
 func HTTPGet(url string, headers map[string]string) (*http.Response, error) {
 	return HTTPWithHeaders("GET", url, headers, 0)
 }
 
-// HTTPGetTimeout send an HTTP GET request with timeout.
+// HTTPGetTimeout sends an HTTP GET request with timeout.
 func HTTPGetTimeout(url string, headers map[string]string, timeout time.Duration) (*http.Response, error) {
 	return HTTPWithHeaders("GET", url, headers, timeout)
 }
 
-// HTTPWithHeaders send an HTTP request with headers and specified method.
+// HTTPWithHeaders sends an HTTP request with headers and specified method.
 func HTTPWithHeaders(method, url string, headers map[string]string, timeout time.Duration) (*http.Response, error) {
 	req, err := http.NewRequest(method, url, nil)
 	if err != nil {

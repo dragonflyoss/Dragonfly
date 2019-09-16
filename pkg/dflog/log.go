@@ -30,10 +30,10 @@ import (
 // DefaultLogTimeFormat defines the timestamp format.
 const DefaultLogTimeFormat = "2006-01-02 15:04:05.000"
 
-// Option is a functional configuration for the given logrus logger
+// Option is a functional configuration for the given logrus logger.
 type Option func(l *logrus.Logger) error
 
-// WithDebug sets the log level to debug
+// WithDebug sets the log level to debug.
 func WithDebug(debug bool) Option {
 	return func(l *logrus.Logger) error {
 		if debug {
@@ -84,7 +84,7 @@ func WithMaxSizeMB(max uint) Option {
 	}
 }
 
-// WithConsole adds a hook to output logs to stdout
+// WithConsole adds a hook to output logs to stdout.
 func WithConsole() Option {
 	return func(l *logrus.Logger) error {
 		consoleLog := &logrus.Logger{
@@ -102,7 +102,7 @@ func WithConsole() Option {
 	}
 }
 
-// WithSign sets the sign in formatter
+// WithSign sets the sign in formatter.
 func WithSign(sign string) Option {
 	return func(l *logrus.Logger) error {
 		l.Formatter = &DragonflyFormatter{

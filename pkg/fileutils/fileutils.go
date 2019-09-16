@@ -64,7 +64,7 @@ func DeleteFiles(filePaths ...string) {
 	}
 }
 
-// OpenFile open a file. If the parent directory of the file isn't exist,
+// OpenFile opens a file. If the parent directory of the file isn't exist,
 // it will create the directory.
 func OpenFile(path string, flag int, perm os.FileMode) (*os.File, error) {
 	if PathExist(path) {
@@ -214,10 +214,10 @@ func Md5Sum(name string) string {
 // GetSys returns the underlying data source of the os.FileInfo.
 func GetSys(info os.FileInfo) (*syscall.Stat_t, bool) {
 	sys, ok := info.Sys().(*syscall.Stat_t)
-	return sys, ok
+	return sys, okGetSys
 }
 
-// LoadYaml load yaml config file.
+// LoadYaml loads yaml config file.
 func LoadYaml(path string, out interface{}) error {
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
