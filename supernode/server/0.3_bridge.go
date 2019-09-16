@@ -29,6 +29,7 @@ import (
 	sutil "github.com/dragonflyoss/Dragonfly/supernode/util"
 
 	"github.com/go-openapi/strfmt"
+	"github.com/gorilla/schema"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -68,10 +69,25 @@ var resultMap = map[string]string{
 }
 
 func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
-	reader := req.Body
 	request := &types.TaskRegisterRequest{}
-	if err := json.NewDecoder(reader).Decode(request); err != nil {
-		return errors.Wrap(errortypes.ErrInvalidValue, err.Error())
+
+	// parse request.Body to the types.TaskRegisterRequest struct
+	ct := req.Header.Get("Content-Type")
+	if ct == "application/x-www-form-urlencoded" {
+		if err := req.ParseForm(); err != nil {
+			return errors.Wrapf(errortypes.ErrInvalidValue, "failed to parse the request body as a form: %v", err)
+		}
+
+		decoder := schema.NewDecoder()
+		err = decoder.Decode(request, req.PostForm)
+		if err != nil {
+			return errors.Wrap(errortypes.ErrInvalidValue, err.Error())
+		}
+	} else {
+		reader := req.Body
+		if err := json.NewDecoder(reader).Decode(request); err != nil {
+			return errors.Wrap(errortypes.ErrInvalidValue, err.Error())
+		}
 	}
 
 	if err := request.Validate(strfmt.NewFormats()); err != nil {
