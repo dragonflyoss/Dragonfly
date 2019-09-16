@@ -138,7 +138,7 @@ func waitForStartup(result chan error, p2pPtr *unsafe.Pointer) error {
 			return fmt.Errorf("initialize peer server error")
 		}
 		if !uploaderAPI.PingServer(tmp.host, tmp.port) {
-			return fmt.Errorf("cann't ping port:%d", tmp.port)
+			return fmt.Errorf("can't ping port:%d", tmp.port)
 		}
 		return nil
 	}
