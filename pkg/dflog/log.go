@@ -30,10 +30,10 @@ import (
 // DefaultLogTimeFormat defines the timestamp format.
 const DefaultLogTimeFormat = "2006-01-02 15:04:05.000"
 
-// Option is a functional configuration for the given logrus logger
+// Option is a functional configuration for the given logrus logger.
 type Option func(l *logrus.Logger) error
 
-// WithDebug sets the log level to debug
+// WithDebug sets the log level to debug.
 func WithDebug(debug bool) Option {
 	return func(l *logrus.Logger) error {
 		if debug {
