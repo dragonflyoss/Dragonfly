@@ -55,7 +55,7 @@ type Manager struct {
 	metrics   *metrics
 }
 
-// NewManager return a new Manager Object.
+// NewManager returns a new Manager Object.
 func NewManager(register prometheus.Registerer) (*Manager, error) {
 	return &Manager{
 		peerStore: dutil.NewStore(),

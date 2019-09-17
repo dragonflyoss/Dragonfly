@@ -57,7 +57,7 @@ func WithQuery(query url.Values) Option {
 	}
 }
 
-// WithRawData sets the input data with raw data
+// WithRawData sets the input data with raw data.
 func WithRawData(data io.ReadCloser) Option {
 	return func(r *http.Request) error {
 		r.Body = data
@@ -65,7 +65,7 @@ func WithRawData(data io.ReadCloser) Option {
 	}
 }
 
-// WithJSONBody encodes the input data to JSON and sets it to the body in http.Request
+// WithJSONBody encodes the input data to JSON and sets it to the body in http.Request.
 func WithJSONBody(obj interface{}) Option {
 	return func(r *http.Request) error {
 		b := bytes.NewBuffer([]byte{})
