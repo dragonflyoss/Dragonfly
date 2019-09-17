@@ -44,7 +44,7 @@ func (pmm *pieceMD5Mgr) getPieceMD5(taskID string, pieceNum int) (pieceMD5 strin
 	return pieceMD5s.GetAsString(strconv.Itoa(pieceNum))
 }
 
-// setPieceMD5 set the md5 for pieceRange of taskID.
+// setPieceMD5 sets the md5 for pieceRange of taskID.
 func (pmm *pieceMD5Mgr) setPieceMD5(taskID string, pieceNum int, pieceMD5 string) (err error) {
 	pieceMD5s, err := pmm.taskPieceMD5s.GetAsMap(taskID)
 	if err != nil && !errortypes.IsDataNotFound(err) {

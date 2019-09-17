@@ -55,7 +55,7 @@ func (cd *cacheDetector) detectCache(ctx context.Context, task *types.TaskInfo) 
 		checkSameFile(task, metaData) {
 		breakNum = cd.parseBreakNum(ctx, task, metaData)
 	}
-	logrus.Infof("taskID: %s, detect cache breakNum: %d", task.ID, breakNum)
+	logrus.Infof("taskID: %s, detects cache breakNum: %d", task.ID, breakNum)
 
 	if breakNum == 0 {
 		if metaData, err = cd.resetRepo(ctx, task); err != nil {
