@@ -26,7 +26,7 @@ import (
 
 var mgr = NewManager()
 
-// SetManager set a Manager implementation instead of the default one.
+// SetManager sets a Manager implementation instead of the default one.
 func SetManager(m Manager) {
 	mgr = m
 }

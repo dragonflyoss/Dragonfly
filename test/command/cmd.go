@@ -67,7 +67,7 @@ func checkExist(s string) {
 	}
 }
 
-// NewStarter create an instance of Starter.
+// NewStarter creates an instance of Starter.
 // It checks the binary files whether is existing and creates a temporary
 // directory for testing.
 func NewStarter(name string) *Starter {
@@ -161,7 +161,7 @@ func (s *Starter) Supernode(running time.Duration, args ...string) (
 	return cmd, err
 }
 
-// WriteSupernodeFileServer write a file to the supernode file server.
+// WriteSupernodeFileServer writes a file to the supernode file server.
 func (s *Starter) WriteSupernodeFileServer(filePath string, data []byte, perm os.FileMode) error {
 	return ioutil.WriteFile(fp.Join(s.supernodeFileServerHome, filePath), data, perm)
 }

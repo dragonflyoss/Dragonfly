@@ -53,7 +53,7 @@ func NewManager(cfg *config.Config, taskMgr mgr.TaskMgr, peerMgr mgr.PeerMgr,
 	}, nil
 }
 
-// StartGC start to do the gc jobs.
+// StartGC starts to do the gc jobs.
 func (gcm *Manager) StartGC(ctx context.Context) {
 	logrus.Debugf("start the gc job")
 
