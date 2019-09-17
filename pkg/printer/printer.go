@@ -29,7 +29,7 @@ var (
 	Printer = &StdPrinter{Out: os.Stdout}
 )
 
-// StdPrinter output info to console directly.
+// StdPrinter outputs info to console directly.
 type StdPrinter struct {
 	Out io.Writer
 }

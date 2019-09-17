@@ -47,47 +47,47 @@ var (
 	ErrAuthenticationRequired = DfError{codeAuthenticationRequired, "authentication required"}
 )
 
-// IsSystemError check the error is a system error or not.
+// IsSystemError checks the error is a system error or not.
 func IsSystemError(err error) bool {
 	return checkError(err, codeSystemError)
 }
 
-// IsCDNFail check the error is CDNFail or not.
+// IsCDNFail checks the error is CDNFail or not.
 func IsCDNFail(err error) bool {
 	return checkError(err, codeCDNFail)
 }
 
-// IsCDNWait check the error is CDNWait or not.
+// IsCDNWait checks the error is CDNWait or not.
 func IsCDNWait(err error) bool {
 	return checkError(err, codeCDNWait)
 }
 
-// IsPeerWait check the error is PeerWait or not.
+// IsPeerWait checks the error is PeerWait or not.
 func IsPeerWait(err error) bool {
 	return checkError(err, codePeerWait)
 }
 
-// IsUnknowError check the error is UnknowError or not.
+// IsUnknowError checks the error is UnknowError or not.
 func IsUnknowError(err error) bool {
 	return checkError(err, codeUnknowError)
 }
 
-// IsPeerContinue check the error is PeerContinue or not.
+// IsPeerContinue checks the error is PeerContinue or not.
 func IsPeerContinue(err error) bool {
 	return checkError(err, codePeerContinue)
 }
 
-// IsURLNotReachable check the error is a url not reachable or not.
+// IsURLNotReachable checks the error is a url not reachable or not.
 func IsURLNotReachable(err error) bool {
 	return checkError(err, codeURLNotReachable)
 }
 
-// IsTaskIDDuplicate check the error is a TaskIDDuplicate error or not.
+// IsTaskIDDuplicate checks the error is a TaskIDDuplicate error or not.
 func IsTaskIDDuplicate(err error) bool {
 	return checkError(err, codeTaskIDDuplicate)
 }
 
-// IsAuthenticationRequired check the error is an AuthenticationRequired error or not.
+// IsAuthenticationRequired checks the error is an AuthenticationRequired error or not.
 func IsAuthenticationRequired(err error) bool {
 	return checkError(err, codeAuthenticationRequired)
 }
