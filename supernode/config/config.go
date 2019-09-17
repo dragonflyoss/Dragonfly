@@ -27,7 +27,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 )
 
-// NewConfig create an instant with default values.
+// NewConfig creates an instant with default values.
 func NewConfig() *Config {
 	return &Config{
 		BaseProperties: NewBaseProperties(),
@@ -84,7 +84,7 @@ func (c *Config) IsSuperPID(peerID string) bool {
 	return peerID == c.superNodePID
 }
 
-// NewBaseProperties create an instant with default values.
+// NewBaseProperties creates an instant with default values.
 func NewBaseProperties() *BaseProperties {
 	home := filepath.Join(string(filepath.Separator), "home", "admin", "supernode")
 	return &BaseProperties{
@@ -207,7 +207,7 @@ type BaseProperties struct {
 	// PeerGCDelay is the delay time to execute the GC after the peer has reported the offline.
 	PeerGCDelay time.Duration `yaml:"peerGCDelay"`
 
-	// cIDPrefix s a prefix string used to indicate that the CID is supernode.
+	// cIDPrefix is a prefix string used to indicate that the CID is supernode.
 	cIDPrefix string
 
 	// superNodePID is the ID of supernode, which is the same as peer ID of dfget.
