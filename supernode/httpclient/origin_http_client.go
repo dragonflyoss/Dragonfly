@@ -56,7 +56,7 @@ func NewOriginClient() OriginHTTPClient {
 	}
 }
 
-// RegisterTLSConfig save tls config into map as http client.
+// RegisterTLSConfig saves tls config into map as http client.
 // tlsMap:
 // key->host value->*http.Client
 func (client *OriginClient) RegisterTLSConfig(rawURL string, insecure bool, caBlock []strfmt.Base64) {
@@ -94,7 +94,7 @@ func (client *OriginClient) RegisterTLSConfig(rawURL string, insecure bool, caBl
 	})
 }
 
-// GetContentLength send a head request to get file length.
+// GetContentLength sends a head request to get file length.
 func (client *OriginClient) GetContentLength(url string, headers map[string]string) (int64, int, error) {
 	// send request
 	resp, err := client.HTTPWithHeaders("GET", url, headers, 4*time.Second)
@@ -169,7 +169,7 @@ func (client *OriginClient) Download(url string, headers map[string]string, chec
 	return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 }
 
-// HTTPWithHeaders use host-matched client to request the origin resource.
+// HTTPWithHeaders uses host-matched client to request the origin resource.
 func (client *OriginClient) HTTPWithHeaders(method, url string, headers map[string]string, timeout time.Duration) (*http.Response, error) {
 	req, err := http.NewRequest(method, url, nil)
 	if err != nil {

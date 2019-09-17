@@ -38,7 +38,7 @@ type CDNMgr interface {
 	// GetHTTPPath returns the http download path of taskID.
 	GetHTTPPath(ctx context.Context, taskID string) (path string, err error)
 
-	// GetStatus get the status of the file.
+	// GetStatus gets the status of the file.
 	GetStatus(ctx context.Context, taskID string) (cdnStatus string, err error)
 
 	// Delete the cdn meta with specified taskID.

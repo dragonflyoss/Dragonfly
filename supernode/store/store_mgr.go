@@ -38,7 +38,7 @@ func Register(name string, builder StorageBuilder) {
 	plugins.RegisterPlugin(config.StoragePlugin, name, f)
 }
 
-// Manager manage stores.
+// Manager manages stores.
 type Manager struct {
 	cfg *config.Config
 
@@ -46,7 +46,7 @@ type Manager struct {
 	mutex          sync.Mutex
 }
 
-// NewManager create a store manager.
+// NewManager creates a store manager.
 func NewManager(cfg *config.Config) (*Manager, error) {
 	return &Manager{
 		cfg: cfg,
