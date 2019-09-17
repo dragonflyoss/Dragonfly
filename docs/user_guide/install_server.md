@@ -96,7 +96,7 @@ docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 -v /ho
 3. Compile the source code.
 
     ```sh
-    make build-supernode && make install
+    make build-supernode && make install-supernode
     ```
 
 4. Start the SuperNode.
