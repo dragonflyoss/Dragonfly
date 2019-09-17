@@ -90,37 +90,37 @@ func (s DfError) Error() string {
 	return fmt.Sprintf("{\"Code\":%d,\"Msg\":\"%s\"}", s.Code, s.Msg)
 }
 
-// IsNilError check the error is nil or not.
+// IsNilError checks the error is nil or not.
 func IsNilError(err error) bool {
 	return err == nil
 }
 
-// IsDataNotFound check the error is the data cannot be found.
+// IsDataNotFound checks the error is the data cannot be found.
 func IsDataNotFound(err error) bool {
 	return checkError(err, codeDataNotFound)
 }
 
-// IsEmptyValue check the error is the value is empty or nil.
+// IsEmptyValue checks the error is the value is empty or nil.
 func IsEmptyValue(err error) bool {
 	return checkError(err, codeEmptyValue)
 }
 
-// IsInvalidValue check the error is the value is invalid or not.
+// IsInvalidValue checks the error is the value is invalid or not.
 func IsInvalidValue(err error) bool {
 	return checkError(err, codeInvalidValue)
 }
 
-// IsNotInitialized check the error is the object is not initialized or not.
+// IsNotInitialized checks the error is the object is not initialized or not.
 func IsNotInitialized(err error) bool {
 	return checkError(err, codeNotInitialized)
 }
 
-// IsConvertFailed check the error is a conversion error or not.
+// IsConvertFailed checks the error is a conversion error or not.
 func IsConvertFailed(err error) bool {
 	return checkError(err, codeConvertFailed)
 }
 
-// IsRangeNotSatisfiable check the error is a
+// IsRangeNotSatisfiable checks the error is a
 // range not exist error or not.
 func IsRangeNotSatisfiable(err error) bool {
 	return checkError(err, codeRangeNotSatisfiable)
