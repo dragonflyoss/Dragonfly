@@ -29,6 +29,8 @@ func (client *APIClient) TaskUpdate(ctx context.Context, id string, config *type
 		return err
 	}
 
-	ensureCloseReader(resp)
+	if err := ensureCloseReader(resp); err != nil {
+		return err
+	}
 	return nil
 }
