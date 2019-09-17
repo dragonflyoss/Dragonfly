@@ -88,7 +88,8 @@ func (s *DFGetP2PTestSuite) TestDownloadFile(c *check.C) {
 
 	for _, ca := range cases {
 		if ca.createFile {
-			s.starter.WriteSupernodeFileServer(ca.filePath, ca.fileContent, os.ModePerm)
+			err := s.starter.WriteSupernodeFileServer(ca.filePath, ca.fileContent, os.ModePerm)
+			c.Assert(err, check.IsNil)
 		}
 		cmd, err := s.starter.DFGet(ca.timeout*time.Second,
 			"-u", fmt.Sprintf("http://127.0.0.1:%d/%s", environment.SupernodeDownloadPort, ca.filePath),
