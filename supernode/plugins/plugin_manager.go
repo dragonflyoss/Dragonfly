@@ -22,7 +22,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 )
 
-// NewManager create a default plugin manager instant.
+// NewManager creates a default plugin manager instant.
 func NewManager() Manager {
 	return &managerIml{
 		builders: NewRepository(),
@@ -30,7 +30,7 @@ func NewManager() Manager {
 	}
 }
 
-// NewRepository create a default repository instant.
+// NewRepository creates a default repository instant.
 func NewRepository() Repository {
 	return &repositoryIml{
 		repos: make(map[config.PluginType]*sync.Map),
@@ -45,7 +45,7 @@ type Manager interface {
 	// GetBuilder returns a Builder object with the giving plugin type and name.
 	GetBuilder(pt config.PluginType, name string) Builder
 
-	// DeleteBuilder delete a builder with the giving plugin type and name.
+	// DeleteBuilder deletes a builder with the giving plugin type and name.
 	DeleteBuilder(pt config.PluginType, name string)
 
 	// AddPlugin adds a plugin into this manager.

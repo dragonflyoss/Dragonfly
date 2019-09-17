@@ -31,7 +31,7 @@ import (
 	"github.com/willf/bitset"
 )
 
-// updatePieceProgress added a new peer for the pieceNum when the srcPID successfully downloads the piece.
+// updatePieceProgress adds a new peer for the pieceNum when the srcPID successfully downloads the piece.
 func (pm *Manager) updatePieceProgress(taskID, srcPID string, pieceNum int) error {
 	key, err := generatePieceProgressKey(taskID, pieceNum)
 	if err != nil {
@@ -90,7 +90,7 @@ func (pm *Manager) updateClientProgress(taskID, srcCID, dstPID string, pieceNum,
 	return updatePieceBitSet(cs.pieceBitSet, pieceNum, pieceStatus), nil
 }
 
-// updateRunningPiece update the relationship between the running piece and srcCID and dstPID,
+// updateRunningPiece updates the relationship between the running piece and srcCID and dstPID,
 // which means the info that records the pieces being downloaded from dstPID to srcCID.
 func updateRunningPiece(dstPIDMap *syncmap.SyncMap, srcCID, dstPID string, pieceNum, pieceStatus int) error {
 	pieceNumString := strconv.Itoa(pieceNum)
@@ -130,7 +130,7 @@ func updatePieceBitSet(pieceBitSet *bitset.BitSet, pieceNum, pieceStatus int) bo
 	return true
 }
 
-// updatePeerProgress update the peer progress.
+// updatePeerProgress updates the peer progress.
 func (pm *Manager) updatePeerProgress(taskID, srcPID, dstPID string, pieceNum, pieceStatus int) error {
 	var dstPeerState *peerState
 
@@ -232,7 +232,7 @@ func processPeerFailInfo(srcPeerState, dstPeerState *peerState) {
 	}
 }
 
-// updateProducerLoad update the load of the clientID.
+// updateProducerLoad updates the load of the clientID.
 // TODO: avoid multiple calls
 func updateProducerLoad(load *atomiccount.AtomicInt, taskID, peerID string, pieceNum, pieceStatus int) {
 	// increase the load of peerID when pieceStatus equals PieceRUNNING

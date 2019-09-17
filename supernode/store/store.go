@@ -37,7 +37,7 @@ type Store struct {
 	driver StorageDriver
 }
 
-// NewStore create a new Store instance.
+// NewStore creates a new Store instance.
 func NewStore(name string, builder StorageBuilder, cfg string) (*Store, error) {
 	if name == "" || builder == nil {
 		return nil, fmt.Errorf("plugin name or builder cannot be nil")
@@ -56,12 +56,12 @@ func NewStore(name string, builder StorageBuilder, cfg string) (*Store, error) {
 	}, nil
 }
 
-// Type return the plugin type: StoragePlugin.
+// Type returns the plugin type: StoragePlugin.
 func (s *Store) Type() config.PluginType {
 	return config.StoragePlugin
 }
 
-// Name return the plugin name.
+// Name returns the plugin name.
 func (s *Store) Name() string {
 	return s.driverName
 }
@@ -107,7 +107,7 @@ func (s *Store) Remove(ctx context.Context, raw *Raw) error {
 	return s.driver.Remove(ctx, raw)
 }
 
-// Stat determine whether the data exists based on raw information.
+// Stat determines whether the data exists based on raw information.
 // If that, and return some info that in the form of struct StorageInfo.
 // If not, return the ErrNotFound.
 func (s *Store) Stat(ctx context.Context, raw *Raw) (*StorageInfo, error) {

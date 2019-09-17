@@ -49,7 +49,7 @@ type DfgetTaskMgr interface {
 	// Delete a dfgetTask with clientID and taskID.
 	Delete(ctx context.Context, clientID, taskID string) error
 
-	// UpdateStatus update the status of dfgetTask with specified clientID and taskID.
+	// UpdateStatus updates the status of dfgetTask with specified clientID and taskID.
 	// Supernode will update the status of dfgetTask in the following situations:
 	// 1. after init the dfgetTask
 	// 2. when success/fail to download some pieces

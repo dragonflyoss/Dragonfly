@@ -95,7 +95,7 @@ func (r ResultInfo) Error() string {
 	return fmt.Sprintf("{\"Code\":%d,\"Msg\":\"%s\"}", r.code, r.msg)
 }
 
-// SuccessCode return whether the code equals SuccessCode.
+// SuccessCode returns whether the code equals SuccessCode.
 func (r ResultInfo) SuccessCode() bool {
 	return r.code == constants.Success
 }

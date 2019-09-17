@@ -230,7 +230,7 @@ func (ls *localStorage) PutBytes(ctx context.Context, raw *Raw, data []byte) err
 	return nil
 }
 
-// Stat determine whether the file exists.
+// Stat determines whether the file exists.
 func (ls *localStorage) Stat(ctx context.Context, raw *Raw) (*StorageInfo, error) {
 	_, fileInfo, err := ls.statPath(raw.Bucket, raw.Key)
 	if err != nil {
