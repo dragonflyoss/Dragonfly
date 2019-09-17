@@ -294,7 +294,7 @@ func (p2p *P2PDownloader) getPullRate(data *types.PullPieceTaskResponseContinueD
 
 	localRate := data.DownLink * 1024
 	if p2p.cfg.LocalLimit > 0 {
-		localRate = p2p.cfg.LocalLimit
+		localRate = int(p2p.cfg.LocalLimit)
 	}
 
 	// Calculate the download speed limit
@@ -307,18 +307,18 @@ func (p2p *P2PDownloader) getPullRate(data *types.PullPieceTaskResponseContinueD
 	resp, err := uploaderAPI.ParseRate(p2p.cfg.RV.LocalIP, p2p.cfg.RV.PeerPort, req)
 	if err != nil {
 		logrus.Errorf("failed to parse rate in pull rate: %v", err)
-		p2p.rateLimiter.SetRate(ratelimiter.TransRate(localRate))
+		p2p.rateLimiter.SetRate(ratelimiter.TransRate(int64(localRate)))
 		return
 	}
 
 	reqRate, err := strconv.Atoi(resp)
 	if err != nil {
 		logrus.Errorf("failed to parse rate from resp %s: %v", resp, err)
-		p2p.rateLimiter.SetRate(ratelimiter.TransRate(localRate))
+		p2p.rateLimiter.SetRate(ratelimiter.TransRate(int64(localRate)))
 		return
 	}
 	logrus.Infof("pull rate result:%d cost:%v", reqRate, time.Since(start))
-	p2p.rateLimiter.SetRate(ratelimiter.TransRate(reqRate))
+	p2p.rateLimiter.SetRate(ratelimiter.TransRate(int64(reqRate)))
 }
 
 func (p2p *P2PDownloader) startTask(data *types.PullPieceTaskResponseContinueData) {

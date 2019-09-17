@@ -80,11 +80,11 @@ func setupFlags(cmd *cobra.Command, opt *Options) {
 	flagSet.StringVar(&opt.DownloadPath, "download-path", opt.DownloadPath,
 		"specifies the path where to store downloaded filed from source address")
 
-	flagSet.IntVar(&opt.SystemReservedBandwidth, "system-bandwidth", opt.SystemReservedBandwidth,
-		"Network rate reserved for system (unit: MB/s)")
+	flagSet.Var(&opt.SystemReservedBandwidth, "system-bandwidth",
+		"Network rate reserved for system")
 
-	flagSet.IntVar(&opt.MaxBandwidth, "max-bandwidth", opt.MaxBandwidth,
-		"network rate that supernode can use (unit: MB/s)")
+	flagSet.Var(&opt.MaxBandwidth, "max-bandwidth",
+		"network rate that supernode can use")
 
 	flagSet.IntVar(&opt.SchedulerCorePoolSize, "pool-size", opt.SchedulerCorePoolSize,
 		"the core pool size of ScheduledExecutorService")

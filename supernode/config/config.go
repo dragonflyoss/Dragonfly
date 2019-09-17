@@ -22,9 +22,10 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/yaml.v2"
-
 	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/rate"
+
+	"gopkg.in/yaml.v2"
 )
 
 // NewConfig creates an instant with default values.
@@ -97,9 +98,9 @@ func NewBaseProperties() *BaseProperties {
 		PeerDownLimit:           5,
 		EliminationLimit:        5,
 		FailureCountLimit:       5,
-		LinkLimit:               20,
-		SystemReservedBandwidth: DefaultSystemReservedBandwidth,
-		MaxBandwidth:            DefaultMaxBandwidth,
+		LinkLimit:               20 * rate.MB,
+		SystemReservedBandwidth: 20 * rate.MB,
+		MaxBandwidth:            200 * rate.MB,
 		EnableProfiler:          false,
 		Debug:                   false,
 		FailAccessInterval:      DefaultFailAccessInterval,
@@ -163,19 +164,17 @@ type BaseProperties struct {
 	// default: 5
 	FailureCountLimit int `yaml:"failureCountLimit"`
 
-	// LinkLimit is set for supernode to limit every piece download network speed (unit: MB/s).
-	// default: 20
-	LinkLimit int `yaml:"linkLimit"`
+	// LinkLimit is set for supernode to limit every piece download network speed.
+	// default: 20 MB, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte.
+	LinkLimit rate.Rate `yaml:"linkLimit"`
 
 	// SystemReservedBandwidth is the network bandwidth reserved for system software.
-	// unit: MB/s
-	// default: 20
-	SystemReservedBandwidth int `yaml:"systemReservedBandwidth"`
+	// default: 20 MB, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte.
+	SystemReservedBandwidth rate.Rate `yaml:"systemReservedBandwidth"`
 
 	// MaxBandwidth is the network bandwidth that supernode can use.
-	// unit: MB/s
-	// default: 200
-	MaxBandwidth int `yaml:"maxBandwidth"`
+	// default: 200 MB, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte.
+	MaxBandwidth rate.Rate `yaml:"maxBandwidth"`
 
 	// Whether to enable profiler
 	// default: false
@@ -212,9 +211,4 @@ type BaseProperties struct {
 
 	// superNodePID is the ID of supernode, which is the same as peer ID of dfget.
 	superNodePID string
-}
-
-// TransLimit trans rateLimit from MB/s to B/s.
-func TransLimit(rateLimit int) int {
-	return rateLimit * 1024 * 1024
 }

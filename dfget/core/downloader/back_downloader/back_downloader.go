@@ -112,7 +112,7 @@ func (bd *BackDownloader) Run() error {
 	}
 
 	buf := make([]byte, 512*1024)
-	reader := limitreader.NewLimitReader(resp.Body, bd.cfg.LocalLimit, bd.Md5 != "")
+	reader := limitreader.NewLimitReader(resp.Body, int64(bd.cfg.LocalLimit), bd.Md5 != "")
 	if _, err = io.CopyBuffer(f, reader, buf); err != nil {
 		return err
 	}
