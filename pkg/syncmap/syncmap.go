@@ -39,7 +39,7 @@ func NewSyncMap() *SyncMap {
 	return &SyncMap{&sync.Map{}}
 }
 
-// Add add a key-value pair into the *sync.Map.
+// Add adds a key-value pair into the *sync.Map.
 // The ErrEmptyValue error will be returned if the key is empty.
 func (mmap *SyncMap) Add(key string, value interface{}) error {
 	if stringutils.IsEmptyStr(key) {
