@@ -59,7 +59,7 @@ func New(cfg *config.Config, dfgetLogger *logrus.Logger) (*Daemon, error) {
 	}, nil
 }
 
-// RegisterSuperNode register the supernode as a peer.
+// RegisterSuperNode registers the supernode as a peer.
 func (d *Daemon) RegisterSuperNode() error {
 	// construct the PeerCreateRequest for supernode.
 	// TODO: add supernode version
