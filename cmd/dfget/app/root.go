@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"strconv"
 	"strings"
 	"time"
 
@@ -36,12 +35,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	localLimit string
-	totalLimit string
-	minRate    string
-	filter     string
-)
+var filter string
 
 var cfg = config.NewConfig()
 
@@ -75,9 +69,7 @@ func runDfget() error {
 		return err
 	}
 
-	if err := transParams(); err != nil {
-		return err
-	}
+	cfg.Filter = transFilter(filter)
 
 	// get config from property files
 	initProperties()
@@ -145,27 +137,6 @@ func initProperties() {
 	}
 }
 
-// transParams trans the user-friendly parameter formats
-// to the format corresponding to the `Config` struct.
-func transParams() error {
-	cfg.Filter = transFilter(filter)
-
-	var err error
-	if cfg.LocalLimit, err = transLimit(localLimit); err != nil {
-		return errors.Wrapf(errortypes.ErrConvertFailed, "locallimit: %v", err)
-	}
-
-	if cfg.MinRate, err = transLimit(minRate); err != nil {
-		return errors.Wrapf(errortypes.ErrConvertFailed, "minrate: %v", err)
-	}
-
-	if cfg.TotalLimit, err = transLimit(totalLimit); err != nil {
-		return errors.Wrapf(errortypes.ErrConvertFailed, "totallimit: %v", err)
-	}
-
-	return nil
-}
-
 // initClientLog initializes dfget client's logger.
 // There are two kinds of logger dfget client uses: logfile and console.
 // logfile is used to stored generated log in local filesystem,
@@ -198,13 +169,13 @@ func initFlags() {
 		"Destination path which is used to store the requested downloading file. It must contain detailed directory and specific filename, for example, '/tmp/file.mp4'")
 
 	// localLimit & minRate & totalLimit & timeout
-	flagSet.StringVarP(&localLimit, "locallimit", "s", "",
-		"network bandwidth rate limit for single download task, in format of 20M/m/K/k")
-	flagSet.StringVar(&minRate, "minrate", "",
-		"minimal network bandwidth rate for downloading a file, in format of 20M/m/K/k")
-	flagSet.StringVar(&totalLimit, "totallimit", "",
-		"network bandwidth rate limit for the whole host, in format of 20M/m/K/k")
-	flagSet.IntVarP(&cfg.Timeout, "timeout", "e", 0,
+	flagSet.VarP(&cfg.LocalLimit, "locallimit", "s",
+		"network bandwidth rate limit for single download task, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte")
+	flagSet.Var(&cfg.MinRate, "minrate",
+		"minimal network bandwidth rate for downloading a file, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte")
+	flagSet.Var(&cfg.TotalLimit, "totallimit",
+		"network bandwidth rate limit for the whole host, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte")
+	flagSet.DurationVarP(&cfg.Timeout, "timeout", "e", 0,
 		"Timeout set for file downloading task. If dfget has not finished downloading all pieces of file before --timeout, the dfget will throw an error and exit")
 
 	// md5 & identifier
@@ -255,29 +226,6 @@ func initFlags() {
 		"Alive duration for which uploader keeps no accessing by any uploading requests, after this period uploader will automatically exit")
 
 	flagSet.MarkDeprecated("exceed", "please use '--timeout' or '-e' instead")
-}
-
-// Helper functions.
-func transLimit(limit string) (int, error) {
-	if stringutils.IsEmptyStr(limit) {
-		return 0, nil
-	}
-	l := len(limit)
-	i, err := strconv.Atoi(limit[:l-1])
-
-	if err != nil {
-		return 0, err
-	}
-
-	unit := limit[l-1]
-	if unit == 'k' || unit == 'K' {
-		return i * 1024, nil
-	}
-	if unit == 'm' || unit == 'M' {
-		return i * 1024 * 1024, nil
-	}
-	return 0, fmt.Errorf("invalid unit '%c' of '%s', 'KkMm' are supported",
-		unit, limit)
 }
 
 func transFilter(filter string) []string {

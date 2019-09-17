@@ -213,7 +213,7 @@ func (ps *peerServer) checkHandler(w http.ResponseWriter, r *http.Request) {
 		if ps.rateLimiter == nil {
 			ps.rateLimiter = ratelimiter.NewRateLimiter(int64(totalLimit), 2)
 		} else {
-			ps.rateLimiter.SetRate(ratelimiter.TransRate(totalLimit))
+			ps.rateLimiter.SetRate(ratelimiter.TransRate(int64(totalLimit)))
 		}
 		ps.totalLimitRate = totalLimit
 		logrus.Infof("update total limit to %d", totalLimit)

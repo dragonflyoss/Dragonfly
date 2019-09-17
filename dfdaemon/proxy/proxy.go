@@ -146,7 +146,7 @@ func NewFromConfig(c config.Properties) (*Proxy, error) {
 	if len(c.SuperNodes) > 0 {
 		logrus.Infof("use supernodes: %s", strings.Join(c.SuperNodes, ","))
 	}
-	logrus.Infof("rate limit set to %s", c.RateLimit)
+	logrus.Infof("rate limit set to %s", c.RateLimit.String())
 
 	if c.HijackHTTPS != nil {
 		opts = append(opts, WithHTTPSHosts(c.HijackHTTPS.Hosts...))

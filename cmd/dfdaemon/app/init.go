@@ -65,7 +65,7 @@ func initDfdaemon(cfg config.Properties) error {
 	if err != nil {
 		return errors.Wrap(err, "get dfget version")
 	}
-	logrus.Infof("use dfget %s from %s", bytes.TrimSpace(dfgetVersion), cfg.DFPath)
+	logrus.Infof("use %s from %s", bytes.TrimSpace(dfgetVersion), cfg.DFPath)
 
 	return nil
 }

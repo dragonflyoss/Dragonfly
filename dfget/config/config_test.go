@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/rate"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 
 	"github.com/go-check/check"
@@ -56,10 +57,10 @@ func (suite *ConfigSuite) TestConfig_String(c *check.C) {
 	cfg := NewConfig()
 	expected := "{\"url\":\"\",\"output\":\"\""
 	c.Assert(strings.Contains(cfg.String(), expected), check.Equals, true)
-	cfg.LocalLimit = 20971520
+	cfg.LocalLimit = 20 * rate.MB
 	cfg.Pattern = "p2p"
-	expected = "\"url\":\"\",\"output\":\"\",\"localLimit\":20971520," +
-		"\"pattern\":\"p2p\""
+	expected = "\"url\":\"\",\"output\":\"\",\"localLimit\":\"20MB\"," +
+		"\"minRate\":\"64KB\",\"pattern\":\"p2p\""
 	c.Assert(strings.Contains(cfg.String(), expected), check.Equals, true)
 }
 
@@ -173,8 +174,8 @@ func (suite *ConfigSuite) TestProperties_Load(c *check.C) {
 			content: "nodes:\n  - 10.10.10.1\n  - 10.10.10.2\n",
 			errMsg:  "", expected: &Properties{Nodes: []string{"10.10.10.1", "10.10.10.2"}}},
 		{create: true, ext: "yaml",
-			content: "totalLimit: 10485760",
-			errMsg:  "", expected: &Properties{TotalLimit: 10485760}},
+			content: "totalLimit: 10M",
+			errMsg:  "", expected: &Properties{TotalLimit: 10 * rate.MB}},
 		{create: false, ext: "ini", content: "[node]\naddress=1.1.1.1", errMsg: "read ini config"},
 		{create: true, ext: "ini", content: "[node]\naddress=1.1.1.1",
 			expected: &Properties{Nodes: []string{"1.1.1.1"}}},

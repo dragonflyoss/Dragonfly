@@ -27,6 +27,7 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
 	dferr "github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/rate"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
@@ -97,11 +98,11 @@ type Properties struct {
 	MaxProcs int `yaml:"maxprocs" json:"maxprocs"`
 
 	// dfget config
-	DfgetFlags []string `yaml:"dfget_flags" json:"dfget_flags"`
-	SuperNodes []string `yaml:"supernodes" json:"supernodes"`
-	RateLimit  string   `yaml:"ratelimit" json:"ratelimit"`
-	DFRepo     string   `yaml:"localrepo" json:"localrepo"`
-	DFPath     string   `yaml:"dfpath" json:"dfpath"`
+	DfgetFlags []string  `yaml:"dfget_flags" json:"dfget_flags"`
+	SuperNodes []string  `yaml:"supernodes" json:"supernodes"`
+	RateLimit  rate.Rate `yaml:"ratelimit" json:"ratelimit"`
+	DFRepo     string    `yaml:"localrepo" json:"localrepo"`
+	DFPath     string    `yaml:"dfpath" json:"dfpath"`
 }
 
 // Validate validates the config
@@ -127,13 +128,6 @@ func (p *Properties) Validate() error {
 		)
 	}
 
-	if ok, _ := regexp.MatchString("^[[:digit:]]+[MK]$", p.RateLimit); !ok {
-		return dferr.Newf(
-			constant.CodeExitRateLimitInvalid,
-			"invalid rate limit %s", p.RateLimit,
-		)
-	}
-
 	return nil
 }
 
@@ -150,7 +144,7 @@ func (p *Properties) DFGetConfig() DFGetConfig {
 	dfgetConfig := DFGetConfig{
 		DfgetFlags: dfgetFlags,
 		SuperNodes: p.SuperNodes,
-		RateLimit:  p.RateLimit,
+		RateLimit:  p.RateLimit.String(),
 		DFRepo:     p.DFRepo,
 		DFPath:     p.DFPath,
 	}
