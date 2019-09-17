@@ -186,7 +186,7 @@ func (dtm *Manager) List(ctx context.Context, filter map[string]string) (dfgetTa
 	return nil, nil
 }
 
-// Delete a dfgetTask with clientID and taskID.
+// Delete deletes a dfgetTask with clientID and taskID.
 func (dtm *Manager) Delete(ctx context.Context, clientID, taskID string) error {
 	key, err := generateKey(clientID, taskID)
 	if err != nil {
@@ -204,7 +204,7 @@ func (dtm *Manager) Delete(ctx context.Context, clientID, taskID string) error {
 	return dtm.dfgetTaskStore.Delete(key)
 }
 
-// UpdateStatus update the status of dfgetTask with specified clientID and taskID.
+// UpdateStatus updates the status of dfgetTask with specified clientID and taskID.
 func (dtm *Manager) UpdateStatus(ctx context.Context, clientID, taskID, status string) error {
 	dfgetTask, err := dtm.getDfgetTask(clientID, taskID)
 	if err != nil {

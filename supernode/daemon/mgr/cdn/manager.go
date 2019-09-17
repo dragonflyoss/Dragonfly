@@ -163,12 +163,12 @@ func (cm *Manager) GetHTTPPath(ctx context.Context, taskID string) (string, erro
 	return path.Join("/", raw.Bucket, raw.Key), nil
 }
 
-// GetStatus get the status of the file.
+// GetStatus gets the status of the file.
 func (cm *Manager) GetStatus(ctx context.Context, taskID string) (cdnStatus string, err error) {
 	return "", nil
 }
 
-// Delete the cdn meta with specified taskID.
+// Delete deletes the cdn meta with specified taskID.
 func (cm *Manager) Delete(ctx context.Context, taskID string, force bool) error {
 	if !force {
 		return cm.pieceMD5Manager.removePieceMD5sByTaskID(taskID)
