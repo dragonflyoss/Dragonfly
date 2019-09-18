@@ -105,8 +105,10 @@ func (ts *rootTestSuite) TestDecodeWithYAML() {
 	f, err := ioutil.TempFile("", "")
 	r.Nil(err)
 	defer os.RemoveAll(f.Name())
-	f.WriteString(testCrt)
-	f.Close()
+	_, err = f.WriteString(testCrt)
+	r.Nil(err)
+	err = f.Close()
+	r.Nil(err)
 	v.Set("registry_mirror.certs", []string{f.Name()})
 
 	cfg, err := getConfigFromViper(v)
