@@ -37,7 +37,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// initDfdaemon sets up running environment for dfdaemon according to the given config
+// initDfdaemon sets up running environment for dfdaemon according to the given config.
 func initDfdaemon(cfg config.Properties) error {
 	// if Options.MaxProcs <= 0, programs run with GOMAXPROCS set to the number of cores available.
 	if cfg.MaxProcs > 0 {
@@ -70,7 +70,7 @@ func initDfdaemon(cfg config.Properties) error {
 	return nil
 }
 
-// initLogger initialize the global logrus logger
+// initLogger initializes the global logrus logger.
 func initLogger(cfg config.Properties) error {
 	current, err := user.Current()
 	if err != nil {
@@ -90,7 +90,7 @@ func initLogger(cfg config.Properties) error {
 	return errors.Wrap(dflog.Init(logrus.StandardLogger(), opts...), "init log")
 }
 
-// cleanLocalRepo checks the files at local periodically, and delete the file when
+// cleanLocalRepo checks the files at local periodically, and deletes the file when
 // it comes to a certain age(counted by the last access time).
 // TODO: what happens if the disk usage comes to high level?
 func cleanLocalRepo(dfpath string) {
