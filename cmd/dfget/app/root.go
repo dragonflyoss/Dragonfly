@@ -166,7 +166,7 @@ func initFlags() {
 	// url & output
 	flagSet.StringVarP(&cfg.URL, "url", "u", "", "URL of user requested downloading file(only HTTP/HTTPs supported)")
 	flagSet.StringVarP(&cfg.Output, "output", "o", "",
-		"Destination path which is used to store the requested downloading file. It must contain detailed directory and specific filename, for example, '/tmp/file.mp4'")
+		"destination path which is used to store the requested downloading file. It must contain detailed directory and specific filename, for example, '/tmp/file.mp4'")
 
 	// localLimit & minRate & totalLimit & timeout
 	flagSet.VarP(&cfg.LocalLimit, "locallimit", "s",
@@ -176,18 +176,17 @@ func initFlags() {
 	flagSet.Var(&cfg.TotalLimit, "totallimit",
 		"network bandwidth rate limit for the whole host, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte")
 	flagSet.DurationVarP(&cfg.Timeout, "timeout", "e", 0,
-		"Timeout set for file downloading task. If dfget has not finished downloading all pieces of file before --timeout, the dfget will throw an error and exit")
+		"timeout set for file downloading task. If dfget has not finished downloading all pieces of file before --timeout, the dfget will throw an error and exit")
 
 	// md5 & identifier
 	flagSet.StringVarP(&cfg.Md5, "md5", "m", "",
 		"md5 value input from user for the requested downloading file to enhance security")
 	flagSet.StringVarP(&cfg.Identifier, "identifier", "i", "",
-		"The usage of identifier is making different downloading tasks generate different downloading task IDs even if they have the same URLs. conflict with --md5.")
-
+		"the usage of identifier is making different downloading tasks generate different downloading task IDs even if they have the same URLs. conflict with --md5.")
 	flagSet.StringVar(&cfg.CallSystem, "callsystem", "",
-		"The name of dfget caller which is for debugging. Once set, it will be passed to all components around the request to make debugging easy")
+		"the name of dfget caller which is for debugging. Once set, it will be passed to all components around the request to make debugging easy")
 	flagSet.StringSliceVar(&cfg.Cacerts, "cacerts", nil,
-		"The cacert file which is used to verify remote server when supernode interact with the source.")
+		"the cacert file which is used to verify remote server when supernode interact with the source.")
 	flagSet.StringVarP(&cfg.Pattern, "pattern", "p", "p2p",
 		"download pattern, must be p2p/cdn/source, cdn and source do not support flag --totallimit")
 	flagSet.StringVarP(&filter, "filter", "f", "",
@@ -223,7 +222,7 @@ func initFlags() {
 	flagSet.DurationVar(&cfg.RV.DataExpireTime, "expiretime", config.DataExpireTime,
 		"caching duration for which cached file keeps no accessed by any process, after this period cache file will be deleted")
 	flagSet.DurationVar(&cfg.RV.ServerAliveTime, "alivetime", config.ServerAliveTime,
-		"Alive duration for which uploader keeps no accessing by any uploading requests, after this period uploader will automatically exit")
+		"alive duration for which uploader keeps no accessing by any uploading requests, after this period uploader will automatically exit")
 
 	flagSet.MarkDeprecated("exceed", "please use '--timeout' or '-e' instead")
 }
