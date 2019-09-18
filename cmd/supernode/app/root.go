@@ -191,7 +191,7 @@ func initLog(logger *logrus.Logger, logPath string) error {
 	return nil
 }
 
-// initConfig load configuration from config file.
+// initConfig loads configuration from config file.
 // The properties in config file will be covered by the value that comes from
 // command line parameters.
 func initConfig() error {

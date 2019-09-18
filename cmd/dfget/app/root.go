@@ -62,7 +62,7 @@ func init() {
 	initFlags()
 }
 
-// runDfget do some init operations and start to download.
+// runDfget does some init operations and starts to download.
 func runDfget() error {
 	// initialize logger
 	if err := initClientLog(); err != nil {
@@ -104,7 +104,7 @@ func checkParameters() error {
 	return nil
 }
 
-// load config from property files.
+// initProperties loads config from property files.
 func initProperties() {
 	properties := config.NewProperties()
 	for _, v := range cfg.ConfigFiles {
@@ -151,7 +151,7 @@ func initClientLog() error {
 		dflog.WithDebug(cfg.Verbose),
 	}
 
-	// once cfg.Console is set, process should also output log to console
+	// Once cfg.Console is set, process should also output log to console.
 	if cfg.Console {
 		opts = append(opts, dflog.WithConsole())
 	}

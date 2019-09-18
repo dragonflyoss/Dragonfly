@@ -88,7 +88,7 @@ func initServerLog() error {
 		dflog.WithDebug(cfg.Verbose),
 	}
 
-	// once cfg.Console is set, process should also output log to console
+	// Once cfg.Console is set, process should also output log to console.
 	if cfg.Console {
 		opts = append(opts, dflog.WithConsole())
 	}
