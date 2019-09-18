@@ -72,19 +72,21 @@ func newMetrics(register prometheus.Registerer) *metrics {
 
 // Manager is an implementation of the interface of TaskMgr.
 type Manager struct {
-	cfg *config.Config
+	cfg          *config.Config
+	metrics      *metrics
+	originClient httpclient.OriginHTTPClient
 
+	// store object
 	taskStore               *dutil.Store
 	accessTimeMap           *syncmap.SyncMap
 	taskURLUnReachableStore *syncmap.SyncMap
 
+	// mgr object
 	peerMgr      mgr.PeerMgr
 	dfgetTaskMgr mgr.DfgetTaskMgr
 	progressMgr  mgr.ProgressMgr
 	cdnMgr       mgr.CDNMgr
 	schedulerMgr mgr.SchedulerMgr
-	OriginClient httpclient.OriginHTTPClient
-	metrics      *metrics
 }
 
 // NewManager returns a new Manager Object.
@@ -101,7 +103,7 @@ func NewManager(cfg *config.Config, peerMgr mgr.PeerMgr, dfgetTaskMgr mgr.DfgetT
 		schedulerMgr:            schedulerMgr,
 		accessTimeMap:           syncmap.NewSyncMap(),
 		taskURLUnReachableStore: syncmap.NewSyncMap(),
-		OriginClient:            originClient,
+		originClient:            originClient,
 		metrics:                 newMetrics(register),
 	}, nil
 }

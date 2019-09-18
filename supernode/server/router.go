@@ -55,6 +55,12 @@ func initRoute(s *Server) *mux.Router {
 		{Method: http.MethodGet, Path: "/peers/{id}", HandlerFunc: s.getPeer},
 		{Method: http.MethodGet, Path: "/peers", HandlerFunc: s.listPeers},
 
+		// task
+		{Method: http.MethodDelete, Path: "/tasks/{id}", HandlerFunc: s.deleteTask},
+
+		// piece
+		{Method: http.MethodGet, Path: "/tasks/{id}/pieces/{pieceRange}/error", HandlerFunc: s.handlePieceError},
+
 		// metrics
 		{Method: http.MethodGet, Path: "/metrics", HandlerFunc: handleMetrics},
 		{Method: http.MethodPost, Path: "/task/metrics", HandlerFunc: m.handleMetricsReport},

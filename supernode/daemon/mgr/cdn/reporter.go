@@ -18,10 +18,10 @@ package cdn
 
 import (
 	"context"
-	"fmt"
 	"hash"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
@@ -132,7 +132,7 @@ func (re *reporter) processCacheByReadFile(ctx context.Context, taskID string, m
 
 	fileMd5Value := metaData.RealMd5
 	if stringutils.IsEmptyStr(fileMd5Value) {
-		fileMd5Value = fmt.Sprintf("%x", result.fileMd5.Sum(nil))
+		fileMd5Value = fileutils.GetMd5Sum(result.fileMd5, nil)
 	}
 
 	fmd := &fileMetaData{
