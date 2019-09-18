@@ -83,7 +83,6 @@ func initLogger(cfg config.Properties) error {
 		dflog.WithLogFile(logFilePath),
 		dflog.WithSign(fmt.Sprintf("%d", os.Getpid())),
 		dflog.WithDebug(cfg.Verbose),
-		dflog.WithConsole(),
 	}
 
 	logrus.Debugf("use log file %s", logFilePath)

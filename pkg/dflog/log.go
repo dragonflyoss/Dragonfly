@@ -61,7 +61,7 @@ func WithLogFile(f string) Option {
 		if logger := getLumberjack(l); logger == nil {
 			l.SetOutput(&lumberjack.Logger{
 				Filename:   f,
-				MaxSize:    20, // mb
+				MaxSize:    40, // mb
 				MaxBackups: 1,
 			})
 		} else {
@@ -123,9 +123,6 @@ func Init(l *logrus.Logger, opts ...Option) error {
 		if err := opt(l); err != nil {
 			return err
 		}
-	}
-	if logger, ok := l.Out.(*lumberjack.Logger); ok {
-		return logger.Rotate()
 	}
 	return nil
 }
