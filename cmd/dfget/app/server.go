@@ -65,7 +65,10 @@ func initServerFlags() {
 }
 
 func runServer() error {
-	initServerLog()
+	err := initServerLog()
+	if err != nil {
+		return err
+	}
 	// launch a peer server as a uploader server
 	port, err := uploader.LaunchPeerServer(cfg)
 	if err != nil {
