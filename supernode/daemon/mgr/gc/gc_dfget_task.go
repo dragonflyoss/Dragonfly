@@ -25,6 +25,20 @@ import (
 func (gcm *Manager) gcDfgetTasksWithTaskID(ctx context.Context, taskID string, cids []string) []error {
 	var errSlice []error
 	for _, cid := range cids {
+		// NOTE: At present, we create a peer for every dfgetTask.
+		// So we should also delete the peer when the dfgetTask deleted.
+		// In addition,if a peer crashes when servers,we can gc it by this way
+		//
+		// TODO: In the future, we need a heartbeat mechanism to get the peer status and
+		// implement a one-to-many relationship between peers and dfgetTasks.
+		// For compatibility with older versions, we can perform different operations according to the version of peer.
+		dfgetTask, err := gcm.dfgetTaskMgr.Get(ctx, cid, taskID)
+		if err == nil {
+			gcm.progressMgr.UpdatePeerServiceDown(ctx, dfgetTask.PeerID)
+		} else {
+			errSlice = append(errSlice, errors.Wrapf(err, "failed to get dfgetTask by cid(%s)", cid))
+		}
+
 		if err := gcm.progressMgr.DeleteCID(ctx, cid); err != nil {
 			errSlice = append(errSlice, errors.Wrapf(err, "failed to delete dfgetTask(%s) progress info", cid))
 		}
