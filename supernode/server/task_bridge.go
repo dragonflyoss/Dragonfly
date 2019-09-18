@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-package mgr
+package server
 
 import (
 	"context"
+	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
-// GCMgr as an interface defines all operations about gc operation.
-type GCMgr interface {
-	// StartGC start to execute GC with a new goroutine.
-	StartGC(ctx context.Context)
+func (s *Server) deleteTask(ctx context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
+	id := mux.Vars(req)["id"]
+	params := req.URL.Query()
+	full, _ := strconv.ParseBool(params.Get("full"))
 
-	// GCTask to do the gc task job with specified taskID.
-	// The CDN file will be deleted when the full is true.
-	GCTask(ctx context.Context, taskID string, full bool)
+	s.GCMgr.GCTask(ctx, id, full)
 
-	// GCPeer to do the gc peer job when a peer offline.
-	GCPeer(ctx context.Context, peerID string)
+	rw.WriteHeader(http.StatusOK)
+	return nil
 }

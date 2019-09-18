@@ -71,8 +71,8 @@ func (gcm *Manager) StartGC(ctx context.Context) {
 }
 
 // GCTask to do the gc job with specified taskID.
-func (gcm *Manager) GCTask(ctx context.Context, taskID string) {
-	gcm.gcTask(ctx, taskID)
+func (gcm *Manager) GCTask(ctx context.Context, taskID string, full bool) {
+	gcm.gcTask(ctx, taskID, full)
 }
 
 // GCPeer to do the gc job when a peer offline.

@@ -49,7 +49,7 @@ func (gcm *Manager) gcTasks(ctx context.Context) {
 			continue
 		}
 
-		if !gcm.gcTask(ctx, taskID) {
+		if !gcm.gcTask(ctx, taskID, false) {
 			continue
 		}
 		removedTaskCount++
@@ -58,7 +58,7 @@ func (gcm *Manager) gcTasks(ctx context.Context) {
 	logrus.Infof("gc tasks: success to full gc task count(%d), remainder count(%d)", removedTaskCount, totalTaskNums-removedTaskCount)
 }
 
-func (gcm *Manager) gcTask(ctx context.Context, taskID string) bool {
+func (gcm *Manager) gcTask(ctx context.Context, taskID string, full bool) bool {
 	logrus.Infof("start to gc task: %s", taskID)
 
 	util.GetLock(taskID, false)
@@ -73,7 +73,7 @@ func (gcm *Manager) gcTask(ctx context.Context, taskID string) bool {
 	}(&wg)
 
 	go func(wg *sync.WaitGroup) {
-		gcm.gcCDNByTaskID(ctx, taskID)
+		gcm.gcCDNByTaskID(ctx, taskID, full)
 		wg.Done()
 	}(&wg)
 
@@ -98,8 +98,8 @@ func (gcm *Manager) gcCIDsByTaskID(ctx context.Context, taskID string) {
 	}
 }
 
-func (gcm *Manager) gcCDNByTaskID(ctx context.Context, taskID string) {
-	if err := gcm.cdnMgr.Delete(ctx, taskID, false); err != nil {
+func (gcm *Manager) gcCDNByTaskID(ctx context.Context, taskID string, full bool) {
+	if err := gcm.cdnMgr.Delete(ctx, taskID, full); err != nil {
 		logrus.Errorf("gc task: failed to gc cdn meta taskID(%s): %v", taskID, err)
 	}
 }

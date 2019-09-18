@@ -30,14 +30,14 @@ import (
 type cacheDetector struct {
 	cacheStore      *store.Store
 	metaDataManager *fileMetaDataManager
-	OriginClient    httpclient.OriginHTTPClient
+	originClient    httpclient.OriginHTTPClient
 }
 
 func newCacheDetector(cacheStore *store.Store, metaDataManager *fileMetaDataManager, originClient httpclient.OriginHTTPClient) *cacheDetector {
 	return &cacheDetector{
 		cacheStore:      cacheStore,
 		metaDataManager: metaDataManager,
-		OriginClient:    originClient,
+		originClient:    originClient,
 	}
 }
 
@@ -68,7 +68,7 @@ func (cd *cacheDetector) detectCache(ctx context.Context, task *types.TaskInfo) 
 }
 
 func (cd *cacheDetector) parseBreakNum(ctx context.Context, task *types.TaskInfo, metaData *fileMetaData) int {
-	expired, err := cd.OriginClient.IsExpired(task.RawURL, task.Headers, metaData.LastModified, metaData.ETag)
+	expired, err := cd.originClient.IsExpired(task.RawURL, task.Headers, metaData.LastModified, metaData.ETag)
 	if err != nil {
 		logrus.Errorf("failed to check whether the task(%s) has expired: %v", task.ID, err)
 	}
@@ -85,7 +85,7 @@ func (cd *cacheDetector) parseBreakNum(ctx context.Context, task *types.TaskInfo
 		return 0
 	}
 
-	supportRange, err := cd.OriginClient.IsSupportRange(task.TaskURL, task.Headers)
+	supportRange, err := cd.originClient.IsSupportRange(task.TaskURL, task.Headers)
 	if err != nil {
 		logrus.Errorf("failed to check whether the task(%s) supports partial requests: %v", task.ID, err)
 	}

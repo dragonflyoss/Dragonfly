@@ -81,6 +81,35 @@ func (mr *MockCDNMgrMockRecorder) GetStatus(ctx, taskID interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatus", reflect.TypeOf((*MockCDNMgr)(nil).GetStatus), ctx, taskID)
 }
 
+// GetPieceMD5 mocks base method
+func (m *MockCDNMgr) GetPieceMD5(ctx context.Context, taskID string, pieceNum int, pieceRange, source string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPieceMD5", ctx, taskID, pieceNum, pieceRange, source)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPieceMD5 indicates an expected call of GetPieceMD5
+func (mr *MockCDNMgrMockRecorder) GetPieceMD5(ctx, taskID, pieceNum, pieceRange, source interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPieceMD5", reflect.TypeOf((*MockCDNMgr)(nil).GetPieceMD5), ctx, taskID, pieceNum, pieceRange, source)
+}
+
+// CheckFile mocks base method
+func (m *MockCDNMgr) CheckFile(ctx context.Context, taskID string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckFile", ctx, taskID)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// CheckFile indicates an expected call of CheckFile
+func (mr *MockCDNMgrMockRecorder) CheckFile(ctx, taskID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckFile", reflect.TypeOf((*MockCDNMgr)(nil).CheckFile), ctx, taskID)
+}
+
 // Delete mocks base method
 func (m *MockCDNMgr) Delete(ctx context.Context, taskID string, force bool) error {
 	m.ctrl.T.Helper()
