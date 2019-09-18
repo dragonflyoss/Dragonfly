@@ -53,7 +53,7 @@ type TLSConfig struct {
 	ManagerWhiteList string `json:"manager-whitelist,omitempty"`
 }
 
-// NewAPIClient initializes a new API client for the given host
+// NewAPIClient initializes a new API client for the given host.
 func NewAPIClient(host string, tls TLSConfig) (CommonAPIClient, error) {
 	if host == "" {
 		host = defaultHost
@@ -111,7 +111,7 @@ func generateBaseURL(u *url.URL, tls TLSConfig) string {
 	return "http://" + u.Host
 }
 
-// BaseURL returns the base URL of APIClient
+// BaseURL returns the base URL of APIClient.
 func (client *APIClient) BaseURL() string {
 	return client.baseURL
 }

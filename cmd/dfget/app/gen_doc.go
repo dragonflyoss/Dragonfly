@@ -59,7 +59,7 @@ func (g *GenDocCommand) runGenDoc(args []string) error {
 	// FIXME: make document path configurable
 	if _, err := os.Stat(g.path); err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("path %s does not exits, please check your gen-doc input flag --path", g.path)
+			return fmt.Errorf("path %s does not exist, please check your gen-doc input flag --path", g.path)
 		}
 		return err
 	}

@@ -100,7 +100,7 @@ func init() {
 	exitOnError(bindRootFlags(viper.GetViper()), "bind root command flags")
 }
 
-// bindRootFlags binds flags on rootCmd to the given viper instance
+// bindRootFlags binds flags on rootCmd to the given viper instance.
 func bindRootFlags(v *viper.Viper) error {
 	if err := v.BindPFlags(rootCmd.Flags()); err != nil {
 		return err
@@ -133,7 +133,7 @@ func exitOnError(err error, msg string) {
 	}
 }
 
-// Execute runs dfdaemon
+// Execute runs dfdaemon.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		logrus.Errorf("dfdaemon failed: %v", err)
@@ -145,7 +145,7 @@ func Execute() {
 	}
 }
 
-// getConfigFromViper returns dfdaemon config from the given viper instance
+// getConfigFromViper returns dfdaemon config from the given viper instance.
 func getConfigFromViper(v *viper.Viper) (*config.Properties, error) {
 	var cfg config.Properties
 	if err := v.Unmarshal(&cfg, func(dc *mapstructure.DecoderConfig) {
@@ -164,7 +164,7 @@ func getConfigFromViper(v *viper.Viper) (*config.Properties, error) {
 }
 
 // decodeWithYAML returns a mapstructure.DecodeHookFunc to decode the given
-// types by unmarshalling from yaml text
+// types by unmarshalling from yaml text.
 func decodeWithYAML(types ...reflect.Type) mapstructure.DecodeHookFunc {
 	return func(f, t reflect.Type, data interface{}) (interface{}, error) {
 		for _, typ := range types {
