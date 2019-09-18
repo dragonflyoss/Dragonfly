@@ -205,7 +205,10 @@ func initConfig() error {
 		return nil
 	}
 
-	opt := getPureOptionFromCLI()
+	opt, err := getPureOptionFromCLI()
+	if err != nil {
+		return err
+	}
 	choosePropValue(opt.BaseProperties, cfg.BaseProperties)
 	return nil
 }
@@ -253,12 +256,15 @@ func choosePropValue(cliProp, cfgProp *config.BaseProperties) {
 	}
 }
 
-func getPureOptionFromCLI() *Options {
+func getPureOptionFromCLI() (*Options, error) {
 	cmd := &cobra.Command{}
 	opt := &Options{&config.BaseProperties{}}
 	setupFlags(cmd, opt)
-	cmd.ParseFlags(os.Args)
-	return opt
+	err := cmd.ParseFlags(os.Args)
+	if err != nil {
+		return nil, err
+	}
+	return opt, err
 }
 
 // Execute will process supernode.
