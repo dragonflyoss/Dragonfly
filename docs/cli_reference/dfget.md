@@ -48,17 +48,17 @@ download SUCCESS cost:0.026s length:141898 reason:0
   -i, --identifier string     The usage of identifier is making different downloading tasks generate different downloading task IDs even if they have the same URLs. conflict with --md5.
       --insecure              identify whether supernode should skip secure verify when interact with the source.
       --ip string             IP address that server will listen on
-  -s, --locallimit string     network bandwidth rate limit for single download task, in format of 20M/m/K/k
+  -s, --locallimit rate       network bandwidth rate limit for single download task, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte (default 20MB)
   -m, --md5 string            md5 value input from user for the requested downloading file to enhance security
-      --minrate string        minimal network bandwidth rate for downloading a file, in format of 20M/m/K/k
+      --minrate rate          minimal network bandwidth rate for downloading a file, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte (default 64KB)
   -n, --node strings          specify the addresses(host:port) of supernodes
       --notbs                 disable back source downloading for requested file when p2p fails to download it
   -o, --output string         Destination path which is used to store the requested downloading file. It must contain detailed directory and specific filename, for example, '/tmp/file.mp4'
   -p, --pattern string        download pattern, must be p2p/cdn/source, cdn and source do not support flag --totallimit (default "p2p")
       --port int              port number that server will listen on
   -b, --showbar               show progress bar, it is conflict with '--console'
-  -e, --timeout int           Timeout set for file downloading task. If dfget has not finished downloading all pieces of file before --timeout, the dfget will throw an error and exit
-      --totallimit string     network bandwidth rate limit for the whole host, in format of 20M/m/K/k
+  -e, --timeout duration      Timeout set for file downloading task. If dfget has not finished downloading all pieces of file before --timeout, the dfget will throw an error and exit
+      --totallimit rate       network bandwidth rate limit for the whole host, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte (default 0B)
   -u, --url string            URL of user requested downloading file(only HTTP/HTTPs supported)
       --verbose               be verbose
 ```
