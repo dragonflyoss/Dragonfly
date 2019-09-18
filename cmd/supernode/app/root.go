@@ -69,31 +69,31 @@ func setupFlags(cmd *cobra.Command, opt *Options) {
 		"the path of supernode's configuration file")
 
 	flagSet.IntVar(&opt.ListenPort, "port", opt.ListenPort,
-		"ListenPort is the port supernode server listens on")
+		"listenPort is the port that supernode server listens on")
 
 	flagSet.IntVar(&opt.DownloadPort, "download-port", opt.DownloadPort,
-		"DownloadPort is the port for download files from supernode")
+		"downloadPort is the port for download files from supernode")
 
 	flagSet.StringVar(&opt.HomeDir, "home-dir", opt.HomeDir,
-		"HomeDir is working directory of supernode")
+		"homeDir is the working directory of supernode")
 
 	flagSet.StringVar(&opt.DownloadPath, "download-path", opt.DownloadPath,
-		"specifies the path where to store downloaded filed from source address")
+		"download path specifies the path where to store downloaded filed from source address")
 
 	flagSet.Var(&opt.SystemReservedBandwidth, "system-bandwidth",
-		"Network rate reserved for system")
+		"network rate reserved for system")
 
 	flagSet.Var(&opt.MaxBandwidth, "max-bandwidth",
 		"network rate that supernode can use")
 
 	flagSet.IntVar(&opt.SchedulerCorePoolSize, "pool-size", opt.SchedulerCorePoolSize,
-		"the core pool size of ScheduledExecutorService")
+		"pool size is the core pool size of ScheduledExecutorService")
 
 	flagSet.BoolVar(&opt.EnableProfiler, "profiler", opt.EnableProfiler,
-		"Set if supernode HTTP server setup profiler")
+		"profiler sets whether supernode HTTP server setups profiler")
 
 	flagSet.BoolVarP(&opt.Debug, "debug", "D", opt.Debug,
-		"Switch daemon log level to DEBUG mode")
+		"switch daemon log level to DEBUG mode")
 
 	flagSet.IntVar(&opt.PeerUpLimit, "up-limit", opt.PeerUpLimit,
 		"upload limit for a peer to serve download tasks")
@@ -102,22 +102,22 @@ func setupFlags(cmd *cobra.Command, opt *Options) {
 		"download limit for supernode to serve download tasks")
 
 	flagSet.StringVar(&opt.AdvertiseIP, "advertise-ip", "",
-		"the supernode ip that we advertise to other peer in the p2p-network")
+		"the supernode ip is the ip we advertise to other peers in the p2p-network")
 
 	flagSet.DurationVar(&opt.FailAccessInterval, "fail-access-interval", opt.FailAccessInterval,
-		"FailAccessInterval is the interval time after failed to access the URL")
+		"fail access interval is the interval time after failed to access the URL")
 
 	flagSet.DurationVar(&opt.GCInitialDelay, "gc-initial-delay", opt.GCInitialDelay,
-		"GCInitialDelay is the delay time from the start to the first GC execution")
+		"gc initial delay is the delay time from the start to the first GC execution")
 
 	flagSet.DurationVar(&opt.GCMetaInterval, "gc-meta-interval", opt.GCMetaInterval,
-		"GCMetaInterval is the interval time to execute the GC meta")
+		"gc meta interval is the interval time to execute the GC meta")
 
 	flagSet.DurationVar(&opt.TaskExpireTime, "task-expire-time", opt.TaskExpireTime,
-		"TaskExpireTime when a task is not accessed within the taskExpireTime,and it will be treated to be expired")
+		"task expire time is the time that a task is treated expired if the task is not accessed within the time")
 
 	flagSet.DurationVar(&opt.PeerGCDelay, "peer-gc-delay", opt.PeerGCDelay,
-		"PeerGCDelay is the delay time to execute the GC after the peer has reported the offline")
+		"peer gc delay is the delay time to execute the GC after the peer has reported the offline")
 
 }
 
