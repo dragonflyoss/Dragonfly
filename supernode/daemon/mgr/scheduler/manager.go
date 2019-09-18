@@ -147,9 +147,9 @@ func (sm *Manager) getPieceResults(ctx context.Context, taskID, clientID, srcPID
 	if err != nil {
 		return nil, err
 	}
-	if srcPeerState.ClientErrorCount.Get() > config.FailCountLimit {
+	if srcPeerState.ClientErrorCount.Get() > int32(sm.cfg.FailureCountLimit) {
 		logrus.Warnf("scheduler: peerID: %s got errors for %d times which reaches error limit: %d for taskID(%s)",
-			srcPID, srcPeerState.ClientErrorCount.Get(), config.FailCountLimit, taskID)
+			srcPID, srcPeerState.ClientErrorCount.Get(), sm.cfg.FailureCountLimit, taskID)
 		useSupernode = true
 	}
 

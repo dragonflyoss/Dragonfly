@@ -57,7 +57,7 @@ func (c *Config) String() string {
 // SetCIDPrefix sets a string as the prefix for supernode CID
 // which used to distinguish from the other peer nodes.
 func (c *Config) SetCIDPrefix(ip string) {
-	c.cIDPrefix = fmt.Sprintf("cdnnode:%s~", ip)
+	c.cIDPrefix = fmt.Sprintf("%s%s~", SuperNodeCIdPrefix, ip)
 }
 
 // GetSuperCID returns the cid string for taskID.
@@ -89,18 +89,18 @@ func (c *Config) IsSuperPID(peerID string) bool {
 func NewBaseProperties() *BaseProperties {
 	home := filepath.Join(string(filepath.Separator), "home", "admin", "supernode")
 	return &BaseProperties{
-		ListenPort:              8002,
-		DownloadPort:            8001,
+		ListenPort:              DefaultListenPort,
+		DownloadPort:            DefaultDownloadPort,
 		HomeDir:                 home,
-		SchedulerCorePoolSize:   10,
+		SchedulerCorePoolSize:   DefaultSchedulerCorePoolSize,
 		DownloadPath:            filepath.Join(home, "repo", "download"),
-		PeerUpLimit:             5,
-		PeerDownLimit:           5,
-		EliminationLimit:        5,
-		FailureCountLimit:       5,
-		LinkLimit:               20 * rate.MB,
-		SystemReservedBandwidth: 20 * rate.MB,
-		MaxBandwidth:            200 * rate.MB,
+		PeerUpLimit:             DefaultPeerUpLimit,
+		PeerDownLimit:           DefaultPeerDownLimit,
+		EliminationLimit:        DefaultEliminationLimit,
+		FailureCountLimit:       DefaultFailureCountLimit,
+		LinkLimit:               DefaultLinkLimit * rate.MB,
+		SystemReservedBandwidth: DefaultSystemReservedBandwidth * rate.MB,
+		MaxBandwidth:            DefaultMaxBandwidth * rate.MB,
 		EnableProfiler:          false,
 		Debug:                   false,
 		FailAccessInterval:      DefaultFailAccessInterval,
