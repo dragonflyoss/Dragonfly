@@ -188,13 +188,14 @@ func (p2p *P2PDownloader) Run() error {
 			} else if code == constants.CodePeerFinish {
 				p2p.finishTask(response, clientWriter)
 				return nil
-			} else if code == constants.CodePeerWait {
-				continue
-			}
-
-			logrus.Warnf("request piece result:%v", response)
-			if code == constants.CodeSourceError {
-				p2p.cfg.BackSourceReason = config.BackSourceReasonSourceError
+			} else {
+				logrus.Warnf("request piece result:%v", response)
+				if code == constants.CodePeerWait {
+					continue
+				}
+				if code == constants.CodeSourceError {
+					p2p.cfg.BackSourceReason = config.BackSourceReasonSourceError
+				}
 			}
 		}
 
