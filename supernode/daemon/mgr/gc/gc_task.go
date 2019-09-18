@@ -49,17 +49,15 @@ func (gcm *Manager) gcTasks(ctx context.Context) {
 			continue
 		}
 
-		if !gcm.gcTask(ctx, taskID, false) {
-			continue
-		}
+		gcm.gcTask(ctx, taskID, false)
 		removedTaskCount++
 	}
 
 	logrus.Infof("gc tasks: success to full gc task count(%d), remainder count(%d)", removedTaskCount, totalTaskNums-removedTaskCount)
 }
 
-func (gcm *Manager) gcTask(ctx context.Context, taskID string, full bool) bool {
-	logrus.Infof("start to gc task: %s", taskID)
+func (gcm *Manager) gcTask(ctx context.Context, taskID string, full bool) {
+	logrus.Infof("gc task: start working on task: %s", taskID)
 
 	util.GetLock(taskID, false)
 	defer util.ReleaseLock(taskID, false)
@@ -83,7 +81,6 @@ func (gcm *Manager) gcTask(ctx context.Context, taskID string, full bool) bool {
 	}(&wg)
 
 	wg.Wait()
-	return true
 }
 
 func (gcm *Manager) gcCIDsByTaskID(ctx context.Context, taskID string) {
