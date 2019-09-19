@@ -574,9 +574,10 @@ the situation.
 
 #### Parameters
 
-|Type|Name|Description|Schema|
-|---|---|---|---|
-|**Path**|**id**  <br>*required*|ID of task|string|
+|Type|Name|Description|Schema|Default|
+|---|---|---|---|---|
+|**Path**|**id**  <br>*required*|ID of task|string||
+|**Query**|**full**  <br>*optional*|supernode will also delete the cdn files when the value of full equals true.|boolean|`"false"`|
 
 
 #### Responses
@@ -647,6 +648,47 @@ to those peers.
 |**Path**|**id**  <br>*required*|ID of task|string|
 |**Path**|**pieceRange**  <br>*required*|the range of specific piece in the task, example "0-45565".|string|
 |**Body**|**PieceUpdateRequest**  <br>*optional*|request body which contains task update information.|[PieceUpdateRequest](#pieceupdaterequest)|
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|No Content|
+|**404**|An unexpected 404 error occurred.|[Error](#error)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
+#### Consumes
+
+* `application/json`
+
+
+#### Produces
+
+* `application/json`
+
+
+<a name="tasks-id-pieces-piecerange-error-post"></a>
+### report a piece error
+```
+POST /tasks/{id}/pieces/{pieceRange}/error
+```
+
+
+#### Description
+When a peer failed to download a piece from supernode or
+failed to validate the pieceMD5,
+and then dfget should report the error info to supernode.
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|
+|---|---|---|---|
+|**Path**|**id**  <br>*required*|ID of task|string|
+|**Path**|**pieceRange**  <br>*required*|the range of specific piece in the task, example "0-45565".|string|
+|**Body**|**PieceErrorRequest**  <br>*optional*|request body which contains piece error information.|[PieceErrorRequest](#pieceerrorrequest)|
 
 
 #### Responses
@@ -783,6 +825,23 @@ The detailed information of a peer in supernode.
 |**hostName**  <br>*optional*|host name of peer client node, as a valid RFC 1123 hostname.  <br>**Minimum length** : `1`|string (hostname)|
 |**port**  <br>*optional*|when registering, dfget will setup one uploader process. <br>This one acts as a server for peer pulling tasks.<br>This port is which this server listens on.  <br>**Minimum value** : `15000`  <br>**Maximum value** : `65000`|integer (int32)|
 |**version**  <br>*optional*|version number of dfget binary|string|
+
+
+<a name="pieceerrorrequest"></a>
+### PieceErrorRequest
+Peer's detailed information in supernode.
+
+
+|Name|Description|Schema|
+|---|---|---|
+|**dstIP**  <br>*optional*|the peer ID of the target Peer.|string|
+|**dstPid**  <br>*optional*|the peer ID of the target Peer.|string|
+|**errorType**  <br>*optional*|the error type when failed to download from supernode that dfget will report to supernode|enum (FILE_NOT_EXIST, FILE_MD5_NOT_MATCH)|
+|**expectedMd5**  <br>*optional*|the MD5 value of piece which returned by the supernode that<br>in order to verify the correctness of the piece content which<br>downloaded from the other peers.|string|
+|**range**  <br>*optional*|the range of specific piece in the task, example "0-45565".|string|
+|**realMd5**  <br>*optional*|the MD5 information of piece which calculated by the piece content<br>which downloaded from the target peer.|string|
+|**srcCid**  <br>*optional*|the CID of the src Peer.|string|
+|**taskId**  <br>*optional*|the taskID of the piece.|string|
 
 
 <a name="pieceinfo"></a>
