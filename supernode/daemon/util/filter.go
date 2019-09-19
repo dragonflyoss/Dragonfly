@@ -28,19 +28,19 @@ import (
 )
 
 const (
-	// PAGENUM identity the page number of the data.
+	// PAGENUM identifies the page number of the data.
 	// The default value is 0.
 	PAGENUM = "pageNum"
 
-	// PAGESIZE identity the page size of the data.
+	// PAGESIZE identifies the page size of the data.
 	// If this value equals 0, return all values.
 	PAGESIZE = "pageSize"
 
-	// SORTKEY identity the sort key of the data.
+	// SORTKEY identifies the sort key of the data.
 	// Each mgr needs to define acceptable values based on its own implementation.
 	SORTKEY = "sortKey"
 
-	// SORTDIRECT identity the sort direct of the data.
+	// SORTDIRECT identifies the sort direct of the data.
 	// The value can only be ASC or DESC.
 	SORTDIRECT = "sortDirect"
 

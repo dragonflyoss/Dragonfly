@@ -40,6 +40,6 @@ type PeerMgr interface {
 	// GetAllPeerIDs returns all peerIDs.
 	GetAllPeerIDs(ctx context.Context) (peerIDs []string)
 
-	// List return a list of peers info with filter.
+	// List returns a list of peers info with filter.
 	List(ctx context.Context, filter *util.PageFilter) (peerList []*types.PeerInfo, err error)
 }

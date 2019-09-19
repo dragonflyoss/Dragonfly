@@ -234,7 +234,7 @@ func (pm *Manager) GetPieceProgressByCID(ctx context.Context, taskID, clientID, 
 }
 
 // GetPeerIDsByPieceNum gets all peerIDs with specified taskID and pieceNum.
-// It will return nil when no peers is available.
+// It will return nil when no peers are available.
 func (pm *Manager) GetPeerIDsByPieceNum(ctx context.Context, taskID string, pieceNum int) (peerIDs []string, err error) {
 	key, err := generatePieceProgressKey(taskID, pieceNum)
 	if err != nil {
@@ -264,7 +264,7 @@ func (pm *Manager) GetPeerStateByPeerID(ctx context.Context, peerID string) (*mg
 	}, nil
 }
 
-// UpdatePeerServiceDown do update operation when a peer server offline.
+// UpdatePeerServiceDown does update operation when a peer server offline.
 func (pm *Manager) UpdatePeerServiceDown(ctx context.Context, peerID string) (err error) {
 	peerState, err := pm.peerProgress.getAsPeerState(peerID)
 	if err != nil {

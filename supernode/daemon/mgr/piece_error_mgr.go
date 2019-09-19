@@ -24,7 +24,7 @@ import (
 
 // PieceErrorMgr as an interface defines all operations to handle piece errors.
 type PieceErrorMgr interface {
-	// StartHandleError start a goroutine to handle the piece error.
+	// StartHandleError starts a goroutine to handle the piece error.
 	StartHandleError(ctx context.Context)
 
 	// HandlePieceError the peer should report the error with related info when

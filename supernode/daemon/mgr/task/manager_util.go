@@ -398,7 +398,7 @@ func (tm *Manager) pieceResultToPieceInfo(ctx context.Context, pr *mgr.PieceResu
 	}, nil
 }
 
-// convertToPeerPieceStatus convert piece result and dfgetTask status to dfgetTask status code.
+// convertToPeerPieceStatus converts piece result and dfgetTask status to dfgetTask status code.
 // And it should return "" if failed to convert.
 func convertToDfgetTaskStatus(result, status string) string {
 	if status == types.PiecePullRequestDfgetTaskStatusSTARTED {
@@ -419,7 +419,7 @@ func convertToDfgetTaskStatus(result, status string) string {
 	return ""
 }
 
-// convertToPeerPieceStatus convert piece result and dfgetTask status to piece status code.
+// convertToPeerPieceStatus converts piece result and dfgetTask status to piece status code.
 // And it should return -1 if failed to convert.
 func convertToPeerPieceStatus(result, status string) (int, bool) {
 	if status == types.PiecePullRequestDfgetTaskStatusSTARTED {
