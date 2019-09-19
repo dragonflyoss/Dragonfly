@@ -190,7 +190,8 @@ func (suite *ConfigSuite) TestProperties_Load(c *check.C) {
 	for idx, v := range cases {
 		filename := filepath.Join(dirName, fmt.Sprintf("%d.%s", idx, v.ext))
 		if v.create {
-			ioutil.WriteFile(filename, []byte(v.content), os.ModePerm)
+			err := ioutil.WriteFile(filename, []byte(v.content), os.ModePerm)
+			c.Assert(err, check.IsNil)
 		}
 		p := &Properties{}
 		err := p.Load(filename)
