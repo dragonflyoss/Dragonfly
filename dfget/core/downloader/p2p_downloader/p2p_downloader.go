@@ -284,7 +284,7 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 	return p2p.pullPieceTask(item)
 }
 
-// getPullRate get download rate limit dynamically.
+// getPullRate gets download rate limit dynamically.
 func (p2p *P2PDownloader) getPullRate(data *types.PullPieceTaskResponseContinueData) {
 	if time.Since(p2p.pullRateTime).Seconds() < 3 {
 		return

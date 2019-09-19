@@ -198,10 +198,10 @@ type Config struct {
 	// Insecure indicates whether skip secure verify when supernode interact with the source.
 	Insecure bool `json:"insecure,omitempty"`
 
-	// ShowBar show progress bar, it's conflict with `--console`.
+	// ShowBar shows progress bar, it's conflict with `--console`.
 	ShowBar bool `json:"showBar,omitempty"`
 
-	// Console show log on console, it's conflict with `--showbar`.
+	// Console shows log on console, it's conflict with `--showbar`.
 	Console bool `json:"console,omitempty"`
 
 	// Verbose indicates whether to be verbose.
@@ -329,16 +329,16 @@ type RuntimeVariable struct {
 	// Only server port information is stored currently.
 	MetaPath string
 
-	// SystemDataDir specify a default directory to store temporary files.
+	// SystemDataDir specifies a default directory to store temporary files.
 	SystemDataDir string
 
-	// DataDir specify a directory to store temporary files.
+	// DataDir specifies a directory to store temporary files.
 	// For now, the value of `DataDir` always equals `SystemDataDir`,
 	// and there is no difference between them.
 	// TODO: If there is insufficient disk space, we should set it to the `TargetDir`.
 	DataDir string
 
-	// RealTarget specify the full target path whose value is equal to the `Output`.
+	// RealTarget specifies the full target path whose value is equal to the `Output`.
 	RealTarget string
 
 	// TargetDir is the directory of the RealTarget path.
@@ -368,12 +368,12 @@ type RuntimeVariable struct {
 	// FileLength the length of the file to download.
 	FileLength int64
 
-	// DataExpireTime specify the caching duration for which
+	// DataExpireTime specifies the caching duration for which
 	// cached files keep no accessed by any process.
 	// After this period, the cached files will be deleted.
 	DataExpireTime time.Duration
 
-	// ServerAliveTime specify the alive duration for which
+	// ServerAliveTime specifies the alive duration for which
 	// uploader keeps no accessing by any uploading requests.
 	// After this period, the uploader will automatically exit.
 	ServerAliveTime time.Duration
