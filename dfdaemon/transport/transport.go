@@ -52,7 +52,7 @@ func New(opts ...Option) (*DFRoundTripper, error) {
 	rt := &DFRoundTripper{
 		Round:          defaultHTTPTransport(nil),
 		Round2:         http.NewFileTransport(http.Dir("/")),
-		ShouldUseDfget: needUseGetter,
+		ShouldUseDfget: NeedUseGetter,
 	}
 
 	for _, opt := range opts {
@@ -162,6 +162,6 @@ func (roundTripper *DFRoundTripper) downloadByGetter(url string, header map[stri
 
 // needUseGetter is the default value for ShouldUseDfget, which downloads all
 // images layers with dfget.
-func needUseGetter(req *http.Request) bool {
+func NeedUseGetter(req *http.Request) bool {
 	return req.Method == http.MethodGet && layerReg.MatchString(req.URL.Path)
 }

@@ -179,6 +179,7 @@ func (proxy *Proxy) mirrorRegistry(w http.ResponseWriter, r *http.Request) {
 	t, err := transport.New(
 		transport.WithDownloader(proxy.downloadFactory()),
 		transport.WithTLS(proxy.registry.TLSConfig()),
+		transport.WithCondition(proxy.shouldUseDfgetForMirror),
 	)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("failed to get transport: %v", err), http.StatusInternalServerError)
@@ -262,6 +263,12 @@ func (proxy *Proxy) shouldUseDfget(req *http.Request) bool {
 		}
 	}
 	return false
+}
+
+// shouldUseDfgetForMirror returns whether we should use dfget to proxy a request
+// when we use registry mirror.
+func (proxy *Proxy) shouldUseDfgetForMirror(req *http.Request) bool {
+	return proxy.registry != nil && !proxy.registry.Direct && transport.NeedUseGetter(req)
 }
 
 // tunnelHTTPS handles a CONNECT request and proxy an https request through an

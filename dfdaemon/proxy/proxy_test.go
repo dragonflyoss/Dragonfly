@@ -32,9 +32,10 @@ type testItem struct {
 }
 
 type testCase struct {
-	Error error
-	Rules []*config.Proxy
-	Items []testItem
+	Error          error
+	Rules          []*config.Proxy
+	RegistryMirror *config.RegistryMirror
+	Items          []testItem
 }
 
 func newTestCase() *testCase {
@@ -49,6 +50,20 @@ func (tc *testCase) WithRule(regx string, direct bool, useHTTPS bool) *testCase 
 	var r *config.Proxy
 	r, tc.Error = config.NewProxy(regx, useHTTPS, direct)
 	tc.Rules = append(tc.Rules, r)
+	return tc
+}
+
+func (tc *testCase) WithRegistryMirror(url string, direct bool) *testCase {
+	if tc.Error != nil {
+		return tc
+	}
+
+	var remote *config.URL
+	remote, tc.Error = config.NewURL(url)
+	tc.RegistryMirror = &config.RegistryMirror{
+		Remote: remote,
+		Direct: direct,
+	}
 	return tc
 }
 
@@ -82,6 +97,26 @@ func (tc *testCase) Test(t *testing.T) {
 	}
 }
 
+func (tc *testCase) TestMirror(t *testing.T) {
+	a := assert.New(t)
+	if !a.Nil(tc.Error) {
+		return
+	}
+	tp, err := New(WithRegistryMirror(tc.RegistryMirror))
+	if !a.Nil(err) {
+		return
+	}
+	for _, item := range tc.Items {
+		req, err := http.NewRequest("GET", item.URL, nil)
+		if !a.Nil(err) {
+			continue
+		}
+		if !a.Equal(tp.shouldUseDfgetForMirror(req), !item.Direct) {
+			fmt.Println(item.URL)
+		}
+	}
+}
+
 func TestMatch(t *testing.T) {
 	newTestCase().
 		WithRule("/blobs/sha256/", false, false).
@@ -101,4 +136,23 @@ func TestMatch(t *testing.T) {
 		WithTest("http://h/a/d", false, true).  // should match /a/d and use https
 		WithTest("http://h/a/e", false, false). // should match /a, not /a/e
 		Test(t)
+
+	newTestCase().
+		WithTest("http://h/a", true, false).
+		TestMirror(t)
+
+	newTestCase().
+		WithRegistryMirror("http://index.docker.io", false).
+		WithTest("http://h/a", true, false).
+		TestMirror(t)
+
+	newTestCase().
+		WithRegistryMirror("http://index.docker.io", false).
+		WithTest("http://index.docker.io/v2/blobs/sha256/xxx", false, false).
+		TestMirror(t)
+
+	newTestCase().
+		WithRegistryMirror("http://index.docker.io", true).
+		WithTest("http://index.docker.io/v2/blobs/sha256/xxx", true, false).
+		TestMirror(t)
 }
