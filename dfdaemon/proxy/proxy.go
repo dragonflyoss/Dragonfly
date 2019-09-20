@@ -372,7 +372,7 @@ func handshake(w http.ResponseWriter, config *tls.Config) (net.Conn, error) {
 }
 
 // A singleUseListener implements a net.Listener that returns the net.Conn specified
-// in c for the first Accept call, and return errors for the subsequent calls.
+// in c for the first Accept call, and returns errors for the subsequent calls.
 type singleUseListener struct {
 	c net.Conn
 }

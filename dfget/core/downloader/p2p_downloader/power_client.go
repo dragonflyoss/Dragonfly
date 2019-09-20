@@ -56,7 +56,7 @@ type PowerClient struct {
 	// A piece will be putted into this queue after it be downloaded successfully.
 	clientQueue queue.Queue
 
-	// rateLimiter limit the download speed.
+	// rateLimiter limits the download speed.
 	rateLimiter *ratelimiter.RateLimiter
 
 	// total indicates the total length of the downloaded piece.

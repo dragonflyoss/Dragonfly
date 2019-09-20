@@ -44,7 +44,7 @@ type APIClient struct {
 	version string
 }
 
-// TLSConfig contains information of tls which users can specify
+// TLSConfig contains information of TLS which users can specify
 type TLSConfig struct {
 	CA               string `json:"tlscacert,omitempty"`
 	Cert             string `json:"tlscert,omitempty"`
