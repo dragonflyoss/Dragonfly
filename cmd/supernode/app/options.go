@@ -27,7 +27,7 @@ func NewOptions() *Options {
 	}
 }
 
-// Options store the values that comes from command line parameters.
+// Options stores the values that comes from command line parameters.
 type Options struct {
 	*config.BaseProperties
 }

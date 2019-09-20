@@ -47,7 +47,7 @@ type DFRoundTripper struct {
 	Downloader     downloader.Interface
 }
 
-// New return the default DFRoundTripper.
+// New returns the default DFRoundTripper.
 func New(opts ...Option) (*DFRoundTripper, error) {
 	rt := &DFRoundTripper{
 		Round:          defaultHTTPTransport(nil),
@@ -71,7 +71,7 @@ func New(opts ...Option) (*DFRoundTripper, error) {
 // Option is functional config for DFRoundTripper
 type Option func(rt *DFRoundTripper) error
 
-// WithTLS configures tls config used for http transport
+// WithTLS configures TLS config used for http transport
 func WithTLS(cfg *tls.Config) Option {
 	return func(rt *DFRoundTripper) error {
 		rt.Round = defaultHTTPTransport(cfg)
