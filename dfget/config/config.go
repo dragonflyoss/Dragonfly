@@ -79,7 +79,7 @@ type Properties struct {
 	ClientQueueSize int `yaml:"clientQueueSize" json:"clientQueueSize,omitempty"`
 }
 
-// NewProperties create a new properties with default values.
+// NewProperties creates a new properties with default values.
 func NewProperties() *Properties {
 	return &Properties{
 		Nodes:           []string{DefaultNode},

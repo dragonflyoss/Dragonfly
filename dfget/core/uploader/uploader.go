@@ -54,7 +54,7 @@ var (
 // -----------------------------------------------------------------------------
 // dfget server functions
 
-// WaitForShutdown wait for peer server shutdown
+// WaitForShutdown waits for peer server shutdown
 func WaitForShutdown() {
 	if p2p != nil {
 		p2p.waitForShutdown()

@@ -34,7 +34,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// CreateConfig create a temporary config
+// CreateConfig creates a temporary config.
 func CreateConfig(writer io.Writer, workHome string) *config.Config {
 	if writer == nil {
 		writer = ioutil.Discard
@@ -50,7 +50,7 @@ func CreateConfig(writer io.Writer, workHome string) *config.Config {
 	return cfg
 }
 
-// CreateTestFile create a temp file and write a string.
+// CreateTestFile creates a temp file and write a string.
 func CreateTestFile(path string, content string) error {
 	f, err := createFile(path, content)
 	if f != nil {
@@ -59,7 +59,7 @@ func CreateTestFile(path string, content string) error {
 	return err
 }
 
-// CreateTestFileWithMD5 create a temp file and write a string
+// CreateTestFileWithMD5 creates a temp file and write a string
 // and return the md5 of the file.
 func CreateTestFileWithMD5(path string, content string) string {
 	f, err := createFile(path, content)
@@ -81,7 +81,7 @@ func createFile(path string, content string) (*os.File, error) {
 	return f, nil
 }
 
-// CreateRandomString create a random string of specified length.
+// CreateRandomString creates a random string of specified length.
 func CreateRandomString(cap int) string {
 	var letterBytes = "abcdefghijklmnopqrstuvwxyz"
 	var length = len(letterBytes)
@@ -114,7 +114,7 @@ type ClientErrorFuncType func(ip string, req *types.ClientErrorRequest) (*types.
 // ClientErrorFuncType function type of SupernodeAPI#ReportMetricsType
 type ReportMetricsFuncType func(node string, req *api_types.TaskMetricsRequest) (*types.BaseResponse, error)
 
-// MockSupernodeAPI mock SupernodeAPI
+// MockSupernodeAPI mocks the SupernodeAPI.
 type MockSupernodeAPI struct {
 	RegisterFunc      RegisterFuncType
 	PullFunc          PullFuncType

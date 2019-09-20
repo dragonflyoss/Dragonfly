@@ -69,7 +69,7 @@ func ParseHost(host string) (*url.URL, string, string, error) {
 	return u, basePath, strings.TrimPrefix(host, u.Scheme+"://"), nil
 }
 
-// GenTLSConfig returns a tls config object according to inputting parameters.
+// GenTLSConfig returns a TLS config object according to inputting parameters.
 func GenTLSConfig(key, cert, ca string) (*tls.Config, error) {
 	tlsConfig := &tls.Config{}
 	tlsCert, err := tls.LoadX509KeyPair(cert, key)

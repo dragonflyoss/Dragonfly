@@ -156,7 +156,7 @@ func Post(endpoint string, opts ...Option) (*http.Response, error) {
 	return apiClient.HTTPCli.Do(req)
 }
 
-// newAPIClient return new HTTP client with tls.
+// newAPIClient returns new HTTP client with TLS.
 //
 // FIXME: Could we make some functions exported in alibaba/pouch/client?
 func newAPIClient(host string, tls client.TLSConfig) (*client.APIClient, error) {

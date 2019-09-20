@@ -94,7 +94,7 @@ type P2PDownloader struct {
 	// total indicates the total length of the downloaded file.
 	total int64
 
-	// rateLimiter limit the download speed.
+	// rateLimiter limits the download speed.
 	rateLimiter *ratelimiter.RateLimiter
 	// pullRateTime the time when the pull rate API is called to
 	// control the time interval between two calls to the API.
@@ -108,7 +108,7 @@ type P2PDownloader struct {
 
 var _ downloader.Downloader = &P2PDownloader{}
 
-// NewP2PDownloader create P2PDownloader
+// NewP2PDownloader creates a P2PDownloader.
 func NewP2PDownloader(cfg *config.Config,
 	api api.SupernodeAPI,
 	register regist.SupernodeRegister,

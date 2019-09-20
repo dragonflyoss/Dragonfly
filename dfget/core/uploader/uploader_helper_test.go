@@ -52,7 +52,7 @@ func pieceContent(pieceSize int64, origin string) string {
 	return buf.String()
 }
 
-// newTestPeerServer init the peer server for testing.
+// newTestPeerServer inits the peer server for testing.
 func newTestPeerServer(workHome string) (srv *peerServer) {
 	cfg := helper.CreateConfig(nil, workHome)
 	srv = newPeerServer(cfg, 0)
@@ -61,7 +61,7 @@ func newTestPeerServer(workHome string) (srv *peerServer) {
 	return srv
 }
 
-// initHelper create a temporary file and store it in the syncTaskMap.
+// initHelper creates a temporary file and store it in the syncTaskMap.
 func initHelper(srv *peerServer, fileName, dataDir, content string) {
 	helper.CreateTestFile(helper.GetServiceFile(fileName, dataDir), content)
 	if srv != nil {

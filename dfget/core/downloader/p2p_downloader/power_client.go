@@ -40,7 +40,7 @@ import (
 
 // PowerClient downloads file from dragonfly.
 type PowerClient struct {
-	// taskID a string which represents a unique task.
+	// taskID is a string which represents a unique task.
 	taskID string
 	// node indicates the IP address of the currently registered supernode.
 	node string
@@ -96,7 +96,7 @@ func (pc *PowerClient) Run() error {
 	return nil
 }
 
-// ClientError return the client error if occurred
+// ClientError returns the client error if occurred
 func (pc *PowerClient) ClientError() *types.ClientErrorRequest {
 	return pc.clientError
 }
