@@ -104,8 +104,12 @@ func (client *APIClient) hijack(ctx context.Context, path string, query url.Valu
 	}
 
 	if tcpConn, ok := conn.(*net.TCPConn); ok {
-		tcpConn.SetKeepAlive(true)
-		tcpConn.SetKeepAlivePeriod(30 * time.Second)
+		if err := tcpConn.SetKeepAlive(true); err != nil {
+			return nil, nil, err
+		}
+		if err := tcpConn.SetKeepAlivePeriod(30 * time.Second); err != nil {
+			return nil, nil, err
+		}
 	}
 
 	//lint:ignore SA1019 we do not migrate this to 'net/http.Client' as it does not implement Hijack now.

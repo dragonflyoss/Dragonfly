@@ -31,10 +31,13 @@ func decodeBody(obj interface{}, body io.Reader) error {
 	return nil
 }
 
-func ensureCloseReader(resp *Response) {
+func ensureCloseReader(resp *Response) error {
 	if resp != nil && resp.Body != nil {
+		defer resp.Body.Close()
+
 		// close body ReadCloser to make Transport reuse the connection
-		io.CopyN(ioutil.Discard, resp.Body, 512)
-		resp.Body.Close()
+		_, err := io.CopyN(ioutil.Discard, resp.Body, 512)
+		return err
 	}
+	return nil
 }

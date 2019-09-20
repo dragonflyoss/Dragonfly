@@ -26,6 +26,8 @@ func (client *APIClient) PeerDelete(ctx context.Context, id string) error {
 	if err != nil {
 		return err
 	}
-	ensureCloseReader(resp)
+	if err := ensureCloseReader(resp); err != nil {
+		return err
+	}
 	return nil
 }
