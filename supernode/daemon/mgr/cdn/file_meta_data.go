@@ -168,7 +168,7 @@ func (mm *fileMetaDataManager) updateStatusAndResult(ctx context.Context, taskID
 	return mm.writeFileMetaData(ctx, originMetaData)
 }
 
-// writePieceMD5s write the piece md5s to storage for the md5 file of taskID.
+// writePieceMD5s writes the piece md5s to storage for the md5 file of taskID.
 //
 // And it should append the fileMD5 which means that the md5 of the task file
 // and the SHA-1 digest of fileMD5 at the end of the file.
@@ -191,7 +191,7 @@ func (mm *fileMetaDataManager) writePieceMD5s(ctx context.Context, taskID, fileM
 	return mm.fileStore.PutBytes(ctx, getMd5DataRawFunc(taskID), []byte(pieceMD5Str))
 }
 
-// readPieceMD5s read the md5 file of the taskID and returns the pieceMD5s.
+// readPieceMD5s reads the md5 file of the taskID and returns the pieceMD5s.
 func (mm *fileMetaDataManager) readPieceMD5s(ctx context.Context, taskID, fileMD5 string) (pieceMD5s []string, err error) {
 	mm.locker.GetLock(taskID, true)
 	defer mm.locker.ReleaseLock(taskID, true)
