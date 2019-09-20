@@ -310,3 +310,7 @@ If you are in China,docker container uses UTC time(Coordinated Universal Time) a
 ```sh
  docker run -d --name dfclient -v /etc/localtime:/etc/localtime:ro -p 65001:65001 dragonflyoss/dfclient:0.4.0 --registry https://index.docker.io
 ```
+
+## How to join Dragonfly as a member
+
+Please check the [CONTRIBUTING.md](CONTRIBUTING.md#join-dragonfly-as-a-member)

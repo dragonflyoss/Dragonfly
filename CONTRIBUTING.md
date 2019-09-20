@@ -8,6 +8,7 @@ It is warmly welcomed if you have interest to hack on Dragonfly. First, we encou
 * [Reporting general issues](#reporting-general-issues)
 * [Code and doc contribution](#code-and-doc-contribution)
 * [Engage to help anything](#engage-to-help-anything)
+* [Join Dragonfly as a member](#join-dragonfly-as-a-member)
 
 ## Reporting security issues
 
@@ -195,3 +196,24 @@ We choose GitHub as the primary place for Dragonfly to collaborate. So the lates
 * write blogs on Dragonfly and so on.
 
 In a word, **ANY HELP IS CONTRIBUTION.**
+
+## Join Dragonfly as a member
+
+It is also welcomed to join Dragonfly team if you are willing to participate in Dragonfly community continuously and keep active.
+
+### Requirements
+
+* Have read the [Contributing to Dragonfly](CONTRIBUTING.md) carefully
+* Have read the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md)
+* Have submitted multi PRs to the community
+* Be active in the community, may including but not limited
+  * Submitting or commenting on issues
+  * Contributing PRs to the community
+  * Reviewing PRs in the community
+
+### How to do it
+
+You can do it in either of two ways:
+
+* Submit a PR in the [dragonflyoss/Dragonfly](https://github.com/dragonflyoss/Dragonfly) repo
+* Contact with the community's [maintainers](MAINTAINERS.md) offline
