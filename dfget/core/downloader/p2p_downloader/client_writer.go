@@ -96,7 +96,9 @@ func (cw *ClientWriter) init() (err error) {
 		}
 
 		cw.serviceFile, _ = fileutils.OpenFile(cw.serviceFilePath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0755)
-		fileutils.Link(cw.serviceFilePath, cw.clientFilePath)
+		if err := fileutils.Link(cw.serviceFilePath, cw.clientFilePath); err != nil {
+			return err
+		}
 	}
 
 	cw.result = true
@@ -183,7 +185,9 @@ func (cw *ClientWriter) write(piece *Piece) error {
 
 func writePieceToFile(piece *Piece, file *os.File) error {
 	start := int64(piece.PieceNum) * (int64(piece.PieceSize) - 5)
-	file.Seek(start, 0)
+	if _, err := file.Seek(start, 0); err != nil {
+		return err
+	}
 
 	buf := bufio.NewWriterSize(file, 4*1024*1024)
 	_, err := io.Copy(buf, piece.RawContent())
