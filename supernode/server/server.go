@@ -105,7 +105,7 @@ func New(cfg *config.Config, logger *logrus.Logger, register prometheus.Register
 		return nil, err
 	}
 
-	gcMgr, err := gc.NewManager(cfg, taskMgr, peerMgr, dfgetTaskMgr, progressMgr, cdnMgr)
+	gcMgr, err := gc.NewManager(cfg, taskMgr, peerMgr, dfgetTaskMgr, progressMgr, cdnMgr, register)
 	if err != nil {
 		return nil, err
 	}
