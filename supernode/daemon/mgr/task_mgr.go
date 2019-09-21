@@ -49,10 +49,10 @@ type TaskMgr interface {
 	// List returns the list tasks with filter.
 	List(ctx context.Context, filter map[string]string) ([]*types.TaskInfo, error)
 
-	// CheckTaskStatus check whether the taskID corresponding file exists.
+	// CheckTaskStatus checks whether the taskID corresponding file exists.
 	CheckTaskStatus(ctx context.Context, taskID string) (bool, error)
 
-	// Delete deletes a task
+	// Delete deletes a task.
 	Delete(ctx context.Context, taskID string) error
 
 	// Update updates the task info with specified info.

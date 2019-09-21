@@ -29,7 +29,7 @@ type BaseResponse struct {
 	Msg string `json:"msg,omitempty"`
 }
 
-// NewBaseResponse create a BaseResponse instance.
+// NewBaseResponse creates a BaseResponse instance.
 func NewBaseResponse(code int, msg string) *BaseResponse {
 	res := new(BaseResponse)
 	res.Code = code

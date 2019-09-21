@@ -390,7 +390,7 @@ func (l *singleUseListener) Close() error { return nil }
 
 func (l *singleUseListener) Addr() net.Addr { return l.c.LocalAddr() }
 
-// A customCloseConn implements net.Conn and calls f before closing the underlying net.Conn
+// A customCloseConn implements net.Conn and calls f before closing the underlying net.Conn.
 type customCloseConn struct {
 	net.Conn
 	f func()

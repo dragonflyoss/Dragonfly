@@ -23,5 +23,5 @@ type Interface interface {
 	Download(url string, header map[string][]string, name string) (string, error)
 }
 
-// Factory is a function that returns a new downloader
+// Factory is a function that returns a new downloader.
 type Factory func() Interface

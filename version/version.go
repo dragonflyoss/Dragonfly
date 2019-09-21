@@ -64,7 +64,7 @@ var (
 	// SupernodeVersion is the version of supernode
 	SupernodeVersion = version
 
-	// DFVersion the global instance of DragonflyVersion
+	// DFVersion is the global instance of DragonflyVersion.
 	DFVersion *types.DragonflyVersion
 )
 
@@ -118,7 +118,7 @@ func NewBuildInfo(program string, registerer prometheus.Registerer) {
 	buildInfo.WithLabelValues(version, revision, os, arch, goVersion).Set(1)
 }
 
-// Handler returns build information
+// Handler returns build information.
 func Handler(w http.ResponseWriter, r *http.Request) {
 	data, err := json.Marshal(DFVersion)
 	if err != nil {
@@ -129,7 +129,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// HandlerWithCtx returns build information
+// HandlerWithCtx returns build information.
 func HandlerWithCtx(context context.Context, w http.ResponseWriter, r *http.Request) (err error) {
 	Handler(w, r)
 	return

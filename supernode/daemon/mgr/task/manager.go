@@ -188,7 +188,7 @@ func (tm *Manager) List(ctx context.Context, filter map[string]string) ([]*types
 	return nil, nil
 }
 
-// CheckTaskStatus check the task status.
+// CheckTaskStatus checks the task status.
 func (tm *Manager) CheckTaskStatus(ctx context.Context, taskID string) (bool, error) {
 	util.GetLock(taskID, true)
 	defer util.ReleaseLock(taskID, true)
@@ -222,7 +222,7 @@ func (tm *Manager) Update(ctx context.Context, taskID string, taskInfo *types.Ta
 	return tm.updateTask(taskID, taskInfo)
 }
 
-// GetPieces get the pieces to be downloaded based on the scheduling result.
+// GetPieces gets the pieces to be downloaded based on the scheduling result.
 func (tm *Manager) GetPieces(ctx context.Context, taskID, clientID string, req *types.PiecePullRequest) (bool, interface{}, error) {
 	logrus.Debugf("get pieces request: %+v with taskID(%s) and clientID(%s)", req, taskID, clientID)
 
@@ -264,7 +264,7 @@ func (tm *Manager) GetPieces(ctx context.Context, taskID, clientID string, req *
 	return true, nil, tm.processTaskFinish(ctx, taskID, clientID, dfgetTaskStatus)
 }
 
-// UpdatePieceStatus update the piece status with specified parameters.
+// UpdatePieceStatus updates the piece status with specified parameters.
 func (tm *Manager) UpdatePieceStatus(ctx context.Context, taskID, pieceRange string, pieceUpdateRequest *types.PieceUpdateRequest) error {
 	logrus.Debugf("get update piece status request: %+v with taskID(%s) pieceRange(%s)", pieceUpdateRequest, taskID, pieceRange)
 

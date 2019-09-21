@@ -22,7 +22,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 )
 
-// CommonAPIClient defines common methods of api client
+// CommonAPIClient defines common methods of api client.
 type CommonAPIClient interface {
 	PreheatAPIClient
 }

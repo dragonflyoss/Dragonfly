@@ -23,7 +23,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 )
 
-// ResultInfo identify a struct that will returned to the client.
+// ResultInfo identify a struct that will be returned to the client.
 type ResultInfo struct {
 	code int
 	msg  string

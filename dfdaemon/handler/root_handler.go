@@ -26,7 +26,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// New returns a new http mux for dfdaemon
+// New returns a new http mux for dfdaemon.
 func New() *http.ServeMux {
 	s := http.DefaultServeMux
 	s.HandleFunc("/args", getArgs)

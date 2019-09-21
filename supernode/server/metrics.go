@@ -33,7 +33,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// metrics defines some prometheus metrics for monitoring supernode
+// metrics defines some prometheus metrics for monitoring supernode.
 type metrics struct {
 	// server http related metrics
 	requestCounter  *prometheus.CounterVec
@@ -86,7 +86,7 @@ func newMetrics(register prometheus.Registerer) *metrics {
 	}
 }
 
-// instrumentHandler will update metrics for every http request
+// instrumentHandler will update metrics for every http request.
 func (m *metrics) instrumentHandler(handlerName string, handler http.HandlerFunc) http.HandlerFunc {
 	return promhttp.InstrumentHandlerDuration(
 		m.requestDuration.MustCurryWith(prometheus.Labels{"handler": handlerName}),

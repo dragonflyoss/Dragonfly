@@ -43,7 +43,7 @@ var (
 	}
 )
 
-// checkBoilerplate checks if the input string contains the boilerplate
+// checkBoilerplate checks if the input string contains the boilerplate.
 func checkBoilerplate(content string) error {
 	// ignore generated files
 	if strings.Contains(content, "DO NOT EDIT") {
@@ -82,7 +82,7 @@ func checkBoilerplate(content string) error {
 	return nil
 }
 
-// verifyFile verifies if a file contains the boilerplate
+// verifyFile verifies if a file contains the boilerplate.
 func verifyFile(filePath string) error {
 	if len(filePath) == 0 {
 		return fmt.Errorf("empty file name")

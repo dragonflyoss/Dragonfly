@@ -131,7 +131,7 @@ func (p *Properties) Validate() error {
 	return nil
 }
 
-// DFGetConfig returns config for dfget downloader
+// DFGetConfig returns config for dfget downloader.
 func (p *Properties) DFGetConfig() DFGetConfig {
 	// init DfgetFlags
 	var dfgetFlags []string
@@ -154,7 +154,7 @@ func (p *Properties) DFGetConfig() DFGetConfig {
 	return dfgetConfig
 }
 
-// DFGetConfig configures how dfdaemon calls dfget
+// DFGetConfig configures how dfdaemon calls dfget.
 type DFGetConfig struct {
 	DfgetFlags  []string      `yaml:"dfget_flags"`
 	SuperNodes  []string      `yaml:"supernodes"`
@@ -176,7 +176,7 @@ type RegistryMirror struct {
 	Insecure bool `yaml:"insecure" json:"insecure"`
 }
 
-// TLSConfig returns the tls.Config used to communicate with the mirror
+// TLSConfig returns the tls.Config used to communicate with the mirror.
 func (r *RegistryMirror) TLSConfig() *tls.Config {
 	if r == nil {
 		return nil
@@ -193,26 +193,26 @@ func (r *RegistryMirror) TLSConfig() *tls.Config {
 	return cfg
 }
 
-// HijackConfig represents how dfdaemon hijacks http requests
+// HijackConfig represents how dfdaemon hijacks http requests.
 type HijackConfig struct {
 	Cert  string        `yaml:"cert" json:"cert"`
 	Key   string        `yaml:"key" json:"key"`
 	Hosts []*HijackHost `yaml:"hosts" json:"hosts"`
 }
 
-// HijackHost is a hijack rule for the hosts that matches Regx
+// HijackHost is a hijack rule for the hosts that matches Regx.
 type HijackHost struct {
 	Regx     *Regexp   `yaml:"regx" json:"regx"`
 	Insecure bool      `yaml:"insecure" json:"insecure"`
 	Certs    *CertPool `yaml:"certs" json:"certs"`
 }
 
-// URL is simple wrapper around url.URL to make it unmarshallable from a string
+// URL is simple wrapper around url.URL to make it unmarshallable from a string.
 type URL struct {
 	*url.URL
 }
 
-// NewURL parses url from the given string
+// NewURL parses url from the given string.
 func NewURL(s string) (*URL, error) {
 	u, err := url.Parse(s)
 	if err != nil {
@@ -222,12 +222,12 @@ func NewURL(s string) (*URL, error) {
 	return &URL{u}, nil
 }
 
-// UnmarshalYAML implements yaml.Unmarshaller
+// UnmarshalYAML implements yaml.Unmarshaller.
 func (u *URL) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return u.unmarshal(unmarshal)
 }
 
-// UnmarshalJSON implements json.Unmarshaller
+// UnmarshalJSON implements json.Unmarshaller.
 func (u *URL) UnmarshalJSON(b []byte) error {
 	return u.unmarshal(func(v interface{}) error { return json.Unmarshal(b, v) })
 }
@@ -247,29 +247,29 @@ func (u *URL) unmarshal(unmarshal func(interface{}) error) error {
 	return nil
 }
 
-// MarshalJSON implements json.Marshaller to print the url
+// MarshalJSON implements json.Marshaller to print the url.
 func (u *URL) MarshalJSON() ([]byte, error) {
 	return json.Marshal(u.String())
 }
 
-// MarshalYAML implements yaml.Marshaller to print the url
+// MarshalYAML implements yaml.Marshaller to print the url.
 func (u *URL) MarshalYAML() (interface{}, error) {
 	return u.String(), nil
 }
 
 // CertPool is a wrapper around x509.CertPool, which can be unmarshalled and
-// constructed from a list of filenames
+// constructed from a list of filenames.
 type CertPool struct {
 	Files []string
 	*x509.CertPool
 }
 
-// UnmarshalYAML implements yaml.Unmarshaller
+// UnmarshalYAML implements yaml.Unmarshaller.
 func (cp *CertPool) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return cp.unmarshal(unmarshal)
 }
 
-// UnmarshalJSON implements json.Unmarshaller
+// UnmarshalJSON implements json.Unmarshaller.
 func (cp *CertPool) UnmarshalJSON(b []byte) error {
 	return cp.unmarshal(func(v interface{}) error { return json.Unmarshal(b, v) })
 }
@@ -288,22 +288,22 @@ func (cp *CertPool) unmarshal(unmarshal func(interface{}) error) error {
 	return nil
 }
 
-// MarshalJSON implements json.Marshaller to print the cert pool
+// MarshalJSON implements json.Marshaller to print the cert pool.
 func (cp *CertPool) MarshalJSON() ([]byte, error) {
 	return json.Marshal(cp.Files)
 }
 
-// MarshalYAML implements yaml.Marshaller to print the cert pool
+// MarshalYAML implements yaml.Marshaller to print the cert pool.
 func (cp *CertPool) MarshalYAML() (interface{}, error) {
 	return cp.Files, nil
 }
 
-// Regexp is simple wrapper around regexp.Regexp to make it unmarshallable from a string
+// Regexp is a simple wrapper around regexp. Regexp to make it unmarshallable from a string.
 type Regexp struct {
 	*regexp.Regexp
 }
 
-// NewRegexp returns new Regexp instance compiled from the given string
+// NewRegexp returns a new Regexp instance compiled from the given string.
 func NewRegexp(exp string) (*Regexp, error) {
 	r, err := regexp.Compile(exp)
 	if err != nil {
@@ -312,12 +312,12 @@ func NewRegexp(exp string) (*Regexp, error) {
 	return &Regexp{r}, nil
 }
 
-// UnmarshalYAML implements yaml.Unmarshaller
+// UnmarshalYAML implements yaml.Unmarshaller.
 func (r *Regexp) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return r.unmarshal(unmarshal)
 }
 
-// UnmarshalJSON implements json.Unmarshaller
+// UnmarshalJSON implements json.Unmarshaller.
 func (r *Regexp) UnmarshalJSON(b []byte) error {
 	return r.unmarshal(func(v interface{}) error { return json.Unmarshal(b, v) })
 }
@@ -334,12 +334,12 @@ func (r *Regexp) unmarshal(unmarshal func(interface{}) error) error {
 	return err
 }
 
-// MarshalJSON implements json.Marshaller to print the regexp
+// MarshalJSON implements json.Marshaller to print the regexp.
 func (r *Regexp) MarshalJSON() ([]byte, error) {
 	return json.Marshal(r.String())
 }
 
-// MarshalYAML implements yaml.Marshaller to print the regexp
+// MarshalYAML implements yaml.Marshaller to print the regexp.
 func (r *Regexp) MarshalYAML() (interface{}, error) {
 	return r.String(), nil
 }
@@ -371,7 +371,7 @@ type Proxy struct {
 	Direct   bool    `yaml:"direct" json:"direct"`
 }
 
-// NewProxy returns a new proxy rule with given attributes
+// NewProxy returns a new proxy rule with given attributes.
 func NewProxy(regx string, useHTTPS bool, direct bool) (*Proxy, error) {
 	exp, err := NewRegexp(regx)
 	if err != nil {
@@ -385,7 +385,7 @@ func NewProxy(regx string, useHTTPS bool, direct bool) (*Proxy, error) {
 	}, nil
 }
 
-// Match checks if the given url matches the rule
+// Match checks if the given url matches the rule.
 func (r *Proxy) Match(url string) bool {
 	return r.Regx != nil && r.Regx.MatchString(url)
 }

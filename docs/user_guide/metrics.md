@@ -25,7 +25,7 @@ This doc contains all the metrics that Dragonfly components currently support. N
 
 ## Dfdaemon
 
-- dragonfly_dfdaemon_build_info{version, revision, goversion, arch, os} - build and version information of dfdaemon
+- dragonfly_dfdaemon_build_info{version, revision, goversion, arch, os} - build and version information of dfdaemon.
 
 ## Dfget
 

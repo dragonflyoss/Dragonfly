@@ -48,7 +48,7 @@ func (s *Server) handlePieceError(ctx context.Context, rw http.ResponseWriter, r
 		return errors.Wrap(errortypes.ErrEmptyValue, "dstPid")
 	}
 
-	// fulfill the taskID and pieceRange if they are empty
+	// Fulfill the taskID and pieceRange if they are empty.
 	if stringutils.IsEmptyStr(request.TaskID) {
 		request.TaskID = taskID
 	}

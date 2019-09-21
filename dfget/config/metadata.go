@@ -21,7 +21,7 @@ import (
 	"io/ioutil"
 )
 
-// NewMetaData create a MetaData instance.
+// NewMetaData creates a MetaData instance.
 func NewMetaData(metaPath string) *MetaData {
 	return &MetaData{
 		MetaPath: metaPath,

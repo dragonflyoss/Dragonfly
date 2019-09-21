@@ -42,7 +42,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// newPeerServer return a new P2PServer.
+// newPeerServer returns a new P2PServer.
 func newPeerServer(cfg *config.Config, port int) *peerServer {
 	s := &peerServer{
 		cfg:      cfg,
@@ -64,7 +64,7 @@ func newPeerServer(cfg *config.Config, port int) *peerServer {
 // ----------------------------------------------------------------------------
 // peerServer structure
 
-// peerServer offer file-block to other clients
+// peerServer offers file-block to other clients.
 type peerServer struct {
 	cfg *config.Config
 
@@ -124,7 +124,7 @@ func (ps *peerServer) initRouter() *mux.Router {
 // ----------------------------------------------------------------------------
 // peerServer handlers
 
-// uploadHandler use to upload a task file when other peers download from it.
+// uploadHandler uses to upload a task file when other peers download from it.
 func (ps *peerServer) uploadHandler(w http.ResponseWriter, r *http.Request) {
 	sendAlive(ps.cfg)
 
@@ -201,7 +201,7 @@ func (ps *peerServer) parseRateHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, strconv.Itoa(clientRate))
 }
 
-// checkHandler use to check the server status.
+// checkHandler is used to check the server status.
 // TODO: Disassemble this function for too many things done.
 func (ps *peerServer) checkHandler(w http.ResponseWriter, r *http.Request) {
 	sendAlive(ps.cfg)
@@ -230,7 +230,7 @@ func (ps *peerServer) checkHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s@%s", taskFileName, version.DFGetVersion)
 }
 
-// oneFinishHandler use to update the status of peer task.
+// oneFinishHandler is used to update the status of peer task.
 func (ps *peerServer) oneFinishHandler(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		sendHeader(w, http.StatusBadRequest)
@@ -334,7 +334,7 @@ func amendRange(size int64, needPad bool, up *uploadParam) error {
 	return nil
 }
 
-// parseParams validates the parameter range and parses it
+// parseParams validates the parameter range and parses it.
 func parseParams(rangeVal, pieceNumStr, pieceSizeStr string) (*uploadParam, error) {
 	var (
 		err error
@@ -374,7 +374,7 @@ func parseParams(rangeVal, pieceNumStr, pieceSizeStr string) (*uploadParam, erro
 	return up, nil
 }
 
-// uploadPiece send a piece of the file to the remote peer.
+// uploadPiece sends a piece of the file to the remote peer.
 func (ps *peerServer) uploadPiece(f *os.File, w http.ResponseWriter, up *uploadParam) (e error) {
 	w.Header().Set(config.StrContentLength, strconv.FormatInt(up.length, 10))
 	sendHeader(w, http.StatusPartialContent)

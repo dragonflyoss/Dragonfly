@@ -17,7 +17,7 @@
 package types
 
 // ClientErrorRequest reports the error to supernode when dfget downloading
-// piece from supernode
+// piece from supernode.
 type ClientErrorRequest struct {
 	ErrorType   string `request:"errorType"`
 	SrcCid      string `request:"srcCid"`

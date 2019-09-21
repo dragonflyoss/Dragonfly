@@ -41,7 +41,7 @@ func (e RespError) Error() string {
 	return e.msg
 }
 
-// Code returns the response  code
+// Code returns the response code.
 func (e RespError) Code() int {
 	return e.code
 }

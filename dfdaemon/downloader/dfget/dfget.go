@@ -32,12 +32,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// DFGetter implements Downloader to download file by dragonfly
+// DFGetter implements Downloader to download file by dragonfly.
 type DFGetter struct {
 	config config.DFGetConfig
 }
 
-// NewGetter returns a dfget downloader from the given config
+// NewGetter returns a dfget downloader from the given config.
 func NewGetter(cfg config.DFGetConfig) *DFGetter {
 	return &DFGetter{config: cfg}
 }
@@ -60,7 +60,7 @@ func (dfGetter *DFGetter) Download(url string, header map[string][]string, name 
 	return "", fmt.Errorf("dfget fail(%s):%v", cmd.ProcessState.String(), err)
 }
 
-// getCommand returns the command to download the given resource
+// getCommand returns the command to download the given resource.
 func (dfGetter *DFGetter) getCommand(
 	url string, header map[string][]string, output string,
 ) (cmd *exec.Cmd) {

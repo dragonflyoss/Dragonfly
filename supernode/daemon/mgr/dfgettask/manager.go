@@ -96,7 +96,7 @@ func (dtm *Manager) Add(ctx context.Context, dfgetTask *types.DfGetTask) error {
 		return err
 	}
 
-	// the default status of DfgetTask is WAITING
+	// The default status of DfgetTask is WAITING.
 	if stringutils.IsEmptyStr(dfgetTask.Status) {
 		dfgetTask.Status = types.DfGetTaskStatusWAITING
 	}

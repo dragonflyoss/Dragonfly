@@ -33,7 +33,7 @@ type Store struct {
 	driverName string
 	// config is used to init storage driver.
 	config interface{}
-	// driver holds a storage which implements the interface of StorageDriver
+	// driver holds a storage which implements the interface of StorageDriver.
 	driver StorageDriver
 }
 
