@@ -20,13 +20,29 @@ import (
 	"context"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/pkg/metricsutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 )
 
 var _ mgr.GCMgr = &Manager{}
+
+type metrics struct {
+	gcTasksCount *prometheus.CounterVec
+	gcPeersCount *prometheus.CounterVec
+}
+
+func newMetrics(register prometheus.Registerer) *metrics {
+	return &metrics{
+		gcTasksCount: metricsutils.NewCounter(config.SubsystemSupernode, "gc_tasks_total",
+			"Total number of tasks that have been garbage collected", []string{}, register),
+		gcPeersCount: metricsutils.NewCounter(config.SubsystemSupernode, "gc_peers_total",
+			"Total number of peers that have been garbage collected", []string{}, register),
+	}
+}
 
 // Manager is an implementation of the interface of DfgetTaskMgr.
 type Manager struct {
@@ -38,11 +54,12 @@ type Manager struct {
 	dfgetTaskMgr mgr.DfgetTaskMgr
 	progressMgr  mgr.ProgressMgr
 	cdnMgr       mgr.CDNMgr
+	metrics      *metrics
 }
 
 // NewManager returns a new Manager.
-func NewManager(cfg *config.Config, taskMgr mgr.TaskMgr, peerMgr mgr.PeerMgr,
-	dfgetTaskMgr mgr.DfgetTaskMgr, progressMgr mgr.ProgressMgr, cdnMgr mgr.CDNMgr) (*Manager, error) {
+func NewManager(cfg *config.Config, taskMgr mgr.TaskMgr, peerMgr mgr.PeerMgr, dfgetTaskMgr mgr.DfgetTaskMgr,
+	progressMgr mgr.ProgressMgr, cdnMgr mgr.CDNMgr, register prometheus.Registerer) (*Manager, error) {
 	return &Manager{
 		cfg:          cfg,
 		taskMgr:      taskMgr,
@@ -50,6 +67,7 @@ func NewManager(cfg *config.Config, taskMgr mgr.TaskMgr, peerMgr mgr.PeerMgr,
 		dfgetTaskMgr: dfgetTaskMgr,
 		progressMgr:  progressMgr,
 		cdnMgr:       cdnMgr,
+		metrics:      newMetrics(register),
 	}, nil
 }
 

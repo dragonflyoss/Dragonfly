@@ -46,18 +46,16 @@ func (gcm *Manager) gcPeers(ctx context.Context) {
 			continue
 		}
 
-		if !gcm.gcPeer(ctx, peerID) {
-			logrus.Warnf("gc peers: failed to gc peer peerID(%s): %v", peerID, err)
-			continue
-		}
+		gcm.gcPeer(ctx, peerID)
 		gcPeerCount++
 	}
 
+	gcm.metrics.gcPeersCount.WithLabelValues().Add(float64(gcPeerCount))
 	logrus.Infof("gc peers: success to gc peer count(%d), remainder count(%d)", gcPeerCount, len(peerIDs)-gcPeerCount)
 }
 
-func (gcm *Manager) gcPeer(ctx context.Context, peerID string) bool {
-	logrus.Infof("start to gc peer: %s", peerID)
+func (gcm *Manager) gcPeer(ctx context.Context, peerID string) {
+	logrus.Infof("gc peer: start to deal with peer: %s", peerID)
 
 	util.GetLock(peerID, false)
 	defer util.ReleaseLock(peerID, false)
@@ -76,7 +74,6 @@ func (gcm *Manager) gcPeer(ctx context.Context, peerID string) bool {
 	}(&wg)
 
 	wg.Wait()
-	return true
 }
 
 func (gcm *Manager) gcCIDsByPeerID(ctx context.Context, peerID string) {

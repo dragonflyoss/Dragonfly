@@ -53,11 +53,12 @@ func (gcm *Manager) gcTasks(ctx context.Context) {
 		removedTaskCount++
 	}
 
+	gcm.metrics.gcTasksCount.WithLabelValues().Add(float64(removedTaskCount))
 	logrus.Infof("gc tasks: success to full gc task count(%d), remainder count(%d)", removedTaskCount, totalTaskNums-removedTaskCount)
 }
 
 func (gcm *Manager) gcTask(ctx context.Context, taskID string, full bool) {
-	logrus.Infof("gc task: start working on task: %s", taskID)
+	logrus.Infof("gc task: start to deal with task: %s", taskID)
 
 	util.GetLock(taskID, false)
 	defer util.ReleaseLock(taskID, false)
