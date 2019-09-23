@@ -132,3 +132,9 @@ requestCounter.WithLabelValues("200").Inc()
 This function will auto-register metrics to Prometheus default registry and you can get `dragonfly_supernode_http_requests_total{code,handler,method}` in /metrics endpoint. Here we also add prefix `dragonfly` to metrics name by default. If you want to learn more about how to use these metrics after getting them, please check [prometheus/client_golang](https://github.com/prometheus/client_golang).
 
 As for naming of metric and label, it is better to follow the best practice. We suggest you to check this [metric and label naming](https://prometheus.io/docs/practices/naming/) guide for more detailed information.
+
+### Integrating with other exporters
+
+In order to monitor the over-all status of Dragonfly components, you may need to use other exporters. Prometheus itself has a huge ecosystem, including all kinds of exporters with different utilities. You can check [exporters](https://prometheus.io/docs/instrumenting/exporters/) for more information.
+
+If you want to monitor the io status and network traffic of supernodes, we recommend you to use [node_exporter](https://github.com/prometheus/node_exporter).
