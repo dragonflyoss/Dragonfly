@@ -321,3 +321,20 @@ If supernodes are set in multiple-supernode mode, dfget will connect to one of t
 Because dfget will randomize the order of all supernodes it knows and store them in a slice.
 If dfget connects to the first supernode unsuccessfully, it will connect to the second supernode in the slice.
 And so on until all the known supernodes fail to access twice, the dfget will exit with download failure.
+
+## Can I configure the gc parameter
+
+Yes, we can configure the supernode gc parameter.
+
+There are some parameters we can configure in supernode.
+
+Name                           | Default Value | Description
+------------------------------ | ------------- | ----------
+gc-initial-delay               | 6s            | it is the delay time from the start to the first GC execution.
+gc-meta-interval               | 2min          | it is the interval time to execute the GC meta.
+task-expire-time               | 3min          | when a task is not accessed within the time,it will be treated to be expired.
+peer-gc-delay                  | 3min          | it is the delay time to execute the GC after the peer has reported the offline.
+
+In supernode ,gc will begin `gc-initial-delay` time after supernode works.Then supernode will run peer-gc goroutine and task-gc goroutine every  `gc-meta-interval` time.
+If a task isn't accessed by dfgets in `task-expire-time` time, task-gc goroutine will gc this task, but now supernode only gc the task information in memory.
+If a peer reports that it's offline and can't provide download service to other peers, peer-gc goroutine will gc this peer after `peer-gc-delay` time.
