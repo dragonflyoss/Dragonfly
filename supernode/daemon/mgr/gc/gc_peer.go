@@ -38,6 +38,7 @@ func (gcm *Manager) gcPeers(ctx context.Context) {
 		peerState, err := gcm.progressMgr.GetPeerStateByPeerID(ctx, peerID)
 		if err != nil {
 			logrus.Warnf("gc peers: failed to get peerState peerID(%s): %v", peerID, err)
+			gcm.gcPeer(ctx, peerID)
 			continue
 		}
 
