@@ -188,7 +188,7 @@ func (proxy *Proxy) mirrorRegistry(w http.ResponseWriter, r *http.Request) {
 }
 
 // remoteConfig returns the tls.Config used to connect to the given remote host.
-// If the host should not be hijacked, nil will be returned.
+// If the host should not be hijacked, and it will return nil.
 func (proxy *Proxy) remoteConfig(host string) *tls.Config {
 	for _, h := range proxy.httpsHosts {
 		if h.Regx.MatchString(host) {
@@ -202,7 +202,7 @@ func (proxy *Proxy) remoteConfig(host string) *tls.Config {
 	return nil
 }
 
-// SetRules change the rule lists of the proxy to the given rules
+// SetRules changes the rule lists of the proxy to the given rules.
 func (proxy *Proxy) SetRules(rules []*config.Proxy) error {
 	proxy.rules = rules
 	return nil

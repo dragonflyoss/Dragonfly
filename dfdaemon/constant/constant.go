@@ -41,7 +41,7 @@ const (
 )
 
 const (
-	// DefaultConfigPath the default path of dfdaemon configuration file.
+	// DefaultConfigPath is the default path of dfdaemon configuration file.
 	DefaultConfigPath = "/etc/dragonfly/dfdaemon.yml"
 )
 
