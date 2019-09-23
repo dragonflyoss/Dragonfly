@@ -41,7 +41,7 @@ type Server struct {
 // Option is the functional option for creating a server
 type Option func(s *Server) error
 
-// WithTLSFromFile sets the TLS config for the server from the given key pair file
+// WithTLSFromFile sets the TLS config for the server from the given key pair file.
 func WithTLSFromFile(certFile, keyFile string) Option {
 	return func(s *Server) error {
 		if s.server.TLSConfig == nil {

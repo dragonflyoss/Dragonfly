@@ -364,7 +364,7 @@ func certPoolFromFiles(files ...string) (*x509.CertPool, error) {
 	return roots, nil
 }
 
-// Proxy describes a regular expression matching rule for how to proxy a request
+// Proxy describes a regular expression matching rule for how to proxy a request.
 type Proxy struct {
 	Regx     *Regexp `yaml:"regx" json:"regx"`
 	UseHTTPS bool    `yaml:"use_https" json:"use_https"`
