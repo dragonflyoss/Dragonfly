@@ -256,7 +256,9 @@ func (s *Server) reportServiceDown(ctx context.Context, rw http.ResponseWriter, 
 	if err != nil {
 		return err
 	}
-	s.ProgressMgr.UpdatePeerServiceDown(ctx, dfgetTask.PeerID)
+	if err := s.ProgressMgr.UpdatePeerServiceDown(ctx, dfgetTask.PeerID); err != nil {
+		return err
+	}
 
 	return EncodeResponse(rw, http.StatusOK, &types.ResultInfo{
 		Code: constants.CodeGetPeerDown,
