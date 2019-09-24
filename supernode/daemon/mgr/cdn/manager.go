@@ -238,13 +238,13 @@ func (cm *Manager) CheckFile(ctx context.Context, taskID string) bool {
 }
 
 // Delete the cdn meta with specified taskID.
+// It will also delete the files on the disk when the force equals true.
 func (cm *Manager) Delete(ctx context.Context, taskID string, force bool) error {
 	if !force {
 		return cm.pieceMD5Manager.removePieceMD5sByTaskID(taskID)
 	}
 
-	// TODO: delete the file form disk.
-	return nil
+	return deleteTaskFiles(ctx, cm.cacheStore, taskID)
 }
 
 func (cm *Manager) handleCDNResult(ctx context.Context, task *types.TaskInfo, realMd5 string, httpFileLength, realHTTPFileLength, realFileLength int64) (bool, error) {

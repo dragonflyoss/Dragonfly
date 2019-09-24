@@ -23,6 +23,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 	statutils "github.com/dragonflyoss/Dragonfly/pkg/stat"
@@ -260,6 +261,32 @@ func (ls *localStorage) Remove(ctx context.Context, raw *Raw) error {
 	defer unLock(path, -1, false)
 
 	return os.RemoveAll(path)
+}
+
+// GetAvailSpace returns the available disk space in B.
+func (ls *localStorage) GetAvailSpace(ctx context.Context, raw *Raw) (fileutils.Fsize, error) {
+	path, _, err := ls.statPath(raw.Bucket, raw.Key)
+	if err != nil {
+		return 0, err
+	}
+
+	lock(path, -1, true)
+	defer unLock(path, -1, true)
+	return fileutils.GetFreeSpace(path)
+}
+
+// Walk walks the file tree rooted at root which determined by raw.Bucket and raw.Key,
+// calling walkFn for each file or directory in the tree, including root.
+func (ls *localStorage) Walk(ctx context.Context, raw *Raw) error {
+	path, _, err := ls.statPath(raw.Bucket, raw.Key)
+	if err != nil {
+		return err
+	}
+
+	lock(path, -1, true)
+	defer unLock(path, -1, true)
+
+	return filepath.Walk(path, raw.WalkFn)
 }
 
 // helper function

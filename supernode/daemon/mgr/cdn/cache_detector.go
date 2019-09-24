@@ -61,9 +61,11 @@ func (cd *cacheDetector) detectCache(ctx context.Context, task *types.TaskInfo) 
 		if metaData, err = cd.resetRepo(ctx, task); err != nil {
 			return 0, nil, err
 		}
+	} else {
+		logrus.Debugf("start to update access time with taskID(%s)", task.ID)
+		cd.metaDataManager.updateAccessTime(ctx, task.ID, getCurrentTimeMillisFunc())
 	}
 
-	// TODO: update the access time of task meta file for GC module
 	return breakNum, metaData, nil
 }
 
@@ -117,7 +119,7 @@ func (cd *cacheDetector) parseBreakNumByCheckFile(ctx context.Context, taskID st
 
 func (cd *cacheDetector) resetRepo(ctx context.Context, task *types.TaskInfo) (*fileMetaData, error) {
 	logrus.Infof("reset repo for taskID: %s", task.ID)
-	if err := deleteTaskFiles(ctx, cd.cacheStore, task.ID, false); err != nil {
+	if err := deleteTaskFiles(ctx, cd.cacheStore, task.ID); err != nil {
 		return nil, err
 	}
 

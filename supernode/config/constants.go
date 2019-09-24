@@ -19,6 +19,7 @@ package config
 import (
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/rate"
 )
 
@@ -108,6 +109,19 @@ const (
 
 	// DefaultPeerGCDelay is the delay time to execute the GC after the peer has reported the offline.
 	DefaultPeerGCDelay = 3 * time.Minute
+)
+
+// Default config value for gc disk
+const (
+	DefaultYoungGCThreshold = 100 * fileutils.GB
+
+	DefaultFullGCThreshold = 5 * fileutils.GB
+
+	DefaultIntervalThreshold = 2 * time.Hour
+
+	DefaultGCDiskInterval = 15 * time.Second
+
+	DefaultCleanRatio = 1
 )
 
 const (

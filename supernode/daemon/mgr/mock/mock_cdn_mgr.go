@@ -11,6 +11,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 
 	types "github.com/dragonflyoss/Dragonfly/apis/types"
+	mgr "github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 )
 
 // MockCDNMgr is a mock of CDNMgr interface
@@ -79,6 +80,21 @@ func (m *MockCDNMgr) GetStatus(ctx context.Context, taskID string) (string, erro
 func (mr *MockCDNMgrMockRecorder) GetStatus(ctx, taskID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatus", reflect.TypeOf((*MockCDNMgr)(nil).GetStatus), ctx, taskID)
+}
+
+// GetGCTaskIDs mocks base method
+func (m *MockCDNMgr) GetGCTaskIDs(ctx context.Context, taskMgr mgr.TaskMgr) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGCTaskIDs", ctx, taskMgr)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetGCTaskIDs indicates an expected call of GetGCTaskIDs
+func (mr *MockCDNMgrMockRecorder) GetGCTaskIDs(ctx, taskMgr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGCTaskIDs", reflect.TypeOf((*MockCDNMgr)(nil).GetGCTaskIDs), ctx, taskMgr)
 }
 
 // GetPieceMD5 mocks base method

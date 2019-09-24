@@ -41,6 +41,12 @@ type CDNMgr interface {
 	// GetStatus gets the status of the file.
 	GetStatus(ctx context.Context, taskID string) (cdnStatus string, err error)
 
+	// GetGCTaskIDs returns the taskIDs that should exec GC operations as a string slice.
+	//
+	// It should return nil when the free disk of cdn storage is lager than config.YoungGCThreshold.
+	// It should return all taskIDs that are not running when the free disk of cdn storage is less than config.FullGCThreshold.
+	GetGCTaskIDs(ctx context.Context, taskMgr TaskMgr) ([]string, error)
+
 	// GetPieceMD5 gets the piece Md5 accorrding to the specified taskID and pieceNum.
 	GetPieceMD5(ctx context.Context, taskID string, pieceNum int, pieceRange, source string) (pieceMd5 string, err error)
 

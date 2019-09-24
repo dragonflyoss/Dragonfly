@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 
@@ -115,6 +116,17 @@ func (s *Store) Stat(ctx context.Context, raw *Raw) (*StorageInfo, error) {
 		return nil, err
 	}
 	return s.driver.Stat(ctx, raw)
+}
+
+// GetAvailSpace returns the available disk space in B.
+func (s *Store) GetAvailSpace(ctx context.Context, raw *Raw) (fileutils.Fsize, error) {
+	return s.driver.GetAvailSpace(ctx, raw)
+}
+
+// Walk walks the file tree rooted at root which determined by raw.Bucket and raw.Key,
+// calling walkFn for each file or directory in the tree, including root.
+func (s *Store) Walk(ctx context.Context, raw *Raw) error {
+	return s.driver.Walk(ctx, raw)
 }
 
 func checkEmptyKey(raw *Raw) error {

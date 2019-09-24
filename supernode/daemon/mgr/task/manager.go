@@ -172,8 +172,6 @@ func (tm *Manager) Register(ctx context.Context, req *types.TaskCreateRequest) (
 
 // Get a task info according to specified taskID.
 func (tm *Manager) Get(ctx context.Context, taskID string) (*types.TaskInfo, error) {
-	util.GetLock(taskID, true)
-	defer util.ReleaseLock(taskID, true)
 	return tm.getTask(taskID)
 }
 

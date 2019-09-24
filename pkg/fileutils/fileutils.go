@@ -234,3 +234,13 @@ func LoadYaml(path string, out interface{}) error {
 	}
 	return nil
 }
+
+// GetFreeSpace gets the free disk space of the path.
+func GetFreeSpace(path string) (Fsize, error) {
+	fs := syscall.Statfs_t{}
+	if err := syscall.Statfs(path, &fs); err != nil {
+		return 0, err
+	}
+
+	return Fsize(fs.Bavail * uint64(fs.Bsize)), nil
+}
