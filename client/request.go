@@ -132,10 +132,8 @@ func (client *APIClient) newRequest(method, path string, query url.Values, body 
 		return nil, err
 	}
 
-	if header != nil {
-		for k, v := range header {
-			req.Header[k] = v
-		}
+	for k, v := range header {
+		req.Header[k] = v
 	}
 
 	return req, err

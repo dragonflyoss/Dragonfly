@@ -102,7 +102,6 @@ func filter(handler Handler) http.HandlerFunc {
 			// Handle error if request handling fails.
 			HandleErrorResponse(w, err)
 		}
-		return
 	}
 }
 

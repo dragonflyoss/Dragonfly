@@ -192,13 +192,13 @@ func (ps *peerServer) parseRateHandler(w http.ResponseWriter, r *http.Request) {
 
 	// no need to calculate rate when totalLimitRate less than or equals zero.
 	if ps.totalLimitRate <= 0 {
-		fmt.Fprintf(w, rateLimit)
+		fmt.Fprint(w, rateLimit)
 		return
 	}
 
 	clientRate = ps.calculateRateLimit(clientRate)
 
-	fmt.Fprintf(w, strconv.Itoa(clientRate))
+	fmt.Fprint(w, strconv.Itoa(clientRate))
 }
 
 // checkHandler use to check the server status.
@@ -234,7 +234,7 @@ func (ps *peerServer) checkHandler(w http.ResponseWriter, r *http.Request) {
 func (ps *peerServer) oneFinishHandler(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		sendHeader(w, http.StatusBadRequest)
-		fmt.Fprintf(w, err.Error())
+		fmt.Fprint(w, err.Error())
 		return
 	}
 

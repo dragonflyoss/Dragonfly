@@ -106,7 +106,7 @@ func launch(cfg *config.Config, p2pPtr *unsafe.Pointer) error {
 		tmp := newPeerServer(cfg, port)
 		storeSrvPtr(p2pPtr, tmp)
 		if err := tmp.ListenAndServe(); err != nil {
-			if strings.Index(err.Error(), "address already in use") < 0 {
+			if !strings.Contains(err.Error(), "address already in use") {
 				// start failed or shutdown
 				return err
 			} else if uploaderAPI.PingServer(tmp.host, tmp.port) {
