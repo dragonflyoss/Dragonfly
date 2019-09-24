@@ -51,6 +51,72 @@ func (ts *rootTestSuite) TestConfigNotFound() {
 	r.True(os.IsNotExist(errors.Cause(readConfigFile(v, rootCmd))))
 }
 
+func (ts *rootTestSuite) TestNodeFlag() {
+	r := ts.Require()
+	fs := afero.NewMemMapFs()
+
+	fs.Create("/dfget")
+
+	configName := "dfdaemon.yml"
+	file, err := fs.Create(configName)
+	r.Nil(err)
+	file.WriteString("supernodes:\n- 127.0.0.1:6666")
+	file.Close()
+
+	// flag not set, should use config file
+	{
+		v := viper.New()
+		v.SetFs(fs)
+		v.Set("dfpath", "/")
+		rootCmd.Flags().Set("config", configName)
+		r.Nil(bindRootFlags(v))
+		r.Nil(readConfigFile(v, rootCmd))
+		cfg, err := getConfigFromViper(rootCmd, v)
+		r.Nil(err)
+		r.Equal([]string{"127.0.0.1:6666"}, cfg.SuperNodes)
+	}
+
+	// flag not set, config file doesn't exist, should use default
+	{
+		v := viper.New()
+		v.SetFs(fs)
+		v.Set("dfpath", "/")
+		rootCmd.Flags().Set("config", "xxx")
+		r.Nil(bindRootFlags(v))
+		r.NotNil(readConfigFile(v, rootCmd))
+		cfg, err := getConfigFromViper(rootCmd, v)
+		r.Nil(err)
+		r.Equal([]string{"127.0.0.1:8002"}, cfg.SuperNodes)
+	}
+
+	// when --node flag is set, should always use the flag
+	rootCmd.Flags().Set("node", "127.0.0.1:7777")
+
+	{
+		v := viper.New()
+		v.SetFs(fs)
+		v.Set("dfpath", "/")
+		rootCmd.Flags().Set("config", "xxx")
+		r.Nil(bindRootFlags(v))
+		r.NotNil(readConfigFile(v, rootCmd))
+		cfg, err := getConfigFromViper(rootCmd, v)
+		r.Nil(err)
+		r.Equal([]string{"127.0.0.1:7777"}, cfg.SuperNodes)
+	}
+
+	{
+		v := viper.New()
+		v.SetFs(fs)
+		v.Set("dfpath", "/")
+		rootCmd.Flags().Set("config", configName)
+		r.Nil(bindRootFlags(v))
+		r.Nil(readConfigFile(v, rootCmd))
+		cfg, err := getConfigFromViper(rootCmd, v)
+		r.Nil(err)
+		r.Equal([]string{"127.0.0.1:7777"}, cfg.SuperNodes)
+	}
+}
+
 func generateFakeFilename(fs afero.Fs) string {
 	for i := 0; i < 100; i++ {
 		d := fmt.Sprintf("/dftest-%d-%d", time.Now().UnixNano(), rand.Int())
@@ -111,7 +177,7 @@ func (ts *rootTestSuite) TestDecodeWithYAML() {
 	r.Nil(err)
 	v.Set("registry_mirror.certs", []string{f.Name()})
 
-	cfg, err := getConfigFromViper(v)
+	cfg, err := getConfigFromViper(rootCmd, v)
 	r.Nil(err)
 	r.NotNil(cfg.RegistryMirror.Remote)
 	r.Equal(mockURL, cfg.RegistryMirror.Remote.String())
