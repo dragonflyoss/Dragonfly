@@ -303,5 +303,4 @@ func reportMetrics(cfg *config.Config, supernodeAPI api.SupernodeAPI, downloadTi
 			return
 		}
 	}
-	return
 }
