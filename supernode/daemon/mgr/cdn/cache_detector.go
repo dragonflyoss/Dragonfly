@@ -24,6 +24,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/httpclient"
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -59,7 +60,7 @@ func (cd *cacheDetector) detectCache(ctx context.Context, task *types.TaskInfo) 
 
 	if breakNum == 0 {
 		if metaData, err = cd.resetRepo(ctx, task); err != nil {
-			return 0, nil, err
+			return 0, nil, errors.Wrapf(err, "failed to reset repo")
 		}
 	} else {
 		logrus.Debugf("start to update access time with taskID(%s)", task.ID)
@@ -120,7 +121,7 @@ func (cd *cacheDetector) parseBreakNumByCheckFile(ctx context.Context, taskID st
 func (cd *cacheDetector) resetRepo(ctx context.Context, task *types.TaskInfo) (*fileMetaData, error) {
 	logrus.Infof("reset repo for taskID: %s", task.ID)
 	if err := deleteTaskFiles(ctx, cd.cacheStore, task.ID); err != nil {
-		return nil, err
+		logrus.Errorf("reset repo: failed to delete task(%s) files: %v", task.ID, err)
 	}
 
 	return cd.metaDataManager.writeFileMetaDataByTask(ctx, task)
