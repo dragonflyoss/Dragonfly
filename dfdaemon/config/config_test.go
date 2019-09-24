@@ -269,6 +269,65 @@ func (ts *configTestSuite) TestMirrorTLSConfig() {
 	r.Equal(m.Insecure, m.TLSConfig().InsecureSkipVerify)
 }
 
+func (ts *configTestSuite) TestDFGetConfig() {
+	c := defaultConfig()
+	r := ts.Require()
+
+	{
+		flagsConfigs := c.DFGetConfig()
+		r.Contains(flagsConfigs.DfgetFlags, "--dfdaemon")
+		r.Equal(c.SuperNodes, flagsConfigs.SuperNodes)
+		r.Equal(c.RateLimit.String(), flagsConfigs.RateLimit)
+		r.Equal(c.DFRepo, flagsConfigs.DFRepo)
+		r.Equal(c.DFPath, flagsConfigs.DFPath)
+
+		c.Verbose = true
+		flagsConfigs = c.DFGetConfig()
+		r.Contains(flagsConfigs.DfgetFlags, "--verbose")
+	}
+
+	{
+		aRegex, err := NewRegexp("a.registry.com")
+		r.Nil(err)
+		bRegex, err := NewRegexp("b.registry.com")
+		r.Nil(err)
+		c.HijackHTTPS = &HijackConfig{
+			Hosts: []*HijackHost{
+				{
+					Regx:     aRegex,
+					Insecure: true,
+					Certs:    nil,
+				},
+				{
+					Regx:     bRegex,
+					Insecure: false,
+					Certs: &CertPool{
+						CertPool: x509.NewCertPool(),
+					},
+				},
+			},
+		}
+		r.Equal(c.HijackHTTPS.Hosts, c.DFGetConfig().HostsConfig)
+	}
+
+	{
+		url, err := NewURL("c.registry.com")
+		r.Nil(err)
+		c.RegistryMirror = &RegistryMirror{
+			Remote: url,
+			Certs: &CertPool{
+				CertPool: x509.NewCertPool(),
+			},
+			Insecure: false,
+		}
+		mirrorConfigs := c.DFGetConfig()
+		r.Equal(len(mirrorConfigs.HostsConfig), 3)
+		r.Equal(mirrorConfigs.HostsConfig[len(mirrorConfigs.HostsConfig)-1].Regx.String(), c.RegistryMirror.Remote.Host)
+		r.Equal(mirrorConfigs.HostsConfig[len(mirrorConfigs.HostsConfig)-1].Certs, c.RegistryMirror.Certs)
+		r.Equal(mirrorConfigs.HostsConfig[len(mirrorConfigs.HostsConfig)-1].Insecure, c.RegistryMirror.Insecure)
+	}
+}
+
 func (ts *configTestSuite) TestSerialization() {
 	currentFs := fs
 	defer func() { fs = currentFs }()

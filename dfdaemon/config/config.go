@@ -151,6 +151,16 @@ func (p *Properties) DFGetConfig() DFGetConfig {
 	if p.HijackHTTPS != nil {
 		dfgetConfig.HostsConfig = p.HijackHTTPS.Hosts
 	}
+	if p.RegistryMirror != nil {
+		exp, err := NewRegexp(p.RegistryMirror.Remote.Host)
+		if err == nil {
+			dfgetConfig.HostsConfig = append(dfgetConfig.HostsConfig, &HijackHost{
+				Regx:     exp,
+				Insecure: p.RegistryMirror.Insecure,
+				Certs:    p.RegistryMirror.Certs,
+			})
+		}
+	}
 	return dfgetConfig
 }
 
