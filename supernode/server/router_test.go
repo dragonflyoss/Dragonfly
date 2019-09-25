@@ -86,7 +86,8 @@ func (rs *RouterTestSuite) SetUpSuite(c *check.C) {
 }
 
 func (rs *RouterTestSuite) TearDownSuite(c *check.C) {
-	rs.listener.Close()
+	err := rs.listener.Close()
+	c.Check(err, check.IsNil)
 }
 
 func (rs *RouterTestSuite) TestDebugHandler(c *check.C) {

@@ -23,6 +23,6 @@ import (
 
 func (s *Server) ping(context context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
 	rw.WriteHeader(http.StatusOK)
-	rw.Write([]byte{'O', 'K'})
-	return
+	_, err = rw.Write([]byte{'O', 'K'})
+	return err
 }
