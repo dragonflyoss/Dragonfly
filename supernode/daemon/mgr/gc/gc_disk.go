@@ -69,6 +69,8 @@ func (gcm *Manager) deleteTaskDisk(ctx context.Context, gcTaskIDs []string) {
 		util.ReleaseLock(taskID, false)
 		count++
 	}
+	gcm.metrics.gcDisksCount.WithLabelValues().Add(float64(count))
+	gcm.metrics.lastGCDisksTime.WithLabelValues().SetToCurrentTime()
 
 	logrus.Debugf("gc disk: success to gc task count(%d), remainder count(%d)", count, len(gcTaskIDs)-count)
 }

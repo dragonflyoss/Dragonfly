@@ -237,8 +237,8 @@ type BaseProperties struct {
 	// IntervalThreshold is the threshold of the interval at which the task file is accessed.
 	IntervalThreshold time.Duration `yaml:"IntervalThreshold"`
 
-	// CleanRatio the ratio to clean the disk and based on 10.
-	// And the value of CleanRatio should be [1-10].
+	// CleanRatio is the ratio to clean the disk and it is based on 10.
+	// It means the value of CleanRatio should be [1-10].
 	//
 	// default: 1
 	CleanRatio int
