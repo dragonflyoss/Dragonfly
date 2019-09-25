@@ -82,7 +82,7 @@ type ProgressMgr interface {
 	// GetBlackInfoByPeerID gets black info with specified peerID.
 	GetBlackInfoByPeerID(ctx context.Context, peerID string) (dstPIDMap *syncmap.SyncMap, err error)
 
-	// UpdateSuperLoad update the superLoad with delta.
+	// UpdateSuperLoad updates the superLoad with delta.
 	//
 	// The value will be rolled back if it exceeds the limit after updated and returns false.
 	UpdateSuperLoad(ctx context.Context, taskID string, delta, limit int32) (updated bool, err error)

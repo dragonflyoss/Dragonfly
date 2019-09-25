@@ -30,19 +30,19 @@ var (
 	// SupernodeDownloadPort is the port that supernode will listen.
 	SupernodeDownloadPort = 8009
 
-	// DragonflySupernodeBinary is default binary
+	// DragonflySupernodeBinary is the default binary path.
 	DragonflySupernodeBinary = "/usr/local/bin/supernode"
 
-	// DragonflyAddress is default address dragonfly supernode listens on.
+	// DragonflyAddress is the default address dragonfly supernode listens on.
 	DragonflyAddress = fmt.Sprintf("tcp://127.0.0.1:%d", SupernodeListenPort)
 
-	// TLSConfig is default tls config
+	// TLSConfig is the default TLS config.
 	TLSConfig = client.TLSConfig{}
 
-	// GateWay default gateway for test
+	// GateWay is the default gateway for test.
 	GateWay = "192.168.1.1"
 
-	// Subnet default subnet for test
+	// Subnet is the default subnet for test.
 	Subnet = "192.168.1.0/24"
 )
 

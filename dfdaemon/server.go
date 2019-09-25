@@ -32,13 +32,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// Server represents the dfdaemon server
+// Server represents the dfdaemon server.
 type Server struct {
 	server *http.Server
 	proxy  *proxy.Proxy
 }
 
-// Option is the functional option for creating a server
+// Option is the functional option for creating a server.
 type Option func(s *Server) error
 
 // WithTLSFromFile sets the TLS config for the server from the given key pair file.
@@ -56,7 +56,7 @@ func WithTLSFromFile(certFile, keyFile string) Option {
 	}
 }
 
-// WithAddr sets the address the server listens on
+// WithAddr sets the address the server listens on.
 func WithAddr(addr string) Option {
 	return func(s *Server) error {
 		s.server.Addr = addr
@@ -64,7 +64,7 @@ func WithAddr(addr string) Option {
 	}
 }
 
-// WithProxy sets the proxy
+// WithProxy sets the proxy.
 func WithProxy(p *proxy.Proxy) Option {
 	return func(s *Server) error {
 		if p == nil {
@@ -75,7 +75,7 @@ func WithProxy(p *proxy.Proxy) Option {
 	}
 }
 
-// New returns a new server instance
+// New returns a new server instance.
 func New(opts ...Option) (*Server, error) {
 	p, _ := proxy.New()
 	s := &Server{
@@ -96,7 +96,7 @@ func New(opts ...Option) (*Server, error) {
 	return s, nil
 }
 
-// NewFromConfig returns a new server instance from given configuration
+// NewFromConfig returns a new server instance from given configuration.
 func NewFromConfig(cfg config.Properties) (*Server, error) {
 	p, err := proxy.NewFromConfig(cfg)
 	if err != nil {
@@ -115,7 +115,7 @@ func NewFromConfig(cfg config.Properties) (*Server, error) {
 	return New(opts...)
 }
 
-// Start runs dfdaemon's http server
+// Start runs dfdaemon's http server.
 func (s *Server) Start() error {
 	proxy.WithDirectHandler(handler.New())(s.proxy)
 	s.server.Handler = s.proxy
@@ -127,7 +127,7 @@ func (s *Server) Start() error {
 	return s.server.ListenAndServe()
 }
 
-// Stop gracefully stops the dfdaemon http server
+// Stop gracefully stops the dfdaemon http server.
 func (s *Server) Stop(ctx context.Context) error {
 	return s.server.Shutdown(ctx)
 }

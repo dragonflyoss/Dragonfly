@@ -40,7 +40,7 @@ const (
 	GCHandlingDelay    = 3 * time.Second
 )
 
-// handlerStore stores all registered handler
+// handlerStore stores all registered handler.
 var handlerStore = syncmap.NewSyncMap()
 
 type handlerInitFunc func(gcManager mgr.GCMgr, cdnManager mgr.CDNMgr) (handler Handler, err error)

@@ -53,7 +53,7 @@ type Piece struct {
 	Content *bytes.Buffer `json:"-"`
 }
 
-// RawContent return raw contents.
+// RawContent returns raw contents.
 func (p *Piece) RawContent() *bytes.Buffer {
 	contents := p.Content.Bytes()
 	length := len(contents)

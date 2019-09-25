@@ -91,7 +91,7 @@ func (pm *Manager) Register(ctx context.Context, peerCreateRequest *types.PeerCr
 	}, nil
 }
 
-// DeRegister a peer from p2p network.
+// DeRegister is a peer from p2p network.
 func (pm *Manager) DeRegister(ctx context.Context, peerID string) error {
 	peerInfo, err := pm.getPeerInfo(peerID)
 	if err != nil {

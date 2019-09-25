@@ -34,7 +34,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// CreateConfig create a temporary config
+// CreateConfig creates a temporary config.
 func CreateConfig(writer io.Writer, workHome string) *config.Config {
 	if writer == nil {
 		writer = ioutil.Discard
@@ -50,7 +50,7 @@ func CreateConfig(writer io.Writer, workHome string) *config.Config {
 	return cfg
 }
 
-// CreateTestFile create a temp file and write a string.
+// CreateTestFile creates a temp file and write a string.
 func CreateTestFile(path string, content string) error {
 	f, err := createFile(path, content)
 	if f != nil {
@@ -59,7 +59,7 @@ func CreateTestFile(path string, content string) error {
 	return err
 }
 
-// CreateTestFileWithMD5 create a temp file and write a string
+// CreateTestFileWithMD5 creates a temp file and write a string
 // and return the md5 of the file.
 func CreateTestFileWithMD5(path string, content string) string {
 	f, err := createFile(path, content)
@@ -81,7 +81,7 @@ func createFile(path string, content string) (*os.File, error) {
 	return f, nil
 }
 
-// CreateRandomString create a random string of specified length.
+// CreateRandomString creates a random string of specified length.
 func CreateRandomString(cap int) string {
 	var letterBytes = "abcdefghijklmnopqrstuvwxyz"
 	var length = len(letterBytes)
@@ -114,7 +114,7 @@ type ClientErrorFuncType func(ip string, req *types.ClientErrorRequest) (*types.
 // ClientErrorFuncType function type of SupernodeAPI#ReportMetricsType
 type ReportMetricsFuncType func(node string, req *api_types.TaskMetricsRequest) (*types.BaseResponse, error)
 
-// MockSupernodeAPI mock SupernodeAPI
+// MockSupernodeAPI mocks the SupernodeAPI.
 type MockSupernodeAPI struct {
 	RegisterFunc      RegisterFuncType
 	PullFunc          PullFuncType
@@ -126,7 +126,7 @@ type MockSupernodeAPI struct {
 
 var _ api.SupernodeAPI = &MockSupernodeAPI{}
 
-// Register implements SupernodeAPI#Register
+// Register implements SupernodeAPI#Register.
 func (m *MockSupernodeAPI) Register(ip string, req *types.RegisterRequest) (
 	*types.RegisterResponse, error) {
 	if m.RegisterFunc != nil {
@@ -135,7 +135,7 @@ func (m *MockSupernodeAPI) Register(ip string, req *types.RegisterRequest) (
 	return nil, nil
 }
 
-// PullPieceTask implements SupernodeAPI#PullPiece
+// PullPieceTask implements SupernodeAPI#PullPiece.
 func (m *MockSupernodeAPI) PullPieceTask(ip string, req *types.PullPieceTaskRequest) (
 	*types.PullPieceTaskResponse, error) {
 	if m.PullFunc != nil {
@@ -144,7 +144,7 @@ func (m *MockSupernodeAPI) PullPieceTask(ip string, req *types.PullPieceTaskRequ
 	return nil, nil
 }
 
-// ReportPiece implements SupernodeAPI#ReportPiece
+// ReportPiece implements SupernodeAPI#ReportPiece.
 func (m *MockSupernodeAPI) ReportPiece(ip string, req *types.ReportPieceRequest) (
 	*types.BaseResponse, error) {
 	if m.ReportFunc != nil {
@@ -153,7 +153,7 @@ func (m *MockSupernodeAPI) ReportPiece(ip string, req *types.ReportPieceRequest)
 	return nil, nil
 }
 
-// ServiceDown implements SupernodeAPI#ServiceDown
+// ServiceDown implements SupernodeAPI#ServiceDown.
 func (m *MockSupernodeAPI) ServiceDown(ip string, taskID string, cid string) (
 	*types.BaseResponse, error) {
 	if m.ServiceDownFunc != nil {
@@ -162,7 +162,7 @@ func (m *MockSupernodeAPI) ServiceDown(ip string, taskID string, cid string) (
 	return nil, nil
 }
 
-// ReportClientError implements SupernodeAPI#ReportClientError
+// ReportClientError implements SupernodeAPI#ReportClientError.
 func (m *MockSupernodeAPI) ReportClientError(ip string, req *types.ClientErrorRequest) (resp *types.BaseResponse, e error) {
 	if m.ClientErrorFunc != nil {
 		return m.ClientErrorFunc(ip, req)
@@ -177,7 +177,7 @@ func (m *MockSupernodeAPI) ReportMetrics(ip string, req *api_types.TaskMetricsRe
 	return nil, nil
 }
 
-// CreateRegisterFunc creates a mock register function
+// CreateRegisterFunc creates a mock register function.
 func CreateRegisterFunc() RegisterFuncType {
 	var newResponse = func(code int, msg string) *types.RegisterResponse {
 		return &types.RegisterResponse{

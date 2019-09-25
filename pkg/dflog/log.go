@@ -84,7 +84,7 @@ func WithMaxSizeMB(max uint) Option {
 	}
 }
 
-// WithConsole adds a hook to output logs to stdout
+// WithConsole adds a hook to output logs to stdout.
 func WithConsole() Option {
 	return func(l *logrus.Logger) error {
 		consoleLog := &logrus.Logger{
@@ -102,7 +102,7 @@ func WithConsole() Option {
 	}
 }
 
-// WithSign sets the sign in formatter
+// WithSign sets the sign in formatter.
 func WithSign(sign string) Option {
 	return func(l *logrus.Logger) error {
 		l.Formatter = &DragonflyFormatter{

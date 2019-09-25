@@ -25,7 +25,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/pkg/ratelimiter"
 )
 
-// NewLimitReader creates LimitReader
+// NewLimitReader creates a LimitReader.
 // src: reader
 // rate: bytes/second
 func NewLimitReader(src io.Reader, rate int64, calculateMd5 bool) *LimitReader {
@@ -69,7 +69,7 @@ func newRateLimiterWithDefaultWindow(rate int64) *ratelimiter.RateLimiter {
 	return ratelimiter.NewRateLimiter(ratelimiter.TransRate(rate), 2)
 }
 
-// LimitReader read stream with RateLimiter.
+// LimitReader reads stream with RateLimiter.
 type LimitReader struct {
 	Src     io.Reader
 	Limiter *ratelimiter.RateLimiter
@@ -90,7 +90,7 @@ func (lr *LimitReader) Read(p []byte) (n int, err error) {
 	return n, e
 }
 
-// Md5 calculates the md5 of all contents read
+// Md5 calculates the md5 of all contents read.
 func (lr *LimitReader) Md5() string {
 	if lr.md5sum != nil {
 		return fileutils.GetMd5Sum(lr.md5sum, nil)

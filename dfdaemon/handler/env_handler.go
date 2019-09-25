@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// getEnv returns the environments of dfdaemon
+// getEnv returns the environments of dfdaemon.
 func getEnv(w http.ResponseWriter, r *http.Request) {
 	logrus.Debugf("access:%s", r.URL.String())
 	json.NewEncoder(w).Encode(ensureStringKey(viper.AllSettings()))

@@ -121,11 +121,11 @@ func (s *TaskMgrTestSuite) TestUpdateTaskInfo(c *check.C) {
 	resp, err := s.taskManager.Register(context.Background(), req)
 	c.Check(err, check.IsNil)
 
-	// return error when taskInfo equals nil
+	// Return error when taskInfo equals nil.
 	err = s.taskManager.Update(context.Background(), resp.ID, nil)
 	c.Check(errortypes.IsEmptyValue(err), check.Equals, true)
 
-	// return error when taskInfo.CDNStatus equals ""
+	// Return error when taskInfo.CDNStatus equals "".
 	err = s.taskManager.Update(context.Background(), resp.ID, &types.TaskInfo{})
 	c.Check(errortypes.IsEmptyValue(err), check.Equals, true)
 
@@ -154,7 +154,7 @@ func (s *TaskMgrTestSuite) TestUpdateTaskInfo(c *check.C) {
 	c.Check(task.CdnStatus, check.Equals, types.TaskInfoCdnStatusSUCCESS)
 	c.Check(task.FileLength, check.Equals, int64(2000))
 
-	// do not update if origin CDNStatus equals success
+	// Do not update if origin CDNStatus equals success.
 	err = s.taskManager.Update(context.Background(), resp.ID, &types.TaskInfo{
 		CdnStatus:  types.TaskInfoCdnStatusFAILED,
 		FileLength: 3000,

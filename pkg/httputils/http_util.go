@@ -289,7 +289,7 @@ func CheckConnect(ip string, port int, timeout int) (localIP string, e error) {
 	return
 }
 
-// ConstructRangeStr wrap the rangeStr as a HTTP Range header value.
+// ConstructRangeStr wraps the rangeStr as a HTTP Range header value.
 func ConstructRangeStr(rangeStr string) string {
 	return fmt.Sprintf("bytes=%s", rangeStr)
 }

@@ -151,7 +151,7 @@ J88xU3xXABE5QsNNbqLcMgQoXeMmqk1WuUhxXzTXT5h5gdW53faxV5M5Cb3zI8My
 PPpBF5Cw+khgkJcY/ezKjHIvyABJwdzW8aAqwDBFAQ==
 -----END CERTIFICATE-----`
 
-// TestDecodeWithYAML tests if config.URL and config.Regexp are decoded correctly
+// TestDecodeWithYAML tests if config.URL and config.Regexp are decoded correctly.
 func (ts *rootTestSuite) TestDecodeWithYAML() {
 	r := ts.Require()
 	v := viper.New()

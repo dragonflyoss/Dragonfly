@@ -172,7 +172,7 @@ func runSuperNode() error {
 	return d.Run()
 }
 
-// initLog initializes log Level and log format
+// initLog initializes log Level and log format.
 func initLog(logger *logrus.Logger, logPath string) error {
 	logFilePath := path.Join(options.HomeDir, "logs", logPath)
 

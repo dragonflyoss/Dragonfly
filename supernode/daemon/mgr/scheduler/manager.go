@@ -264,7 +264,7 @@ func (sm *Manager) deletePeerIDByPieceNum(ctx context.Context, taskID string, pi
 	}
 }
 
-// isExistInMap returns whether the key exists in the mmap
+// isExistInMap returns whether the key exists in the mmap.
 func isExistInMap(mmap *syncmap.SyncMap, key string) bool {
 	if mmap == nil {
 		return false

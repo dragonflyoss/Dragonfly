@@ -35,7 +35,7 @@ func ensureCloseReader(resp *Response) error {
 	if resp != nil && resp.Body != nil {
 		defer resp.Body.Close()
 
-		// close body ReadCloser to make Transport reuse the connection
+		// Close body ReadCloser to make Transport reuse the connection.
 		_, err := io.CopyN(ioutil.Discard, resp.Body, 512)
 		return err
 	}

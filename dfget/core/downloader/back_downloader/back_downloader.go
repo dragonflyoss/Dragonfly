@@ -59,7 +59,7 @@ type BackDownloader struct {
 
 var _ downloader.Downloader = &BackDownloader{}
 
-// NewBackDownloader create BackDownloader
+// NewBackDownloader creates a BackDownloader.
 func NewBackDownloader(cfg *config.Config, result *regist.RegisterResult) *BackDownloader {
 	var (
 		taskID string
