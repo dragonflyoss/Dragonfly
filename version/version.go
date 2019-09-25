@@ -46,22 +46,22 @@ var (
 	// populate via ldflags
 	buildDate string
 
-	// goVersion is the running program's golang version
+	// goVersion is the running program's golang version.
 	goVersion = runtime.Version()
 
-	// os is the running program's operating system
+	// os is the running program's operating system.
 	os = runtime.GOOS
 
-	// arch is the running program's architecture target
+	// arch is the running program's architecture target.
 	arch = runtime.GOARCH
 
-	// DFDaemonVersion is the version of dfdaemon
+	// DFDaemonVersion is the version of dfdaemon.
 	DFDaemonVersion = version
 
-	// DFGetVersion is the version of dfget
+	// DFGetVersion is the version of dfget.
 	DFGetVersion = version
 
-	// SupernodeVersion is the version of supernode
+	// SupernodeVersion is the version of supernode.
 	SupernodeVersion = version
 
 	// DFVersion is the global instance of DragonflyVersion.
