@@ -86,6 +86,7 @@ func NewProperties() *Properties {
 		LocalLimit:      DefaultLocalLimit,
 		MinRate:         DefaultMinRate,
 		ClientQueueSize: DefaultClientQueueSize,
+		TotalLimit:      DefaultTotalLimit,
 	}
 }
 
@@ -146,18 +147,6 @@ type Config struct {
 	// Output full output path.
 	Output string `json:"output"`
 
-	// LocalLimit rate limit about a single download task, format: G(B)/g/M(B)/m/K(B)/k/B
-	// pure number will also be parsed as Byte.
-	LocalLimit rate.Rate `json:"localLimit,omitempty"`
-
-	// Minimal rate about a single download task, format: G(B)/g/M(B)/m/K(B)/k/B
-	// pure number will also be parsed as Byte.
-	MinRate rate.Rate `json:"minRate,omitempty"`
-
-	// TotalLimit rate limit about the whole host, format: G(B)/g/M(B)/m/K(B)/k/B
-	// pure number will also be parsed as Byte.
-	TotalLimit rate.Rate `json:"totalLimit,omitempty"`
-
 	// Timeout download timeout(second).
 	Timeout time.Duration `json:"timeout,omitempty"`
 
@@ -186,9 +175,6 @@ type Config struct {
 	// eg: --header='Accept: *' --header='Host: abc'.
 	Header []string `json:"header,omitempty"`
 
-	// Node specify supernodes.
-	Node []string `json:"node,omitempty"`
-
 	// Notbs indicates whether to not back source to download when p2p fails.
 	Notbs bool `json:"notbs,omitempty"`
 
@@ -207,12 +193,6 @@ type Config struct {
 	// Verbose indicates whether to be verbose.
 	// If set true, log level will be 'debug'.
 	Verbose bool `json:"verbose,omitempty"`
-
-	// ClientQueueSize is the size of client queue
-	// which controls the number of pieces that can be processed simultaneously.
-	// It is only useful when the pattern not equals "source".
-	// The default value is 6.
-	ClientQueueSize int `json:"clientQueueSize,omitempty"`
 
 	// Start time.
 	StartTime time.Time `json:"-"`
@@ -240,6 +220,9 @@ type Config struct {
 
 	// The reason of backing to source.
 	BackSourceReason int `json:"-"`
+
+	// Embedded Properties holds all configurable properties.
+	Properties
 }
 
 func (cfg *Config) String() string {
@@ -267,8 +250,6 @@ func NewConfig() *Config {
 	cfg.RV.SystemDataDir = path.Join(cfg.WorkHome, "data")
 	cfg.RV.FileLength = -1
 	cfg.ConfigFiles = []string{DefaultYamlConfigFile, DefaultIniConfigFile}
-	cfg.LocalLimit = DefaultLocalLimit
-	cfg.MinRate = DefaultMinRate
 	return cfg
 }
 

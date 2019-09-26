@@ -58,9 +58,10 @@ func (suite *ConfigSuite) TestConfig_String(c *check.C) {
 	expected := "{\"url\":\"\",\"output\":\"\""
 	c.Assert(strings.Contains(cfg.String(), expected), check.Equals, true)
 	cfg.LocalLimit = 20 * rate.MB
+	cfg.MinRate = 64 * rate.KB
 	cfg.Pattern = "p2p"
-	expected = "\"url\":\"\",\"output\":\"\",\"localLimit\":\"20MB\"," +
-		"\"minRate\":\"64KB\",\"pattern\":\"p2p\""
+	expected = "\"url\":\"\",\"output\":\"\",\"pattern\":\"p2p\"," +
+		"\"localLimit\":\"20MB\",\"minRate\":\"64KB\""
 	c.Assert(strings.Contains(cfg.String(), expected), check.Equals, true)
 }
 

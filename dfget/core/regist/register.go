@@ -64,8 +64,8 @@ func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errortypes
 		start      = time.Now()
 	)
 
-	logrus.Infof("do register to one of %v", s.cfg.Node)
-	nodes, nLen := s.cfg.Node, len(s.cfg.Node)
+	logrus.Infof("do register to one of %v", s.cfg.Nodes)
+	nodes, nLen := s.cfg.Nodes, len(s.cfg.Nodes)
 	req := s.constructRegisterRequest(peerPort)
 	for i = 0; i < nLen; i++ {
 		req.SupernodeIP = netutils.ExtractHost(nodes[i])
@@ -92,7 +92,7 @@ func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errortypes
 		return nil, err
 	}
 
-	result := NewRegisterResult(nodes[i], s.cfg.Node, s.cfg.URL,
+	result := NewRegisterResult(nodes[i], s.cfg.Nodes, s.cfg.URL,
 		resp.Data.TaskID, resp.Data.FileLength, resp.Data.PieceSize)
 
 	logrus.Infof("do register result:%s and cost:%.3fs", resp,
@@ -114,14 +114,14 @@ func (s *supernodeRegister) checkResponse(resp *types.RegisterResponse, e error)
 }
 
 func (s *supernodeRegister) setRemainderNodes(idx int) {
-	nLen := len(s.cfg.Node)
+	nLen := len(s.cfg.Nodes)
 	if nLen <= 0 {
 		return
 	}
 	if idx < nLen {
-		s.cfg.Node = s.cfg.Node[idx+1:]
+		s.cfg.Nodes = s.cfg.Nodes[idx+1:]
 	} else {
-		s.cfg.Node = []string{}
+		s.cfg.Nodes = []string{}
 	}
 }
 

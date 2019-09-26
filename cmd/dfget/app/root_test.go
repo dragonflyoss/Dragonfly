@@ -27,7 +27,6 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/rate"
-
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
 )
@@ -37,9 +36,10 @@ type dfgetSuit struct {
 }
 
 func (suit *dfgetSuit) Test_initFlagsNoArguments() {
-	suit.Nil(cfg.Node)
+	initProperties()
+	suit.Equal(cfg.Nodes, []string{"127.0.0.1"})
 	suit.Equal(cfg.LocalLimit, 20*rate.MB)
-	suit.Equal(cfg.TotalLimit, rate.Rate(0))
+	suit.Equal(cfg.TotalLimit, 20*rate.MB)
 	suit.Equal(cfg.Notbs, false)
 	suit.Equal(cfg.DFDaemon, false)
 	suit.Equal(cfg.Console, false)
@@ -55,7 +55,7 @@ func (suit *dfgetSuit) Test_initProperties() {
 	iniFile := filepath.Join(dirName, "dragonfly.ini")
 	yamlFile := filepath.Join(dirName, "dragonfly.yaml")
 	iniContent := []byte("[node]\naddress=1.1.1.1")
-	yamlContent := []byte("nodes:\n  - 1.1.1.2\nlocalLimit: 1000K")
+	yamlContent := []byte("nodes:\n  - 1.1.1.2\nlocalLimit: 1000K\ntotalLimit: 1000k")
 	ioutil.WriteFile(iniFile, iniContent, os.ModePerm)
 	ioutil.WriteFile(yamlFile, yamlContent, os.ModePerm)
 
@@ -71,9 +71,9 @@ func (suit *dfgetSuit) Test_initProperties() {
 		{configs: []string{iniFile, yamlFile},
 			expected: newProp(0, 0, 0, "1.1.1.1")},
 		{configs: []string{yamlFile, iniFile},
-			expected: newProp(int(rate.MB*20), 0, 0, "1.1.1.2")},
+			expected: newProp(int(rate.KB*1000), int(rate.KB*1000), 0, "1.1.1.2")},
 		{configs: []string{filepath.Join(dirName, "x"), yamlFile},
-			expected: newProp(int(rate.MB*20), 0, 0, "1.1.1.2")},
+			expected: newProp(int(rate.KB*1000), int(rate.KB*1000), 0, "1.1.1.2")},
 	}
 
 	for _, v := range cases {
@@ -84,7 +84,7 @@ func (suit *dfgetSuit) Test_initProperties() {
 			"--locallimit", v.expected.LocalLimit.String(),
 			"--totallimit", v.expected.TotalLimit.String()})
 		initProperties()
-		suit.EqualValues(cfg.Node, v.expected.Nodes)
+		suit.EqualValues(cfg.Nodes, v.expected.Nodes)
 		suit.Equal(cfg.LocalLimit, v.expected.LocalLimit)
 		suit.Equal(cfg.TotalLimit, v.expected.TotalLimit)
 		suit.Equal(cfg.ClientQueueSize, v.expected.ClientQueueSize)
