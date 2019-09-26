@@ -31,7 +31,9 @@ func getArgs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain;charset=utf-8")
 	for index, value := range os.Args {
 		if index > 0 {
-			w.Write([]byte(value + " "))
+			if _, err := w.Write([]byte(value + " ")); err != nil {
+				logrus.Errorf("failed to respond information: %v", err)
+			}
 		}
 
 	}

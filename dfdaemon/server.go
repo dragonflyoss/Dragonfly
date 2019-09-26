@@ -117,7 +117,7 @@ func NewFromConfig(cfg config.Properties) (*Server, error) {
 
 // Start runs dfdaemon's http server.
 func (s *Server) Start() error {
-	proxy.WithDirectHandler(handler.New())(s.proxy)
+	_ = proxy.WithDirectHandler(handler.New())(s.proxy)
 	s.server.Handler = s.proxy
 	if s.server.TLSConfig != nil {
 		logrus.Infof("start dfdaemon https server on %s", s.server.Addr)
