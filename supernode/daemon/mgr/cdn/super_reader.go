@@ -102,7 +102,7 @@ func readHeader(reader io.Reader, pieceMd5 hash.Hash) (uint32, error) {
 		return 0, err
 	}
 	if n != config.PieceHeadSize {
-		return 0, fmt.Errorf("unexected head size: %d", n)
+		return 0, fmt.Errorf("unexpected head size: %d", n)
 	}
 
 	if pieceMd5 != nil {
