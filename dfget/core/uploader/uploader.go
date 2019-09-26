@@ -61,7 +61,7 @@ func WaitForShutdown() {
 	}
 }
 
-// LaunchPeerServer launchs a server to send piece data.
+// LaunchPeerServer launches a server to send piece data.
 func LaunchPeerServer(cfg *config.Config) (int, error) {
 	// avoid data race caused by reading and writing variable 'p2p'
 	// in different routines

@@ -146,7 +146,7 @@ func Execute() {
 
 // getConfigFromViper returns dfdaemon config from the given viper instance
 func getConfigFromViper(cmd *cobra.Command, v *viper.Viper) (*config.Properties, error) {
-	// override supernodes in config file if --node is sepecified in cli.
+	// override supernodes in config file if --node is specified in cli.
 	// use default value if no supernodes is configured in config file
 	if cmd.Flags().Lookup("node").Changed ||
 		len(v.GetStringSlice("supernodes")) == 0 {
