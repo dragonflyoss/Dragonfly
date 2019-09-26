@@ -126,18 +126,6 @@ func (u uploadHeader) newRange(rangeStr string) uploadHeader {
 	return newU
 }
 
-func (u uploadHeader) newNum(num int) uploadHeader {
-	newU := u
-	newU.num = fmt.Sprintf("%d", num)
-	return newU
-}
-
-func (u uploadHeader) newSize(size int) uploadHeader {
-	newU := u
-	newU.size = fmt.Sprintf("%d", size)
-	return newU
-}
-
 // ----------------------------------------------------------------------------
 // upload param
 

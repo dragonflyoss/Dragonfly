@@ -53,9 +53,8 @@ var (
 )
 
 type PeerServerTestSuite struct {
-	workHome    string
-	servicePath string
-	srv         *peerServer
+	workHome string
+	srv      *peerServer
 }
 
 func (s *PeerServerTestSuite) SetUpSuite(c *check.C) {

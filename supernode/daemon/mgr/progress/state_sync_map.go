@@ -102,20 +102,6 @@ func (mmap *stateSyncMap) getAsPieceState(key string) (*pieceState, error) {
 	return nil, errors.Wrapf(errortypes.ErrConvertFailed, "key %s: %v", key, v)
 }
 
-// getAsSuperLoadState returns result as *superLoadState.
-// The ErrConvertFailed error will be returned if the assertion fails.
-func (mmap *stateSyncMap) getAsSuperLoadState(key string) (*superLoadState, error) {
-	v, err := mmap.get(key)
-	if err != nil {
-		return nil, errors.Wrapf(err, "key: %s", key)
-	}
-
-	if value, ok := v.(*superLoadState); ok {
-		return value, nil
-	}
-	return nil, errors.Wrapf(errortypes.ErrConvertFailed, "key %s: %v", key, v)
-}
-
 // remove deletes the key-value pair from the mmap.
 // The ErrEmptyValue error will be returned if the key is empty.
 // And the ErrDataNotFound error will be returned if the key cannot be found.

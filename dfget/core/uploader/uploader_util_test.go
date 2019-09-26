@@ -36,7 +36,6 @@ func init() {
 
 type UploaderUtilTestSuite struct {
 	workHome string
-	host     string
 	ip       string
 	port     int
 	server   *http.Server
