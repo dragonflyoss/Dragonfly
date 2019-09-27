@@ -31,16 +31,25 @@ import (
 var _ mgr.GCMgr = &Manager{}
 
 type metrics struct {
-	gcTasksCount *prometheus.CounterVec
-	gcPeersCount *prometheus.CounterVec
+	gcTasksCount    *prometheus.CounterVec
+	gcPeersCount    *prometheus.CounterVec
+	gcDisksCount    *prometheus.CounterVec
+	lastGCDisksTime *prometheus.GaugeVec
 }
 
 func newMetrics(register prometheus.Registerer) *metrics {
 	return &metrics{
 		gcTasksCount: metricsutils.NewCounter(config.SubsystemSupernode, "gc_tasks_total",
 			"Total number of tasks that have been garbage collected", []string{}, register),
+
 		gcPeersCount: metricsutils.NewCounter(config.SubsystemSupernode, "gc_peers_total",
 			"Total number of peers that have been garbage collected", []string{}, register),
+
+		gcDisksCount: metricsutils.NewCounter(config.SubsystemSupernode, "gc_disks_total",
+			"Total number of garbage collecting the task data in disks", []string{}, register),
+
+		lastGCDisksTime: metricsutils.NewGauge(config.SubsystemSupernode, "last_gc_disks_timestamp_seconds",
+			"Timestamp of the last disk gc", []string{}, register),
 	}
 }
 

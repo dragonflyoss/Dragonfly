@@ -26,6 +26,8 @@ dragonfly_supernode_cdn_download_failed_total          |                        
 dragonfly_supernode_pieces_downloaded_size_bytes_total |                                        | counter   | Total size of pieces downloaded from supernode in bytes.
 dragonfly_supernode_gc_peers_total                     |                                        | counter   | Total number of peers that have been garbage collected.
 dragonfly_supernode_gc_tasks_total                     |                                        | counter   | Total number of tasks that have been garbage collected.
+dragonfly_supernode_gc_disks_total                     |                                        | counter   | Total number of garbage collecting the task data in disks.
+dragonfly_supernode_last_gc_disks_timestamp_seconds    |                                        | gauge     | Timestamp of the last disk gc.
 
 ## Dfdaemon
 
