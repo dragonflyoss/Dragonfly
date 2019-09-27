@@ -7,10 +7,10 @@ This doc contains all the metrics that Dragonfly components currently support. N
 Name                                                   | Labels                                 | Type      | Description
 :----------------------------------------------------- | :--------------------------------------|:--------- | :----------
 dragonfly_supernode_build_info                         | version, revision, goversion, arch, os | gauge     | Build and version information of supernode.
-dragonfly_supernode_http_requests_total                | code, handler, method                  | counter   | Total number of http requests.
-dragonfly_supernode_http_request_duration_seconds      | code, handler, method                  | histogram | HTTP request latency in seconds.
-dragonfly_supernode_http_request_size_bytes            | code, handler, method                  | histogram | HTTP request size in bytes.
-dragonfly_supernode_http_response_size_bytes           | code, handler, method                  | histogram | HTTP response size in bytes.
+dragonfly_supernode_http_requests_total                | code, handler                          | counter   | Total number of http requests.
+dragonfly_supernode_http_request_duration_seconds      | handler                                | histogram | HTTP request latency in seconds.
+dragonfly_supernode_http_request_size_bytes            | handler                                | histogram | HTTP request size in bytes.
+dragonfly_supernode_http_response_size_bytes           | handler                                | histogram | HTTP response size in bytes.
 dragonfly_supernode_peers                              | peer                                   | gauge     | Dragonfly peers, the label peer consists of the hostname and ip address of one peer.
 dragonfly_supernode_tasks                              | cdnstatus                              | gauge     | Dragonfly tasks.
 dragonfly_supernode_tasks_registered_total             |                                        | counter   | Total times of registering new tasks.
