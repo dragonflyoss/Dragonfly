@@ -309,7 +309,7 @@ func (ls *localStorage) statPath(bucket, key string) (string, os.FileInfo, error
 	f, err := os.Stat(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return "", nil, errors.Wrapf(ErrKeyNotFound, "key: %s", key)
+			return "", nil, errors.Wrapf(ErrKeyNotFound, "bucket(%s) key(%s)", bucket, key)
 		}
 		return "", nil, err
 	}

@@ -29,6 +29,7 @@ import (
 
 	"github.com/emirpasic/gods/maps/treemap"
 	godsutils "github.com/emirpasic/gods/utils"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -41,7 +42,10 @@ func (cm *Manager) GetGCTaskIDs(ctx context.Context, taskMgr mgr.TaskMgr) ([]str
 
 	freeDisk, err := cm.cacheStore.GetAvailSpace(ctx, getHomeRawFunc())
 	if err != nil {
-		return nil, err
+		if store.IsKeyNotFound(err) {
+			return nil, nil
+		}
+		return nil, errors.Wrapf(err, "failed to get avail space")
 	}
 	if freeDisk > cm.cfg.YoungGCThreshold {
 		return nil, nil
