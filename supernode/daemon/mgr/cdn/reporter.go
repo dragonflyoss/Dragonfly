@@ -58,7 +58,7 @@ func (re *reporter) reportCache(ctx context.Context, taskID string, metaData *fi
 	}
 
 	success, updateTaskInfo, err := re.processCacheByQuick(ctx, taskID, metaData, breakNum)
-	if err == nil && success == true {
+	if err == nil && success {
 		// it is possible to succeed only if breakNum equals -1
 		return nil, updateTaskInfo, nil
 	}

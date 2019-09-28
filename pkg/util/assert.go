@@ -56,7 +56,7 @@ func IsNil(value interface{}) bool {
 
 // IsTrue returns whether the value is true.
 func IsTrue(value bool) bool {
-	return value == true
+	return value
 }
 
 // IsPositive returns whether the value is a positive number.

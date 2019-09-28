@@ -62,7 +62,7 @@ func (cm *Manager) GetGCTaskIDs(ctx context.Context, taskMgr mgr.TaskMgr) ([]str
 
 	// walkTaskIDs is used to avoid processing multiple times for the same taskID
 	// which is extracted from file name.
-	walkTaskIDs := make(map[string]bool, 0)
+	walkTaskIDs := make(map[string]bool)
 	walkFn := func(path string, info os.FileInfo, err error) error {
 		logrus.Debugf("start to walk path(%s)", path)
 
@@ -159,17 +159,13 @@ func getGCTasks(gapTasks, intervalTasks *treemap.Map) []string {
 
 	for _, v := range gapTasks.Values() {
 		if taskIDs, ok := v.([]string); ok {
-			for _, taskID := range taskIDs {
-				gcTasks = append(gcTasks, taskID)
-			}
+			gcTasks = append(gcTasks, taskIDs...)
 		}
 	}
 
 	for _, v := range intervalTasks.Values() {
 		if taskIDs, ok := v.([]string); ok {
-			for _, taskID := range taskIDs {
-				gcTasks = append(gcTasks, taskID)
-			}
+			gcTasks = append(gcTasks, taskIDs...)
 		}
 	}
 
