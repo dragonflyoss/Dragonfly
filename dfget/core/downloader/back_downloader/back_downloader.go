@@ -102,7 +102,7 @@ func (bd *BackDownloader) Run() error {
 	bd.tempFileName = f.Name()
 	defer f.Close()
 
-	if resp, err = httputils.HTTPGet(bd.URL, netutils.ConvertHeaders(bd.cfg.Header)); err != nil {
+	if resp, err = httputils.HTTPGetWithTLS(bd.URL, netutils.ConvertHeaders(bd.cfg.Header), 0, bd.cfg.Cacerts, bd.cfg.Insecure); err != nil {
 		return err
 	}
 	defer resp.Body.Close()
