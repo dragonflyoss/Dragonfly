@@ -138,3 +138,15 @@ As for naming of metric and label, it is better to follow the best practice. We 
 In order to monitor the over-all status of Dragonfly components, you may need to use other exporters. Prometheus itself has a huge ecosystem, including all kinds of exporters with different utilities. You can check [exporters](https://prometheus.io/docs/instrumenting/exporters/) for more information.
 
 If you want to monitor the io status and network traffic of supernodes, we recommend you to use [node_exporter](https://github.com/prometheus/node_exporter).
+
+### Use Grafana Dashboard
+
+With metrics exposed in supernode, we can view these metrics in Grafana dashboards now by configuring [Prometheus Data Source](https://grafana.com/docs/features/datasources/prometheus/) first.
+
+Example screenshots:
+
+![example_dashboard1.png](../images/dashboards/dashboard1.png)
+
+![example_dashboard2.png](../images/dashboards/dashboard2.png)
+
+You can also import this [dragonfly dashboard](./dragonfly.json) into Grafana or just import it from [Grafana Dashboards](https://grafana.com/grafana/dashboards/10852).
