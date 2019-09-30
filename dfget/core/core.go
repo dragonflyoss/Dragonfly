@@ -109,9 +109,9 @@ func prepare(cfg *config.Config) (err error) {
 	}
 	rv.DataDir = cfg.RV.SystemDataDir
 
-	cfg.Node = adjustSupernodeList(cfg.Node)
+	cfg.Nodes = adjustSupernodeList(cfg.Nodes)
 	if stringutils.IsEmptyStr(rv.LocalIP) {
-		rv.LocalIP = checkConnectSupernode(cfg.Node)
+		rv.LocalIP = checkConnectSupernode(cfg.Nodes)
 	}
 	rv.Cid = getCid(rv.LocalIP, cfg.Sign)
 	rv.TaskFileName = getTaskFileName(rv.RealTarget, cfg.Sign)
@@ -142,7 +142,7 @@ func registerToSuperNode(cfg *config.Config, register regist.SupernodeRegister) 
 		panic("user specified")
 	}
 
-	if len(cfg.Node) == 0 {
+	if len(cfg.Nodes) == 0 {
 		cfg.BackSourceReason = config.BackSourceReasonNodeEmpty
 		panic("supernode empty")
 	}
@@ -202,10 +202,10 @@ func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 
 	if success {
 		logrus.Infof("download SUCCESS from supernode %s cost:%.3fs length:%d",
-			cfg.Node, time.Since(cfg.StartTime).Seconds(), cfg.RV.FileLength)
+			cfg.Nodes, time.Since(cfg.StartTime).Seconds(), cfg.RV.FileLength)
 	} else {
 		logrus.Infof("download FAIL from supernode %s cost:%.3fs length:%d reason:%d",
-			cfg.Node, time.Since(cfg.StartTime).Seconds(), cfg.RV.FileLength, cfg.BackSourceReason)
+			cfg.Nodes, time.Since(cfg.StartTime).Seconds(), cfg.RV.FileLength, cfg.BackSourceReason)
 	}
 	return err
 }
@@ -294,7 +294,7 @@ func reportMetrics(cfg *config.Config, supernodeAPI api.SupernodeAPI, downloadTi
 		Success:          success,
 		TaskID:           taskID,
 	}
-	for _, node := range cfg.Node {
+	for _, node := range cfg.Nodes {
 		resp, err := supernodeAPI.ReportMetrics(node, req)
 		if err != nil {
 			logrus.Errorf("failed to report metrics to supernode %s: %v", node, err)

@@ -116,8 +116,8 @@ func initProperties() {
 		}
 	}
 
-	if cfg.Node == nil {
-		cfg.Node = properties.Nodes
+	if cfg.Nodes == nil {
+		cfg.Nodes = properties.Nodes
 	}
 
 	if cfg.LocalLimit == 0 {
@@ -195,7 +195,7 @@ func initFlags() {
 			"\nin this way, different but actually the same URLs can reuse the same downloading task")
 	flagSet.StringSliceVar(&cfg.Header, "header", nil,
 		"http header, eg: --header='Accept: *' --header='Host: abc'")
-	flagSet.StringSliceVarP(&cfg.Node, "node", "n", nil,
+	flagSet.StringSliceVarP(&cfg.Nodes, "node", "n", nil,
 		"specify the addresses(host:port) of supernodes")
 	flagSet.BoolVar(&cfg.Notbs, "notbs", false,
 		"disable back source downloading for requested file when p2p fails to download it")
@@ -237,7 +237,7 @@ func transFilter(filter string) []string {
 func handleNodes() error {
 	nodes := make([]string, 0)
 
-	for _, v := range cfg.Node {
+	for _, v := range cfg.Nodes {
 		// TODO: check the validity of v.
 		if strings.IndexByte(v, ':') > 0 {
 			nodes = append(nodes, v)
@@ -245,7 +245,7 @@ func handleNodes() error {
 		}
 		nodes = append(nodes, fmt.Sprintf("%s:%d", v, config.DefaultSupernodePort))
 	}
-	cfg.Node = nodes
+	cfg.Nodes = nodes
 	return nil
 }
 

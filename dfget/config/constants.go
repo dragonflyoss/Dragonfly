@@ -52,6 +52,7 @@ const (
 	DefaultNode            = "127.0.0.1"
 	DefaultLocalLimit      = 20 * rate.MB
 	DefaultMinRate         = 64 * rate.KB
+	DefaultTotalLimit      = 20 * rate.MB
 	DefaultClientQueueSize = 6
 )
 

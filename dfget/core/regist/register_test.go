@@ -91,21 +91,21 @@ func (s *RegistTestSuite) TestSupernodeRegister_Register(c *check.C) {
 		}
 	}
 
-	cfg.Node = []string{""}
+	cfg.Nodes = []string{""}
 	f(constants.HTTPError, "connection refused", nil)
 
-	cfg.Node = []string{"x"}
+	cfg.Nodes = []string{"x"}
 	f(501, "invalid source url", nil)
 
-	cfg.Node = []string{"x"}
+	cfg.Nodes = []string{"x"}
 	cfg.URL = "http://taobao.com"
 	f(constants.CodeNeedAuth, "need auth", nil)
 
-	cfg.Node = []string{"x"}
+	cfg.Nodes = []string{"x"}
 	cfg.URL = "http://github.com"
 	f(constants.CodeWaitAuth, "wait auth", nil)
 
-	cfg.Node = []string{"x"}
+	cfg.Nodes = []string{"x"}
 	cfg.URL = "http://lowzj.com"
 	f(constants.Success, "", &RegisterResult{
 		Node: "x", RemainderNodes: []string{}, URL: cfg.URL, TaskID: "a",

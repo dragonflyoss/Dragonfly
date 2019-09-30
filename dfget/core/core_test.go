@@ -94,11 +94,11 @@ func (s *CoreTestSuite) TestRegisterToSupernode(c *check.C) {
 
 	uploader.SetupPeerServerExecutor(nil)
 	cfg.Pattern = config.PatternP2P
-	cfg.Node = []string{"x"}
+	cfg.Nodes = []string{"x"}
 	cfg.URL = "http://x.com"
 	f(config.BackSourceReasonRegisterFail, true, nil)
 
-	cfg.Node = []string{"x"}
+	cfg.Nodes = []string{"x"}
 	cfg.URL = "http://taobao.com"
 	cfg.BackSourceReason = config.BackSourceReasonNone
 }
