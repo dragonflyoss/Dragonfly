@@ -314,3 +314,10 @@ If you are in China,docker container uses UTC time(Coordinated Universal Time) a
 ## How to join Dragonfly as a member
 
 Please check the [CONTRIBUTING.md](CONTRIBUTING.md#join-dragonfly-as-a-member)
+
+## How dfget connect to supernodes in multiple-supernode mode
+
+If supernodes are set in multiple-supernode mode, dfget will connect to one of these supernodes randomly.
+Because dfget will randomize the order of all supernodes it knows and store them in a slice.
+If dfget connects to the first supernode unsuccessfully, it will connect to the second supernode in the slice.
+And so on until all the known supernodes fail to access twice, the dfget will exit with download failure.
