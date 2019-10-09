@@ -330,14 +330,19 @@ func (proxy *Proxy) handleHTTPS(w http.ResponseWriter, r *http.Request) {
 	// We have to wait until the connection is closed
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	http.Serve(&singleUseListener{&customCloseConn{sConn, wg.Done}}, rp)
+	if err := http.Serve(&singleUseListener{&customCloseConn{sConn, wg.Done}}, rp); err != nil {
+		logrus.Errorf("failed to accept incoming HTTP connections: %v", err)
+	}
 	wg.Wait()
 }
 
-func copyAndClose(dst io.WriteCloser, src io.ReadCloser) {
-	io.Copy(dst, src)
-	dst.Close()
-	src.Close()
+func copyAndClose(dst io.WriteCloser, src io.ReadCloser) error {
+	defer src.Close()
+	defer dst.Close()
+	if _, err := io.Copy(dst, src); err != nil {
+		return err
+	}
+	return nil
 }
 
 func copyHeader(dst, src http.Header) {
