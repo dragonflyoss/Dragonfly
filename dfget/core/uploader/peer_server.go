@@ -448,7 +448,6 @@ func (ps *peerServer) waitForShutdown() {
 	if ps.finished == nil {
 		return
 	}
-
 	for {
 		select {
 		case _, notClose := <-ps.finished:

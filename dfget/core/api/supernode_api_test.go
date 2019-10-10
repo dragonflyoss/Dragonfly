@@ -129,28 +129,28 @@ func (s *SupernodeAPITestSuite) TestSupernodeAPI_get(c *check.C) {
 	}
 
 	api := s.api.(*supernodeAPI)
-	f := func(code int, res string, e error) (*testRes, error, string) {
+	f := func(code int, res string, e error) (*testRes, string, error) {
 		s.mock.GetFunc = s.mock.CreateGetFunc(code, []byte(res), e)
 		msg := fmt.Sprintf("code:%d res:%s e:%v", code, res, e)
 		resp := new(testRes)
 		err := api.get("http://localhost", resp)
-		return resp, err, msg
+		return resp, msg, err
 	}
 
-	r, e, m := f(0, "test", nil)
+	r, m, e := f(0, "test", nil)
 	c.Assert(r.A, check.Equals, 0, check.Commentf(m))
 	c.Assert(e.Error(), check.Equals, "0:test", check.Commentf(m))
 
-	r, e, m = f(0, "x", fmt.Errorf("test error"))
+	r, m, e = f(0, "x", fmt.Errorf("test error"))
 	c.Assert(r.A, check.Equals, 0, check.Commentf(m))
 	c.Assert(e.Error(), check.Equals, "test error", check.Commentf(m))
 
-	r, e, m = f(200, "x", nil)
+	r, m, e = f(200, "x", nil)
 	c.Assert(r.A, check.Equals, 0, check.Commentf(m))
 	c.Assert(strings.Contains(e.Error(), "invalid character"),
 		check.Equals, true, check.Commentf(m))
 
-	r, e, m = f(200, `{"A":1}`, nil)
+	r, m, e = f(200, `{"A":1}`, nil)
 	c.Assert(r.A, check.Equals, 1, check.Commentf(m))
 	c.Assert(e, check.IsNil, check.Commentf(m))
 

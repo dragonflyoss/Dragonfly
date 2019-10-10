@@ -140,7 +140,7 @@ func (pc *PowerClient) downloadPiece() (content *bytes.Buffer, e error) {
 	if pc.total, e = content.ReadFrom(limitReader); e != nil {
 		return nil, e
 	}
-	pc.readCost = time.Now().Sub(startTime)
+	pc.readCost = time.Since(startTime)
 
 	// Verify md5 code
 	if realMd5 := limitReader.Md5(); realMd5 != pieceMD5 {

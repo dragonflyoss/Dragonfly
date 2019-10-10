@@ -70,7 +70,7 @@ type Manager struct {
 func NewManager(cfg *config.Config, gcManager mgr.GCMgr, cdnManager mgr.CDNMgr) (*Manager, error) {
 	return &Manager{
 		cfg:                cfg,
-		handlers:           make(map[string]Handler, 0),
+		handlers:           make(map[string]Handler),
 		gcManager:          gcManager,
 		cdnManager:         cdnManager,
 		pieceErrChan:       make(chan *types.PieceErrorRequest, ErrHandlerChanSize),
