@@ -67,8 +67,14 @@ type Plugin interface {
 	Name() string
 }
 
+// BuilderConfig is the config struct to construct the plugin instant.
+type BuilderConfig struct {
+	Conf  string
+	Other interface{}
+}
+
 // Builder is a function that creates a new plugin instant with the giving conf.
-type Builder func(conf string) (Plugin, error)
+type Builder func(builderConfig BuilderConfig) (Plugin, error)
 
 // Repository stores data related to plugin.
 type Repository interface {
