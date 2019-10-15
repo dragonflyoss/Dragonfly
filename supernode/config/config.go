@@ -138,9 +138,7 @@ type BaseProperties struct {
 	SchedulerCorePoolSize int `yaml:"schedulerCorePoolSize"`
 
 	// DownloadPath specifies the path where to store downloaded files from source address.
-	// This path can be set beyond BaseDir, such as taking advantage of a different disk from BaseDir's.
-	// default: $BaseDir/downloads
-	DownloadPath string `yaml:"downloadPath"`
+	DownloadPath string
 
 	// PeerUpLimit is the upload limit of a peer. When dfget starts to play a role of peer,
 	// it can only stand PeerUpLimit upload tasks from other peers.
