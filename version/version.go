@@ -123,9 +123,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	data, err := json.Marshal(DFVersion)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error encoding JSON: %s", err), http.StatusInternalServerError)
+	} else if _, err := w.Write(data); err != nil {
+		http.Error(w, fmt.Sprintf("error writing the data to the connection: %s", err), http.StatusInternalServerError)
 	} else {
 		w.WriteHeader(http.StatusOK)
-		w.Write(data)
 	}
 }
 
