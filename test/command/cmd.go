@@ -60,6 +60,7 @@ func init() {
 	supernodePath = fp.Join(binDir, "supernode")
 }
 
+// checkExist checks the path whether is existing.
 func checkExist(s string) {
 	if _, err := os.Stat(s); err != nil {
 		panic(fmt.Sprintf("please execute 'make build' before starting "+
@@ -213,7 +214,9 @@ func (s *Starter) KillAll() {
 func (s *Starter) Clean() {
 	s.KillAll()
 	if s.Home != "" {
-		os.RemoveAll(s.Home)
+		if err := os.RemoveAll(s.Home); err != nil {
+			fmt.Printf("failed to clean all temporary directories and processes: %s", s.Home)
+		}
 	}
 }
 
@@ -223,14 +226,18 @@ func (s *Starter) kill(cmd *exec.Cmd) {
 		return
 	}
 	if cmd.ProcessState == nil {
-		cmd.Process.Signal(os.Interrupt)
+		if err := cmd.Process.Signal(os.Interrupt); err != nil {
+			fmt.Printf("failed to send a signal to the Process: %v", err)
+		}
 	}
 	if v, ok := s.listMap[cmd]; ok {
 		s.cmdList.Remove(v)
 		delete(s.listMap, cmd)
 	}
 	if v, ok := s.fileSrv[cmd]; ok {
-		v.Shutdown(context.Background())
+		if err := v.Shutdown(context.Background()); err != nil {
+			fmt.Printf("failed to shutdown the server: %v", err)
+		}
 		delete(s.fileSrv, cmd)
 	}
 }
