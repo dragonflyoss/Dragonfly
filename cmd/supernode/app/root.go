@@ -51,6 +51,17 @@ var rootCmd = &cobra.Command{
 	Args:         cobra.NoArgs,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// load config file.
+		if err := readConfigFile(supernodeViper, cmd); err != nil {
+			return errors.Wrap(err, "read config file")
+		}
+
+		// get config from viper.
+		cfg, err := getConfigFromViper(supernodeViper)
+		if err != nil {
+			return errors.Wrap(err, "get config from viper")
+		}
+
 		// create home dir
 		if err := fileutils.CreateDirectory(supernodeViper.GetString("base.homeDir")); err != nil {
 			return fmt.Errorf("failed to create home dir %s: %v", supernodeViper.GetString("base.homeDir"), err)
@@ -65,17 +76,6 @@ var rootCmd = &cobra.Command{
 		dfgetLogger := logrus.New()
 		if err := initLog(dfgetLogger, "dfget.log"); err != nil {
 			return err
-		}
-
-		// load config file
-		if err := readConfigFile(supernodeViper, cmd); err != nil {
-			return errors.Wrap(err, "read config file")
-		}
-
-		// get config from viper
-		cfg, err := getConfigFromViper(supernodeViper)
-		if err != nil {
-			return errors.Wrap(err, "get config from viper")
 		}
 
 		// set supernode advertise ip
