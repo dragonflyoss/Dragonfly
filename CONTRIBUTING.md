@@ -147,7 +147,7 @@ PR is the only way to make change to Dragonfly project files. To help reviewers 
 As a contributor, if you want to make any contribution to Dragonfly project, we should reach an agreement on the version of tools used in the development environment.
 Here are some dependents with specific version:
 
-* golang : v1.12.6
+* golang : v1.12.10
 * swagger : 0.19.0
 * markdownlint : v0.5.0
 * misspell : latest

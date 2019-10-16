@@ -77,7 +77,7 @@ In order to run unit-test or integration test, install go and configure go envir
 
 ``` shell
 # go version
-go version go1.12.6 linux/amd64
+go version go1.12.10 linux/amd64
 # which go
 /usr/local/go/bin/go
 # env |grep GO
