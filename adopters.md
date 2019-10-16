@@ -29,4 +29,5 @@ Below are the adoptors of project Dragonfly. If you are using to Dragonfly to im
 <a href="https://www.sogou.com/" border="0" target="_blank"><img alt="sogou" src="docs/images/adoptor_logo/sogou.jpg" height="70"></a>&nbsp; &nbsp; &nbsp;<br/><br/>
 <a href="www.chinaunicom.com.cn" border="0" target="_blank"><img alt="ChinaUnicom" src="docs/images/adoptor_logo/ChinaUnicom.png" height="70"></a>&nbsp; &nbsp; &nbsp;
 <a href="https://www.daocloud.io/" border="0" target="_blank"><img alt="DaoCloud" src="docs/images/adoptor_logo/DaoCloud.png" height="70"></a>&nbsp; &nbsp; &nbsp;
+<a href="https://www.360.cn//" border="0" target="_blank"><img alt="Qihoo360" src="docs/images/adoptor_logo/qihoo-360.jpg" height="70"></a>&nbsp; &nbsp; &nbsp;
 
