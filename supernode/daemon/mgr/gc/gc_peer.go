@@ -27,8 +27,15 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	// gcPeersTimeout specifies the timeout for peers gc.
+	// If the actual execution time exceeds this threshold, a warning will be thrown.
+	gcPeersTimeout = 2.0 * time.Second
+)
+
 func (gcm *Manager) gcPeers(ctx context.Context) {
 	var gcPeerCount int
+	startTime := time.Now()
 	peerIDs := gcm.peerMgr.GetAllPeerIDs(ctx)
 
 	for _, peerID := range peerIDs {
@@ -51,7 +58,13 @@ func (gcm *Manager) gcPeers(ctx context.Context) {
 		gcPeerCount++
 	}
 
+	// slow GC detected, report it with a log warning
+	if timeDuring := time.Since(startTime); timeDuring > gcPeersTimeout {
+		logrus.Warnf("gc peers:%d cost:%.3f", gcPeerCount, timeDuring.Seconds())
+	}
+
 	gcm.metrics.gcPeersCount.WithLabelValues().Add(float64(gcPeerCount))
+
 	logrus.Infof("gc peers: success to gc peer count(%d), remainder count(%d)", gcPeerCount, len(peerIDs)-gcPeerCount)
 }
 
