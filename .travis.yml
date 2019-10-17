@@ -9,8 +9,3 @@ script:
 
 # after_success:
 #   - bash <(curl -s https://codecov.io/bash) || echo "Failed to report code coverage!"
-
-cache:
-  directories:
-    - .autoconf
-    - $HOME/.m2
