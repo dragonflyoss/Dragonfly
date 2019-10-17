@@ -26,8 +26,15 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	// gcTasksTimeout specifies the timeout for tasks gc.
+	// If the actual execution time exceeds this threshold, a warning will be thrown.
+	gcTasksTimeout = 2.0 * time.Second
+)
+
 func (gcm *Manager) gcTasks(ctx context.Context) {
 	var removedTaskCount int
+	startTime := time.Now()
 
 	// get all taskIDs and the corresponding accessTime
 	taskAccessMap, err := gcm.taskMgr.GetAccessTime(ctx)
@@ -53,7 +60,13 @@ func (gcm *Manager) gcTasks(ctx context.Context) {
 		removedTaskCount++
 	}
 
+	// slow GC detected, report it with a log warning
+	if timeDuring := time.Since(startTime); timeDuring > gcTasksTimeout {
+		logrus.Warnf("gc tasks:%d cost:%.3f", removedTaskCount, timeDuring.Seconds())
+	}
+
 	gcm.metrics.gcTasksCount.WithLabelValues().Add(float64(removedTaskCount))
+
 	logrus.Infof("gc tasks: success to full gc task count(%d), remainder count(%d)", removedTaskCount, totalTaskNums-removedTaskCount)
 }
 

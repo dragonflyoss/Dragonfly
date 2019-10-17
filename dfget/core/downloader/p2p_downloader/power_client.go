@@ -38,6 +38,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	// downloadPieceTimeout specifies the timeout for piece downloading.
+	// If the actual execution time exceeds this threshold, a warning will be thrown.
+	downloadPieceTimeout = 2.0 * time.Second
+)
+
 // PowerClient downloads file from dragonfly.
 type PowerClient struct {
 	// taskID is a string which represents a unique task.
@@ -149,9 +155,9 @@ func (pc *PowerClient) downloadPiece() (content *bytes.Buffer, e error) {
 			pc.pieceTask.Range, pieceMD5, realMd5)
 	}
 
-	if timeDuring := time.Since(startTime).Seconds(); timeDuring > 2.0 {
+	if timeDuring := time.Since(startTime); timeDuring > downloadPieceTimeout {
 		logrus.Warnf("client range:%s cost:%.3f from peer:%s, readCost:%.3f, length:%d",
-			pc.pieceTask.Range, timeDuring, dstIP, pc.readCost.Seconds(), pc.total)
+			pc.pieceTask.Range, timeDuring.Seconds(), dstIP, pc.readCost.Seconds(), pc.total)
 	}
 	return content, nil
 }
