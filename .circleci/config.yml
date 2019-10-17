@@ -7,7 +7,7 @@ jobs:
     docker:
       # this image is build from Dockerfile
       # https://github.com/pouchcontainer/pouchlinter/blob/master/Dockerfile
-      - image: pouchcontainer/pouchlinter:v0.2.3
+      - image: pouchcontainer/pouchlinter:v0.2.4
     working_directory: /go/src/github.com/dragonflyoss/Dragonfly
     steps:
       - checkout
