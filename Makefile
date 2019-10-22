@@ -16,16 +16,20 @@
 
 # You can assign 1 to USE_DOCKER so that you can build components of Dragonfly
 # with docker.
-USE_DOCKER?=0 # Default: build components in the local environment.
+USE_DOCKER ?= 0 # Default: build components in the local environment.
 
 # Assign the Dragonfly version to DF_VERSION as the image tag.
-DF_VERSION?=latest # Default: use latest as the image tag which built by docker.
+DF_VERSION ?= latest # Default: use latest as the image tag which built by docker.
 
 # Default: in order to use go mod we have to export GO111MODULE=on.
-export GO111MODULE=on
+export GO111MODULE := on
 
-# Default: use GOPROXY to speed up downloading go mod dependency.
-export GOPROXY=https://goproxy.io
+# Use GOPROXY environment variable if set
+GOPROXY := $(shell go env GOPROXY)
+ifeq ($(GOPROXY),)
+    GOPROXY := https://goproxy.io
+endif
+export GOPROXY
 
 help:  ## Display this help information
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n"} /^[a-zA-Z_-]+:.*?##/ { printf " \033[36m make %-22s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)

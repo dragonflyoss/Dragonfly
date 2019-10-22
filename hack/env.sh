@@ -28,6 +28,3 @@ GOOS=$(go env GOOS)
 GOARCH=$(go env GOARCH)
 export GOOS
 export GOARCH
-
-export GO111MODULE=on
-export GOPROXY=https://goproxy.io
