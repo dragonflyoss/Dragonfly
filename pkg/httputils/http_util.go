@@ -18,8 +18,11 @@ package httputils
 
 import (
 	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"reflect"
@@ -210,16 +213,37 @@ func Do(url string, headers map[string]string, timeout time.Duration) (string, e
 
 // HTTPGet sends an HTTP GET request with headers.
 func HTTPGet(url string, headers map[string]string) (*http.Response, error) {
-	return HTTPWithHeaders("GET", url, headers, 0)
+	return HTTPWithHeaders("GET", url, headers, 0, nil)
 }
 
 // HTTPGetTimeout sends an HTTP GET request with timeout.
 func HTTPGetTimeout(url string, headers map[string]string, timeout time.Duration) (*http.Response, error) {
-	return HTTPWithHeaders("GET", url, headers, timeout)
+	return HTTPWithHeaders("GET", url, headers, timeout, nil)
+}
+
+// HTTPGetWithTLS sends an HTTP GET request with TLS config.
+func HTTPGetWithTLS(url string, headers map[string]string, timeout time.Duration, cacerts []string, insecure bool) (*http.Response, error) {
+	roots := x509.NewCertPool()
+	appendSuccess := false
+	for _, certPath := range cacerts {
+		certBytes, err := ioutil.ReadFile(certPath)
+		if err != nil {
+			return nil, err
+		}
+		appendSuccess = appendSuccess || roots.AppendCertsFromPEM(certBytes)
+	}
+
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: insecure,
+	}
+	if appendSuccess {
+		tlsConfig.RootCAs = roots
+	}
+	return HTTPWithHeaders("GET", url, headers, timeout, tlsConfig)
 }
 
 // HTTPWithHeaders sends an HTTP request with headers and specified method.
-func HTTPWithHeaders(method, url string, headers map[string]string, timeout time.Duration) (*http.Response, error) {
+func HTTPWithHeaders(method, url string, headers map[string]string, timeout time.Duration, tlsConfig *tls.Config) (*http.Response, error) {
 	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
 		return nil, err
@@ -229,7 +253,16 @@ func HTTPWithHeaders(method, url string, headers map[string]string, timeout time
 		req.Header.Add(k, v)
 	}
 
-	c := &http.Client{}
+	var transport http.RoundTripper
+	if tlsConfig != nil {
+		transport = &http.Transport{
+			TLSClientConfig: tlsConfig,
+		}
+	}
+
+	c := &http.Client{
+		Transport: transport,
+	}
 	if timeout > 0 {
 		c.Timeout = timeout
 	}
