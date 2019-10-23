@@ -17,6 +17,7 @@
 package app
 
 import (
+	"os"
 	"path"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
@@ -64,10 +65,19 @@ func initServerFlags() {
 		"be verbose")
 }
 
+func initCfgFromEnvs() {
+	if ip := os.Getenv(config.EnvPeerServerIP); len(ip) > 0 {
+		cfg.RV.LocalIP = ip
+	}
+}
+
 func runServer() error {
 	if err := initServerLog(); err != nil {
 		return err
 	}
+
+	initCfgFromEnvs()
+
 	// launch a peer server as a uploader server
 	port, err := uploader.LaunchPeerServer(cfg)
 	if err != nil {

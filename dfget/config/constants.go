@@ -56,6 +56,11 @@ const (
 	DefaultClientQueueSize = 6
 )
 
+/* environment variables */
+const (
+	EnvPeerServerIP = "LOCAL_IP"
+)
+
 /* http headers */
 const (
 	StrRange         = "Range"
