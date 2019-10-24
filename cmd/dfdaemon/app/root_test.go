@@ -76,7 +76,7 @@ func (ts *rootTestSuite) TestNodeFlag() {
 		r.Equal([]string{"127.0.0.1:6666"}, cfg.SuperNodes)
 	}
 
-	// flag not set, config file doesn't exist, should use default
+	// flag not set, config file doesn't exist, should be nil
 	{
 		v := viper.New()
 		v.SetFs(fs)
@@ -86,7 +86,7 @@ func (ts *rootTestSuite) TestNodeFlag() {
 		r.NotNil(readConfigFile(v, rootCmd))
 		cfg, err := getConfigFromViper(rootCmd, v)
 		r.Nil(err)
-		r.Equal([]string{"127.0.0.1:8002"}, cfg.SuperNodes)
+		r.EqualValues([]string(nil), cfg.SuperNodes)
 	}
 
 	// when --node flag is set, should always use the flag

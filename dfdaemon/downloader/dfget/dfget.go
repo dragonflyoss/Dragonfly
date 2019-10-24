@@ -77,7 +77,9 @@ func (dfGetter *DFGetter) getCommand(
 	}
 	add("-s", dfGetter.config.RateLimit)
 	add("--totallimit", dfGetter.config.RateLimit)
-	add("--node", strings.Join(dfGetter.config.SuperNodes, ","))
+	if len(dfGetter.config.SuperNodes) > 0 {
+		add("--node", strings.Join(dfGetter.config.SuperNodes, ","))
+	}
 
 	for key, value := range header {
 		// discard HTTP host header for backing to source successfully
