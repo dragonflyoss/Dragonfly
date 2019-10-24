@@ -111,7 +111,7 @@ func (gcm *Manager) gcCIDsByTaskID(ctx context.Context, taskID string) {
 
 func (gcm *Manager) gcCDNByTaskID(ctx context.Context, taskID string, full bool) {
 	if err := gcm.cdnMgr.Delete(ctx, taskID, full); err != nil {
-		logrus.Errorf("gc task: failed to gc cdn meta taskID(%s): %v", taskID, err)
+		logrus.Errorf("gc task: failed to gc cdn meta taskID(%s) full(%t): %v", taskID, full, err)
 	}
 }
 

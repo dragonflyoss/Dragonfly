@@ -264,3 +264,45 @@ func (s *Server) reportServiceDown(ctx context.Context, rw http.ResponseWriter, 
 		Code: constants.CodeGetPeerDown,
 	})
 }
+
+func (s *Server) reportPieceError(ctx context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
+	logrus.Warnf("get report piece error request %v", req)
+
+	params := req.URL.Query()
+	taskID := params.Get("taskId")
+	pieceRange := params.Get("range")
+	srcCid := params.Get("srcCid")
+	dstCid := params.Get("dstCid")
+	dstIP := params.Get("dstIp")
+	realMd5 := params.Get("realMd5")
+	expectedMd5 := params.Get("expectedMd5")
+	errorType := params.Get("errorType")
+
+	// get peerID according to the CID and taskID
+	dstDfgetTask, err := s.DfgetTaskMgr.Get(ctx, dstCid, taskID)
+	if err != nil {
+		return nil
+	}
+
+	request := &types.PieceErrorRequest{
+		DstIP:       dstIP,
+		DstPid:      dstDfgetTask.PeerID,
+		ErrorType:   errorType,
+		Range:       pieceRange,
+		ExpectedMd5: expectedMd5,
+		RealMd5:     realMd5,
+		SrcCid:      srcCid,
+		TaskID:      taskID,
+	}
+
+	if stringutils.IsEmptyStr(request.DstPid) {
+		return errors.Wrap(errortypes.ErrEmptyValue, "dstPid")
+	}
+
+	if err := s.PieceErrorMgr.HandlePieceError(ctx, request); err != nil {
+		return err
+	}
+
+	rw.WriteHeader(http.StatusOK)
+	return nil
+}
