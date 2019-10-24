@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"os"
 	"os/user"
-	"path"
 	"path/filepath"
 	"strings"
 	"syscall"
@@ -77,6 +76,10 @@ type Properties struct {
 	// It is only useful when the Pattern equals "source".
 	// The default value is 6.
 	ClientQueueSize int `yaml:"clientQueueSize" json:"clientQueueSize,omitempty"`
+
+	// WorkHome work home path,
+	// default: `$HOME/.small-dragonfly`.
+	WorkHome string `yaml:"workHome" json:"workHome,omitempty"`
 }
 
 // NewProperties creates a new properties with default values.
@@ -204,10 +207,6 @@ type Config struct {
 	// Username of the system currently logged in.
 	User string `json:"-"`
 
-	// WorkHome work home path,
-	// default: `$HOME/.small-dragonfly`.
-	WorkHome string `json:"-"`
-
 	// Config file paths,
 	// default:["/etc/dragonfly/dfget.yml","/etc/dragonfly.conf"].
 	//
@@ -237,17 +236,12 @@ func NewConfig() *Config {
 	cfg.Sign = fmt.Sprintf("%d-%.3f",
 		os.Getpid(), float64(time.Now().UnixNano())/float64(time.Second))
 
-	// TODO: Use parameters instead of currentUser.HomeDir.
 	currentUser, err := user.Current()
 	if err != nil {
 		printer.Println(fmt.Sprintf("get user error: %s", err))
 		os.Exit(CodeGetUserError)
 	}
-
 	cfg.User = currentUser.Username
-	cfg.WorkHome = path.Join(currentUser.HomeDir, ".small-dragonfly")
-	cfg.RV.MetaPath = path.Join(cfg.WorkHome, "meta", "host.meta")
-	cfg.RV.SystemDataDir = path.Join(cfg.WorkHome, "data")
 	cfg.RV.FileLength = -1
 	cfg.ConfigFiles = []string{DefaultYamlConfigFile, DefaultIniConfigFile}
 	return cfg

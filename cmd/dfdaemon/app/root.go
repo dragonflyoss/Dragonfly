@@ -92,7 +92,8 @@ func init() {
 	rf.String("registry", "https://index.docker.io", "registry mirror url, which will override the registry mirror settings in the config file if presented")
 
 	// dfget download config
-	rf.String("localrepo", filepath.Join(os.Getenv("HOME"), ".small-dragonfly/dfdaemon/data/"), "temp output dir of dfdaemon")
+	rf.String("localrepo", "", "temp output dir of dfdaemon")
+	rf.String("workHome", filepath.Join(os.Getenv("HOME"), ".small-dragonfly"), "the work home directory of dfdaemon.")
 	rf.String("dfpath", defaultDfgetPath, "dfget path")
 	rf.Var(netutils.NetLimit(), "ratelimit", "net speed limit")
 	rf.StringSlice("node", []string{"127.0.0.1:8002"}, "specify the addresses(host:port) of supernodes that will be passed to dfget.")
@@ -165,6 +166,11 @@ func getConfigFromViper(cmd *cobra.Command, v *viper.Viper) (*config.Properties,
 		)
 	}); err != nil {
 		return nil, errors.Wrap(err, "unmarshal yaml")
+	}
+
+	// use `{WorkHome}/dfdaemon/data/` as repo dir if localrepo is not configured.
+	if cfg.DFRepo == "" {
+		cfg.DFRepo = filepath.Join(cfg.WorkHome, "dfdaemon/data/")
 	}
 
 	return &cfg, cfg.Validate()

@@ -72,12 +72,15 @@ func initDfdaemon(cfg config.Properties) error {
 
 // initLogger initializes the global logrus logger.
 func initLogger(cfg config.Properties) error {
-	current, err := user.Current()
-	if err != nil {
-		return errors.Wrap(err, "get current user")
+	if cfg.WorkHome == "" {
+		current, err := user.Current()
+		if err != nil {
+			return errors.Wrap(err, "get current user")
+		}
+		cfg.WorkHome = filepath.Join(current.HomeDir, ".small-dragonfly")
 	}
 
-	logFilePath := filepath.Join(current.HomeDir, ".small-dragonfly/logs/dfdaemon.log")
+	logFilePath := filepath.Join(cfg.WorkHome, "logs", "dfdaemon.log")
 
 	opts := []dflog.Option{
 		dflog.WithLogFile(logFilePath),

@@ -79,6 +79,7 @@ func (pe *peerServerExecutor) StartPeerServerProcess(cfg *config.Config) (port i
 		"--port", strconv.Itoa(cfg.RV.PeerPort),
 		"--meta", cfg.RV.MetaPath,
 		"--data", cfg.RV.SystemDataDir,
+		"--home", cfg.WorkHome,
 		"--expiretime", cfg.RV.DataExpireTime.String(),
 		"--alivetime", cfg.RV.ServerAliveTime.String())
 	if cfg.Verbose {

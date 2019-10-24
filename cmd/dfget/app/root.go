@@ -19,6 +19,7 @@ package app
 import (
 	"fmt"
 	"os"
+	"os/user"
 	"path"
 	"strings"
 	"time"
@@ -34,6 +35,12 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
+
+type propertiesResult struct {
+	prop     *config.Properties
+	fileName string
+	err      error
+}
 
 var filter string
 
@@ -64,15 +71,25 @@ func init() {
 
 // runDfget does some init operations and starts to download.
 func runDfget() error {
+	// get config from property files
+	propResults := initProperties()
+
 	// initialize logger
 	if err := initClientLog(); err != nil {
 		return err
 	}
 
-	cfg.Filter = transFilter(filter)
+	// TODO: make the result print of initproperties elegant.
+	// print property load result
+	for _, propRst := range propResults {
+		if propRst.err != nil {
+			logrus.Debugf("initProperties[%s] fail: %v", propRst.fileName, propRst.err)
+			continue
+		}
+		logrus.Debugf("initProperties[%s] success: %v", propRst.fileName, propRst.prop)
+	}
 
-	// get config from property files
-	initProperties()
+	cfg.Filter = transFilter(filter)
 
 	if err := handleNodes(); err != nil {
 		return err
@@ -105,15 +122,19 @@ func checkParameters() error {
 }
 
 // initProperties loads config from property files.
-func initProperties() {
+func initProperties() []*propertiesResult {
+	var results []*propertiesResult
 	properties := config.NewProperties()
 	for _, v := range cfg.ConfigFiles {
-		if err := properties.Load(v); err == nil {
-			logrus.Debugf("initProperties[%s] success: %v", v, properties)
+		var err error
+		if err = properties.Load(v); err == nil {
 			break
-		} else {
-			logrus.Debugf("initProperties[%s] fail: %v", v, err)
 		}
+		results = append(results, &propertiesResult{
+			prop:     properties,
+			fileName: v,
+			err:      err,
+		})
 	}
 
 	if cfg.Nodes == nil {
@@ -135,6 +156,24 @@ func initProperties() {
 	if cfg.ClientQueueSize == 0 {
 		cfg.ClientQueueSize = properties.ClientQueueSize
 	}
+
+	currentUser, err := user.Current()
+	if err != nil {
+		printer.Println(fmt.Sprintf("get user error: %s", err))
+		os.Exit(config.CodeGetUserError)
+	}
+	cfg.User = currentUser.Username
+	if cfg.WorkHome == "" {
+		cfg.WorkHome = properties.WorkHome
+		if cfg.WorkHome == "" {
+			cfg.WorkHome = path.Join(currentUser.HomeDir, ".small-dragonfly")
+		}
+	}
+	cfg.RV.MetaPath = path.Join(cfg.WorkHome, "meta", "host.meta")
+	cfg.RV.SystemDataDir = path.Join(cfg.WorkHome, "data")
+	cfg.RV.FileLength = -1
+
+	return results
 }
 
 // initClientLog initializes dfget client's logger.
@@ -213,6 +252,8 @@ func initFlags() {
 		"show log on console, it's conflict with '--showbar'")
 	flagSet.BoolVar(&cfg.Verbose, "verbose", false,
 		"be verbose")
+	flagSet.StringVar(&cfg.WorkHome, "home", cfg.WorkHome,
+		"the work home directory of dfget")
 
 	// pass to peer server which as a uploader server
 	flagSet.StringVar(&cfg.RV.LocalIP, "ip", "",
