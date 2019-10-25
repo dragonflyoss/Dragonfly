@@ -95,7 +95,7 @@ func init() {
 	rf.String("localrepo", filepath.Join(os.Getenv("HOME"), ".small-dragonfly/dfdaemon/data/"), "temp output dir of dfdaemon")
 	rf.String("dfpath", defaultDfgetPath, "dfget path")
 	rf.Var(netutils.NetLimit(), "ratelimit", "net speed limit")
-	rf.StringSlice("node", []string{"127.0.0.1:8002"}, "specify the addresses(host:port) of supernodes that will be passed to dfget.")
+	rf.StringSlice("node", nil, "specify the addresses(host:port) of supernodes that will be passed to dfget.")
 
 	exitOnError(bindRootFlags(viper.GetViper()), "bind root command flags")
 }
