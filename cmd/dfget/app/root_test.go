@@ -37,7 +37,7 @@ type dfgetSuit struct {
 
 func (suit *dfgetSuit) Test_initFlagsNoArguments() {
 	initProperties()
-	suit.Equal(cfg.Nodes, []string{"127.0.0.1"})
+	suit.Equal(cfg.Nodes, []string{"127.0.0.1:8002"})
 	suit.Equal(cfg.LocalLimit, 20*rate.MB)
 	suit.Equal(cfg.TotalLimit, 20*rate.MB)
 	suit.Equal(cfg.Notbs, false)
@@ -69,11 +69,11 @@ func (suit *dfgetSuit) Test_initProperties() {
 		{configs: nil,
 			expected: config.NewProperties()},
 		{configs: []string{iniFile, yamlFile},
-			expected: newProp(0, 0, 0, "1.1.1.1")},
+			expected: newProp(0, 0, 0, "1.1.1.1:8002")},
 		{configs: []string{yamlFile, iniFile},
-			expected: newProp(int(rate.KB*1000), int(rate.KB*1000), 0, "1.1.1.2")},
+			expected: newProp(int(rate.KB*1000), int(rate.KB*1000), 0, "1.1.1.2:8002")},
 		{configs: []string{filepath.Join(dirName, "x"), yamlFile},
-			expected: newProp(int(rate.KB*1000), int(rate.KB*1000), 0, "1.1.1.2")},
+			expected: newProp(int(rate.KB*1000), int(rate.KB*1000), 0, "1.1.1.2:8002")},
 	}
 
 	for _, v := range cases {
@@ -84,7 +84,7 @@ func (suit *dfgetSuit) Test_initProperties() {
 			"--locallimit", v.expected.LocalLimit.String(),
 			"--totallimit", v.expected.TotalLimit.String()})
 		initProperties()
-		suit.EqualValues(cfg.Nodes, v.expected.Nodes)
+		suit.EqualValues(cfg.Nodes, config.NodeWightSlice2StringSlice(v.expected.Supernodes))
 		suit.Equal(cfg.LocalLimit, v.expected.LocalLimit)
 		suit.Equal(cfg.TotalLimit, v.expected.TotalLimit)
 		suit.Equal(cfg.ClientQueueSize, v.expected.ClientQueueSize)
@@ -134,7 +134,7 @@ func TestSuite(t *testing.T) {
 func newProp(local int, total int, size int, nodes ...string) *config.Properties {
 	p := config.NewProperties()
 	if nodes != nil {
-		p.Nodes = nodes
+		p.Supernodes, _ = config.ParseNodesSlice(nodes)
 	}
 	if local != 0 {
 		p.LocalLimit = rate.Rate(local)

@@ -54,6 +54,7 @@ const (
 	DefaultMinRate         = 64 * rate.KB
 	DefaultTotalLimit      = 20 * rate.MB
 	DefaultClientQueueSize = 6
+	DefaultSupernodeWeight = 1
 )
 
 /* http headers */
