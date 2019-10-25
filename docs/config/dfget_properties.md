@@ -9,9 +9,9 @@ The following startup parameters are supported for `dfget`
 | Parameter | Description |
 | ------------- | ------------- |
 | nodes	| Nodes specify supernodes with format host:port=weight where the host is necessary, the port(default: 8002) and the weight(default:1) are optional. |
-| localLimit | LocalLimit rate limit about a single download task,format: 20M/m/K/k |
-| minRate | Minimal rate about a single download task. it's type is integer. The format of `M/m/K/k` will be supported soon |
-| totalLimit | TotalLimit rate limit about the whole host,format: 20M/m/K/k |
+| localLimit | LocalLimit rate limit about a single download task,format: G(B)/g/M(B)/m/K(B)/k/B. |
+| minRate | Minimal rate about a single download task,format: G(B)/g/M(B)/m/K(B)/k/B. |
+| totalLimit | TotalLimit rate limit about the whole host includes download and upload, format: G(B)/g/M(B)/m/K(B)/k/B |
 | clientQueueSize | ClientQueueSize is the size of client queue, which controls the number of pieces that can be processed simultaneously. It is only useful when the Pattern equals "source". The default value is 6 |
 
 ## Examples

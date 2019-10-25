@@ -2,15 +2,12 @@
 # You can configure your supernode by change the parameter according your requirement.
 ---
 base:
-  # AdvertiseIP is used to set the ip that we advertise to other peer in the p2p-network.
-  # By default, the first non-loop address is advertised.
-  advertiseIP: 127.0.0.1
-
   # ListenPort is the port supernode server listens on.
   # default: 8002
-  listenPort: 8005
+  listenPort: 8002
 
   # DownloadPort is the port for download files from supernode.
+  # And you should start a file server firstly which listens on the download port.
   # default: 8001
   downloadPort: 8001
 
@@ -24,11 +21,6 @@ base:
   # Note: source file downloading is into pieces via range attribute set in HTTP header.
   # default: 10
   schedulerCorePoolSize: 10
-
-  # DownloadPath specifies the path where to store downloaded files from source address.
-  # This path can be set beyond BaseDir, such as taking advantage of a different disk from BaseDir's.
-  # default: $BaseDir/downloads
-  downloadPath: /home/admin/supernode/downloads
 
   # PeerUpLimit is the upload limit of a peer. When dfget starts to play a role of peer,
   # it can only stand PeerUpLimit upload tasks from other peers.
@@ -57,10 +49,6 @@ base:
   # default: 5
   failureCountLimit: 5
 
-  # LinkLimit is set for supernode to limit every piece download network speed.
-  # default: 20 MB, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte.
-  linkLimit: 20M
-
   # SystemReservedBandwidth is the network bandwidth reserved for system software.
   # default: 20 MB, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte.
   systemReservedBandwidth: 20M
@@ -78,6 +66,7 @@ base:
   debug: false
 
   # FailAccessInterval is the interval time after failed to access the URL.
+  # If a task failed to be downloaded from the source, it will not be retried in the time since the last failure.
   # default: 3m
   failAccessInterval: 3m
 
@@ -117,5 +106,3 @@ base:
   # IntervalThreshold is the threshold of the interval at which the task file is accessed.
   # default: 2h0m0s
   IntervalThreshold: 2h
-plugins: {}
-storages: {}
