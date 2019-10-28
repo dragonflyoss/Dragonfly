@@ -179,7 +179,7 @@ func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 
 	timeout := netutils.CalculateTimeout(cfg.RV.FileLength, cfg.MinRate, config.DefaultMinRate, 10*time.Second)
 	if timeout == 0 && cfg.Timeout > 0 {
-		timeout = time.Duration(cfg.Timeout) * time.Second
+		timeout = cfg.Timeout
 	}
 	success := true
 	err := downloader.DoDownloadTimeout(getter, timeout)
