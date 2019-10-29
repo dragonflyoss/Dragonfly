@@ -20,7 +20,9 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"io"
+	"os"
 )
 
 // Sha256 returns the SHA-256 checksum of the data.
@@ -34,7 +36,9 @@ func Sha256(value string) string {
 func Sha1(contents []string) string {
 	h := sha1.New()
 	for _, content := range contents {
-		io.WriteString(h, content)
+		if _, err := io.WriteString(h, content); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to write string to io.Write: %v", err)
+		}
 	}
 	return hex.EncodeToString(h.Sum(nil))
 }

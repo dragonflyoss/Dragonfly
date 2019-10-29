@@ -60,7 +60,9 @@ func DeleteFile(filePath string) error {
 func DeleteFiles(filePaths ...string) {
 	if len(filePaths) > 0 {
 		for _, f := range filePaths {
-			DeleteFile(f)
+			if err := DeleteFile(f); err != nil {
+				fmt.Fprintf(os.Stderr, "fail to delete file: %v", err)
+			}
 		}
 	}
 }
