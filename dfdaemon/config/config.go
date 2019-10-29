@@ -101,6 +101,7 @@ type Properties struct {
 	DfgetFlags []string  `yaml:"dfget_flags" json:"dfget_flags"`
 	SuperNodes []string  `yaml:"supernodes" json:"supernodes"`
 	RateLimit  rate.Rate `yaml:"ratelimit" json:"ratelimit"`
+	WorkHome   string    `yaml:"workHome" json:"workHome,omitempty"`
 	DFRepo     string    `yaml:"localrepo" json:"localrepo"`
 	DFPath     string    `yaml:"dfpath" json:"dfpath"`
 }
