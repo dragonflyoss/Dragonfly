@@ -45,6 +45,7 @@ download SUCCESS cost:0.026s length:141898 reason:0
                               in this way, different but actually the same URLs can reuse the same downloading task
       --header strings        http header, eg: --header='Accept: *' --header='Host: abc'
   -h, --help                  help for dfget
+      --home string           the work home directory of dfget
   -i, --identifier string     the usage of identifier is making different downloading tasks generate different downloading task IDs even if they have the same URLs. conflict with --md5.
       --insecure              identify whether supernode should skip secure verify when interact with the source.
       --ip string             IP address that server will listen on
