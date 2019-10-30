@@ -19,13 +19,14 @@ dfdaemon [flags]
   -h, --help               help for dfdaemon
       --hostIp string      dfdaemon host ip, default: 127.0.0.1 (default "127.0.0.1")
       --keypem string      key.pem file path
-      --localrepo string   temp output dir of dfdaemon (default "/root/.small-dragonfly/dfdaemon/data")
+      --localrepo string   temp output dir of dfdaemon
       --maxprocs int       the maximum number of CPUs that the dfdaemon can use (default 4)
       --node strings       specify the addresses(host:port) of supernodes that will be passed to dfget.
       --port uint          dfdaemon will listen the port (default 65001)
       --ratelimit rate     net speed limit (default 20MB)
       --registry string    registry mirror url, which will override the registry mirror settings in the config file if presented (default "https://index.docker.io")
       --verbose            verbose
+      --workHome string    the work home directory of dfdaemon. (default "/root/.small-dragonfly")
 ```
 
 ### SEE ALSO
