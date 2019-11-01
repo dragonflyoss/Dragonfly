@@ -33,7 +33,6 @@ import (
 	"github.com/dragonflyoss/Dragonfly/pkg/printer"
 	"github.com/dragonflyoss/Dragonfly/pkg/rate"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
-
 	"github.com/pkg/errors"
 	"gopkg.in/gcfg.v1"
 	"gopkg.in/warnings.v0"
@@ -50,14 +49,18 @@ import (
 // Since 0.2.0, the INI config is just to be compatible with previous versions.
 // The YAML config will have more properties:
 // 		nodes:
-// 		    - 127.0.0.1
-// 		    - 10.10.10.1
+// 		    - 127.0.0.1=1
+// 		    - 10.10.10.1:8002=2
 // 		localLimit: 20M
 // 		totalLimit: 20M
 // 		clientQueueSize: 6
 type Properties struct {
-	// Nodes specify supernodes.
-	Nodes []string `yaml:"nodes,omitempty" json:"nodes,omitempty"`
+	// Supernodes specify supernodes with weight.
+	// The type of weight must be integer.
+	// All weights will be divided by the greatest common divisor in the end.
+	//
+	// E.g. ["192.168.33.21=1", "192.168.33.22=2"]
+	Supernodes []*NodeWight `yaml:"nodes,omitempty" json:"nodes,omitempty"`
 
 	// LocalLimit rate limit about a single download task, format: G(B)/g/M(B)/m/K(B)/k/B
 	// pure number will also be parsed as Byte.
@@ -85,7 +88,7 @@ type Properties struct {
 // NewProperties creates a new properties with default values.
 func NewProperties() *Properties {
 	return &Properties{
-		Nodes:           []string{DefaultNode},
+		Supernodes:      GetDefaultSupernodesValue(),
 		LocalLimit:      DefaultLocalLimit,
 		MinRate:         DefaultMinRate,
 		ClientQueueSize: DefaultClientQueueSize,
@@ -123,8 +126,13 @@ func (p *Properties) loadFromIni(path string) error {
 			return fmt.Errorf("read ini config from %s error: %v", path, err)
 		}
 	}
-	p.Nodes = strings.Split(oldConfig.Node.Address, ",")
-	return nil
+
+	nodes, err := ParseNodesString(oldConfig.Node.Address)
+	if err != nil {
+		return errors.Wrapf(err, "failed to handle nodes")
+	}
+	p.Supernodes = nodes
+	return err
 }
 
 func (p *Properties) fileType(path string) string {
@@ -196,6 +204,9 @@ type Config struct {
 	// Verbose indicates whether to be verbose.
 	// If set true, log level will be 'debug'.
 	Verbose bool `json:"verbose,omitempty"`
+
+	// Nodes specify supernodes.
+	Nodes []string `json:"-"`
 
 	// Start time.
 	StartTime time.Time `json:"-"`

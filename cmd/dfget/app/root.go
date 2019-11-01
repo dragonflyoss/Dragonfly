@@ -72,7 +72,10 @@ func init() {
 // runDfget does some init operations and starts to download.
 func runDfget() error {
 	// get config from property files
-	propResults := initProperties()
+	propResults, err := initProperties()
+	if err != nil {
+		return err
+	}
 
 	// initialize logger
 	if err := initClientLog(); err != nil {
@@ -91,10 +94,6 @@ func runDfget() error {
 
 	cfg.Filter = transFilter(filter)
 
-	if err := handleNodes(); err != nil {
-		return err
-	}
-
 	if err := checkParameters(); err != nil {
 		return err
 	}
@@ -106,10 +105,10 @@ func runDfget() error {
 	logrus.Infof("get init config:%v", cfg)
 
 	// enter the core process
-	err := core.Start(cfg)
-	printer.Println(resultMsg(cfg, time.Now(), err))
-	if err != nil {
-		os.Exit(err.Code)
+	dfError := core.Start(cfg)
+	printer.Println(resultMsg(cfg, time.Now(), dfError))
+	if dfError != nil {
+		os.Exit(dfError.Code)
 	}
 	return nil
 }
@@ -122,12 +121,12 @@ func checkParameters() error {
 }
 
 // initProperties loads config from property files.
-func initProperties() []*propertiesResult {
+func initProperties() ([]*propertiesResult, error) {
 	var results []*propertiesResult
 	properties := config.NewProperties()
 	for _, v := range cfg.ConfigFiles {
-		var err error
-		if err = properties.Load(v); err == nil {
+		err := properties.Load(v)
+		if err == nil {
 			break
 		}
 		results = append(results, &propertiesResult{
@@ -137,8 +136,12 @@ func initProperties() []*propertiesResult {
 		})
 	}
 
-	if cfg.Nodes == nil {
-		cfg.Nodes = properties.Nodes
+	supernodes := cfg.Supernodes
+	if supernodes == nil {
+		supernodes = properties.Supernodes
+	}
+	if supernodes != nil {
+		cfg.Nodes = config.NodeWightSlice2StringSlice(supernodes)
 	}
 
 	if cfg.LocalLimit == 0 {
@@ -173,7 +176,7 @@ func initProperties() []*propertiesResult {
 	cfg.RV.SystemDataDir = path.Join(cfg.WorkHome, "data")
 	cfg.RV.FileLength = -1
 
-	return results
+	return results, nil
 }
 
 // initClientLog initializes dfget client's logger.
@@ -234,8 +237,8 @@ func initFlags() {
 			"\nin this way, different but actually the same URLs can reuse the same downloading task")
 	flagSet.StringSliceVar(&cfg.Header, "header", nil,
 		"http header, eg: --header='Accept: *' --header='Host: abc'")
-	flagSet.StringSliceVarP(&cfg.Nodes, "node", "n", nil,
-		"specify the addresses(host:port) of supernodes")
+	flagSet.VarP(config.NewSupernodesValue(&cfg.Supernodes, nil), "node", "n",
+		"specify the addresses(host:port=weight) of supernodes where the host is necessary, the port(default: 8002) and the weight(default:1) are optional. And the type of weight must be integer")
 	flagSet.BoolVar(&cfg.Notbs, "notbs", false,
 		"disable back source downloading for requested file when p2p fails to download it")
 	flagSet.BoolVar(&cfg.DFDaemon, "dfdaemon", false,
@@ -273,21 +276,6 @@ func transFilter(filter string) []string {
 		return nil
 	}
 	return strings.Split(filter, "&")
-}
-
-func handleNodes() error {
-	nodes := make([]string, 0)
-
-	for _, v := range cfg.Nodes {
-		// TODO: check the validity of v.
-		if strings.IndexByte(v, ':') > 0 {
-			nodes = append(nodes, v)
-			continue
-		}
-		nodes = append(nodes, fmt.Sprintf("%s:%d", v, config.DefaultSupernodePort))
-	}
-	cfg.Nodes = nodes
-	return nil
 }
 
 func resultMsg(cfg *config.Config, end time.Time, e *errortypes.DfError) string {

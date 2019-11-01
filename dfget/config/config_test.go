@@ -173,19 +173,31 @@ func (suite *ConfigSuite) TestProperties_Load(c *check.C) {
 			content: "nodes:\n\t- 10.10.10.1", errMsg: "yaml", expected: nil},
 		{create: true, ext: "yaml",
 			content: "nodes:\n  - 10.10.10.1\n  - 10.10.10.2\n",
-			errMsg:  "", expected: &Properties{Nodes: []string{"10.10.10.1", "10.10.10.2"}}},
+			errMsg:  "", expected: &Properties{Supernodes: []*NodeWight{
+				{"10.10.10.1:8002", 1},
+				{"10.10.10.2:8002", 1},
+			}}},
 		{create: true, ext: "yaml",
 			content: "totalLimit: 10M",
 			errMsg:  "", expected: &Properties{TotalLimit: 10 * rate.MB}},
 		{create: false, ext: "ini", content: "[node]\naddress=1.1.1.1", errMsg: "read ini config"},
 		{create: true, ext: "ini", content: "[node]\naddress=1.1.1.1",
-			expected: &Properties{Nodes: []string{"1.1.1.1"}}},
+			expected: &Properties{Supernodes: []*NodeWight{
+				{"1.1.1.1:8002", 1},
+			}}},
 		{create: true, ext: "conf", content: "[node]\naddress=1.1.1.1",
-			expected: &Properties{Nodes: []string{"1.1.1.1"}}},
+			expected: &Properties{Supernodes: []*NodeWight{
+				{"1.1.1.1:8002", 1},
+			}}},
 		{create: true, ext: "conf", content: "[node]\naddress=1.1.1.1,1.1.1.2",
-			expected: &Properties{Nodes: []string{"1.1.1.1", "1.1.1.2"}}},
+			expected: &Properties{Supernodes: []*NodeWight{
+				{"1.1.1.1:8002", 1},
+				{"1.1.1.2:8002", 1},
+			}}},
 		{create: true, ext: "conf", content: "[node]\naddress=1.1.1.1\n[totalLimit]",
-			expected: &Properties{Nodes: []string{"1.1.1.1"}}},
+			expected: &Properties{Supernodes: []*NodeWight{
+				{"1.1.1.1:8002", 1},
+			}}},
 	}
 
 	for idx, v := range cases {

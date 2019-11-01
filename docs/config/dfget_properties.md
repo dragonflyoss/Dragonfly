@@ -8,7 +8,7 @@ The following startup parameters are supported for `dfget`
 
 | Parameter | Description |
 | ------------- | ------------- |
-| nodes	| Nodes specify supernodes |
+| nodes	| Nodes specify supernodes with format host:port=weight where the host is necessary, the port(default: 8002) and the weight(default:1) are optional. |
 | localLimit | LocalLimit rate limit about a single download task,format: 20M/m/K/k |
 | minRate | Minimal rate about a single download task. it's type is integer. The format of `M/m/K/k` will be supported soon |
 | totalLimit | TotalLimit rate limit about the whole host,format: 20M/m/K/k |
