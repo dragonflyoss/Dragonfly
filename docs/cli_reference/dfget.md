@@ -52,7 +52,7 @@ download SUCCESS cost:0.026s length:141898 reason:0
   -s, --locallimit rate       network bandwidth rate limit for single download task, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte (default 0B)
   -m, --md5 string            md5 value input from user for the requested downloading file to enhance security
       --minrate rate          minimal network bandwidth rate for downloading a file, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte (default 0B)
-  -n, --node strings          specify the addresses(host:port) of supernodes
+  -n, --node supernodes       specify the addresses(host:port=weight) of supernodes where the host is necessary, the port(default: 8002) and the weight(default:1) are optional. And the type of weight must be integer
       --notbs                 disable back source downloading for requested file when p2p fails to download it
   -o, --output string         destination path which is used to store the requested downloading file. It must contain detailed directory and specific filename, for example, '/tmp/file.mp4'
   -p, --pattern string        download pattern, must be p2p/cdn/source, cdn and source do not support flag --totallimit (default "p2p")
