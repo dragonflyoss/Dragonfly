@@ -21,12 +21,14 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/sirupsen/logrus"
@@ -73,6 +75,12 @@ func (pe *peerServerExecutor) StartPeerServerProcess(cfg *config.Config) (port i
 	if port = pe.checkPeerServerExist(cfg, 0); port > 0 {
 		return port, nil
 	}
+
+	fileLock := fileutils.NewFileLock(filepath.Dir(cfg.RV.MetaPath))
+	if err = fileLock.Lock(); err != nil {
+		return 0, err
+	}
+	defer fileLock.Unlock()
 
 	cmd := exec.Command(os.Args[0], "server",
 		"--ip", cfg.RV.LocalIP,
