@@ -22,7 +22,6 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
-	"path"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -89,7 +88,7 @@ func prepare(cfg *config.Config) (err error) {
 	rv := &cfg.RV
 
 	rv.RealTarget = cfg.Output
-	rv.TargetDir = path.Dir(rv.RealTarget)
+	rv.TargetDir = filepath.Dir(rv.RealTarget)
 	if err = fileutils.CreateDirectory(rv.TargetDir); err != nil {
 		return err
 	}
@@ -98,7 +97,7 @@ func prepare(cfg *config.Config) (err error) {
 		return err
 	}
 
-	if err = fileutils.CreateDirectory(path.Dir(rv.MetaPath)); err != nil {
+	if err = fileutils.CreateDirectory(filepath.Dir(rv.MetaPath)); err != nil {
 		return err
 	}
 	if err = fileutils.CreateDirectory(cfg.WorkHome); err != nil {
@@ -238,7 +237,7 @@ func createTempTargetFile(targetDir string, sign string) (name string, e error) 
 		return f.Name(), e
 	}
 
-	f, e = os.OpenFile(path.Join(targetDir, fmt.Sprintf("%s%d", prefix, rand.Uint64())),
+	f, e = os.OpenFile(filepath.Join(targetDir, fmt.Sprintf("%s%d", prefix, rand.Uint64())),
 		os.O_CREATE|os.O_EXCL, 0755)
 	if e == nil {
 		return f.Name(), e

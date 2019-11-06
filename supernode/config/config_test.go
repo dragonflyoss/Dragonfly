@@ -19,7 +19,7 @@ package config
 import (
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/go-check/check"
@@ -62,7 +62,7 @@ func (s *SupernodeConfigTestSuite) TearDownSuite(c *check.C) {
 }
 
 func (s *SupernodeConfigTestSuite) TestConfig_Load(c *check.C) {
-	confPath := path.Join(s.workHome, "supernode.yml")
+	confPath := filepath.Join(s.workHome, "supernode.yml")
 	conf := NewConfig()
 	exp := &Config{}
 

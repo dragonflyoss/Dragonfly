@@ -18,7 +18,7 @@ package store
 
 import (
 	"fmt"
-	"path"
+	"path/filepath"
 	"sync"
 
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
@@ -84,7 +84,7 @@ func (sm *Manager) getDefaultStorage() (*Store, error) {
 	if sm.cfg == nil {
 		return nil, fmt.Errorf("cannot init local storage without home path")
 	}
-	cfg := fmt.Sprintf("baseDir: %s", path.Join(sm.cfg.HomeDir, "repo"))
+	cfg := fmt.Sprintf("baseDir: %s", filepath.Join(sm.cfg.HomeDir, "repo"))
 	s, err := NewStore(LocalStorageDriver, NewLocalStorage, cfg)
 	if err != nil {
 		return nil, err

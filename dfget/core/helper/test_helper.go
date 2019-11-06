@@ -22,7 +22,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
-	"path"
+	"path/filepath"
 
 	api_types "github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
@@ -41,9 +41,9 @@ func CreateConfig(writer io.Writer, workHome string) *config.Config {
 	}
 	cfg := config.NewConfig()
 	cfg.WorkHome = workHome
-	cfg.RV.MetaPath = path.Join(cfg.WorkHome, "meta", "host.meta")
-	cfg.RV.SystemDataDir = path.Join(cfg.WorkHome, "data")
-	fileutils.CreateDirectory(path.Dir(cfg.RV.MetaPath))
+	cfg.RV.MetaPath = filepath.Join(cfg.WorkHome, "meta", "host.meta")
+	cfg.RV.SystemDataDir = filepath.Join(cfg.WorkHome, "data")
+	fileutils.CreateDirectory(filepath.Dir(cfg.RV.MetaPath))
 	fileutils.CreateDirectory(cfg.RV.SystemDataDir)
 
 	logrus.StandardLogger().Out = writer

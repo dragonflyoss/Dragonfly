@@ -24,7 +24,7 @@ import (
 	"math/rand"
 	"net"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -65,7 +65,7 @@ func (s *CoreTestSuite) TearDownSuite(c *check.C) {
 func (s *CoreTestSuite) TestPrepare(c *check.C) {
 	buf := &bytes.Buffer{}
 	cfg := s.createConfig(buf)
-	cfg.Output = path.Join(s.workHome, "test.output")
+	cfg.Output = filepath.Join(s.workHome, "test.output")
 
 	err := prepare(cfg)
 	fmt.Printf("%s\nerror:%v", buf.String(), err)

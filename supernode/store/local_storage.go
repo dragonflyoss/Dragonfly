@@ -22,7 +22,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
@@ -73,7 +72,7 @@ func NewLocalStorage(conf string) (StorageDriver, error) {
 	}
 
 	// prepare the base dir
-	if !path.IsAbs(cfg.BaseDir) {
+	if !filepath.IsAbs(cfg.BaseDir) {
 		return nil, fmt.Errorf("not absolute path: %s", cfg.BaseDir)
 	}
 	if err := fileutils.CreateDirectory(cfg.BaseDir); err != nil {
@@ -243,7 +242,7 @@ func (ls *localStorage) Stat(ctx context.Context, raw *Raw) (*StorageInfo, error
 		return nil, fmt.Errorf("get create time error")
 	}
 	return &StorageInfo{
-		Path:       path.Join(raw.Bucket, raw.Key),
+		Path:       filepath.Join(raw.Bucket, raw.Key),
 		Size:       fileInfo.Size(),
 		CreateTime: statutils.Ctime(sys),
 		ModTime:    fileInfo.ModTime(),
@@ -293,19 +292,19 @@ func (ls *localStorage) Walk(ctx context.Context, raw *Raw) error {
 
 // preparePath gets the target path and creates the upper directory if it does not exist.
 func (ls *localStorage) preparePath(bucket, key string) (string, error) {
-	dir := path.Join(ls.BaseDir, bucket)
+	dir := filepath.Join(ls.BaseDir, bucket)
 
 	if err := fileutils.CreateDirectory(dir); err != nil {
 		return "", err
 	}
 
-	target := path.Join(dir, key)
+	target := filepath.Join(dir, key)
 	return target, nil
 }
 
 // statPath determines whether the target file exists and returns an fileMutex if so.
 func (ls *localStorage) statPath(bucket, key string) (string, os.FileInfo, error) {
-	filePath := path.Join(ls.BaseDir, bucket, key)
+	filePath := filepath.Join(ls.BaseDir, bucket, key)
 	f, err := os.Stat(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
