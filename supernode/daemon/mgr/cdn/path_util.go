@@ -57,6 +57,7 @@ func getMetaDataRaw(taskID string) *store.Raw {
 	return &store.Raw{
 		Bucket: config.DownloadHome,
 		Key:    getMetaDataKey(taskID),
+		Trunc:  true,
 	}
 }
 
@@ -64,6 +65,7 @@ func getMd5DataRaw(taskID string) *store.Raw {
 	return &store.Raw{
 		Bucket: config.DownloadHome,
 		Key:    getMd5DataKey(taskID),
+		Trunc:  true,
 	}
 }
 

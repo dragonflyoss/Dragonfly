@@ -142,7 +142,7 @@ func (re *reporter) processCacheByReadFile(ctx context.Context, taskID string, m
 		FileLength: result.fileLength,
 	}
 	if err := re.metaDataManager.updateStatusAndResult(ctx, taskID, fmd); err != nil {
-		logrus.Infof("failed to update status and result fileMetaData(%+v) for taskID(%s): %v", fmd, taskID, err)
+		logrus.Errorf("failed to update status and result fileMetaData(%+v) for taskID(%s): %v", fmd, taskID, err)
 		return nil, nil, err
 	}
 	logrus.Infof("success to update status and result fileMetaData(%+v) for taskID(%s)", fmd, taskID)

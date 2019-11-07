@@ -174,7 +174,12 @@ func (ls *localStorage) Put(ctx context.Context, raw *Raw, data io.Reader) error
 	lock(path, raw.Offset, false)
 	defer unLock(path, raw.Offset, false)
 
-	f, err := fileutils.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644)
+	var f *os.File
+	if raw.Trunc {
+		f, err = fileutils.OpenFile(path, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+	} else {
+		f, err = fileutils.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644)
+	}
 	if err != nil {
 		return err
 	}
@@ -210,7 +215,12 @@ func (ls *localStorage) PutBytes(ctx context.Context, raw *Raw, data []byte) err
 	lock(path, raw.Offset, false)
 	defer unLock(path, raw.Offset, false)
 
-	f, err := fileutils.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644)
+	var f *os.File
+	if raw.Trunc {
+		f, err = fileutils.OpenFile(path, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)
+	} else {
+		f, err = fileutils.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644)
+	}
 	if err != nil {
 		return err
 	}

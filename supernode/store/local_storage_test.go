@@ -270,6 +270,82 @@ func (s *LocalStorageSuite) TestGetPut(c *check.C) {
 
 }
 
+func (s *LocalStorageSuite) TestPutTrunc(c *check.C) {
+	originRaw := &Raw{
+		Key:    "fooTrunc.meta",
+		Offset: 0,
+		Trunc:  true,
+	}
+	originData := "hello world"
+
+	var cases = []struct {
+		truncRaw     *Raw
+		getErrCheck  func(error) bool
+		data         io.Reader
+		expectedData string
+	}{
+		{
+			truncRaw: &Raw{
+				Key:    "fooTrunc.meta",
+				Offset: 0,
+				Trunc:  true,
+			},
+			data:         strings.NewReader("hello"),
+			getErrCheck:  IsNilError,
+			expectedData: "hello",
+		},
+		{
+			truncRaw: &Raw{
+				Key:    "fooTrunc.meta",
+				Offset: 6,
+				Trunc:  true,
+			},
+			data:         strings.NewReader("golang"),
+			getErrCheck:  IsNilError,
+			expectedData: "\x00\x00\x00\x00\x00\x00golang",
+		},
+		{
+			truncRaw: &Raw{
+				Key:    "fooTrunc.meta",
+				Offset: 0,
+				Trunc:  false,
+			},
+			data:         strings.NewReader("foo"),
+			getErrCheck:  IsNilError,
+			expectedData: "foolo world",
+		},
+		{
+			truncRaw: &Raw{
+				Key:    "fooTrunc.meta",
+				Offset: 6,
+				Trunc:  false,
+			},
+			data:         strings.NewReader("foo"),
+			getErrCheck:  IsNilError,
+			expectedData: "hello foold",
+		},
+	}
+
+	for _, v := range cases {
+		err := s.storeLocal.Put(context.Background(), originRaw, strings.NewReader(originData))
+		c.Check(err, check.IsNil)
+
+		err = s.storeLocal.Put(context.Background(), v.truncRaw, v.data)
+		c.Check(err, check.IsNil)
+
+		r, err := s.storeLocal.Get(context.Background(), &Raw{
+			Key: "fooTrunc.meta",
+		})
+		c.Check(err, check.IsNil)
+
+		if err == nil {
+			result, err := ioutil.ReadAll(r)
+			c.Assert(err, check.IsNil)
+			c.Assert(string(result[:]), check.Equals, v.expectedData)
+		}
+	}
+}
+
 func (s *LocalStorageSuite) TestPutParallel(c *check.C) {
 	var key = "fooPutParallel"
 	var routineCount = 4

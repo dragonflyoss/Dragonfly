@@ -28,6 +28,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
 	"github.com/dragonflyoss/Dragonfly/supernode/util"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -86,7 +87,7 @@ func (mm *fileMetaDataManager) writeFileMetaDataByTask(ctx context.Context, task
 func (mm *fileMetaDataManager) writeFileMetaData(ctx context.Context, metaData *fileMetaData) error {
 	data, err := json.Marshal(metaData)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to marshal metadata")
 	}
 
 	return mm.fileStore.PutBytes(ctx, getMetaDataRawFunc(metaData.TaskID), data)
@@ -96,14 +97,14 @@ func (mm *fileMetaDataManager) writeFileMetaData(ctx context.Context, metaData *
 func (mm *fileMetaDataManager) readFileMetaData(ctx context.Context, taskID string) (*fileMetaData, error) {
 	bytes, err := mm.fileStore.GetBytes(ctx, getMetaDataRawFunc(taskID))
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to get metadata bytes")
 	}
 
 	metaData := &fileMetaData{}
 	if err := json.Unmarshal(bytes, metaData); err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to unmarshal metadata bytes")
 	}
-	logrus.Infof("success to read metadata: %+v for taskID: %s", metaData, taskID)
+	logrus.Debugf("success to read metadata: %+v for taskID: %s", metaData, taskID)
 
 	if metaData.PieceSize == 0 {
 		metaData.PieceSize = config.DefaultPieceSize
@@ -117,7 +118,7 @@ func (mm *fileMetaDataManager) updateAccessTime(ctx context.Context, taskID stri
 
 	originMetaData, err := mm.readFileMetaData(ctx, taskID)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to get origin metaData")
 	}
 
 	interval := accessTime - originMetaData.AccessTime
@@ -153,7 +154,7 @@ func (mm *fileMetaDataManager) updateStatusAndResult(ctx context.Context, taskID
 
 	originMetaData, err := mm.readFileMetaData(ctx, taskID)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to get origin metadata")
 	}
 
 	originMetaData.Finish = metaData.Finish
