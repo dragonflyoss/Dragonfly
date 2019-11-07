@@ -16,11 +16,13 @@
 
 package downloader
 
+import "context"
+
 // Interface specifies on how an plugin can download a file.
 type Interface interface {
-	// Download download url file to file name
-	// return dst path and download error
-	Download(url string, header map[string][]string, name string) (string, error)
+	// DownloadContext downloads the resource as specified in url, and it accepts
+	// a context parameter so that it can handle timeouts correctly.
+	DownloadContext(ctx context.Context, url string, header map[string][]string, name string) (string, error)
 }
 
 // Factory is a function that returns a new downloader.

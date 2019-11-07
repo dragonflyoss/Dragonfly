@@ -17,6 +17,7 @@
 package dfget
 
 import (
+	"context"
 	"fmt"
 	netUrl "net/url"
 	"os/exec"
@@ -42,11 +43,11 @@ func NewGetter(cfg config.DFGetConfig) *DFGetter {
 	return &DFGetter{config: cfg}
 }
 
-// Download is the method of DFGetter to download by dragonfly.
-func (dfGetter *DFGetter) Download(url string, header map[string][]string, name string) (string, error) {
+// DownloadContext downloads the resources as specified in url.
+func (dfGetter *DFGetter) DownloadContext(ctx context.Context, url string, header map[string][]string, name string) (string, error) {
 	startTime := time.Now()
 	dstPath := filepath.Join(dfGetter.config.DFRepo, name)
-	cmd := dfGetter.getCommand(url, header, dstPath)
+	cmd := dfGetter.getCommand(ctx, url, header, dstPath)
 	err := cmd.Run()
 	if cmd.ProcessState.Success() {
 		log.Infof("dfget url:%s [SUCCESS] cost:%.3fs", url, time.Since(startTime).Seconds())
@@ -62,7 +63,7 @@ func (dfGetter *DFGetter) Download(url string, header map[string][]string, name 
 
 // getCommand returns the command to download the given resource.
 func (dfGetter *DFGetter) getCommand(
-	url string, header map[string][]string, output string,
+	ctx context.Context, url string, header map[string][]string, output string,
 ) (cmd *exec.Cmd) {
 	args := []string{
 		"-u", url,
@@ -107,5 +108,5 @@ func (dfGetter *DFGetter) getCommand(
 		}
 	}
 
-	return exec.Command(dfGetter.config.DFPath, args...)
+	return exec.CommandContext(ctx, dfGetter.config.DFPath, args...)
 }
