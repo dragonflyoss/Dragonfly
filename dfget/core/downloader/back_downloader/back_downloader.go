@@ -22,7 +22,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/downloader"
@@ -90,13 +90,13 @@ func (bd *BackDownloader) Run() error {
 		return err
 	}
 
-	printer.Printf("start download %s from the source station", path.Base(bd.Target))
-	logrus.Infof("start download %s from the source station", path.Base(bd.Target))
+	printer.Printf("start download %s from the source station", filepath.Base(bd.Target))
+	logrus.Infof("start download %s from the source station", filepath.Base(bd.Target))
 
 	defer bd.Cleanup()
 
 	prefix := "backsource." + bd.cfg.Sign + "."
-	if f, err = ioutil.TempFile(path.Dir(bd.Target), prefix); err != nil {
+	if f, err = ioutil.TempFile(filepath.Dir(bd.Target), prefix); err != nil {
 		return err
 	}
 	bd.tempFileName = f.Name()

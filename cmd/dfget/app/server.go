@@ -17,7 +17,7 @@
 package app
 
 import (
-	"path"
+	"path/filepath"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
@@ -82,7 +82,7 @@ func runServer() error {
 }
 
 func initServerLog() error {
-	logFilePath := path.Join(cfg.WorkHome, "logs", "dfserver.log")
+	logFilePath := filepath.Join(cfg.WorkHome, "logs", "dfserver.log")
 
 	opts := []dflog.Option{
 		dflog.WithLogFile(logFilePath),

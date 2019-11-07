@@ -23,7 +23,7 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
@@ -64,8 +64,8 @@ func (s *BackDownloaderTestSuite) TearDownSuite(c *check.C) {
 }
 
 func (s *BackDownloaderTestSuite) TestBackDownloader_Run(c *check.C) {
-	testFileMd5 := helper.CreateTestFileWithMD5(path.Join(s.workHome, "download.test"), "test downloader")
-	dst := path.Join(s.workHome, "back.test")
+	testFileMd5 := helper.CreateTestFileWithMD5(filepath.Join(s.workHome, "download.test"), "test downloader")
+	dst := filepath.Join(s.workHome, "back.test")
 
 	cfg := helper.CreateConfig(nil, s.workHome)
 	bd := &BackDownloader{
@@ -102,7 +102,7 @@ func (s *BackDownloaderTestSuite) TestBackDownloader_Run(c *check.C) {
 }
 
 func (s *BackDownloaderTestSuite) TestBackDownloader_Run_NotExist(c *check.C) {
-	dst := path.Join(s.workHome, "back.test")
+	dst := filepath.Join(s.workHome, "back.test")
 
 	cfg := helper.CreateConfig(nil, s.workHome)
 	bd := &BackDownloader{

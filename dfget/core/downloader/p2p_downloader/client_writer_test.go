@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 
@@ -39,7 +39,7 @@ func init() {
 
 func (s *ClientWriterTestSuite) SetUpSuite(c *check.C) {
 	s.workHome, _ = ioutil.TempDir("/tmp", "dfget-ClientWriterTestSuite-")
-	serviceFilePath := path.Join(s.workHome, "cwtest.service")
+	serviceFilePath := filepath.Join(s.workHome, "cwtest.service")
 	s.serviceFile, _ = fileutils.OpenFile(serviceFilePath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0755)
 }
 

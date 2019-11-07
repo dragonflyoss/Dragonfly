@@ -19,7 +19,7 @@ package downloader
 import (
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -56,8 +56,8 @@ func (s *DownloaderTestSuite) TestMoveFile(c *check.C) {
 	tmp, _ := ioutil.TempDir("/tmp", "dfget-TestMoveFile-")
 	defer os.RemoveAll(tmp)
 
-	src := path.Join(tmp, "a")
-	dst := path.Join(tmp, "b")
+	src := filepath.Join(tmp, "a")
+	dst := filepath.Join(tmp, "b")
 	md5str := helper.CreateTestFileWithMD5(src, "hello")
 
 	err := MoveFile(src, dst, "x")

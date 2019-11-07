@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"os"
 	"os/user"
-	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -169,11 +169,11 @@ func initProperties() ([]*propertiesResult, error) {
 	if cfg.WorkHome == "" {
 		cfg.WorkHome = properties.WorkHome
 		if cfg.WorkHome == "" {
-			cfg.WorkHome = path.Join(currentUser.HomeDir, ".small-dragonfly")
+			cfg.WorkHome = filepath.Join(currentUser.HomeDir, ".small-dragonfly")
 		}
 	}
-	cfg.RV.MetaPath = path.Join(cfg.WorkHome, "meta", "host.meta")
-	cfg.RV.SystemDataDir = path.Join(cfg.WorkHome, "data")
+	cfg.RV.MetaPath = filepath.Join(cfg.WorkHome, "meta", "host.meta")
+	cfg.RV.SystemDataDir = filepath.Join(cfg.WorkHome, "data")
 	cfg.RV.FileLength = -1
 
 	return results, nil
@@ -185,7 +185,7 @@ func initProperties() ([]*propertiesResult, error) {
 // while console log will output the dfget client's log in console/terminal for
 // debugging usage.
 func initClientLog() error {
-	logFilePath := path.Join(cfg.WorkHome, "logs", "dfclient.log")
+	logFilePath := filepath.Join(cfg.WorkHome, "logs", "dfclient.log")
 
 	opts := []dflog.Option{
 		dflog.WithLogFile(logFilePath),

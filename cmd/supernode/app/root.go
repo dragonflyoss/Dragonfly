@@ -19,7 +19,6 @@ package app
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"reflect"
 	"time"
@@ -318,7 +317,7 @@ func decodeWithYAML(types ...reflect.Type) mapstructure.DecodeHookFunc {
 
 // initLog initializes log Level and log format.
 func initLog(logger *logrus.Logger, logPath string) error {
-	logFilePath := path.Join(supernodeViper.GetString("base.homeDir"), "logs", logPath)
+	logFilePath := filepath.Join(supernodeViper.GetString("base.homeDir"), "logs", logPath)
 
 	opts := []dflog.Option{
 		dflog.WithLogFile(logFilePath),

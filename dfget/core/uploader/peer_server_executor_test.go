@@ -23,7 +23,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -47,7 +47,7 @@ type PeerServerExecutorTestSuite struct {
 
 func (s *PeerServerExecutorTestSuite) SetUpSuite(c *check.C) {
 	s.workHome, _ = ioutil.TempDir("/tmp", "dfget-PeerServerTestSuite-")
-	s.script = path.Join(s.workHome, "script.sh")
+	s.script = filepath.Join(s.workHome, "script.sh")
 	s.writeScript("")
 	s.start()
 }

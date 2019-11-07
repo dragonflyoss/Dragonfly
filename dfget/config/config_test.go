@@ -23,7 +23,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/user"
-	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -84,7 +83,7 @@ func (suite *ConfigSuite) TestNewConfig(c *check.C) {
 
 	if curUser, err := user.Current(); err != nil {
 		c.Assert(cfg.User, check.Equals, curUser.Username)
-		c.Assert(cfg.WorkHome, check.Equals, path.Join(curUser.HomeDir, ".small-dragonfly"))
+		c.Assert(cfg.WorkHome, check.Equals, filepath.Join(curUser.HomeDir, ".small-dragonfly"))
 	}
 }
 

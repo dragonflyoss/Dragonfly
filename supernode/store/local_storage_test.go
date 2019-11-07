@@ -22,7 +22,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -55,7 +55,7 @@ func (s *LocalStorageSuite) SetUpSuite(c *check.C) {
 			&config.PluginProperties{
 				Name:    LocalStorageDriver,
 				Enabled: true,
-				Config:  "baseDir: " + path.Join(s.workHome, "repo"),
+				Config:  "baseDir: " + filepath.Join(s.workHome, "repo"),
 			},
 		},
 	}
@@ -321,7 +321,7 @@ func (s *LocalStorageSuite) BenchmarkPutSerial(c *check.C) {
 func (s *LocalStorageSuite) TestManager_Get(c *check.C) {
 	cfg := &config.Config{
 		BaseProperties: &config.BaseProperties{
-			HomeDir: path.Join(s.workHome, "test_mgr"),
+			HomeDir: filepath.Join(s.workHome, "test_mgr"),
 		},
 	}
 	mgr, _ := NewManager(cfg)
@@ -345,12 +345,12 @@ func (s *LocalStorageSuite) checkStat(raw *Raw, c *check.C) {
 	c.Assert(IsNilError(err), check.Equals, true)
 
 	driver := s.storeLocal.driver.(*localStorage)
-	pathTemp := path.Join(driver.BaseDir, raw.Bucket, raw.Key)
+	pathTemp := filepath.Join(driver.BaseDir, raw.Bucket, raw.Key)
 	f, _ := os.Stat(pathTemp)
 	sys, _ := fileutils.GetSys(f)
 
 	c.Assert(info, check.DeepEquals, &StorageInfo{
-		Path:       path.Join(raw.Bucket, raw.Key),
+		Path:       filepath.Join(raw.Bucket, raw.Key),
 		Size:       f.Size(),
 		ModTime:    f.ModTime(),
 		CreateTime: statutils.Ctime(sys),
