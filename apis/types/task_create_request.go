@@ -6,8 +6,9 @@ package types
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"github.com/go-openapi/errors"
 	strfmt "github.com/go-openapi/strfmt"
+
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
@@ -23,9 +24,9 @@ type TaskCreateRequest struct {
 	//
 	CID string `json:"cID,omitempty"`
 
-	// This field is for debugging. When caller of dfget is using it to files, he can pass callSystem
-	// name to dfget. When this field is passing to supernode, supernode has ability to filter them via
-	// some black/white list to guarantee security, or some other purposes.
+	// This attribute represents where the dfget requests come from. Dfget will pass
+	// this field to supernode and supernode can do some checking and filtering via
+	// black/white list mechanism to guarantee security, or some other purposes like debugging.
 	//
 	// Min Length: 1
 	CallSystem string `json:"callSystem,omitempty"`
@@ -81,6 +82,9 @@ type TaskCreateRequest struct {
 	// The resource url is provided by command line parameter.
 	//
 	RawURL string `json:"rawURL,omitempty"`
+
+	// IP address of supernode which the peer connects to
+	SupernodeIP string `json:"supernodeIP,omitempty"`
 
 	// taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via
 	// --filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.

@@ -13,6 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -o nounset
+set -o errexit
+set -o pipefail
+
 export INSTALL_HOME=/opt/dragonfly
 export INSTALL_CLIENT_PATH=df-client
 export INSTALL_SUPERNODE_PATH=df-supernode

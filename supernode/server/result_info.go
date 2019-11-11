@@ -1,13 +1,29 @@
+/*
+ * Copyright The Dragonfly Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package server
 
 import (
 	"fmt"
 
-	"github.com/dragonflyoss/Dragonfly/common/constants"
-	"github.com/dragonflyoss/Dragonfly/common/errors"
+	"github.com/dragonflyoss/Dragonfly/pkg/constants"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 )
 
-// ResultInfo identify a struct that will returned to the client.
+// ResultInfo identify a struct that will be returned to the client.
 type ResultInfo struct {
 	code int
 	msg  string
@@ -17,21 +33,25 @@ type ResultInfo struct {
 // NewResultInfoWithError returns a new ResultInfo with error only.
 // And it will fill the result code according to the type of error.
 func NewResultInfoWithError(err error) ResultInfo {
-	if errors.IsEmptyValue(err) ||
-		errors.IsInvalidValue(err) {
+	if errortypes.IsEmptyValue(err) ||
+		errortypes.IsInvalidValue(err) {
 		return NewResultInfoWithCodeError(constants.CodeParamError, err)
 	}
 
-	if errors.IsDataNotFound(err) {
+	if errortypes.IsDataNotFound(err) {
 		return NewResultInfoWithCodeError(constants.CodeTargetNotFound, err)
 	}
 
-	if errors.IsPeerWait(err) {
+	if errortypes.IsPeerWait(err) {
 		return NewResultInfoWithCodeError(constants.CodePeerWait, err)
 	}
 
-	if errors.IsPeerContinue(err) {
+	if errortypes.IsPeerContinue(err) {
 		return NewResultInfoWithCodeError(constants.CodePeerContinue, err)
+	}
+
+	if errortypes.IsURLNotReachable(err) {
+		return NewResultInfoWithCodeError(constants.CodeURLNotReachable, err)
 	}
 
 	// IsConvertFailed
@@ -75,7 +95,7 @@ func (r ResultInfo) Error() string {
 	return fmt.Sprintf("{\"Code\":%d,\"Msg\":\"%s\"}", r.code, r.msg)
 }
 
-// SuccessCode return whether the code equals SuccessCode.
+// SuccessCode returns whether the code equals SuccessCode.
 func (r ResultInfo) SuccessCode() bool {
 	return r.code == constants.Success
 }

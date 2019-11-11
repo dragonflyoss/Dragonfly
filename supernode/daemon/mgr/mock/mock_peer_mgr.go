@@ -81,6 +81,20 @@ func (mr *MockPeerMgrMockRecorder) Get(ctx, peerID interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockPeerMgr)(nil).Get), ctx, peerID)
 }
 
+// GetAllPeerIDs mocks base method
+func (m *MockPeerMgr) GetAllPeerIDs(ctx context.Context) []string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllPeerIDs", ctx)
+	ret0, _ := ret[0].([]string)
+	return ret0
+}
+
+// GetAllPeerIDs indicates an expected call of GetAllPeerIDs
+func (mr *MockPeerMgrMockRecorder) GetAllPeerIDs(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllPeerIDs", reflect.TypeOf((*MockPeerMgr)(nil).GetAllPeerIDs), ctx)
+}
+
 // List mocks base method
 func (m *MockPeerMgr) List(ctx context.Context, filter *util.PageFilter) ([]*types.PeerInfo, error) {
 	m.ctrl.T.Helper()

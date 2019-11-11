@@ -1,84 +1,50 @@
 # Use dfdaemon as an HTTP proxy
 
-Dfdaemon can be used as an HTTP proxy to speed up image pulling from any registry
-as well as general HTTP downloads.
+## Prerequisites
 
-Please first ensure that you know how to install and run [supernode](install_server.md)
-and [dfdaemon](install_client.md).
+You need to first install and configure [supernode](install_server.md) and [dfdaemon](install_client.md).
 
-**HTTPS support is currently very limited. All HTTPS request will be tunneled
-directly, without dfget.**
+## Proxy Configuration
 
-## Proxy rule configuration
-
-Proxy rules are configured in `/etc/dragonfly/dfdaemon.yml`. For performance
-reason, dfdaemon will handle a request with the the first matching rule.
+Proxy rules are configured in `/etc/dragonfly/dfdaemon.yml`.
 
 ```yaml
+# Requests that match the regular expressions will be proxied with dfget,
+# otherwise they'll be proxied directly. Requests will be handled by the first
+# matching rule.
 proxies:
-# proxy requests directly, without dfget
+  # proxy all http image layer download requests with dfget
+- regx: blobs/sha256.*
+  # proxy requests directly, without dfget
 - regx: no-proxy-reg
   direct: true
-# proxy all http image layer download requests with dfget
-- regx: blobs/sha256:.*
-# change http requests to some-registry to https, and proxy them with dfget
+  # change http requests to some-registry to https, and proxy them with dfget
 - regx: some-registry/
   use_https: true
+
+# If an https request's host matches any of the hijacking rules, dfdaemon will
+# decrypt the request with given key pair and proxy it with the proxy rules.
+hijack_https:
+  cert: df.crt
+  key: df.key
+  hosts:
+    # match hosts by regular expressions. certificate will be validated normally
+  - regx: host-1
+    # ignore certificate errors
+  - regx: host-2
+    insecure: true
+    # use the given certificate for validation
+  - regx: host-3
+    certs: ["server.crt"]
 ```
 
-## Download images
+## Usage
 
-Add the following content to `/etc/dragonfly/dfdaemon.yml`.
+You can use dfdaemon like any other HTTP proxy. For example on linux and
+macOS, you can use the `HTTP_PROXY` or `HTTPS_PROXY` environment variables.
 
-```yaml
-proxies:
-# proxy all http image layer download requests with dfget
-- regx: blobs/sha256:.*
-```
-
-Set HTTP_PROXY for docker daemon in `/etc/systemd/system/docker.service.d/http-proxy.conf`.
-`65001` is the default proxy port for dfdaemon.
+## Get the Certificate of Your Server
 
 ```
-[Service]
-Environment="HTTP_PROXY=http://127.0.0.1:65001"
+openssl x509 -in <(openssl s_client -showcerts -servername xxx -connect xxx:443 -prexit 2>/dev/null)
 ```
-
-Set your registry as insecure in `/etc/docker/daemon.json`
-
-```json
-{
-  "insecure-registries": [ "your.registry" ]
-}
-```
-
-Start dfdaemon and restart docker daemon.
-
-```
-systemctl restart docker
-```
-
-Pull an image to see if it works. For registries that are not configured
-insecure, you can still pull image from it, but dfdaemon will not be able to
-speed up your downloads with dfget.
-
-```
-docker pull nginx
-docker pull your.registry/team/repo:tag
-```
-
-Then you can [check if your image is downloaded with dfget](../../FAQ.md#how-to-check-if-block-piece-is-distributed-among-dfgets-nodes).
-
-## Download files
-
-You can simply use `HTTP_PROXY` environment variable to let dfdaemon download
-requests that match the proxy rules. This works for any program that
-respects the `HTTP_PROXY` environment variable.
-
-```
-HTTP_PROXY=http://127.0.0.1:65001 curl http://github.com
-```
-
-HTTPS requests and requests that are not matched, will be proxied directly,
-and dragonfly is not able to speed up them.
-

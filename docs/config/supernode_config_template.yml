@@ -1,0 +1,121 @@
+# This file is the template of supernode configuration file.
+# You can configure your supernode by change the parameter according your requirement.
+
+base:
+  # AdvertiseIP is used to set the ip that we advertise to other peer in the p2p-network.
+  # By default, the first non-loop address is advertised.
+  advertiseIP: 127.0.0.1
+
+  # ListenPort is the port supernode server listens on.
+  # default: 8002
+  listenPort: 8005
+
+  # DownloadPort is the port for download files from supernode.
+  # default: 8001
+  downloadPort: 8001
+
+  # HomeDir is working directory of supernode.
+  # default: /home/admin/supernode
+  homeDir: /home/admin/supernode
+
+  # the core pool size of ScheduledExecutorService.
+  # When a request to start a download task, supernode will construct a thread concurrent pool
+  # to download pieces of source file and write to specified storage.
+  # Note: source file downloading is into pieces via range attribute set in HTTP header.
+  # default: 10
+  schedulerCorePoolSize: 10
+
+  # DownloadPath specifies the path where to store downloaded files from source address.
+  # This path can be set beyond BaseDir, such as taking advantage of a different disk from BaseDir's.
+  # default: $BaseDir/downloads
+  downloadPath: /home/admin/supernode/downloads
+
+  # PeerUpLimit is the upload limit of a peer. When dfget starts to play a role of peer,
+  # it can only stand PeerUpLimit upload tasks from other peers.
+  # default: 5
+  peerUpLimit: 5
+
+  # PeerDownLimit is the download limit of a peer. When a peer starts to download a file/image,
+  # it will download file/image in the form of pieces. PeerDownLimit mean that a peer can only
+  # stand starting PeerDownLimit concurrent downloading tasks.
+  # default: 4
+  peerDownLimit: 4
+
+  # When dfget node starts to play a role of peer, it will provide services for other peers
+  # to pull pieces. If it runs into an issue when providing services for a peer, its self failure
+  # increases by 1. When the failure limit reaches EliminationLimit, the peer will isolate itself
+  # as a unhealthy state. Then this dfget will be no longer called by other peers.
+  # default: 5
+  eliminationLimit: 5
+
+  # FailureCountLimit is the failure count limit set in supernode for dfget client.
+  # When a dfget client takes part in the peer network constructed by supernode,
+  # supernode will command the peer to start distribution task.
+  # When dfget client fails to finish distribution task, the failure count of client
+  # increases by 1. When failure count of client reaches to FailureCountLimit(default 5),
+  # dfget client will be moved to blacklist of supernode to stop playing as a peer.
+  # default: 5
+  failureCountLimit: 5
+
+  # LinkLimit is set for supernode to limit every piece download network speed.
+  # default: 20 MB, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte.
+  linkLimit: 20M
+
+  # SystemReservedBandwidth is the network bandwidth reserved for system software.
+  # default: 20 MB, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte.
+  systemReservedBandwidth: 20M
+
+  # MaxBandwidth is the network bandwidth that supernode can use.
+  # default: 200 MB, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte.
+  maxBandwidth: 200M
+
+  # Whether to enable profiler
+  # default: false
+  enableProfiler: false
+
+  # Whether to open DEBUG level
+  # default: false
+  debug: false
+
+  # FailAccessInterval is the interval time after failed to access the URL.
+  # default: 3m
+  failAccessInterval: 3m
+
+  # gc related
+
+  # GCInitialDelay is the delay time from the start to the first GC execution.
+  # default: 6s
+  gcInitialDelay: 6s
+
+  # GCMetaInterval is the interval time to execute GC meta.
+  # default: 2m0s
+  gcMetaInterval: 2m
+
+  # TaskExpireTime when a task is not accessed within the taskExpireTime,
+  # and it will be treated to be expired.
+  # default: 3m0s
+  taskExpireTime: 3m
+
+  # PeerGCDelay is the delay time to execute the GC after the peer has reported the offline.
+  # default: 3m0s
+  peerGCDelay: 3m
+
+  # GCDiskInterval is the interval time to execute GC disk.
+  # default: 15s
+  gcDiskInterval: 15s
+
+  # YoungGCThreshold if the available disk space is more than YoungGCThreshold
+  # and there is no need to GC disk.
+  # default: 100GB
+  youngGCThreshold: 100G
+
+  #  FullGCThreshold if the available disk space is less than FullGCThreshold
+  #  and the supernode should gc all task files which are not being used.
+  #  default: 5GB
+  fullGCThreshold: 5G
+
+  # IntervalThreshold is the threshold of the interval at which the task file is accessed.
+  # default: 2h0m0s
+  IntervalThreshold: 2h
+plugins: {}
+storages: {}

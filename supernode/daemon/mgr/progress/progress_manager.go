@@ -1,11 +1,30 @@
+/*
+ * Copyright The Dragonfly Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package progress
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
+	"github.com/dragonflyoss/Dragonfly/pkg/timeutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 
@@ -32,52 +51,60 @@ var _ mgr.ProgressMgr = &Manager{}
 // Manager is an implementation of the interface of ProgressMgr.
 type Manager struct {
 	// superProgress maintains the super progress.
-	// key:taskID,value:*superState
+	// key:taskID string, value:superState *superState
 	superProgress *stateSyncMap
 
 	// clientProgress maintains the client progress.
-	// key:CID,value:*clientState
+	// key:CID string, value:clientState *clientState
 	clientProgress *stateSyncMap
 
 	// peerProgress maintains the peer progress.
-	// key:PeerID,value:*peerState
+	// key:PeerID string, value:peerState *peerState
 	peerProgress *stateSyncMap
 
 	// pieceProgress maintains the information about
 	// which peers the piece currently exists on
-	// key:pieceNum@taskID,value:*pieceState
+	// key:pieceNum@taskID string, value:pieceState *pieceState
 	pieceProgress *stateSyncMap
 
 	// clientBlackInfo maintains the blacklist of the PID.
-	// key:srcPID,value:map[dstPID]*Atomic
-	clientBlackInfo *cutil.SyncMap
+	// key:srcPID string, value:dstPIDMap map[dstPID]*Atomic
+	clientBlackInfo *syncmap.SyncMap
+
+	// superLoad maintains the load num downloaded from the supernode for each task.
+	// key:taskID string, value:superLoadState *superLoadState
+	superLoad *stateSyncMap
 
 	cfg *config.Config
 }
 
 // NewManager returns a new Manager.
 func NewManager(cfg *config.Config) (*Manager, error) {
-	return &Manager{
+	manager := &Manager{
 		cfg:             cfg,
 		superProgress:   newStateSyncMap(),
 		clientProgress:  newStateSyncMap(),
 		peerProgress:    newStateSyncMap(),
 		pieceProgress:   newStateSyncMap(),
-		clientBlackInfo: cutil.NewSyncMap(),
-	}, nil
+		clientBlackInfo: syncmap.NewSyncMap(),
+		superLoad:       newStateSyncMap(),
+	}
+
+	manager.startMonitorSuperLoad()
+	return manager, nil
 }
 
 // InitProgress inits the correlation information between peers and pieces, etc.
 func (pm *Manager) InitProgress(ctx context.Context, taskID, peerID, clientID string) (err error) {
 	// validate the param
-	if cutil.IsEmptyStr(taskID) {
-		return errors.Wrap(errorType.ErrEmptyValue, "taskID")
+	if stringutils.IsEmptyStr(taskID) {
+		return errors.Wrap(errortypes.ErrEmptyValue, "taskID")
 	}
-	if cutil.IsEmptyStr(clientID) {
-		return errors.Wrap(errorType.ErrEmptyValue, "clientID")
+	if stringutils.IsEmptyStr(clientID) {
+		return errors.Wrap(errortypes.ErrEmptyValue, "clientID")
 	}
-	if cutil.IsEmptyStr(peerID) {
-		return errors.Wrap(errorType.ErrEmptyValue, "peerID")
+	if stringutils.IsEmptyStr(peerID) {
+		return errors.Wrap(errortypes.ErrEmptyValue, "peerID")
 	}
 
 	// init cdn node if the clientID represents a supernode.
@@ -103,14 +130,14 @@ func (pm *Manager) InitProgress(ctx context.Context, taskID, peerID, clientID st
 // UpdateProgress updates the correlation information between peers and pieces.
 // NOTE: What if the update failed?
 func (pm *Manager) UpdateProgress(ctx context.Context, taskID, srcCID, srcPID, dstPID string, pieceNum, pieceStatus int) error {
-	if cutil.IsEmptyStr(taskID) {
-		return errors.Wrap(errorType.ErrEmptyValue, "taskID")
+	if stringutils.IsEmptyStr(taskID) {
+		return errors.Wrap(errortypes.ErrEmptyValue, "taskID")
 	}
-	if cutil.IsEmptyStr(srcCID) {
-		return errors.Wrapf(errorType.ErrEmptyValue, "srcCID for taskID:%s", taskID)
+	if stringutils.IsEmptyStr(srcCID) {
+		return errors.Wrapf(errortypes.ErrEmptyValue, "srcCID for taskID:%s", taskID)
 	}
-	if cutil.IsEmptyStr(srcPID) {
-		return errors.Wrapf(errorType.ErrEmptyValue, "srcPID for taskID:%s", taskID)
+	if stringutils.IsEmptyStr(srcPID) {
+		return errors.Wrapf(errortypes.ErrEmptyValue, "srcPID for taskID:%s", taskID)
 	}
 
 	// Step1: update the PieceProgress
@@ -154,11 +181,11 @@ func (pm *Manager) UpdateProgress(ctx context.Context, taskID, srcCID, srcPID, d
 
 // UpdateClientProgress updates the clientProgress and superProgress.
 func (pm *Manager) UpdateClientProgress(ctx context.Context, taskID, srcCID, dstPID string, pieceNum, pieceStatus int) error {
-	if cutil.IsEmptyStr(taskID) {
-		return errors.Wrap(errorType.ErrEmptyValue, "taskID")
+	if stringutils.IsEmptyStr(taskID) {
+		return errors.Wrap(errortypes.ErrEmptyValue, "taskID")
 	}
-	if cutil.IsEmptyStr(srcCID) {
-		return errors.Wrapf(errorType.ErrEmptyValue, "srcCID for taskID:%s", taskID)
+	if stringutils.IsEmptyStr(srcCID) {
+		return errors.Wrapf(errortypes.ErrEmptyValue, "srcCID for taskID:%s", taskID)
 	}
 
 	result, err := pm.updateClientProgress(taskID, srcCID, dstPID, pieceNum, pieceStatus)
@@ -206,17 +233,8 @@ func (pm *Manager) GetPieceProgressByCID(ctx context.Context, taskID, clientID, 
 	return getAvailablePieces(clientBitset, cdnBitset, runningPieces)
 }
 
-// DeletePieceProgressByCID deletes the pieces progress with specified clientID.
-func (pm *Manager) DeletePieceProgressByCID(ctx context.Context, taskID, clientID string) (err error) {
-	if pm.cfg.IsSuperCID(clientID) {
-		return pm.superProgress.remove(taskID)
-	}
-
-	return pm.clientProgress.remove(clientID)
-}
-
 // GetPeerIDsByPieceNum gets all peerIDs with specified taskID and pieceNum.
-// It will return nil when no peers is available.
+// It will return nil when no peers are available.
 func (pm *Manager) GetPeerIDsByPieceNum(ctx context.Context, taskID string, pieceNum int) (peerIDs []string, err error) {
 	key, err := generatePieceProgressKey(taskID, pieceNum)
 	if err != nil {
@@ -230,21 +248,6 @@ func (pm *Manager) GetPeerIDsByPieceNum(ctx context.Context, taskID string, piec
 	return ps.getAvailablePeers(), nil
 }
 
-// DeletePeerIDByPieceNum deletes the peerID which means that
-// the peer no longer provides the service for the pieceNum of taskID.
-func (pm *Manager) DeletePeerIDByPieceNum(ctx context.Context, taskID string, pieceNum int, peerID string) error {
-	key, err := generatePieceProgressKey(taskID, pieceNum)
-	if err != nil {
-		return err
-	}
-	ps, err := pm.pieceProgress.getAsPieceState(key)
-	if err != nil {
-		return err
-	}
-
-	return ps.delete(peerID)
-}
-
 // GetPeerStateByPeerID gets peer state with specified peerID.
 func (pm *Manager) GetPeerStateByPeerID(ctx context.Context, peerID string) (*mgr.PeerState, error) {
 	peerState, err := pm.peerProgress.getAsPeerState(peerID)
@@ -254,21 +257,26 @@ func (pm *Manager) GetPeerStateByPeerID(ctx context.Context, peerID string) (*mg
 
 	return &mgr.PeerState{
 		PeerID:            peerID,
-		ServiceDownTime:   &peerState.serviceDownTime,
+		ServiceDownTime:   peerState.serviceDownTime,
 		ClientErrorCount:  peerState.clientErrorCount,
 		ServiceErrorCount: peerState.serviceErrorCount,
 		ProducerLoad:      peerState.producerLoad,
 	}, nil
 }
 
-// DeletePeerStateByPeerID deletes the peerState by PeerID.
-func (pm *Manager) DeletePeerStateByPeerID(ctx context.Context, peerID string) error {
-	// delete client blackinfo
-	// TODO: delete the blackinfo that refer to peerID
-	pm.clientBlackInfo.Delete(peerID)
+// UpdatePeerServiceDown does update operation when a peer server offline.
+func (pm *Manager) UpdatePeerServiceDown(ctx context.Context, peerID string) (err error) {
+	peerState, err := pm.peerProgress.getAsPeerState(peerID)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get peer state peerID(%s): %v", peerID, err)
+	}
 
-	// delete peer progress
-	return pm.peerProgress.remove(peerID)
+	if peerState.serviceDownTime > 0 {
+		return fmt.Errorf("failed to update the service down info because this peer(%s) has been offline", peerID)
+	}
+
+	peerState.serviceDownTime = timeutils.GetCurrentTimeMillis()
+	return nil
 }
 
 // GetPeersByTaskID gets all peers info with specified taskID.
@@ -277,7 +285,7 @@ func (pm *Manager) GetPeersByTaskID(ctx context.Context, taskID string) (peersIn
 }
 
 // GetBlackInfoByPeerID gets black info with specified peerID.
-func (pm *Manager) GetBlackInfoByPeerID(ctx context.Context, peerID string) (dstPIDMap *cutil.SyncMap, err error) {
+func (pm *Manager) GetBlackInfoByPeerID(ctx context.Context, peerID string) (dstPIDMap *syncmap.SyncMap, err error) {
 	return pm.clientBlackInfo.GetAsMap(peerID)
 }
 
@@ -308,12 +316,12 @@ func getAvailablePieces(clientBitset, cdnBitset *bitset.BitSet, runningPieceNums
 		}
 
 		if pieceStatus == config.PieceFAILED {
-			return nil, errors.Wrapf(errorType.ErrCDNFail, "pieceNum: %d", getPieceNumByIndex(i))
+			return nil, errors.Wrapf(errortypes.ErrCDNFail, "pieceNum: %d", getPieceNumByIndex(i))
 		}
 	}
 
 	if len(availablePieces) == 0 {
-		return nil, errors.Wrapf(errorType.ErrPeerWait,
+		return nil, errors.Wrapf(errortypes.ErrPeerWait,
 			"clientSucCount:%d,cdnSucCount:%d", clientSucCount, cdnSucCount)
 	}
 

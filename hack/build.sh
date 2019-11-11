@@ -1,11 +1,18 @@
 #!/bin/bash
+
+set -o nounset
+set -o errexit
+set -o pipefail
+
 DFDAEMON_BINARY_NAME=dfdaemon
 DFGET_BINARY_NAME=dfget
 SUPERNODE_BINARY_NAME=supernode
 PKG=github.com/dragonflyoss/Dragonfly
-BUILD_IMAGE=golang:1.12.6
-VERSION=$(git describe --tags | cut -c 2-)
-LDFLAGS="-X ${PKG}/version.Version=${VERSION}"
+BUILD_IMAGE=golang:1.12.10
+VERSION=$(git describe --tags "$(git rev-list --tags --max-count=1)")
+REVISION=$(git rev-parse --short HEAD)
+DATE=$(date "+%Y%m%d-%H:%M:%S")
+LDFLAGS="-X ${PKG}/version.version=${VERSION:1} -X ${PKG}/version.revision=${REVISION} -X ${PKG}/version.buildDate=${DATE}"
 
 curDir=$(cd "$(dirname "$0")" && pwd)
 cd "${curDir}" || return
@@ -18,10 +25,6 @@ USE_DOCKER=${USE_DOCKER:-"0"}
 
 create-dirs() {
     cd "${BUILD_SOURCE_HOME}" || return
-    if [ "${GOOS}" == "darwin" ] && [ "1" == "${USE_DOCKER}" ]
-    then
-        BUILD_PATH=bin
-    fi
     mkdir -p .go/src/${PKG} .go/bin .cache
     mkdir -p "${BUILD_PATH}"
 }
@@ -58,11 +61,13 @@ build-docker() {
         -v "$(pwd)"/.cache:/.cache                                        \
         -e GOOS="${GOOS}"                                                 \
         -e GOARCH="${GOARCH}"                                             \
-        -e CGO_ENABLED=1                                                  \
+        -e CGO_ENABLED=0                                                  \
+        -e GO111MODULE=on                                                 \
+        -e GOPROXY="${GOPROXY}"                                           \
         -w /go/src/${PKG}                                                 \
         ${BUILD_IMAGE}                                                    \
-        go install -v -pkgdir /go/pkg -ldflags "${LDFLAGS}" ./cmd/"$2"
-    echo "BUILD: dfget in ${BUILD_SOURCE_HOME}/${BUILD_PATH}/$1"
+        go build -o "/go/bin/$1" -ldflags "${LDFLAGS}" ./cmd/"$2" 
+    echo "BUILD: $1 in ${BUILD_SOURCE_HOME}/${BUILD_PATH}/$1"
 }
 
 build-dfdaemon-docker(){
@@ -82,7 +87,7 @@ main() {
     if [[ "1" == "${USE_DOCKER}" ]]
     then
         echo "Begin to build with docker."
-        case "$1" in
+        case "${1-}" in
             dfdaemon)
                 build-dfdaemon-docker
             ;;
@@ -100,7 +105,7 @@ main() {
         esac
     else
         echo "Begin to build in the local environment."
-        case "$1" in
+        case "${1-}" in
             dfdaemon)
                 build-dfdaemon-local
             ;;

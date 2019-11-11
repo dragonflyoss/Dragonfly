@@ -1,3 +1,19 @@
+/*
+ * Copyright The Dragonfly Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package server
 
 import (
@@ -6,12 +22,14 @@ import (
 	"net/http"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	"github.com/dragonflyoss/Dragonfly/common/constants"
-	errTypes "github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/constants"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	sutil "github.com/dragonflyoss/Dragonfly/supernode/util"
 
 	"github.com/go-openapi/strfmt"
+	"github.com/gorilla/schema"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -51,14 +69,29 @@ var resultMap = map[string]string{
 }
 
 func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
-	reader := req.Body
 	request := &types.TaskRegisterRequest{}
-	if err := json.NewDecoder(reader).Decode(request); err != nil {
-		return errors.Wrap(errTypes.ErrInvalidValue, err.Error())
+
+	// parse request.Body to the types.TaskRegisterRequest struct
+	ct := req.Header.Get("Content-Type")
+	if ct == "application/x-www-form-urlencoded" {
+		if err := req.ParseForm(); err != nil {
+			return errors.Wrapf(errortypes.ErrInvalidValue, "failed to parse the request body as a form: %v", err)
+		}
+
+		decoder := schema.NewDecoder()
+		err = decoder.Decode(request, req.PostForm)
+		if err != nil {
+			return errors.Wrap(errortypes.ErrInvalidValue, err.Error())
+		}
+	} else {
+		reader := req.Body
+		if err := json.NewDecoder(reader).Decode(request); err != nil {
+			return errors.Wrap(errortypes.ErrInvalidValue, err.Error())
+		}
 	}
 
 	if err := request.Validate(strfmt.NewFormats()); err != nil {
-		return errors.Wrap(errTypes.ErrInvalidValue, err.Error())
+		return errors.Wrap(errortypes.ErrInvalidValue, err.Error())
 	}
 
 	peerCreateRequest := &types.PeerCreateRequest{
@@ -70,28 +103,31 @@ func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http
 	peerCreateResponse, err := s.PeerMgr.Register(ctx, peerCreateRequest)
 	if err != nil {
 		logrus.Errorf("failed to register peer %+v: %v", peerCreateRequest, err)
-		return errors.Wrapf(errTypes.ErrSystemError, "failed to register peer: %v", err)
+		return errors.Wrapf(errortypes.ErrSystemError, "failed to register peer: %v", err)
 	}
 	logrus.Infof("success to register peer %+v", peerCreateRequest)
 
 	peerID := peerCreateResponse.ID
 	taskCreateRequest := &types.TaskCreateRequest{
-		CID:        request.CID,
-		Dfdaemon:   request.Dfdaemon,
-		Headers:    cutil.ConvertHeaders(request.Headers),
-		Identifier: request.Identifier,
-		Md5:        request.Md5,
-		Path:       request.Path,
-		PeerID:     peerID,
-		RawURL:     request.RawURL,
-		TaskURL:    request.TaskURL,
+		CID:         request.CID,
+		CallSystem:  request.CallSystem,
+		Dfdaemon:    request.Dfdaemon,
+		Headers:     netutils.ConvertHeaders(request.Headers),
+		Identifier:  request.Identifier,
+		Md5:         request.Md5,
+		Path:        request.Path,
+		PeerID:      peerID,
+		RawURL:      request.RawURL,
+		TaskURL:     request.TaskURL,
+		SupernodeIP: request.SuperNodeIP,
 	}
+	s.originClient.RegisterTLSConfig(taskCreateRequest.RawURL, request.Insecure, request.RootCAs)
 	resp, err := s.TaskMgr.Register(ctx, taskCreateRequest)
 	if err != nil {
 		logrus.Errorf("failed to register task %+v: %v", taskCreateRequest, err)
 		return err
 	}
-	logrus.Infof("success to register task %+v", taskCreateRequest)
+	logrus.Debugf("success to register task %+v", taskCreateRequest)
 	return EncodeResponse(rw, http.StatusOK, &types.ResultInfo{
 		Code: constants.Success,
 		Msg:  constants.GetMsgByCode(constants.Success),
@@ -116,17 +152,19 @@ func (s *Server) pullPieceTask(ctx context.Context, rw http.ResponseWriter, req 
 
 	// try to get dstPID
 	dstCID := params.Get("dstCid")
-	if !cutil.IsEmptyStr(dstCID) {
+	if !stringutils.IsEmptyStr(dstCID) {
 		dstDfgetTask, err := s.DfgetTaskMgr.Get(ctx, dstCID, taskID)
 		if err != nil {
-			return err
+			logrus.Warnf("failed to get dfget task by dstCID(%s) and taskID(%s), and the srcCID is %s, err: %v",
+				dstCID, taskID, srcCID, err)
+		} else {
+			request.DstPID = dstDfgetTask.PeerID
 		}
-		request.DstPID = dstDfgetTask.PeerID
 	}
 
 	isFinished, data, err := s.TaskMgr.GetPieces(ctx, taskID, srcCID, request)
 	if err != nil {
-		if errTypes.IsCDNFail(err) {
+		if errortypes.IsCDNFail(err) {
 			logrus.Errorf("taskID:%s, failed to get pieces %+v: %v", taskID, request, err)
 		}
 		resultInfo := NewResultInfoWithError(err)
@@ -187,6 +225,11 @@ func (s *Server) reportPiece(ctx context.Context, rw http.ResponseWriter, req *h
 		return err
 	}
 
+	// If piece is downloaded from supernode, add metrics.
+	if s.Config.IsSuperCID(dstCID) {
+		m.pieceDownloadedBytes.WithLabelValues().Add(float64(sutil.CalculatePieceSize(pieceRange)))
+	}
+
 	request := &types.PieceUpdateRequest{
 		ClientID:    srcCID,
 		DstPID:      dstDfgetTask.PeerID,
@@ -198,8 +241,9 @@ func (s *Server) reportPiece(ctx context.Context, rw http.ResponseWriter, req *h
 		return err
 	}
 
-	rw.WriteHeader(http.StatusOK)
-	return nil
+	return EncodeResponse(rw, http.StatusOK, &types.ResultInfo{
+		Code: constants.CodeGetPieceReport,
+	})
 }
 
 func (s *Server) reportServiceDown(ctx context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
@@ -207,24 +251,55 @@ func (s *Server) reportServiceDown(ctx context.Context, rw http.ResponseWriter, 
 	taskID := params.Get("taskId")
 	cID := params.Get("cid")
 
+	// get peerID according to the CID and taskID
 	dfgetTask, err := s.DfgetTaskMgr.Get(ctx, cID, taskID)
 	if err != nil {
 		return err
 	}
-
-	if err := s.ProgressMgr.DeletePieceProgressByCID(ctx, taskID, cID); err != nil {
+	if err := s.ProgressMgr.UpdatePeerServiceDown(ctx, dfgetTask.PeerID); err != nil {
 		return err
 	}
 
-	if err := s.ProgressMgr.DeletePeerStateByPeerID(ctx, dfgetTask.PeerID); err != nil {
-		return err
+	return EncodeResponse(rw, http.StatusOK, &types.ResultInfo{
+		Code: constants.CodeGetPeerDown,
+	})
+}
+
+func (s *Server) reportPieceError(ctx context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
+	logrus.Warnf("get report piece error request %v", req)
+
+	params := req.URL.Query()
+	taskID := params.Get("taskId")
+	pieceRange := params.Get("range")
+	srcCid := params.Get("srcCid")
+	dstCid := params.Get("dstCid")
+	dstIP := params.Get("dstIp")
+	realMd5 := params.Get("realMd5")
+	expectedMd5 := params.Get("expectedMd5")
+	errorType := params.Get("errorType")
+
+	// get peerID according to the CID and taskID
+	dstDfgetTask, err := s.DfgetTaskMgr.Get(ctx, dstCid, taskID)
+	if err != nil {
+		return nil
 	}
 
-	if err := s.PeerMgr.DeRegister(ctx, dfgetTask.PeerID); err != nil {
-		return err
+	request := &types.PieceErrorRequest{
+		DstIP:       dstIP,
+		DstPid:      dstDfgetTask.PeerID,
+		ErrorType:   errorType,
+		Range:       pieceRange,
+		ExpectedMd5: expectedMd5,
+		RealMd5:     realMd5,
+		SrcCid:      srcCid,
+		TaskID:      taskID,
 	}
 
-	if err := s.DfgetTaskMgr.Delete(ctx, cID, taskID); err != nil {
+	if stringutils.IsEmptyStr(request.DstPid) {
+		return errors.Wrap(errortypes.ErrEmptyValue, "dstPid")
+	}
+
+	if err := s.PieceErrorMgr.HandlePieceError(ctx, request); err != nil {
 		return err
 	}
 

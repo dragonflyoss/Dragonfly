@@ -19,7 +19,10 @@ package store
 import (
 	"context"
 	"io"
+	"path/filepath"
 	"time"
+
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 )
 
 // StorageDriver defines an interface to manage the data stored in the driver.
@@ -30,13 +33,13 @@ import (
 // the different pieces of the same file concurrently.
 type StorageDriver interface {
 	// Get data from the storage based on raw information.
-	// If the length<=0, the driver should return all data from the raw.offest.
+	// If the length<=0, the driver should return all data from the raw.offset.
 	// Otherwise, just return the data which starts from raw.offset and the length is raw.length.
 	Get(ctx context.Context, raw *Raw) (io.Reader, error)
 
 	// Get data from the storage based on raw information.
 	// The data should be returned in bytes.
-	// If the length<=0, the storage driver should return all data from the raw.offest.
+	// If the length<=0, the storage driver should return all data from the raw.offset.
 	// Otherwise, just return the data which starts from raw.offset and the length is raw.length.
 	GetBytes(ctx context.Context, raw *Raw) ([]byte, error)
 
@@ -53,10 +56,17 @@ type StorageDriver interface {
 	// Remove the data from the storage based on raw information.
 	Remove(ctx context.Context, raw *Raw) error
 
-	// Stat determine whether the data exists based on raw information.
+	// Stat determines whether the data exists based on raw information.
 	// If that, and return some info that in the form of struct StorageInfo.
 	// If not, return the ErrNotFound.
 	Stat(ctx context.Context, raw *Raw) (*StorageInfo, error)
+
+	// GetAvailSpace returns the available disk space in B.
+	GetAvailSpace(ctx context.Context, raw *Raw) (fileutils.Fsize, error)
+
+	// Walk walks the file tree rooted at root which determined by raw.Bucket and raw.Key,
+	// calling walkFn for each file or directory in the tree, including root.
+	Walk(ctx context.Context, raw *Raw) error
 }
 
 // Raw identifies a piece of data uniquely.
@@ -66,6 +76,7 @@ type Raw struct {
 	Key    string
 	Offset int64
 	Length int64
+	WalkFn filepath.WalkFunc
 }
 
 // StorageInfo includes partial meta information of the data.

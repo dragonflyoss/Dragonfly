@@ -1,3 +1,19 @@
+/*
+ * Copyright The Dragonfly Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package peer
 
 import (
@@ -6,38 +22,56 @@ import (
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
-	"github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/metricsutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	dutil "github.com/dragonflyoss/Dragonfly/supernode/daemon/util"
+	"github.com/dragonflyoss/Dragonfly/supernode/util"
 
 	"github.com/go-openapi/strfmt"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var _ mgr.PeerMgr = &Manager{}
 
+type metrics struct {
+	peers *prometheus.GaugeVec
+}
+
+func newMetrics(register prometheus.Registerer) *metrics {
+	return &metrics{
+		peers: metricsutils.NewGauge(config.SubsystemSupernode, "peers",
+			"Current status of peers", []string{"peer"}, register),
+	}
+}
+
 // Manager is an implement of the interface of PeerMgr.
 type Manager struct {
 	peerStore *dutil.Store
+	metrics   *metrics
 }
 
-// NewManager return a new Manager Object.
-func NewManager() (*Manager, error) {
+// NewManager returns a new Manager Object.
+func NewManager(register prometheus.Registerer) (*Manager, error) {
 	return &Manager{
 		peerStore: dutil.NewStore(),
+		metrics:   newMetrics(register),
 	}, nil
 }
 
 // Register a peer and generate a unique ID as returned.
 func (pm *Manager) Register(ctx context.Context, peerCreateRequest *types.PeerCreateRequest) (peerCreateResponse *types.PeerCreateResponse, err error) {
 	if peerCreateRequest == nil {
-		return nil, errors.Wrap(errorType.ErrEmptyValue, "peer create request")
+		return nil, errors.Wrap(errortypes.ErrEmptyValue, "peer create request")
 	}
 
 	ipString := peerCreateRequest.IP.String()
-	if !util.IsValidIP(ipString) {
-		return nil, errors.Wrapf(errorType.ErrInvalidValue, "peer IP: %s", ipString)
+	if !netutils.IsValidIP(ipString) {
+		return nil, errors.Wrapf(errortypes.ErrInvalidValue, "peer IP: %s", ipString)
 	}
 
 	id := generatePeerID(peerCreateRequest)
@@ -50,25 +84,37 @@ func (pm *Manager) Register(ctx context.Context, peerCreateRequest *types.PeerCr
 		Created:  strfmt.DateTime(time.Now()),
 	}
 	pm.peerStore.Put(id, peerInfo)
+	pm.metrics.peers.WithLabelValues(peerInfo.IP.String()).Inc()
 
 	return &types.PeerCreateResponse{
 		ID: id,
 	}, nil
 }
 
-// DeRegister a peer from p2p network.
+// DeRegister is a peer from p2p network.
 func (pm *Manager) DeRegister(ctx context.Context, peerID string) error {
-	if _, err := pm.getPeerInfo(peerID); err != nil {
+	peerInfo, err := pm.getPeerInfo(peerID)
+	if err != nil {
 		return err
 	}
 
 	pm.peerStore.Delete(peerID)
+	// NOTE: DeRegister will be called asynchronously.
+	pm.metrics.peers.WithLabelValues(peerInfo.IP.String()).Dec()
 	return nil
 }
 
 // Get returns the peerInfo of the specified peerID.
 func (pm *Manager) Get(ctx context.Context, peerID string) (*types.PeerInfo, error) {
+	util.GetLock(peerID, true)
+	defer util.ReleaseLock(peerID, true)
+
 	return pm.getPeerInfo(peerID)
+}
+
+// GetAllPeerIDs returns all peerIDs.
+func (pm *Manager) GetAllPeerIDs(ctx context.Context) (peerIDs []string) {
+	return pm.peerStore.ListKeyAsStringSlice()
 }
 
 // List returns all filtered peerInfo by filter.
@@ -105,8 +151,8 @@ func (pm *Manager) List(ctx context.Context, filter *dutil.PageFilter) (
 // returns the underlying PeerInfo value.
 func (pm *Manager) getPeerInfo(peerID string) (*types.PeerInfo, error) {
 	// return error if peerID is empty
-	if util.IsEmptyStr(peerID) {
-		return nil, errors.Wrap(errorType.ErrEmptyValue, "peerID")
+	if stringutils.IsEmptyStr(peerID) {
+		return nil, errors.Wrap(errortypes.ErrEmptyValue, "peerID")
 	}
 
 	// get value form store
@@ -119,7 +165,7 @@ func (pm *Manager) getPeerInfo(peerID string) (*types.PeerInfo, error) {
 	if info, ok := v.(*types.PeerInfo); ok {
 		return info, nil
 	}
-	return nil, errors.Wrapf(errorType.ErrConvertFailed, "peerID %s: %v", peerID, v)
+	return nil, errors.Wrapf(errortypes.ErrConvertFailed, "peerID %s: %v", peerID, v)
 }
 
 func (pm *Manager) assertPeerInfoSlice(s []interface{}) ([]*types.PeerInfo, error) {
@@ -128,7 +174,7 @@ func (pm *Manager) assertPeerInfoSlice(s []interface{}) ([]*types.PeerInfo, erro
 		// type assertion
 		info, ok := v.(*types.PeerInfo)
 		if !ok {
-			return nil, errors.Wrapf(errorType.ErrConvertFailed, "value  %v", v)
+			return nil, errors.Wrapf(errortypes.ErrConvertFailed, "value  %v", v)
 		}
 		peerInfos = append(peerInfos, info)
 	}

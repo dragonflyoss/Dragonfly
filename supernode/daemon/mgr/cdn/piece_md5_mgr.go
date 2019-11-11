@@ -20,17 +20,17 @@ import (
 	"sort"
 	"strconv"
 
-	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
 )
 
 type pieceMD5Mgr struct {
-	taskPieceMD5s *cutil.SyncMap
+	taskPieceMD5s *syncmap.SyncMap
 }
 
 func newpieceMD5Mgr() *pieceMD5Mgr {
 	return &pieceMD5Mgr{
-		taskPieceMD5s: cutil.NewSyncMap(),
+		taskPieceMD5s: syncmap.NewSyncMap(),
 	}
 }
 
@@ -44,15 +44,15 @@ func (pmm *pieceMD5Mgr) getPieceMD5(taskID string, pieceNum int) (pieceMD5 strin
 	return pieceMD5s.GetAsString(strconv.Itoa(pieceNum))
 }
 
-// setPieceMD5 set the md5 for pieceRange of taskID.
+// setPieceMD5 sets the md5 for pieceRange of taskID.
 func (pmm *pieceMD5Mgr) setPieceMD5(taskID string, pieceNum int, pieceMD5 string) (err error) {
 	pieceMD5s, err := pmm.taskPieceMD5s.GetAsMap(taskID)
-	if err != nil && !errorType.IsDataNotFound(err) {
+	if err != nil && !errortypes.IsDataNotFound(err) {
 		return err
 	}
 
-	if cutil.IsNil(pieceMD5s) {
-		pieceMD5s = cutil.NewSyncMap()
+	if pieceMD5s == nil {
+		pieceMD5s = syncmap.NewSyncMap()
 		pmm.taskPieceMD5s.Add(taskID, pieceMD5s)
 	}
 
@@ -76,4 +76,8 @@ func (pmm *pieceMD5Mgr) getPieceMD5sByTaskID(taskID string) (pieceMD5s []string,
 		pieceMD5s = append(pieceMD5s, pieceMD5)
 	}
 	return pieceMD5s, nil
+}
+
+func (pmm *pieceMD5Mgr) removePieceMD5sByTaskID(taskID string) error {
+	return pmm.taskPieceMD5s.Remove(taskID)
 }

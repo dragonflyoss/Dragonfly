@@ -33,7 +33,7 @@ var (
 	defaultVersion = "v1.24"
 )
 
-// APIClient is a API client that performs all operations
+// APIClient is an API client that performs all operations.
 // against a server
 type APIClient struct {
 	proto   string // socket type
@@ -44,7 +44,7 @@ type APIClient struct {
 	version string
 }
 
-// TLSConfig contains information of tls which users can specify
+// TLSConfig contains information of TLS which users can specify.
 type TLSConfig struct {
 	CA               string `json:"tlscacert,omitempty"`
 	Cert             string `json:"tlscert,omitempty"`
@@ -53,7 +53,7 @@ type TLSConfig struct {
 	ManagerWhiteList string `json:"manager-whitelist,omitempty"`
 }
 
-// NewAPIClient initializes a new API client for the given host
+// NewAPIClient initializes a new API client for the given host.
 func NewAPIClient(host string, tls TLSConfig) (CommonAPIClient, error) {
 	if host == "" {
 		host = defaultHost
@@ -111,7 +111,7 @@ func generateBaseURL(u *url.URL, tls TLSConfig) string {
 	return "http://" + u.Host
 }
 
-// BaseURL returns the base URL of APIClient
+// BaseURL returns the base URL of APIClient.
 func (client *APIClient) BaseURL() string {
 	return client.baseURL
 }

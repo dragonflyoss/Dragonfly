@@ -19,7 +19,7 @@ package config
 import (
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/go-check/check"
@@ -56,22 +56,26 @@ func (s *SupernodeConfigTestSuite) SetUpSuite(c *check.C) {
 
 func (s *SupernodeConfigTestSuite) TearDownSuite(c *check.C) {
 	if s.workHome != "" {
-		os.RemoveAll(s.workHome)
+		err := os.RemoveAll(s.workHome)
+		c.Assert(err, check.IsNil)
 	}
 }
 
 func (s *SupernodeConfigTestSuite) TestConfig_Load(c *check.C) {
-	confPath := path.Join(s.workHome, "supernode.yml")
+	confPath := filepath.Join(s.workHome, "supernode.yml")
 	conf := NewConfig()
 	exp := &Config{}
 
-	ioutil.WriteFile(confPath, []byte(conf.String()), os.ModePerm)
-	exp.Load(confPath)
+	err := ioutil.WriteFile(confPath, []byte(conf.String()), os.ModePerm)
+	c.Assert(err, check.IsNil)
+	err = exp.Load(confPath)
+	c.Assert(err, check.IsNil)
 	c.Assert(conf.BaseProperties, check.DeepEquals, exp.BaseProperties)
 
 	conf = &Config{}
-	ioutil.WriteFile(confPath, []byte(content), os.ModePerm)
-	err := conf.Load(confPath)
+	err = ioutil.WriteFile(confPath, []byte(content), os.ModePerm)
+	c.Assert(err, check.IsNil)
+	err = conf.Load(confPath)
 	c.Assert(err, check.IsNil)
 	c.Assert(conf.HomeDir, check.Equals, "/tmp")
 	c.Assert(conf.Plugins[StoragePlugin], check.NotNil)

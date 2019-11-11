@@ -20,7 +20,7 @@ import (
 	"context"
 	"path"
 
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
 )
@@ -28,21 +28,22 @@ import (
 var getDownloadRawFunc = getDownloadRaw
 var getMetaDataRawFunc = getMetaDataRaw
 var getMd5DataRawFunc = getMd5DataRaw
+var getHomeRawFunc = getHomeRaw
 
 func getDownloadKey(taskID string) string {
-	return path.Join(cutil.SubString(taskID, 0, 3), taskID)
+	return path.Join(getParentKey(taskID), taskID)
 }
 
 func getMetaDataKey(taskID string) string {
-	return path.Join(cutil.SubString(taskID, 0, 3), taskID+".meta")
+	return path.Join(getParentKey(taskID), taskID+".meta")
 }
 
 func getMd5DataKey(taskID string) string {
-	return path.Join(cutil.SubString(taskID, 0, 3), taskID+".md5")
+	return path.Join(getParentKey(taskID), taskID+".md5")
 }
 
-func getUploadKey(taskID string) string {
-	return path.Join(cutil.SubString(taskID, 0, 3), taskID)
+func getParentKey(taskID string) string {
+	return stringutils.SubString(taskID, 0, 3)
 }
 
 func getDownloadRaw(taskID string) *store.Raw {
@@ -66,14 +67,20 @@ func getMd5DataRaw(taskID string) *store.Raw {
 	}
 }
 
-func getUploadRaw(taskID string) *store.Raw {
+func getParentRaw(taskID string) *store.Raw {
 	return &store.Raw{
 		Bucket: config.DownloadHome,
-		Key:    getUploadKey(taskID),
+		Key:    getParentKey(taskID),
 	}
 }
 
-func deleteTaskFiles(ctx context.Context, cacheStore *store.Store, taskID string, deleteUploadFile bool) error {
+func getHomeRaw() *store.Raw {
+	return &store.Raw{
+		Bucket: config.DownloadHome,
+	}
+}
+
+func deleteTaskFiles(ctx context.Context, cacheStore *store.Store, taskID string) error {
 	if err := cacheStore.Remove(ctx, getMetaDataRaw(taskID)); err != nil &&
 		!store.IsKeyNotFound(err) {
 		return err
@@ -89,11 +96,10 @@ func deleteTaskFiles(ctx context.Context, cacheStore *store.Store, taskID string
 		return err
 	}
 
-	if deleteUploadFile {
-		if err := cacheStore.Remove(ctx, getUploadRaw(taskID)); err != nil &&
-			!store.IsKeyNotFound(err) {
-			return err
-		}
+	if err := cacheStore.Remove(ctx, getParentRaw(taskID)); err != nil &&
+		!store.IsKeyNotFound(err) {
+		return err
 	}
+
 	return nil
 }

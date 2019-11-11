@@ -8,8 +8,9 @@ package types
 import (
 	"encoding/json"
 
-	"github.com/go-openapi/errors"
 	strfmt "github.com/go-openapi/strfmt"
+
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
@@ -21,23 +22,10 @@ type TaskInfo struct {
 	// ID of the task.
 	ID string `json:"ID,omitempty"`
 
-	// This field is for debugging. When caller of dfget is using it to files, he can pass callSystem
-	// name to dfget. When this field is passing to supernode, supernode has ability to filter them via
-	// some black/white list to guarantee security, or some other purposes.
-	//
-	// Min Length: 1
-	CallSystem string `json:"callSystem,omitempty"`
-
 	// The status of the created task related to CDN functionality.
 	//
 	// Enum: [WAITING RUNNING FAILED SUCCESS SOURCE_ERROR]
 	CdnStatus string `json:"cdnStatus,omitempty"`
-
-	// tells whether it is a call from dfdaemon. dfdaemon is a long running
-	// process which works for container engines. It translates the image
-	// pulling request into raw requests into those dfget recganises.
-	//
-	Dfdaemon bool `json:"dfdaemon,omitempty"`
 
 	// The length of the file dfget requests to download in bytes
 	// which including the header and the trailer of each piece.
@@ -100,10 +88,6 @@ type TaskInfo struct {
 func (m *TaskInfo) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateCallSystem(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateCdnStatus(formats); err != nil {
 		res = append(res, err)
 	}
@@ -111,19 +95,6 @@ func (m *TaskInfo) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *TaskInfo) validateCallSystem(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.CallSystem) { // not required
-		return nil
-	}
-
-	if err := validate.MinLength("callSystem", "body", string(m.CallSystem), 1); err != nil {
-		return err
-	}
-
 	return nil
 }
 

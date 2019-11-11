@@ -1,3 +1,19 @@
+/*
+ * Copyright The Dragonfly Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package dfdaemon
 
 import (
@@ -9,21 +25,23 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/handler"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/proxy"
-	"github.com/sirupsen/logrus"
+	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/sirupsen/logrus"
 )
 
-// Server represents the dfdaemon server
+// Server represents the dfdaemon server.
 type Server struct {
 	server *http.Server
 	proxy  *proxy.Proxy
 }
 
-// Option is the functional option for creating a server
+// Option is the functional option for creating a server.
 type Option func(s *Server) error
 
-// WithTLSFromFile sets the tls config for the server from the given key pair file
+// WithTLSFromFile sets the TLS config for the server from the given key pair file.
 func WithTLSFromFile(certFile, keyFile string) Option {
 	return func(s *Server) error {
 		if s.server.TLSConfig == nil {
@@ -38,7 +56,7 @@ func WithTLSFromFile(certFile, keyFile string) Option {
 	}
 }
 
-// WithAddr sets the address the server listens on
+// WithAddr sets the address the server listens on.
 func WithAddr(addr string) Option {
 	return func(s *Server) error {
 		s.server.Addr = addr
@@ -46,7 +64,7 @@ func WithAddr(addr string) Option {
 	}
 }
 
-// WithProxy sets the proxy
+// WithProxy sets the proxy.
 func WithProxy(p *proxy.Proxy) Option {
 	return func(s *Server) error {
 		if p == nil {
@@ -57,7 +75,7 @@ func WithProxy(p *proxy.Proxy) Option {
 	}
 }
 
-// New returns a new server instance
+// New returns a new server instance.
 func New(opts ...Option) (*Server, error) {
 	p, _ := proxy.New()
 	s := &Server{
@@ -66,6 +84,8 @@ func New(opts ...Option) (*Server, error) {
 		},
 		proxy: p,
 	}
+	// register dfdaemon build information
+	version.NewBuildInfo("dfdaemon", prometheus.DefaultRegisterer)
 
 	for _, opt := range opts {
 		if err := opt(s); err != nil {
@@ -76,7 +96,7 @@ func New(opts ...Option) (*Server, error) {
 	return s, nil
 }
 
-// NewFromConfig returns a new server instance from given configuration
+// NewFromConfig returns a new server instance from given configuration.
 func NewFromConfig(cfg config.Properties) (*Server, error) {
 	p, err := proxy.NewFromConfig(cfg)
 	if err != nil {
@@ -95,9 +115,9 @@ func NewFromConfig(cfg config.Properties) (*Server, error) {
 	return New(opts...)
 }
 
-// Start runs dfdaemon's http server
+// Start runs dfdaemon's http server.
 func (s *Server) Start() error {
-	proxy.WithDirectHandler(handler.New())(s.proxy)
+	_ = proxy.WithDirectHandler(handler.New())(s.proxy)
 	s.server.Handler = s.proxy
 	if s.server.TLSConfig != nil {
 		logrus.Infof("start dfdaemon https server on %s", s.server.Addr)
@@ -107,7 +127,7 @@ func (s *Server) Start() error {
 	return s.server.ListenAndServe()
 }
 
-// Stop gracefully stops the dfdaemon http server
+// Stop gracefully stops the dfdaemon http server.
 func (s *Server) Stop(ctx context.Context) error {
 	return s.server.Shutdown(ctx)
 }

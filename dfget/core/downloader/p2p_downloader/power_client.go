@@ -24,20 +24,29 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/constants"
-	"github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/constants"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
+	"github.com/dragonflyoss/Dragonfly/pkg/limitreader"
+	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/queue"
+	"github.com/dragonflyoss/Dragonfly/pkg/ratelimiter"
 
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	// downloadPieceTimeout specifies the timeout for piece downloading.
+	// If the actual execution time exceeds this threshold, a warning will be thrown.
+	downloadPieceTimeout = 2.0 * time.Second
+)
+
 // PowerClient downloads file from dragonfly.
 type PowerClient struct {
-	// taskID a string which represents a unique task.
+	// taskID is a string which represents a unique task.
 	taskID string
 	// node indicates the IP address of the currently registered supernode.
 	node string
@@ -48,13 +57,13 @@ type PowerClient struct {
 	cfg *config.Config
 	// queue maintains a queue of tasks that to be downloaded.
 	// When the download fails, the piece is requeued.
-	queue util.Queue
+	queue queue.Queue
 	// clientQueue maintains a queue of tasks that need to be written to disk.
 	// A piece will be putted into this queue after it be downloaded successfully.
-	clientQueue util.Queue
+	clientQueue queue.Queue
 
-	// rateLimiter limit the download speed.
-	rateLimiter *cutil.RateLimiter
+	// rateLimiter limits the download speed.
+	rateLimiter *ratelimiter.RateLimiter
 
 	// total indicates the total length of the downloaded piece.
 	total int64
@@ -79,8 +88,8 @@ func (pc *PowerClient) Run() error {
 		pc.readCost.Seconds(), pc.total)
 
 	if err != nil {
-		logrus.Errorf("read piece cont error:%v from dst:%s:%d, wait 20 ms",
-			err, pc.pieceTask.PeerIP, pc.pieceTask.PeerPort)
+		logrus.Errorf("failed to read piece cont(%s) from dst:%s:%d, wait 20 ms: %v",
+			pc.pieceTask.Range, pc.pieceTask.PeerIP, pc.pieceTask.PeerPort, err)
 		time.AfterFunc(time.Millisecond*20, func() {
 			pc.queue.Put(pc.failPiece())
 		})
@@ -93,7 +102,7 @@ func (pc *PowerClient) Run() error {
 	return nil
 }
 
-// ClientError return the client error if occurred
+// ClientError returns the client error if occurred
 func (pc *PowerClient) ClientError() *types.ClientErrorRequest {
 	return pc.clientError
 }
@@ -106,36 +115,38 @@ func (pc *PowerClient) downloadPiece() (content *bytes.Buffer, e error) {
 
 	// check that the target download peer is available
 	if dstIP != pc.node {
-		if _, e = cutil.CheckConnect(dstIP, peerPort, -1); e != nil {
+		if _, e = httputils.CheckConnect(dstIP, peerPort, -1); e != nil {
 			return nil, e
 		}
 	}
 
 	// send download request
 	startTime := time.Now()
-	resp, err := pc.downloadAPI.Download(dstIP, peerPort, pc.createDownloadRequest())
+	timeout := netutils.CalculateTimeout(int64(pc.pieceTask.PieceSize), pc.cfg.MinRate, config.DefaultMinRate, 10*time.Second)
+	resp, err := pc.downloadAPI.Download(dstIP, peerPort, pc.createDownloadRequest(), timeout)
 	if err != nil {
 		return nil, err
 	}
+	logrus.Debugf("success to get resp timeSince(%v)", time.Since(startTime))
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusRequestedRangeNotSatisfiable {
-		return nil, errors.ErrRangeNotSatisfiable
+		return nil, errortypes.ErrRangeNotSatisfiable
 	}
 	if !pc.is2xxStatus(resp.StatusCode) {
 		if resp.StatusCode == http.StatusNotFound {
 			pc.initFileNotExistError()
 		}
-		return nil, errors.New(resp.StatusCode, pc.readBody(resp.Body))
+		return nil, errortypes.New(resp.StatusCode, pc.readBody(resp.Body))
 	}
 
 	// start to read data from resp
 	// use limitReader to limit the download speed
-	limitReader := cutil.NewLimitReaderWithLimiter(pc.rateLimiter, resp.Body, pieceMD5 != "")
+	limitReader := limitreader.NewLimitReaderWithLimiter(pc.rateLimiter, resp.Body, pieceMD5 != "")
 	content = &bytes.Buffer{}
 	if pc.total, e = content.ReadFrom(limitReader); e != nil {
 		return nil, e
 	}
-	pc.readCost = time.Now().Sub(startTime)
+	pc.readCost = time.Since(startTime)
 
 	// Verify md5 code
 	if realMd5 := limitReader.Md5(); realMd5 != pieceMD5 {
@@ -144,9 +155,9 @@ func (pc *PowerClient) downloadPiece() (content *bytes.Buffer, e error) {
 			pc.pieceTask.Range, pieceMD5, realMd5)
 	}
 
-	if timeDuring := time.Since(startTime).Seconds(); timeDuring > 2.0 {
+	if timeDuring := time.Since(startTime); timeDuring > downloadPieceTimeout {
 		logrus.Warnf("client range:%s cost:%.3f from peer:%s, readCost:%.3f, length:%d",
-			pc.pieceTask.Range, timeDuring, dstIP, pc.readCost.Seconds(), pc.total)
+			pc.pieceTask.Range, timeDuring.Seconds(), dstIP, pc.readCost.Seconds(), pc.total)
 	}
 	return content, nil
 }

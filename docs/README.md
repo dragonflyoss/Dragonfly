@@ -32,7 +32,7 @@ For almost all users, commandline is the first reference you may need. Document 
 
 ## API Reference
 
-Commandline is the easiest way to experience Dragonfly's ability. And API extension will bring more furthure experience of Dragonfly. Commandline is just one kind of combination usage of API, if you wish to hack or take more advantages of Dragonfly, please see [API Reference](./api_reference). Like command line document, all API docs are auto generated via source code.
+Commandline is the easiest way to experience Dragonfly's ability. And API extension will bring more further experience of Dragonfly. Commandline is just one kind of combination usage of API, if you wish to hack or take more advantages of Dragonfly, please see [API Reference](./api_reference). Like command line document, all API docs are auto generated via source code.
 
 ## Ecosystem
 
@@ -40,11 +40,11 @@ Ecosystem documents show connections between Dragonfly and popular tool or syste
 
 ## Developer Guide
 
-Develop Guide helps (potential) developers/contributors to understand the thoery inside Dragonfly rather than the interface it exposes. With better understanding of how Dragonfly is designed, developer could learn source code of Dragonfly much easier and know how to debug, test and hack.
+Develop Guide helps (potential) developers/contributors to understand the theory inside Dragonfly rather than the interface it exposes. With better understanding of how Dragonfly is designed, developer could learn source code of Dragonfly much easier and know how to debug, test and hack.
 
 ### Design Doc
 
-[Design Doc](./design) is content all about deisgn of Dragonfly. It includes all things taken into consideration at the very beginning, the architecture designed for all components in Dragonfly, the interactive workflow between components, all APIs in Dragonfly and some technical things else.
+[Design Doc](./design) is content all about design of Dragonfly. It includes all things taken into consideration at the very beginning, the architecture designed for all components in Dragonfly, the interactive workflow between components, all APIs in Dragonfly and some technical things else.
 
 ### Test Guide
 

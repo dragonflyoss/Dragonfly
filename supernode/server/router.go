@@ -1,3 +1,19 @@
+/*
+ * Copyright The Dragonfly Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package server
 
 import (
@@ -7,25 +23,31 @@ import (
 	"net/http/pprof"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
+	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // versionMatcher defines to parse version url path.
 const versionMatcher = "/v{version:[0-9.]+}"
 
+var m = newMetrics(prometheus.DefaultRegisterer)
+
 func initRoute(s *Server) *mux.Router {
 	r := mux.NewRouter()
-
 	handlers := []*HandlerSpec{
 		// system
 		{Method: http.MethodGet, Path: "/_ping", HandlerFunc: s.ping},
+		{Method: http.MethodGet, Path: "/version", HandlerFunc: version.HandlerWithCtx},
 
 		// v0.3
 		{Method: http.MethodPost, Path: "/peer/registry", HandlerFunc: s.registry},
 		{Method: http.MethodGet, Path: "/peer/task", HandlerFunc: s.pullPieceTask},
 		{Method: http.MethodGet, Path: "/peer/piece/suc", HandlerFunc: s.reportPiece},
 		{Method: http.MethodGet, Path: "/peer/service/down", HandlerFunc: s.reportServiceDown},
+		{Method: http.MethodGet, Path: "/peer/piece/error", HandlerFunc: s.reportPieceError},
 
 		// v1
 		// peer
@@ -33,36 +55,42 @@ func initRoute(s *Server) *mux.Router {
 		{Method: http.MethodDelete, Path: "/peers/{id}", HandlerFunc: s.deRegisterPeer},
 		{Method: http.MethodGet, Path: "/peers/{id}", HandlerFunc: s.getPeer},
 		{Method: http.MethodGet, Path: "/peers", HandlerFunc: s.listPeers},
+
+		// task
+		{Method: http.MethodDelete, Path: "/tasks/{id}", HandlerFunc: s.deleteTask},
+
+		// piece
+		{Method: http.MethodGet, Path: "/tasks/{id}/pieces/{pieceRange}/error", HandlerFunc: s.handlePieceError},
+
+		// metrics
+		{Method: http.MethodGet, Path: "/metrics", HandlerFunc: handleMetrics},
+		{Method: http.MethodPost, Path: "/task/metrics", HandlerFunc: m.handleMetricsReport},
 	}
 
 	// register API
 	for _, h := range handlers {
 		if h != nil {
-			r.Path(versionMatcher + h.Path).Methods(h.Method).Handler(filter(h.HandlerFunc, s))
-			r.Path(h.Path).Methods(h.Method).Handler(filter(h.HandlerFunc, s))
+			r.Path(versionMatcher + h.Path).Methods(h.Method).Handler(m.instrumentHandler(h.Path, filter(h.HandlerFunc)))
+			r.Path(h.Path).Methods(h.Method).Handler(m.instrumentHandler(h.Path, filter(h.HandlerFunc)))
 		}
 	}
 
 	if s.Config.Debug || s.Config.EnableProfiler {
-		profilerSetup(r)
+		r.PathPrefix("/debug/pprof/cmdline").HandlerFunc(pprof.Cmdline)
+		r.PathPrefix("/debug/pprof/profile").HandlerFunc(pprof.Profile)
+		r.PathPrefix("/debug/pprof/symbol").HandlerFunc(pprof.Symbol)
+		r.PathPrefix("/debug/pprof/trace").HandlerFunc(pprof.Trace)
+		r.PathPrefix("/debug/pprof/").HandlerFunc(pprof.Index)
 	}
 	return r
 }
 
-func profilerSetup(mainRouter *mux.Router) {
-	var r = mainRouter.PathPrefix("/debug/").Subrouter()
-	r.HandleFunc("/pprof/", pprof.Index)
-	r.HandleFunc("/pprof/cmdline", pprof.Cmdline)
-	r.HandleFunc("/pprof/profile", pprof.Profile)
-	r.HandleFunc("/pprof/symbol", pprof.Symbol)
-	r.HandleFunc("/pprof/trace", pprof.Trace)
-	r.HandleFunc("/pprof/block", pprof.Handler("block").ServeHTTP)
-	r.HandleFunc("/pprof/heap", pprof.Handler("heap").ServeHTTP)
-	r.HandleFunc("/pprof/goroutine", pprof.Handler("goroutine").ServeHTTP)
-	r.HandleFunc("/pprof/threadcreate", pprof.Handler("threadcreate").ServeHTTP)
+func handleMetrics(ctx context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
+	promhttp.Handler().ServeHTTP(rw, req)
+	return nil
 }
 
-func filter(handler Handler, s *Server) http.HandlerFunc {
+func filter(handler Handler) http.HandlerFunc {
 	pctx := context.Background()
 
 	return func(w http.ResponseWriter, req *http.Request) {
@@ -75,7 +103,6 @@ func filter(handler Handler, s *Server) http.HandlerFunc {
 			// Handle error if request handling fails.
 			HandleErrorResponse(w, err)
 		}
-		return
 	}
 }
 

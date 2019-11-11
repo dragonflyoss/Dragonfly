@@ -21,7 +21,8 @@ import (
 	"fmt"
 	"io"
 
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 
 	"github.com/pkg/errors"
@@ -33,11 +34,11 @@ type Store struct {
 	driverName string
 	// config is used to init storage driver.
 	config interface{}
-	// driver holds a storage which implements the interface of StorageDriver
+	// driver holds a storage which implements the interface of StorageDriver.
 	driver StorageDriver
 }
 
-// NewStore create a new Store instance.
+// NewStore creates a new Store instance.
 func NewStore(name string, builder StorageBuilder, cfg string) (*Store, error) {
 	if name == "" || builder == nil {
 		return nil, fmt.Errorf("plugin name or builder cannot be nil")
@@ -56,12 +57,12 @@ func NewStore(name string, builder StorageBuilder, cfg string) (*Store, error) {
 	}, nil
 }
 
-// Type return the plugin type: StoragePlugin.
+// Type returns the plugin type: StoragePlugin.
 func (s *Store) Type() config.PluginType {
 	return config.StoragePlugin
 }
 
-// Name return the plugin name.
+// Name returns the plugin name.
 func (s *Store) Name() string {
 	return s.driverName
 }
@@ -100,14 +101,14 @@ func (s *Store) PutBytes(ctx context.Context, raw *Raw, data []byte) error {
 
 // Remove the data from the storage based on raw information.
 func (s *Store) Remove(ctx context.Context, raw *Raw) error {
-	if raw == nil || (cutil.IsEmptyStr(raw.Key) &&
-		cutil.IsEmptyStr(raw.Bucket)) {
+	if raw == nil || (stringutils.IsEmptyStr(raw.Key) &&
+		stringutils.IsEmptyStr(raw.Bucket)) {
 		return errors.Wrapf(ErrEmptyKey, "cannot set both key and bucket empty at the same time")
 	}
 	return s.driver.Remove(ctx, raw)
 }
 
-// Stat determine whether the data exists based on raw information.
+// Stat determines whether the data exists based on raw information.
 // If that, and return some info that in the form of struct StorageInfo.
 // If not, return the ErrNotFound.
 func (s *Store) Stat(ctx context.Context, raw *Raw) (*StorageInfo, error) {
@@ -117,8 +118,19 @@ func (s *Store) Stat(ctx context.Context, raw *Raw) (*StorageInfo, error) {
 	return s.driver.Stat(ctx, raw)
 }
 
+// GetAvailSpace returns the available disk space in B.
+func (s *Store) GetAvailSpace(ctx context.Context, raw *Raw) (fileutils.Fsize, error) {
+	return s.driver.GetAvailSpace(ctx, raw)
+}
+
+// Walk walks the file tree rooted at root which determined by raw.Bucket and raw.Key,
+// calling walkFn for each file or directory in the tree, including root.
+func (s *Store) Walk(ctx context.Context, raw *Raw) error {
+	return s.driver.Walk(ctx, raw)
+}
+
 func checkEmptyKey(raw *Raw) error {
-	if raw == nil || cutil.IsEmptyStr(raw.Key) {
+	if raw == nil || stringutils.IsEmptyStr(raw.Key) {
 		return ErrEmptyKey
 	}
 

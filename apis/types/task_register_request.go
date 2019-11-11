@@ -6,8 +6,9 @@ package types
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"github.com/go-openapi/errors"
 	strfmt "github.com/go-openapi/strfmt"
+
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
@@ -26,6 +27,13 @@ type TaskRegisterRequest struct {
 	// Thus, multiple dfget processes on the same peer have different CIDs.
 	//
 	CID string `json:"cID,omitempty"`
+
+	// This attribute represents where the dfget requests come from. Dfget will pass
+	// this field to supernode and supernode can do some checking and filtering via
+	// black/white list mechanism to guarantee security, or some other purposes like debugging.
+	//
+	// Min Length: 1
+	CallSystem string `json:"callSystem,omitempty"`
 
 	// tells whether it is a call from dfdaemon. dfdaemon is a long running
 	// process which works for container engines. It translates the image
@@ -51,6 +59,10 @@ type TaskRegisterRequest struct {
 	// generated taskID is different from B, and the result is that two users use different peer networks.
 	//
 	Identifier string `json:"identifier,omitempty"`
+
+	// tells whether skip secure verify when supernode download the remote source file.
+	//
+	Insecure bool `json:"insecure,omitempty"`
 
 	// md5 checksum for the resource to distribute. dfget catches this parameter from dfget's CLI
 	// and passes it to supernode. When supernode finishes downloading file/image from the source location,
@@ -78,9 +90,12 @@ type TaskRegisterRequest struct {
 	//
 	RawURL string `json:"rawURL,omitempty"`
 
-	// IP address of supernode that the client can connect to
-	// Format: ipv4
-	SuperNodeIP strfmt.IPv4 `json:"superNodeIp,omitempty"`
+	// The root ca cert from client used to download the remote source file.
+	//
+	RootCAs []strfmt.Base64 `json:"rootCAs"`
+
+	// The address of supernode that the client can connect to
+	SuperNodeIP string `json:"superNodeIp,omitempty"`
 
 	// taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via
 	// --filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.
@@ -99,6 +114,10 @@ func (m *TaskRegisterRequest) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateCallSystem(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateHostName(formats); err != nil {
 		res = append(res, err)
 	}
@@ -107,7 +126,7 @@ func (m *TaskRegisterRequest) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
-	if err := m.validateSuperNodeIP(formats); err != nil {
+	if err := m.validateRootCAs(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -124,6 +143,19 @@ func (m *TaskRegisterRequest) validateIP(formats strfmt.Registry) error {
 	}
 
 	if err := validate.FormatOf("IP", "body", "ipv4", m.IP.String(), formats); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *TaskRegisterRequest) validateCallSystem(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.CallSystem) { // not required
+		return nil
+	}
+
+	if err := validate.MinLength("callSystem", "body", string(m.CallSystem), 1); err != nil {
 		return err
 	}
 
@@ -160,14 +192,16 @@ func (m *TaskRegisterRequest) validatePort(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *TaskRegisterRequest) validateSuperNodeIP(formats strfmt.Registry) error {
+func (m *TaskRegisterRequest) validateRootCAs(formats strfmt.Registry) error {
 
-	if swag.IsZero(m.SuperNodeIP) { // not required
+	if swag.IsZero(m.RootCAs) { // not required
 		return nil
 	}
 
-	if err := validate.FormatOf("superNodeIp", "body", "ipv4", m.SuperNodeIP.String(), formats); err != nil {
-		return err
+	for i := 0; i < len(m.RootCAs); i++ {
+
+		// Format "byte" (base64 string) is already validated when unmarshalled
+
 	}
 
 	return nil

@@ -41,7 +41,7 @@ func (e RespError) Error() string {
 	return e.msg
 }
 
-// Code returns the response  code
+// Code returns the response code.
 func (e RespError) Code() int {
 	return e.code
 }
@@ -64,6 +64,15 @@ func (client *APIClient) post(ctx context.Context, path string, query url.Values
 	}
 
 	return client.sendRequest(ctx, "POST", path, query, body, headers)
+}
+
+func (client *APIClient) put(ctx context.Context, path string, query url.Values, obj interface{}, headers map[string][]string) (*Response, error) {
+	body, err := objectToJSONStream(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.sendRequest(ctx, "PUT", path, query, body, headers)
 }
 
 func (client *APIClient) postRawData(ctx context.Context, path string, query url.Values, data io.Reader, headers map[string][]string) (*Response, error) {
@@ -95,10 +104,15 @@ func (client *APIClient) hijack(ctx context.Context, path string, query url.Valu
 	}
 
 	if tcpConn, ok := conn.(*net.TCPConn); ok {
-		tcpConn.SetKeepAlive(true)
-		tcpConn.SetKeepAlivePeriod(30 * time.Second)
+		if err := tcpConn.SetKeepAlive(true); err != nil {
+			return nil, nil, err
+		}
+		if err := tcpConn.SetKeepAlivePeriod(30 * time.Second); err != nil {
+			return nil, nil, err
+		}
 	}
 
+	//lint:ignore SA1019 we do not migrate this to 'net/http.Client' as it does not implement Hijack now.
 	clientconn := httputil.NewClientConn(conn, nil)
 	defer clientconn.Close()
 
@@ -118,10 +132,8 @@ func (client *APIClient) newRequest(method, path string, query url.Values, body 
 		return nil, err
 	}
 
-	if header != nil {
-		for k, v := range header {
-			req.Header[k] = v
-		}
+	for k, v := range header {
+		req.Header[k] = v
 	}
 
 	return req, err
@@ -132,6 +144,8 @@ func (client *APIClient) sendRequest(ctx context.Context, method, path string, q
 	if err != nil {
 		return nil, err
 	}
+
+	req = req.WithContext(ctx)
 
 	resp, err := cancellableDo(ctx, client.HTTPCli, req)
 	if err != nil {
@@ -172,8 +186,6 @@ func cancellableDo(ctx context.Context, client *http.Client, req *http.Request) 
 
 	select {
 	case <-ctx.Done():
-		tr := client.Transport.(*http.Transport)
-		tr.CancelRequest(req)
 		<-ctxResp
 		return nil, ctx.Err()
 

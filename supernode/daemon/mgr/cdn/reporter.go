@@ -1,12 +1,28 @@
+/*
+ * Copyright The Dragonfly Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package cdn
 
 import (
 	"context"
-	"fmt"
 	"hash"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
@@ -42,7 +58,7 @@ func (re *reporter) reportCache(ctx context.Context, taskID string, metaData *fi
 	}
 
 	success, updateTaskInfo, err := re.processCacheByQuick(ctx, taskID, metaData, breakNum)
-	if err == nil && success == true {
+	if err == nil && success {
 		// it is possible to succeed only if breakNum equals -1
 		return nil, updateTaskInfo, nil
 	}
@@ -60,7 +76,7 @@ func (re *reporter) processCacheByQuick(ctx context.Context, taskID string, meta
 	}
 
 	// validate the file md5
-	if cutil.IsEmptyStr(metaData.RealMd5) {
+	if stringutils.IsEmptyStr(metaData.RealMd5) {
 		logrus.Debugf("failed to processCacheByQuick: empty RealMd5 for taskID %s", taskID)
 		return false, nil, nil
 	}
@@ -72,13 +88,13 @@ func (re *reporter) processCacheByQuick(ctx context.Context, taskID string, meta
 		logrus.Debugf("failed to processCacheByQuick: failed to get pieceMd5s taskID %s: %v", taskID, err)
 		return false, nil, err
 	}
-	if cutil.IsEmptySlice(pieceMd5s) {
+	if len(pieceMd5s) == 0 {
 		if pieceMd5s, err = re.metaDataManager.readPieceMD5s(ctx, taskID, metaData.RealMd5); err != nil {
 			logrus.Debugf("failed to processCacheByQuick: failed to read pieceMd5s taskID %s: %v", taskID, err)
 			return false, nil, err
 		}
 	}
-	if cutil.IsEmptySlice(pieceMd5s) {
+	if len(pieceMd5s) == 0 {
 		logrus.Debugf("failed to processCacheByQuick: empty pieceMd5s taskID %s: %v", taskID, err)
 		return false, nil, nil
 	}
@@ -89,7 +105,7 @@ func (re *reporter) processCacheByQuick(ctx context.Context, taskID string, meta
 
 func (re *reporter) processCacheByReadFile(ctx context.Context, taskID string, metaData *fileMetaData, breakNum int) (hash.Hash, *types.TaskInfo, error) {
 	var calculateFileMd5 = true
-	if breakNum == -1 && !cutil.IsEmptyStr(metaData.RealMd5) {
+	if breakNum == -1 && !stringutils.IsEmptyStr(metaData.RealMd5) {
 		calculateFileMd5 = false
 	}
 
@@ -115,8 +131,8 @@ func (re *reporter) processCacheByReadFile(ctx context.Context, taskID string, m
 	}
 
 	fileMd5Value := metaData.RealMd5
-	if cutil.IsEmptyStr(fileMd5Value) {
-		fileMd5Value = fmt.Sprintf("%x", result.fileMd5.Sum(nil))
+	if stringutils.IsEmptyStr(fileMd5Value) {
+		fileMd5Value = fileutils.GetMd5Sum(result.fileMd5, nil)
 	}
 
 	fmd := &fileMetaData{

@@ -19,14 +19,14 @@ package plugins
 import (
 	"fmt"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
+
+	"github.com/sirupsen/logrus"
 )
 
 var mgr = NewManager()
 
-// SetManager set a Manager implementation instead of the default one.
+// SetManager sets a Manager implementation instead of the default one.
 func SetManager(m Manager) {
 	mgr = m
 }

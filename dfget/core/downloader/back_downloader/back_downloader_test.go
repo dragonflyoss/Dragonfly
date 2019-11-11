@@ -23,12 +23,12 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 	"testing"
 
-	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 
 	"github.com/go-check/check"
 )
@@ -64,8 +64,8 @@ func (s *BackDownloaderTestSuite) TearDownSuite(c *check.C) {
 }
 
 func (s *BackDownloaderTestSuite) TestBackDownloader_Run(c *check.C) {
-	testFileMd5 := helper.CreateTestFileWithMD5(path.Join(s.workHome, "download.test"), "test downloader")
-	dst := path.Join(s.workHome, "back.test")
+	testFileMd5 := helper.CreateTestFileWithMD5(filepath.Join(s.workHome, "download.test"), "test downloader")
+	dst := filepath.Join(s.workHome, "back.test")
 
 	cfg := helper.CreateConfig(nil, s.workHome)
 	bd := &BackDownloader{
@@ -88,7 +88,7 @@ func (s *BackDownloaderTestSuite) TestBackDownloader_Run(c *check.C) {
 
 	bd.cleaned = false
 	bd.Md5 = testFileMd5
-	md5sum := util.Md5Sum(dst)
+	md5sum := fileutils.Md5Sum(dst)
 	c.Assert(testFileMd5, check.Equals, md5sum)
 
 	// test: realMd5 doesn't equal to expectedMd5
@@ -102,7 +102,7 @@ func (s *BackDownloaderTestSuite) TestBackDownloader_Run(c *check.C) {
 }
 
 func (s *BackDownloaderTestSuite) TestBackDownloader_Run_NotExist(c *check.C) {
-	dst := path.Join(s.workHome, "back.test")
+	dst := filepath.Join(s.workHome, "back.test")
 
 	cfg := helper.CreateConfig(nil, s.workHome)
 	bd := &BackDownloader{

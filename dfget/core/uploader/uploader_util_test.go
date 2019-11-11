@@ -21,7 +21,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/version"
@@ -36,7 +36,6 @@ func init() {
 
 type UploaderUtilTestSuite struct {
 	workHome string
-	host     string
 	ip       string
 	port     int
 	server   *http.Server
@@ -87,7 +86,7 @@ func (s *UploaderUtilTestSuite) TestGeneratePort(c *check.C) {
 }
 
 func (s *UploaderUtilTestSuite) TestGetPort(c *check.C) {
-	metaPath := path.Join(s.workHome, "meta")
+	metaPath := filepath.Join(s.workHome, "meta")
 	port := getPortFromMeta(metaPath)
 	c.Assert(port, check.Equals, 0)
 
@@ -103,7 +102,7 @@ func (s *UploaderUtilTestSuite) TestGetPort(c *check.C) {
 
 func (s *UploaderUtilTestSuite) TestUpdateServicePortInMeta(c *check.C) {
 	expectedPort := 80
-	metaPath := path.Join(s.workHome, "meta")
+	metaPath := filepath.Join(s.workHome, "meta")
 	updateServicePortInMeta(metaPath, expectedPort)
 	port := getPortFromMeta(metaPath)
 	c.Assert(port, check.Equals, expectedPort)

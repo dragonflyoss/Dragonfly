@@ -27,9 +27,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
+	"github.com/dragonflyoss/Dragonfly/pkg/ratelimiter"
 )
 
 var (
@@ -52,16 +52,16 @@ func pieceContent(pieceSize int64, origin string) string {
 	return buf.String()
 }
 
-// newTestPeerServer init the peer server for testing.
+// newTestPeerServer inits the peer server for testing.
 func newTestPeerServer(workHome string) (srv *peerServer) {
 	cfg := helper.CreateConfig(nil, workHome)
 	srv = newPeerServer(cfg, 0)
 	srv.totalLimitRate = 1000
-	srv.rateLimiter = util.NewRateLimiter(int32(defaultRateLimit), 2)
+	srv.rateLimiter = ratelimiter.NewRateLimiter(int64(defaultRateLimit), 2)
 	return srv
 }
 
-// initHelper create a temporary file and store it in the syncTaskMap.
+// initHelper creates a temporary file and store it in the syncTaskMap.
 func initHelper(srv *peerServer, fileName, dataDir, content string) {
 	helper.CreateTestFile(helper.GetServiceFile(fileName, dataDir), content)
 	if srv != nil {
@@ -123,18 +123,6 @@ func (u uploadHeader) newRange(rangeStr string) uploadHeader {
 	} else {
 		newU.rangeStr = rangeStr
 	}
-	return newU
-}
-
-func (u uploadHeader) newNum(num int) uploadHeader {
-	newU := u
-	newU.num = fmt.Sprintf("%d", num)
-	return newU
-}
-
-func (u uploadHeader) newSize(size int) uploadHeader {
-	newU := u
-	newU.size = fmt.Sprintf("%d", size)
 	return newU
 }
 

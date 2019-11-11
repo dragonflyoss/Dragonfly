@@ -19,7 +19,7 @@ package util
 import (
 	"testing"
 
-	"github.com/dragonflyoss/Dragonfly/common/errors"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 
 	"github.com/go-check/check"
 )
@@ -106,7 +106,6 @@ func (s *StoreTestSuite) TestStore(c *check.C) {
 		err := store.Delete(v.stringField)
 		c.Check(err, check.IsNil)
 		_, err = store.Get(v.stringField)
-		c.Check(errors.IsDataNotFound(err), check.Equals, true)
+		c.Check(errortypes.IsDataNotFound(err), check.Equals, true)
 	}
-
 }

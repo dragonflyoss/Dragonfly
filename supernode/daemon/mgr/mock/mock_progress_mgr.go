@@ -11,7 +11,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 
 	types "github.com/dragonflyoss/Dragonfly/apis/types"
-	util "github.com/dragonflyoss/Dragonfly/common/util"
+	syncmap "github.com/dragonflyoss/Dragonfly/pkg/syncmap"
 	mgr "github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 )
 
@@ -95,20 +95,6 @@ func (mr *MockProgressMgrMockRecorder) GetPieceProgressByCID(ctx, taskID, client
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPieceProgressByCID", reflect.TypeOf((*MockProgressMgr)(nil).GetPieceProgressByCID), ctx, taskID, clientID, filter)
 }
 
-// DeletePieceProgressByCID mocks base method
-func (m *MockProgressMgr) DeletePieceProgressByCID(ctx context.Context, taskID, clientID string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeletePieceProgressByCID", ctx, taskID, clientID)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeletePieceProgressByCID indicates an expected call of DeletePieceProgressByCID
-func (mr *MockProgressMgrMockRecorder) DeletePieceProgressByCID(ctx, taskID, clientID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePieceProgressByCID", reflect.TypeOf((*MockProgressMgr)(nil).DeletePieceProgressByCID), ctx, taskID, clientID)
-}
-
 // GetPeerIDsByPieceNum mocks base method
 func (m *MockProgressMgr) GetPeerIDsByPieceNum(ctx context.Context, taskID string, pieceNum int) ([]string, error) {
 	m.ctrl.T.Helper()
@@ -153,18 +139,18 @@ func (mr *MockProgressMgrMockRecorder) GetPeerStateByPeerID(ctx, peerID interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPeerStateByPeerID", reflect.TypeOf((*MockProgressMgr)(nil).GetPeerStateByPeerID), ctx, peerID)
 }
 
-// DeletePeerStateByPeerID mocks base method
-func (m *MockProgressMgr) DeletePeerStateByPeerID(ctx context.Context, peerID string) error {
+// UpdatePeerServiceDown mocks base method
+func (m *MockProgressMgr) UpdatePeerServiceDown(ctx context.Context, peerID string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeletePeerStateByPeerID", ctx, peerID)
+	ret := m.ctrl.Call(m, "UpdatePeerServiceDown", ctx, peerID)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// DeletePeerStateByPeerID indicates an expected call of DeletePeerStateByPeerID
-func (mr *MockProgressMgrMockRecorder) DeletePeerStateByPeerID(ctx, peerID interface{}) *gomock.Call {
+// UpdatePeerServiceDown indicates an expected call of UpdatePeerServiceDown
+func (mr *MockProgressMgrMockRecorder) UpdatePeerServiceDown(ctx, peerID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePeerStateByPeerID", reflect.TypeOf((*MockProgressMgr)(nil).DeletePeerStateByPeerID), ctx, peerID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePeerServiceDown", reflect.TypeOf((*MockProgressMgr)(nil).UpdatePeerServiceDown), ctx, peerID)
 }
 
 // GetPeersByTaskID mocks base method
@@ -183,10 +169,10 @@ func (mr *MockProgressMgrMockRecorder) GetPeersByTaskID(ctx, taskID interface{})
 }
 
 // GetBlackInfoByPeerID mocks base method
-func (m *MockProgressMgr) GetBlackInfoByPeerID(ctx context.Context, peerID string) (*util.SyncMap, error) {
+func (m *MockProgressMgr) GetBlackInfoByPeerID(ctx context.Context, peerID string) (*syncmap.SyncMap, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBlackInfoByPeerID", ctx, peerID)
-	ret0, _ := ret[0].(*util.SyncMap)
+	ret0, _ := ret[0].(*syncmap.SyncMap)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -195,4 +181,61 @@ func (m *MockProgressMgr) GetBlackInfoByPeerID(ctx context.Context, peerID strin
 func (mr *MockProgressMgrMockRecorder) GetBlackInfoByPeerID(ctx, peerID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBlackInfoByPeerID", reflect.TypeOf((*MockProgressMgr)(nil).GetBlackInfoByPeerID), ctx, peerID)
+}
+
+// UpdateSuperLoad mocks base method
+func (m *MockProgressMgr) UpdateSuperLoad(ctx context.Context, taskID string, delta, limit int32) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateSuperLoad", ctx, taskID, delta, limit)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateSuperLoad indicates an expected call of UpdateSuperLoad
+func (mr *MockProgressMgrMockRecorder) UpdateSuperLoad(ctx, taskID, delta, limit interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSuperLoad", reflect.TypeOf((*MockProgressMgr)(nil).UpdateSuperLoad), ctx, taskID, delta, limit)
+}
+
+// DeleteTaskID mocks base method
+func (m *MockProgressMgr) DeleteTaskID(ctx context.Context, taskID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteTaskID", ctx, taskID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteTaskID indicates an expected call of DeleteTaskID
+func (mr *MockProgressMgrMockRecorder) DeleteTaskID(ctx, taskID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTaskID", reflect.TypeOf((*MockProgressMgr)(nil).DeleteTaskID), ctx, taskID)
+}
+
+// DeleteCID mocks base method
+func (m *MockProgressMgr) DeleteCID(ctx context.Context, clientID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteCID", ctx, clientID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteCID indicates an expected call of DeleteCID
+func (mr *MockProgressMgrMockRecorder) DeleteCID(ctx, clientID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCID", reflect.TypeOf((*MockProgressMgr)(nil).DeleteCID), ctx, clientID)
+}
+
+// DeletePeerID mocks base method
+func (m *MockProgressMgr) DeletePeerID(ctx context.Context, peerID string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeletePeerID", ctx, peerID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeletePeerID indicates an expected call of DeletePeerID
+func (mr *MockProgressMgrMockRecorder) DeletePeerID(ctx, peerID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePeerID", reflect.TypeOf((*MockProgressMgr)(nil).DeletePeerID), ctx, peerID)
 }

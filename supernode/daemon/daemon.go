@@ -1,3 +1,19 @@
+/*
+ * Copyright The Dragonfly Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package daemon
 
 import (
@@ -10,6 +26,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/server"
 
 	"github.com/go-openapi/strfmt"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 )
 
@@ -26,12 +43,12 @@ type Daemon struct {
 }
 
 // New creates a new Daemon.
-func New(cfg *config.Config) (*Daemon, error) {
+func New(cfg *config.Config, dfgetLogger *logrus.Logger) (*Daemon, error) {
 	if err := plugins.Initialize(cfg); err != nil {
 		return nil, err
 	}
 
-	s, err := server.New(cfg)
+	s, err := server.New(cfg, dfgetLogger, prometheus.DefaultRegisterer)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +59,7 @@ func New(cfg *config.Config) (*Daemon, error) {
 	}, nil
 }
 
-// RegisterSuperNode register the supernode as a peer.
+// RegisterSuperNode registers the supernode as a peer.
 func (d *Daemon) RegisterSuperNode() error {
 	// construct the PeerCreateRequest for supernode.
 	// TODO: add supernode version

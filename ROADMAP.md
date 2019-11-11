@@ -1,103 +1,104 @@
 # Dragonfly Roadmap
 
-The `Supernode` of `Dragonfly` was written in Java, as a Sandbox Level Project in CNCF(Cloud Native Computing Foundation), we choose to refactor `Supernode` with Golang. In the meantime, we cherish every contributor who is willing to participate in the project.
+This document is used for contributors to have a better understanding of project's progress.
 
-This document is so crucial in order for contributors to have a better understanding of the progress of the project. For our project, the following versions are tentatively defined as project milestones. In order to welcome contributors to the community, I'll also detail the important features that need to be implemented in this document.
+For `Dragonfly`, the following versions are tentatively defined as project milestones.
+The following three versions are being planned currently:
 
-We are currently planning three versions:
+1. v0.4.x, improved performance and stability.
+2. v0.5.x, more adoptive with cloud env.
+3. v1.0.x, GA version.
 
-1. v0.3.0, as the transition version between Java and Go.
-2. v0.4.0, as a preliminary version of Go implementation.
-3. v0.5.0, as a pre-GA version of Go implementation.
+## v0.4.x
 
-## v0.3.0
+This version will focus on to improved the performance and stability of `Dragonfly`. Including:
 
-This version will exist as a transition version. In this version, we will support Java version and go version in parallel. Including:
+* Golang SDK
+* Supernode HA
+* Merge the dfdaemon and dfget components
+* Decentralized distribution
 
-* Bugfix with the Java version.
-* Refactor with Golang with the function of beggar version.
+We will try to finish it before **October 31, 2019**.
 
-NOTE: **In the meantime,The delivery of documentations is also critical.**
+### Golang SDK
 
-We will try to finish it before **February 1, 2019**.
+`Dragonfly` needs a Golang SDK which is stored in https://github.com/dragonflyoss/Dragonfly/tree/master/client. And then we can achieve the following goals:
 
-### Bug fix with the Java version
+* every caller of `Dragonfly` can take advantages of this SDK by integrating it
+* golang sdk encapsulates of the details of HTTP communication
+* it could provide scalability and portability for other system to integrate `Dragonfly`.
 
-In this release, the project for `Go` is not fully functional or even runnable, so we will continue to fix some bugs in the Java version to serve the general public.
+Related issue: [#348](https://github.com/dragonflyoss/Dragonfly/issues/348)
 
-// TODO
+### Supernode HA
 
-### Refactor with Golang
+As for now, we can specify multiple `supenodes` for dfclient at the same time. However, `supernode` is not aware of each other.
+When one of the `supernode server` is unavailable, dfclient will try to register to the one of the remained `supernodes`.
+The `supernode` registered will download the file from source server, reschedule pieces and re-build a P2P network because it lacks the information about the task and the peer node which will cost a lot of time.
+So we should make multiple `supernodes` be aware of each other.
 
-In this release, we support the implementation of a beggar version of the project for the Go version. We will implement the main logic of work flow with simplify the scheduler, CDN and some other functions. Including:
+Related issue: [#232](https://github.com/dragonflyoss/Dragonfly/issues/232)
 
-* P2P Network Register. The entire registration logic needs to be implemented. The CDN module is not implemented for the time being, we download files from the source directly and saved locally if not exist temporarily.
-* P2P Network Download. We use a simplified version of the scheduler to complete the p2p network, which works, but is fragile.
+### Merge the dfdaemon and dfget components
 
-## v0.4.0
+Both `dfdaemon` and `dfget` are meant for the client and packaged together into dfclient.
+So we can merge them into one single command to make the `Dragonfly` look simpler and easier to be deployed.
 
-At this point, `Dragonfly` is a completely project written by `Go`, we will implement the basic functionality of the Java version and replace it. Including:
+Related issue: [#806](https://github.com/dragonflyoss/Dragonfly/issues/806)
 
-* Delete Java source code and archive it.
-* Implement the functionality basically.
+### Decentralized distribution
 
-We will try to finish it before **March 15, 2019**.
+Now, `dfget` talks to `supernode` to discover peers information and publish its own status.
+It works well, however, the user has to maintain a `supernode` server and `supernode` will become the bottleneck of the cluster.
+So we can use a new approach where `dfget` can discover the same information without talking to `supernode` and
+all the clients can form a gossip cluster, where they can fire and listen for events.
 
-### Archive Java source code
+Related PR: [#594](https://github.com/dragonflyoss/Dragonfly/pull/594)
 
-In this version, the `Go` version is basically a replacement for the Java version. So we will remove the Java source code and stop maintain it, although we'll still provide an image of the latest Java version for archive.
+## v0.5.x
 
-* Package the Java code.
-* Delete the Java source code.
+This version will focus on enhancing the Dragonfly's features to make it more adoptive with cloud env. Including:
 
-### Implement the functionality basically
+* Support for more deployment options
+* Support multi-server computing framework.
+* Development of operation and maintenance tools.
 
-In this release, we've implemented most of the functionality and some advanced features of `Dragonfly` with `Go`, to the point of being aligned with the Java version. Including:
+We will try to finish it before **December 30, 2019**.
 
-* Scheduler. Complete scheduling logic, including blacklist or something others. In addition, for better extensibility, we should support it as a plug-in.
-* CDN support. Use CDN to Cache downloaded data from source to avoid downloading same files repeatedly.
-* Dynamic downloading rate limiting.
-* Disk GC.
-* Preheat image.
+### Support for more deployment options
 
-## v0.5.0
+As a cloud native project, we should do more work to support deploy the `Dragonfly` on the kubernets platform. Including but not limited to the following list:
 
-This is a basically stable version, reaching the pre-GA stage. Including:
+* Deploy `supernode` using [Helm](https://github.com/helm/helm) in Kubernetes to simplify the complexity of scaling SuperNodes in Kubernetes.
+* Deploy `supernode` cluster using [Operator](https://coreos.com/operators/).
+* Deploy `dfget & dfdaemon` using DaemonSet in Kubernetes.
 
-1. Stability & Security enhancement.
-2. Function Enhancement.
+Related issue: [#346](https://github.com/dragonflyoss/Dragonfly/issues/346)
 
-We will try to finish it before **April 15, 2019**.
+### Support multi-server computing framework
 
-### Stability & Security enhancement
+With the rise of ARM servers, x86 servers will not be the only choice.
+However, the images of the two computing frameworks are incompatible for one application.
+So the user will have to maintain the different versions for the same image which will bring challenges to management.
 
-Enhance the stability of the project.
+Related issue: [#775](https://github.com/dragonflyoss/Dragonfly/issues/775)
 
-* Support more configuration items.
-* Support private container image.
-* Support authentication in SuperNode API.
-* Different encryption algorithm in data transmission.
+### Development of operation and maintenance tools
 
-### Function Enhancement
+For better to use `Dragonfly`, we plan to provide more operation and maintenance tools to make it easy, including:
 
-Add more advanced functionality on the basis of previous versions.
+* A tool to validate the config file.
+* A tool for performance testing of `Dragonfly` clusters.
+* A dashboard tool for `Dragonfly`.
 
-* Support multi-registrys.
-* Support supernode cluster. Cluster the SuperNode to decrease possibility of failure.
-* Supernode support storage driver.
-* Use [IPFS](https://github.com/ipfs/go-ipfs) to share block datas between SuperNodes.
-* Highly user-customized modules.
+## v1.0.x
 
-## Future
+This is a stable version in GA stage. And we will focus on making `Dragonfly` support more scenarios. Including:
 
-We're going to do a lot more work on the community ecosystem, and before GA, we need to make our project not only to be useful, but also to be perfect. Including but not limited to the following list:
-
-* Deploy SuperNode using [Helm](https://github.com/helm/helm) in Kubernetes to simplify the complexity of scaling SuperNodes in Kubernetes.
-* Deploy Supernode cluster using [Operator](https://coreos.com/operators/).
-* Deploy dfget & dfdaemon using DaemonSet in Kubernetes.
-* Integration with [Harbor](https://github.com/goharbor/harbor).
-* Plug-In policy for CNCF projects.
-* Integrated monitoring mechanism, the combination of [Prometheus](https://github.com/prometheus/prometheus) and [Grafana](https://github.com/grafana/grafana) may be our first choice.
+* Support different encryption algorithm in data transmission.
+* Support multiple file transfer protocols, such as ftp, etc.
+* Distribution images across cloud vendors.
+* Support publish and subscribe mechanism.
 * ......
 
-This document give us a trunk direction, however it's not perfect, we may adjust the plan appropriately according to the urgency of demand. Finally, we plan to reach GA of the project at **May 21, 2019**, which is the time of [Kubecon Europe 2019](https://events.linuxfoundation.org/events/kubecon-cloudnativecon-europe-2019/). Let's do it together.
+This document give us a trunk direction, however it's not perfect, we may adjust the plan appropriately according to the urgency of demand.

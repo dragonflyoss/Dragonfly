@@ -20,8 +20,7 @@ import (
 	"bytes"
 	"encoding/json"
 
-	"github.com/dragonflyoss/Dragonfly/common/constants"
-	"github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/constants"
 )
 
 // Piece contains all information of a piece.
@@ -54,7 +53,7 @@ type Piece struct {
 	Content *bytes.Buffer `json:"-"`
 }
 
-// RawContent return raw contents.
+// RawContent returns raw contents.
 func (p *Piece) RawContent() *bytes.Buffer {
 	contents := p.Content.Bytes()
 	length := len(contents)
@@ -98,7 +97,7 @@ func NewPieceSimple(taskID string, node string, status int) *Piece {
 // NewPieceContent creates a Piece with specified content.
 func NewPieceContent(taskID, node, dstCid, pieceRange string,
 	result, status int, contents *bytes.Buffer) *Piece {
-	if util.IsNil(contents) {
+	if contents == nil {
 		contents = &bytes.Buffer{}
 	}
 	return &Piece{

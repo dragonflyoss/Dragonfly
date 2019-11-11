@@ -21,9 +21,12 @@ import (
 	"testing"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	"github.com/dragonflyoss/Dragonfly/common/errors"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
 
 	"github.com/go-check/check"
+	"github.com/prometheus/client_golang/prometheus"
+	prom_testutil "github.com/prometheus/client_golang/prometheus/testutil"
 )
 
 func Test(t *testing.T) {
@@ -35,56 +38,199 @@ func init() {
 }
 
 type DfgetTaskMgrTestSuite struct {
+	cfg *config.Config
 }
 
-func (s *DfgetTaskMgrTestSuite) TestDfgetTaskMgr(c *check.C) {
-	dfgetTaskManager, _ := NewManager()
-	clientID := "foo"
-	taskID := "00c4e7b174af7ed61c414b36ef82810ac0c98142c03e5748c00e1d1113f3c882"
+func (s *DfgetTaskMgrTestSuite) SetUpSuite(c *check.C) {
+	s.cfg = config.NewConfig()
+	s.cfg.SetCIDPrefix("127.0.0.1")
+}
 
-	// Add
-	dfgetTask := &types.DfGetTask{
-		CID:       clientID,
-		Path:      "/peer/file/taskFileName",
-		PieceSize: 4 * 1024 * 1024,
-		TaskID:    taskID,
-		PeerID:    "foo-192.168.10.11-1553838710990554281",
+func (s *DfgetTaskMgrTestSuite) TestDfgetTaskAdd(c *check.C) {
+	manager, _ := NewManager(s.cfg, prometheus.NewRegistry())
+	dfgetTasks := manager.metrics.dfgetTasks
+	dfgetTasksRegisterCount := manager.metrics.dfgetTasksRegisterCount
+
+	var testCases = []struct {
+		dfgetTask *types.DfGetTask
+		Expect    *types.DfGetTask
+	}{
+		{
+			dfgetTask: &types.DfGetTask{
+				CID:        "foo",
+				CallSystem: "foo",
+				Dfdaemon:   true,
+				Path:       "/peer/file/taskFileName",
+				PieceSize:  4 * 1024 * 1024,
+				TaskID:     "test1",
+				PeerID:     "peer1",
+			},
+			Expect: &types.DfGetTask{
+				CID:        "foo",
+				CallSystem: "foo",
+				Dfdaemon:   true,
+				Path:       "/peer/file/taskFileName",
+				PieceSize:  4 * 1024 * 1024,
+				TaskID:     "test1",
+				PeerID:     "peer1",
+				Status:     types.DfGetTaskStatusWAITING,
+			},
+		},
+		{
+			dfgetTask: &types.DfGetTask{
+				CID:        "bar",
+				CallSystem: "bar",
+				Dfdaemon:   false,
+				Path:       "/peer/file/taskFileName",
+				PieceSize:  4 * 1024 * 1024,
+				TaskID:     "test2",
+				PeerID:     "peer2",
+			},
+			Expect: &types.DfGetTask{
+				CID:        "bar",
+				CallSystem: "bar",
+				Dfdaemon:   false,
+				Path:       "/peer/file/taskFileName",
+				PieceSize:  4 * 1024 * 1024,
+				TaskID:     "test2",
+				PeerID:     "peer2",
+				Status:     types.DfGetTaskStatusWAITING,
+			},
+		},
 	}
 
-	err := dfgetTaskManager.Add(context.Background(), dfgetTask)
-	c.Check(err, check.IsNil)
+	for _, tc := range testCases {
+		err := manager.Add(context.Background(), tc.dfgetTask)
+		c.Check(err, check.IsNil)
+		c.Assert(1, check.Equals,
+			int(prom_testutil.ToFloat64(
+				dfgetTasks.WithLabelValues(tc.dfgetTask.CallSystem, tc.dfgetTask.Status))))
 
-	// Get
-	dt, err := dfgetTaskManager.Get(context.Background(), clientID, taskID)
-	c.Check(err, check.IsNil)
-	c.Check(dt, check.DeepEquals, &types.DfGetTask{
-		CID:       clientID,
-		Path:      "/peer/file/taskFileName",
-		PieceSize: 4 * 1024 * 1024,
-		TaskID:    taskID,
-		Status:    types.DfGetTaskStatusWAITING,
-		PeerID:    "foo-192.168.10.11-1553838710990554281",
-	})
+		c.Assert(1, check.Equals,
+			int(prom_testutil.ToFloat64(
+				dfgetTasksRegisterCount.WithLabelValues(tc.dfgetTask.CallSystem))))
+		dt, err := manager.Get(context.Background(), tc.dfgetTask.CID, tc.dfgetTask.TaskID)
+		c.Check(err, check.IsNil)
+		c.Check(dt, check.DeepEquals, tc.Expect)
+	}
+}
 
-	// UpdateStatus
-	err = dfgetTaskManager.UpdateStatus(context.Background(), clientID, taskID, types.DfGetTaskStatusSUCCESS)
-	c.Check(err, check.IsNil)
+func (s *DfgetTaskMgrTestSuite) TestDfgetTaskUpdate(c *check.C) {
+	manager, _ := NewManager(s.cfg, prometheus.NewRegistry())
+	dfgetTasksFailCount := manager.metrics.dfgetTasksFailCount
 
-	dt, err = dfgetTaskManager.Get(context.Background(), clientID, taskID)
-	c.Check(err, check.IsNil)
-	c.Check(dt, check.DeepEquals, &types.DfGetTask{
-		CID:       clientID,
-		Path:      "/peer/file/taskFileName",
-		PieceSize: 4 * 1024 * 1024,
-		TaskID:    taskID,
-		Status:    types.DfGetTaskStatusSUCCESS,
-		PeerID:    "foo-192.168.10.11-1553838710990554281",
-	})
+	var testCases = []struct {
+		dfgetTask  *types.DfGetTask
+		taskStatus string
+		Expect     *types.DfGetTask
+	}{
+		{
+			dfgetTask: &types.DfGetTask{
+				CID:        "foo",
+				CallSystem: "foo",
+				Dfdaemon:   true,
+				Path:       "/peer/file/taskFileName",
+				PieceSize:  4 * 1024 * 1024,
+				TaskID:     "test1",
+				PeerID:     "peer1",
+			},
+			taskStatus: types.DfGetTaskStatusFAILED,
+			Expect: &types.DfGetTask{
+				CID:        "foo",
+				CallSystem: "foo",
+				Dfdaemon:   true,
+				Path:       "/peer/file/taskFileName",
+				PieceSize:  4 * 1024 * 1024,
+				TaskID:     "test1",
+				PeerID:     "peer1",
+				Status:     types.DfGetTaskStatusFAILED,
+			},
+		},
+		{
+			dfgetTask: &types.DfGetTask{
+				CID:        "bar",
+				CallSystem: "bar",
+				Dfdaemon:   false,
+				Path:       "/peer/file/taskFileName",
+				PieceSize:  4 * 1024 * 1024,
+				TaskID:     "test2",
+				PeerID:     "peer2",
+			},
+			taskStatus: types.DfGetTaskStatusSUCCESS,
+			Expect: &types.DfGetTask{
+				CID:        "bar",
+				CallSystem: "bar",
+				Dfdaemon:   false,
+				Path:       "/peer/file/taskFileName",
+				PieceSize:  4 * 1024 * 1024,
+				TaskID:     "test2",
+				PeerID:     "peer2",
+				Status:     types.DfGetTaskStatusSUCCESS,
+			},
+		},
+	}
 
-	// Delete
-	err = dfgetTaskManager.Delete(context.Background(), clientID, taskID)
-	c.Check(err, check.IsNil)
+	for _, tc := range testCases {
+		err := manager.Add(context.Background(), tc.dfgetTask)
+		c.Check(err, check.IsNil)
 
-	_, err = dfgetTaskManager.Get(context.Background(), clientID, taskID)
-	c.Check(errors.IsDataNotFound(err), check.Equals, true)
+		err = manager.UpdateStatus(context.Background(), tc.dfgetTask.CID, tc.dfgetTask.TaskID, tc.taskStatus)
+		c.Check(err, check.IsNil)
+
+		if tc.taskStatus == types.DfGetTaskStatusFAILED {
+			c.Assert(1, check.Equals,
+				int(prom_testutil.ToFloat64(
+					dfgetTasksFailCount.WithLabelValues(tc.dfgetTask.CallSystem))))
+		}
+
+		dt, err := manager.Get(context.Background(), tc.dfgetTask.CID, tc.dfgetTask.TaskID)
+		c.Check(err, check.IsNil)
+		c.Check(dt, check.DeepEquals, tc.Expect)
+	}
+}
+
+func (s *DfgetTaskMgrTestSuite) TestDfgetTaskDelete(c *check.C) {
+	manager, _ := NewManager(s.cfg, prometheus.NewRegistry())
+	dfgetTasks := manager.metrics.dfgetTasks
+
+	var testCases = []struct {
+		dfgetTask *types.DfGetTask
+	}{
+		{
+			dfgetTask: &types.DfGetTask{
+				CID:        "foo",
+				CallSystem: "foo",
+				Dfdaemon:   false,
+				Path:       "/peer/file/taskFileName",
+				PieceSize:  4 * 1024 * 1024,
+				TaskID:     "test1",
+				PeerID:     "peer1",
+			},
+		},
+		{
+			dfgetTask: &types.DfGetTask{
+				CID:        "bar",
+				CallSystem: "bar",
+				Dfdaemon:   true,
+				Path:       "/peer/file/taskFileName",
+				PieceSize:  4 * 1024 * 1024,
+				TaskID:     "test2",
+				PeerID:     "peer2",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		err := manager.Add(context.Background(), tc.dfgetTask)
+		c.Check(err, check.IsNil)
+
+		err = manager.Delete(context.Background(), tc.dfgetTask.CID, tc.dfgetTask.TaskID)
+		c.Check(err, check.IsNil)
+		c.Assert(0, check.Equals,
+			int(prom_testutil.ToFloat64(
+				dfgetTasks.WithLabelValues(tc.dfgetTask.CallSystem, tc.dfgetTask.Status))))
+
+		_, err = manager.Get(context.Background(), tc.dfgetTask.CID, tc.dfgetTask.TaskID)
+		c.Check(errortypes.IsDataNotFound(err), check.Equals, true)
+	}
 }

@@ -23,12 +23,13 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/errors"
-	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/ratelimiter"
 
 	"github.com/go-check/check"
 )
@@ -87,7 +88,7 @@ func (s *PowerClientTestSuite) TestDownloadPiece(c *check.C) {
 	}
 	content, err = s.powerClient.downloadPiece()
 	c.Check(content, check.IsNil)
-	c.Check(err, check.DeepEquals, errors.ErrRangeNotSatisfiable)
+	c.Check(err, check.DeepEquals, errortypes.ErrRangeNotSatisfiable)
 
 	// dstIP == pc.node && Download Success && StatusCode == 416
 	body2 := ioutil.NopCloser(bytes.NewReader([]byte("test")))
@@ -162,7 +163,7 @@ func (s *PowerClientTestSuite) reset() {
 	s.powerClient = &PowerClient{
 		cfg:         &config.Config{RV: config.RuntimeVariable{Cid: ""}},
 		node:        "127.0.0.1",
-		rateLimiter: util.NewRateLimiter(int32(5), 2),
+		rateLimiter: ratelimiter.NewRateLimiter(int64(5), 2),
 		downloadAPI: NewMockDownloadAPI(),
 		pieceTask: &types.PullPieceTaskResponseContinueData{
 			PieceMd5: "",
@@ -179,7 +180,7 @@ func (s *PowerClientTestSuite) upServer(port int) {
 	go http.Serve(s.ln, nil)
 }
 
-// downloadMockAPI is an mock implementation of interface DownloadAPI.
+// downloadMockAPI is a mock implementation of interface DownloadAPI.
 type downloadMockAPI struct {
 }
 
@@ -188,6 +189,6 @@ func NewMockDownloadAPI() api.DownloadAPI {
 	return &downloadMockAPI{}
 }
 
-func (d *downloadMockAPI) Download(ip string, port int, req *api.DownloadRequest) (*http.Response, error) {
+func (d *downloadMockAPI) Download(ip string, port int, req *api.DownloadRequest, timeout time.Duration) (*http.Response, error) {
 	return downloadMock()
 }

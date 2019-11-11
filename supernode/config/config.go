@@ -1,16 +1,34 @@
+/*
+ * Copyright The Dragonfly Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package config
 
 import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"time"
+
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/rate"
 
 	"gopkg.in/yaml.v2"
-
-	"github.com/dragonflyoss/Dragonfly/common/util"
 )
 
-// NewConfig create a instant with default values.
+// NewConfig creates an instant with default values.
 func NewConfig() *Config {
 	return &Config{
 		BaseProperties: NewBaseProperties(),
@@ -26,7 +44,7 @@ type Config struct {
 
 // Load loads config properties from the giving file.
 func (c *Config) Load(path string) error {
-	return util.LoadYaml(path, c)
+	return fileutils.LoadYaml(path, c)
 }
 
 func (c *Config) String() string {
@@ -39,7 +57,7 @@ func (c *Config) String() string {
 // SetCIDPrefix sets a string as the prefix for supernode CID
 // which used to distinguish from the other peer nodes.
 func (c *Config) SetCIDPrefix(ip string) {
-	c.cIDPrefix = fmt.Sprintf("cdnnode:%s~", ip)
+	c.cIDPrefix = fmt.Sprintf("%s%s~", SuperNodeCIdPrefix, ip)
 }
 
 // GetSuperCID returns the cid string for taskID.
@@ -67,24 +85,34 @@ func (c *Config) IsSuperPID(peerID string) bool {
 	return peerID == c.superNodePID
 }
 
-// NewBaseProperties create a instant with default values.
+// NewBaseProperties creates an instant with default values.
 func NewBaseProperties() *BaseProperties {
 	home := filepath.Join(string(filepath.Separator), "home", "admin", "supernode")
 	return &BaseProperties{
-		ListenPort:              8002,
-		DownloadPort:            8001,
+		ListenPort:              DefaultListenPort,
+		DownloadPort:            DefaultDownloadPort,
 		HomeDir:                 home,
-		SchedulerCorePoolSize:   10,
+		SchedulerCorePoolSize:   DefaultSchedulerCorePoolSize,
 		DownloadPath:            filepath.Join(home, "repo", "download"),
-		PeerUpLimit:             5,
-		PeerDownLimit:           5,
-		EliminationLimit:        5,
-		FailureCountLimit:       5,
-		LinkLimit:               20,
-		SystemReservedBandwidth: 20,
-		MaxBandwidth:            200,
+		PeerUpLimit:             DefaultPeerUpLimit,
+		PeerDownLimit:           DefaultPeerDownLimit,
+		EliminationLimit:        DefaultEliminationLimit,
+		FailureCountLimit:       DefaultFailureCountLimit,
+		LinkLimit:               DefaultLinkLimit,
+		SystemReservedBandwidth: DefaultSystemReservedBandwidth,
+		MaxBandwidth:            DefaultMaxBandwidth,
 		EnableProfiler:          false,
 		Debug:                   false,
+		FailAccessInterval:      DefaultFailAccessInterval,
+		GCInitialDelay:          DefaultGCInitialDelay,
+		GCMetaInterval:          DefaultGCMetaInterval,
+		GCDiskInterval:          DefaultGCDiskInterval,
+		YoungGCThreshold:        DefaultYoungGCThreshold,
+		FullGCThreshold:         DefaultFullGCThreshold,
+		IntervalThreshold:       DefaultIntervalThreshold,
+		TaskExpireTime:          DefaultTaskExpireTime,
+		PeerGCDelay:             DefaultPeerGCDelay,
+		CleanRatio:              DefaultCleanRatio,
 	}
 }
 
@@ -110,9 +138,7 @@ type BaseProperties struct {
 	SchedulerCorePoolSize int `yaml:"schedulerCorePoolSize"`
 
 	// DownloadPath specifies the path where to store downloaded files from source address.
-	// This path can be set beyond BaseDir, such as taking advantage of a different disk from BaseDir's.
-	// default: $BaseDir/downloads
-	DownloadPath string `yaml:"downloadPath"`
+	DownloadPath string
 
 	// PeerUpLimit is the upload limit of a peer. When dfget starts to play a role of peer,
 	// it can only stand PeerUpLimit upload tasks from other peers.
@@ -122,7 +148,7 @@ type BaseProperties struct {
 	// PeerDownLimit is the download limit of a peer. When a peer starts to download a file/image,
 	// it will download file/image in the form of pieces. PeerDownLimit mean that a peer can only
 	// stand starting PeerDownLimit concurrent downloading tasks.
-	// default: 4
+	// default: 5
 	PeerDownLimit int `yaml:"peerDownLimit"`
 
 	// When dfget node starts to play a role of peer, it will provide services for other peers
@@ -141,19 +167,17 @@ type BaseProperties struct {
 	// default: 5
 	FailureCountLimit int `yaml:"failureCountLimit"`
 
-	// LinkLimit is set for supernode to limit every piece download network speed (unit: MB/s).
-	// default: 20
-	LinkLimit int `yaml:"linkLimit"`
+	// LinkLimit is set for supernode to limit every piece download network speed.
+	// default: 20 MB, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte.
+	LinkLimit rate.Rate `yaml:"linkLimit"`
 
 	// SystemReservedBandwidth is the network bandwidth reserved for system software.
-	// unit: MB/s
-	// default: 20
-	SystemReservedBandwidth int `yaml:"systemReservedBandwidth"`
+	// default: 20 MB, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte.
+	SystemReservedBandwidth rate.Rate `yaml:"systemReservedBandwidth"`
 
 	// MaxBandwidth is the network bandwidth that supernode can use.
-	// unit: MB/s
-	// default: 200
-	MaxBandwidth int `yaml:"maxBandwidth"`
+	// default: 200 MB, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte.
+	MaxBandwidth rate.Rate `yaml:"maxBandwidth"`
 
 	// Whether to enable profiler
 	// default: false
@@ -167,14 +191,53 @@ type BaseProperties struct {
 	// By default, the first non-loop address is advertised.
 	AdvertiseIP string `yaml:"advertiseIP"`
 
-	// cIDPrefix s a prefix string used to indicate that the CID is supernode.
+	// FailAccessInterval is the interval time after failed to access the URL.
+	// unit: minutes
+	// default: 3
+	FailAccessInterval time.Duration `yaml:"failAccessInterval"`
+
+	// cIDPrefix is a prefix string used to indicate that the CID is supernode.
 	cIDPrefix string
 
 	// superNodePID is the ID of supernode, which is the same as peer ID of dfget.
 	superNodePID string
-}
 
-// TransLimit trans rateLimit from MB/s to B/s.
-func TransLimit(rateLimit int) int {
-	return rateLimit * 1024 * 1024
+	// gc related
+
+	// GCInitialDelay is the delay time from the start to the first GC execution.
+	GCInitialDelay time.Duration `yaml:"gcInitialDelay"`
+
+	// GCMetaInterval is the interval time to execute GC meta.
+	GCMetaInterval time.Duration `yaml:"gcMetaInterval"`
+
+	// TaskExpireTime when a task is not accessed within the taskExpireTime,
+	// and it will be treated to be expired.
+	TaskExpireTime time.Duration `yaml:"taskExpireTime"`
+
+	// PeerGCDelay is the delay time to execute the GC after the peer has reported the offline.
+	PeerGCDelay time.Duration `yaml:"peerGCDelay"`
+
+	// GCDiskInterval is the interval time to execute GC disk.
+	GCDiskInterval time.Duration `yaml:"gcDiskInterval"`
+
+	// YoungGCThreshold if the available disk space is more than YoungGCThreshold
+	// and there is no need to GC disk.
+	//
+	// default: 100GB
+	YoungGCThreshold fileutils.Fsize `yaml:"youngGCThreshold"`
+
+	// FullGCThreshold if the available disk space is less than FullGCThreshold
+	// and the supernode should gc all task files which are not being used.
+	//
+	// default: 5GB
+	FullGCThreshold fileutils.Fsize `yaml:"fullGCThreshold"`
+
+	// IntervalThreshold is the threshold of the interval at which the task file is accessed.
+	IntervalThreshold time.Duration `yaml:"IntervalThreshold"`
+
+	// CleanRatio is the ratio to clean the disk and it is based on 10.
+	// It means the value of CleanRatio should be [1-10].
+	//
+	// default: 1
+	CleanRatio int
 }

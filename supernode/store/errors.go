@@ -54,27 +54,27 @@ func (s StorageError) Error() string {
 	return fmt.Sprintf("{\"Code\":%d,\"Msg\":\"%s\"}", s.Code, s.Msg)
 }
 
-// IsNilError check the error is nil or not.
+// IsNilError checks the error is nil or not.
 func IsNilError(err error) bool {
 	return err == nil
 }
 
-// IsKeyNotFound check the error is the key cannot be found.
+// IsKeyNotFound checks the error is the key cannot be found.
 func IsKeyNotFound(err error) bool {
 	return checkError(err, codeKeyNotFound)
 }
 
-// IsEmptyKey check the error is the key is empty or nil.
+// IsEmptyKey checks the error is the key is empty or nil.
 func IsEmptyKey(err error) bool {
 	return checkError(err, codeEmptyKey)
 }
 
-// IsInvalidValue check the error is the value is invalid or not.
+// IsInvalidValue checks the error is the value is invalid or not.
 func IsInvalidValue(err error) bool {
 	return checkError(err, codeInvalidValue)
 }
 
-// IsRangeNotSatisfiable check the error is a
+// IsRangeNotSatisfiable checks the error is a
 // range not exist error or not.
 func IsRangeNotSatisfiable(err error) bool {
 	return checkError(err, codeRangeNotSatisfiable)

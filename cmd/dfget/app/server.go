@@ -17,13 +17,14 @@
 package app
 
 import (
-	"fmt"
-	"path"
+	"path/filepath"
 
-	"github.com/dragonflyoss/Dragonfly/common/dflog"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
+	"github.com/dragonflyoss/Dragonfly/pkg/dflog"
+	"github.com/dragonflyoss/Dragonfly/pkg/printer"
 
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -57,25 +58,42 @@ func initServerFlags() {
 	flagSet.DurationVar(&cfg.RV.DataExpireTime, "expiretime", config.DataExpireTime,
 		"caching duration for which cached file keeps no accessed by any process, after this period cache file will be deleted")
 	flagSet.DurationVar(&cfg.RV.ServerAliveTime, "alivetime", config.ServerAliveTime,
-		"Alive duration for which uploader keeps no accessing by any uploading requests, after this period uploader will automically exit")
+		"alive duration for which uploader keeps no accessing by any uploading requests, after this period uploader will automatically exit")
 
 	flagSet.BoolVar(&cfg.Verbose, "verbose", false,
 		"be verbose")
 }
 
 func runServer() error {
-	initServerLog()
+	if err := initServerLog(); err != nil {
+		return err
+	}
 	// launch a peer server as a uploader server
 	port, err := uploader.LaunchPeerServer(cfg)
 	if err != nil {
 		return err
 	}
-	fmt.Println(port)
+
+	// NOTE: Please update the dfget.PeerServerExecutor.readPort
+	// because it will get the port from the stdout after call the `dfget server`.
+	printer.Printf("dfget uploader server port is %d", port)
 	uploader.WaitForShutdown()
 	return nil
 }
 
 func initServerLog() error {
-	logFilePath := path.Join(cfg.WorkHome, "logs", "dfserver.log")
-	return dflog.InitLog(cfg.Verbose, logFilePath, cfg.Sign)
+	logFilePath := filepath.Join(cfg.WorkHome, "logs", "dfserver.log")
+
+	opts := []dflog.Option{
+		dflog.WithLogFile(logFilePath),
+		dflog.WithSign(cfg.Sign),
+		dflog.WithDebug(cfg.Verbose),
+	}
+
+	// Once cfg.Console is set, process should also output log to console.
+	if cfg.Console {
+		opts = append(opts, dflog.WithConsole())
+	}
+
+	return dflog.Init(logrus.StandardLogger(), opts...)
 }

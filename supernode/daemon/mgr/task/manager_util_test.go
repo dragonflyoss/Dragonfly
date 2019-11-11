@@ -20,13 +20,14 @@ import (
 	"context"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/mock"
+	cMock "github.com/dragonflyoss/Dragonfly/supernode/httpclient/mock"
 
 	"github.com/go-check/check"
 	"github.com/golang/mock/gomock"
-	"github.com/prashantv/gostub"
+	"github.com/prometheus/client_golang/prometheus"
+	prom_testutil "github.com/prometheus/client_golang/prometheus/testutil"
 )
 
 func init() {
@@ -40,9 +41,9 @@ type TaskUtilTestSuite struct {
 	mockPeerMgr      *mock.MockPeerMgr
 	mockProgressMgr  *mock.MockProgressMgr
 	mockSchedulerMgr *mock.MockSchedulerMgr
+	mockOriginClient *cMock.MockOriginHTTPClient
 
-	taskManager       *Manager
-	contentLengthStub *gostub.Stubs
+	taskManager *Manager
 }
 
 func (s *TaskUtilTestSuite) SetUpSuite(c *check.C) {
@@ -53,75 +54,130 @@ func (s *TaskUtilTestSuite) SetUpSuite(c *check.C) {
 	s.mockDfgetTaskMgr = mock.NewMockDfgetTaskMgr(s.mockCtl)
 	s.mockProgressMgr = mock.NewMockProgressMgr(s.mockCtl)
 	s.mockSchedulerMgr = mock.NewMockSchedulerMgr(s.mockCtl)
+	s.mockOriginClient = cMock.NewMockOriginHTTPClient(s.mockCtl)
 	s.taskManager, _ = NewManager(config.NewConfig(), s.mockPeerMgr, s.mockDfgetTaskMgr,
-		s.mockProgressMgr, s.mockCDNMgr, s.mockSchedulerMgr)
+		s.mockProgressMgr, s.mockCDNMgr, s.mockSchedulerMgr, s.mockOriginClient, prometheus.NewRegistry())
 
-	s.contentLengthStub = gostub.Stub(&getContentLength, func(url string, headers map[string]string) (int64, int, error) {
-		return 1000, 200, nil
-	})
+	s.mockOriginClient.EXPECT().GetContentLength(gomock.Any(), gomock.Any()).Return(int64(1000), 200, nil)
 }
 
 func (s *TaskUtilTestSuite) TearDownSuite(c *check.C) {
-	s.contentLengthStub.Reset()
+	s.mockCtl.Finish()
 }
 
-func (s *TaskUtilTestSuite) TestAddOrUpdateTask(c *check.C) {
+func (s *TaskUtilTestSuite) TestEqualsTask(c *check.C) {
 	var cases = []struct {
-		req    *types.TaskCreateRequest
-		task   *types.TaskInfo
-		errNil bool
+		existTask *types.TaskInfo
+		task      *types.TaskInfo
+		result    bool
 	}{
 		{
-			req: &types.TaskCreateRequest{
-				CID:        "cid",
-				CallSystem: "foo",
-				Dfdaemon:   true,
-				Path:       "/peer/file/foo",
-				RawURL:     "http://aa.bb.com",
+			existTask: &types.TaskInfo{
+				ID:             generateTaskID("http://aa.bb.com", "", ""),
+				CdnStatus:      types.TaskInfoCdnStatusRUNNING,
+				HTTPFileLength: 1000,
+				PieceSize:      config.DefaultPieceSize,
+				PieceTotal:     1,
+				RawURL:         "http://aa.bb.com?page=1",
+				TaskURL:        "http://aa.bb.com",
+				Md5:            "fooMD5",
 			},
 			task: &types.TaskInfo{
 				ID:             generateTaskID("http://aa.bb.com", "", ""),
-				CallSystem:     "foo",
 				CdnStatus:      types.TaskInfoCdnStatusWAITING,
-				Dfdaemon:       true,
 				HTTPFileLength: 1000,
 				PieceSize:      config.DefaultPieceSize,
 				PieceTotal:     1,
 				RawURL:         "http://aa.bb.com",
 				TaskURL:        "http://aa.bb.com",
+				Md5:            "fooMD5",
 			},
-			errNil: true,
+			result: true,
 		},
 		{
-			req: &types.TaskCreateRequest{
-				CID:        "cid2",
-				CallSystem: "foo2",
-				Dfdaemon:   false,
-				Path:       "/peer/file/foo2",
-				RawURL:     "http://aa.bb.com",
-				Headers:    map[string]string{"aaa": "bbb"},
-			},
-			task: &types.TaskInfo{
+
+			existTask: &types.TaskInfo{
 				ID:             generateTaskID("http://aa.bb.com", "", ""),
-				CallSystem:     "foo",
 				CdnStatus:      types.TaskInfoCdnStatusWAITING,
-				Dfdaemon:       true,
 				HTTPFileLength: 1000,
 				PieceSize:      config.DefaultPieceSize,
 				PieceTotal:     1,
 				RawURL:         "http://aa.bb.com",
 				TaskURL:        "http://aa.bb.com",
 				Headers:        map[string]string{"aaa": "bbb"},
+				Md5:            "fooMD5",
 			},
-			errNil: true,
+			task: &types.TaskInfo{
+				ID:             generateTaskID("http://aa.bb.com", "", ""),
+				CdnStatus:      types.TaskInfoCdnStatusWAITING,
+				HTTPFileLength: 1000,
+				PieceSize:      config.DefaultPieceSize,
+				PieceTotal:     1,
+				RawURL:         "http://aa.bb.com",
+				TaskURL:        "http://aa.bb.com",
+				Headers:        map[string]string{"aaa": "bbb"},
+				Md5:            "otherMD5",
+			},
+			result: false,
 		},
 	}
 
 	for _, v := range cases {
-		task, err := s.taskManager.addOrUpdateTask(context.Background(), v.req)
-		c.Check(cutil.IsNil(err), check.Equals, v.errNil)
-		taskInfo, err := s.taskManager.getTask(task.ID)
-		c.Check(err, check.IsNil)
-		c.Check(taskInfo, check.DeepEquals, v.task)
+		result := equalsTask(v.existTask, v.task)
+		c.Check(result, check.DeepEquals, v.result)
+	}
+}
+
+func (s *TaskUtilTestSuite) TestTriggerCdnSyncAction(c *check.C) {
+	var err error
+	totalCounter := s.taskManager.metrics.triggerCdnCount
+
+	var cases = []struct {
+		task  *types.TaskInfo
+		err   error
+		skip  bool
+		total float64
+	}{
+		{
+			task: &types.TaskInfo{
+				CdnStatus: types.TaskInfoCdnStatusRUNNING,
+			},
+			err:  nil,
+			skip: true,
+		},
+		{
+			task: &types.TaskInfo{
+				CdnStatus: types.TaskInfoCdnStatusSUCCESS,
+			},
+			err:  nil,
+			skip: true,
+		},
+		{
+			task: &types.TaskInfo{
+				ID:        "foo",
+				CdnStatus: types.TaskInfoCdnStatusWAITING,
+			},
+			err:   nil,
+			skip:  false,
+			total: 1,
+		},
+		{
+			task: &types.TaskInfo{
+				ID:        "foo1",
+				CdnStatus: types.TaskInfoCdnStatusWAITING,
+			},
+			err:   nil,
+			skip:  false,
+			total: 2,
+		},
+	}
+
+	for _, tc := range cases {
+		err = s.taskManager.triggerCdnSyncAction(context.Background(), tc.task)
+		c.Assert(err, check.Equals, tc.err)
+		if !tc.skip {
+			c.Assert(tc.total, check.Equals,
+				int(prom_testutil.ToFloat64(totalCounter.WithLabelValues())))
+		}
 	}
 }

@@ -41,7 +41,7 @@ For Dragonfly's developer, if your code is only used in a single module, then th
 
 ## Run Test Cases Automatically
 
-Test cases can be run via `Makefile` of this repo, or just manully.
+Test cases can be run via `Makefile` of this repo, or just manually.
 
 To run the test automatically, the following prerequisites are needed:
 
@@ -60,7 +60,7 @@ GOPATH=/go
 Using `make -n test`, let us take a look at what `make test` has done.
 
 ```
-#make -n test
+# make -n test
 bash -c "env PATH=/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/usr/X11R6/bin:/usr/local/go/bin:/opt/satools:/root/bin hack/make.sh \
 check build unit-test integration-test cri-test"
 ```
@@ -77,7 +77,7 @@ In order to run unit-test or integration test, install go and configure go envir
 
 ``` shell
 # go version
-go version go1.12.6 linux/amd64
+go version go1.12.10 linux/amd64
 # which go
 /usr/local/go/bin/go
 # env |grep GO
@@ -85,7 +85,7 @@ GOROOT=/usr/local/go
 GOPATH=/go
 ```
 
-Then copy or clone Dragonfly source code to the GOPATH：
+Then copy or clone Dragonfly source code to the GOPATH:
 
 ``` shell
 # pwd
@@ -136,7 +136,7 @@ Then integration test could be run as following:
 * run a single test suite(all the test function will be run):
 
 ``` shell
-#go test -check.f APIPingSuite
+# go test -check.f APIPingSuite
 OK: 3 passed
 PASS
 ok      github.com/dragonflyoss/Dragonfly/test    3.081s

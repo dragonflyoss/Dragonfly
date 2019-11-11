@@ -18,75 +18,140 @@ package app
 
 import (
 	"fmt"
-	"io/ioutil"
+	"math/rand"
 	"os"
-	"path"
+	"path/filepath"
 	"testing"
+	"time"
 
-	"github.com/go-check/check"
-
-	"github.com/dragonflyoss/Dragonfly/supernode/config"
+	"github.com/pkg/errors"
+	"github.com/spf13/afero"
+	"github.com/spf13/viper"
+	"github.com/stretchr/testify/suite"
 )
 
-func Test(t *testing.T) {
-	check.TestingT(t)
+type rootTestSuite struct {
+	suite.Suite
 }
 
-func init() {
-	check.Suite(&SupernodeAppTest{})
+func (ts *rootTestSuite) TestConfigNotFound() {
+	r := ts.Require()
+	v := viper.New()
+	fs := afero.NewMemMapFs()
+	v.SetFs(fs)
+
+	r.False(afero.Exists(fs, rootCmd.Flag("config").DefValue))
+	r.Nil(bindRootFlags(v))
+	r.Nil(readConfigFile(v, rootCmd))
+
+	fake := generateFakeFilename(fs)
+	r.False(afero.Exists(fs, fake))
+	rootCmd.Flags().Set("config", fake)
+	r.Equal(v.GetString("config"), fake)
+	r.True(os.IsNotExist(errors.Cause(readConfigFile(v, rootCmd))))
 }
 
-type SupernodeAppTest struct {
-	workHome string
-	confPath string
-}
+func (ts *rootTestSuite) TestPortFlag() {
+	r := ts.Require()
+	fs := afero.NewMemMapFs()
 
-func (s *SupernodeAppTest) SetUpSuite(c *check.C) {
-	s.workHome, _ = ioutil.TempDir("/tmp", "supernode-AppTest-")
-	s.confPath = path.Join(s.workHome, "supernode.yml")
-}
+	configName := "supernode.yml"
+	file, err := fs.Create(configName)
+	r.Nil(err)
+	file.WriteString("base:\n    listenPort: 8888")
+	file.Close()
 
-func (s *SupernodeAppTest) TearDownSuite(c *check.C) {
-	if s.workHome != "" {
-		if err := os.RemoveAll(s.workHome); err != nil {
-			fmt.Printf("remove path:%s error", s.workHome)
-		}
+	// flag not set, should use config file
+	{
+		v := viper.New()
+		v.SetFs(fs)
+		rootCmd.Flags().Set("config", configName)
+		r.Nil(bindRootFlags(v))
+		r.Nil(readConfigFile(v, rootCmd))
+		cfg, err := getConfigFromViper(v)
+		r.Nil(err)
+		r.Equal(8888, cfg.ListenPort)
+	}
+
+	// flag not set, config file doesn't exist, should use default
+	{
+		v := viper.New()
+		v.SetFs(fs)
+		rootCmd.Flags().Set("config", "xxx")
+		r.Nil(bindRootFlags(v))
+		r.NotNil(readConfigFile(v, rootCmd))
+		cfg, err := getConfigFromViper(v)
+		r.Nil(err)
+		r.Equal(8002, cfg.ListenPort)
+	}
+
+	// when --port flag is set, should always use the flag
+	rootCmd.Flags().Set("port", "9999")
+
+	{
+		v := viper.New()
+		v.SetFs(fs)
+		rootCmd.Flags().Set("config", "xxx")
+		r.Nil(bindRootFlags(v))
+		r.NotNil(readConfigFile(v, rootCmd))
+		cfg, err := getConfigFromViper(v)
+		r.Nil(err)
+		r.Equal(9999, cfg.ListenPort)
+	}
+
+	{
+		v := viper.New()
+		v.SetFs(fs)
+		rootCmd.Flags().Set("config", configName)
+		r.Nil(bindRootFlags(v))
+		r.Nil(readConfigFile(v, rootCmd))
+		cfg, err := getConfigFromViper(v)
+		r.Nil(err)
+		r.Equal(9999, cfg.ListenPort)
 	}
 }
 
-func (s *SupernodeAppTest) SetUpTest(c *check.C) {
-	configFilePath = config.DefaultSupernodeConfigFilePath
-	cfg = config.NewConfig()
-	options = NewOptions()
+func (ts *rootTestSuite) TestHomeDirFlag() {
+	r := ts.Require()
+
+	defaultHomeDir := filepath.Join(string(filepath.Separator), "home", "admin", "supernode")
+	defaultDownloadPath := filepath.Join(defaultHomeDir, "repo", "download")
+
+	// flag not set, should use default value
+	{
+		v := viper.New()
+		r.Nil(bindRootFlags(v))
+		r.NotNil(readConfigFile(v, rootCmd))
+		cfg, err := getConfigFromViper(v)
+		r.Nil(err)
+		r.Equal(defaultHomeDir, cfg.HomeDir)
+		r.Equal(defaultDownloadPath, cfg.DownloadPath)
+	}
+	// when --home-dir flag is set, the DownloadPath should follow the update in default
+	{
+		v := viper.New()
+		rootCmd.Flags().Set("home-dir", "/test-home")
+		r.Nil(bindRootFlags(v))
+		r.NotNil(readConfigFile(v, rootCmd))
+		cfg, err := getConfigFromViper(v)
+		r.Nil(err)
+		r.Equal("/test-home", cfg.HomeDir)
+		r.Equal("/test-home/repo/download", cfg.DownloadPath)
+	}
 }
 
-func (s *SupernodeAppTest) TestInitLog(c *check.C) {
+func generateFakeFilename(fs afero.Fs) string {
+	for i := 0; i < 100; i++ {
+		d := fmt.Sprintf("/supernode-test-%d-%d", time.Now().UnixNano(), rand.Int())
+		_, err := fs.Stat(d)
+		if os.IsNotExist(err) {
+			return d
+		}
+	}
 
+	panic("failed to generate fake dir")
 }
 
-func (s *SupernodeAppTest) TestInitConfig(c *check.C) {
-	err := initConfig()
-	c.Assert(err, check.IsNil)
-
-	configFilePath = s.confPath
-	c.Assert(initConfig(), check.NotNil)
-
-	content := "base:\n  listenPort: 1000"
-	ioutil.WriteFile(s.confPath, []byte(content), os.ModePerm)
-	configFilePath = s.confPath
-	c.Assert(initConfig(), check.IsNil)
-	c.Assert(cfg.ListenPort, check.Equals, 1000)
-
-	os.Args = []string{os.Args[0], "--port", "1100"}
-	configFilePath = s.confPath
-	c.Assert(initConfig(), check.IsNil)
-	c.Assert(cfg.ListenPort, check.Equals, 1100)
-}
-
-func (s *SupernodeAppTest) TestNewOptions(c *check.C) {
-	opt := NewOptions()
-	expected := config.NewBaseProperties()
-
-	c.Assert(opt.BaseProperties, check.NotNil)
-	c.Assert(opt.BaseProperties, check.DeepEquals, expected)
+func TestRootCommand(t *testing.T) {
+	suite.Run(t, &rootTestSuite{})
 }

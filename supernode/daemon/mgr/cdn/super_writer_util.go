@@ -1,3 +1,19 @@
+/*
+ * Copyright The Dragonfly Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package cdn
 
 import (
@@ -5,10 +21,10 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/binary"
-	"fmt"
 	"hash"
 	"sync"
 
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
 
@@ -49,7 +65,7 @@ func (cw *superWriter) writerPool(ctx context.Context, wg *sync.WaitGroup, n int
 				}
 
 				// report piece status
-				pieceSum := fmt.Sprintf("%x", pieceMd5.Sum(nil))
+				pieceSum := fileutils.GetMd5Sum(pieceMd5, nil)
 				pieceMd5Value := getPieceMd5Value(pieceSum, job.pieceContentSize+config.PieceWrapSize)
 				if cw.cdnReporter != nil {
 					if err := cw.cdnReporter.reportPieceStatus(ctx, job.taskID, job.pieceNum, pieceMd5Value, config.PieceSUCCESS); err != nil {

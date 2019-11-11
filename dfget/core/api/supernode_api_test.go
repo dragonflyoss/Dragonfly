@@ -21,24 +21,26 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dragonflyoss/Dragonfly/common/constants"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
+	"github.com/dragonflyoss/Dragonfly/pkg/constants"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 
 	"github.com/go-check/check"
 )
+
+const localhost = "127.0.0.1"
 
 func Test(t *testing.T) {
 	check.TestingT(t)
 }
 
 type SupernodeAPITestSuite struct {
-	mock *cutil.MockHTTPClient
+	mock *httputils.MockHTTPClient
 	api  SupernodeAPI
 }
 
 func (s *SupernodeAPITestSuite) SetUpSuite(c *check.C) {
-	s.mock = cutil.NewMockHTTPClient()
+	s.mock = httputils.NewMockHTTPClient()
 	s.api = NewSupernodeAPI()
 	s.api.(*supernodeAPI).HTTPClient = s.mock
 }
@@ -55,43 +57,41 @@ func init() {
 // unit tests for SupernodeAPI
 
 func (s *SupernodeAPITestSuite) TestSupernodeAPI_Register(c *check.C) {
-	ip := "127.0.0.1"
-
 	s.mock.PostJSONFunc = s.mock.CreatePostJSONFunc(0, nil, nil)
-	r, e := s.api.Register(ip, createRegisterRequest())
+	r, e := s.api.Register(localhost, createRegisterRequest())
 	c.Assert(r, check.IsNil)
 	c.Assert(e.Error(), check.Equals, "0:")
 
 	s.mock.PostJSONFunc = s.mock.CreatePostJSONFunc(0, nil,
 		fmt.Errorf("test"))
-	r, e = s.api.Register(ip, createRegisterRequest())
+	r, e = s.api.Register(localhost, createRegisterRequest())
 	c.Assert(r, check.IsNil)
 	c.Assert(e.Error(), check.Equals, "test")
 
 	res := types.RegisterResponse{BaseResponse: &types.BaseResponse{}}
 	s.mock.PostJSONFunc = s.mock.CreatePostJSONFunc(200, []byte(res.String()), nil)
-	r, e = s.api.Register(ip, createRegisterRequest())
+	r, e = s.api.Register(localhost, createRegisterRequest())
+	c.Assert(e, check.IsNil)
 	c.Assert(r, check.NotNil)
 	c.Assert(r.Code, check.Equals, 0)
 
 	res.Code = constants.Success
 	res.Data = &types.RegisterResponseData{FileLength: int64(32)}
 	s.mock.PostJSONFunc = s.mock.CreatePostJSONFunc(200, []byte(res.String()), nil)
-	r, e = s.api.Register(ip, createRegisterRequest())
+	r, e = s.api.Register(localhost, createRegisterRequest())
+	c.Assert(e, check.IsNil)
 	c.Assert(r, check.NotNil)
 	c.Assert(r.Code, check.Equals, constants.Success)
 	c.Assert(r.Data.FileLength, check.Equals, res.Data.FileLength)
 }
 
 func (s *SupernodeAPITestSuite) TestSupernodeAPI_PullPieceTask(c *check.C) {
-	ip := "127.0.0.1"
-
 	res := &types.PullPieceTaskResponse{BaseResponse: &types.BaseResponse{}}
 	res.Code = constants.CodePeerFinish
 	res.Data = []byte(`{"fileLength":2}`)
 	s.mock.GetFunc = s.mock.CreateGetFunc(200, []byte(res.String()), nil)
 
-	r, e := s.api.PullPieceTask(ip, nil)
+	r, e := s.api.PullPieceTask(localhost, nil)
 
 	c.Assert(e, check.IsNil)
 	c.Assert(r.Code, check.Equals, res.Code)
@@ -99,28 +99,26 @@ func (s *SupernodeAPITestSuite) TestSupernodeAPI_PullPieceTask(c *check.C) {
 }
 
 func (s *SupernodeAPITestSuite) TestSupernodeAPI_ReportPiece(c *check.C) {
-	ip := "127.0.0.1"
-
+	req := &types.ReportPieceRequest{
+		TaskID:     "sssss",
+		PieceRange: "0-11",
+	}
 	s.mock.GetFunc = s.mock.CreateGetFunc(200, []byte(`{"Code":700}`), nil)
-	r, e := s.api.ReportPiece(ip, nil)
+	r, e := s.api.ReportPiece(localhost, req)
 	c.Check(e, check.IsNil)
 	c.Check(r.Code, check.Equals, 700)
 }
 
 func (s *SupernodeAPITestSuite) TestSupernodeAPI_ServiceDown(c *check.C) {
-	ip := "127.0.0.1"
-
 	s.mock.GetFunc = s.mock.CreateGetFunc(200, []byte(`{"Code":200}`), nil)
-	r, e := s.api.ServiceDown(ip, "", "")
+	r, e := s.api.ServiceDown(localhost, "", "")
 	c.Check(e, check.IsNil)
 	c.Check(r.Code, check.Equals, 200)
 }
 
 func (s *SupernodeAPITestSuite) TestSupernodeAPI_ReportClientError(c *check.C) {
-	ip := "127.0.0.1"
-
 	s.mock.GetFunc = s.mock.CreateGetFunc(200, []byte(`{"Code":700}`), nil)
-	r, e := s.api.ReportClientError(ip, nil)
+	r, e := s.api.ReportClientError(localhost, nil)
 	c.Check(e, check.IsNil)
 	c.Check(r.Code, check.Equals, 700)
 }
@@ -131,27 +129,28 @@ func (s *SupernodeAPITestSuite) TestSupernodeAPI_get(c *check.C) {
 	}
 
 	api := s.api.(*supernodeAPI)
-	f := func(code int, res string, e error) (*testRes, error, string) {
+	f := func(code int, res string, e error) (*testRes, string, error) {
 		s.mock.GetFunc = s.mock.CreateGetFunc(code, []byte(res), e)
 		msg := fmt.Sprintf("code:%d res:%s e:%v", code, res, e)
 		resp := new(testRes)
 		err := api.get("http://localhost", resp)
-		return resp, err, msg
+		return resp, msg, err
 	}
 
-	r, e, m := f(0, "test", nil)
+	r, m, e := f(0, "test", nil)
 	c.Assert(r.A, check.Equals, 0, check.Commentf(m))
 	c.Assert(e.Error(), check.Equals, "0:test", check.Commentf(m))
 
-	r, e, m = f(0, "x", fmt.Errorf("test error"))
+	r, m, e = f(0, "x", fmt.Errorf("test error"))
+	c.Assert(r.A, check.Equals, 0, check.Commentf(m))
 	c.Assert(e.Error(), check.Equals, "test error", check.Commentf(m))
 
-	r, e, m = f(200, "x", nil)
+	r, m, e = f(200, "x", nil)
 	c.Assert(r.A, check.Equals, 0, check.Commentf(m))
 	c.Assert(strings.Contains(e.Error(), "invalid character"),
 		check.Equals, true, check.Commentf(m))
 
-	r, e, m = f(200, `{"A":1}`, nil)
+	r, m, e = f(200, `{"A":1}`, nil)
 	c.Assert(r.A, check.Equals, 1, check.Commentf(m))
 	c.Assert(e, check.IsNil, check.Commentf(m))
 

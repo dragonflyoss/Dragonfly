@@ -1,12 +1,27 @@
+/*
+ * Copyright The Dragonfly Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package cdn
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
-	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	errorType "github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 	"github.com/dragonflyoss/Dragonfly/supernode/util"
 
 	"github.com/pkg/errors"
@@ -31,23 +46,10 @@ func (cm *Manager) download(ctx context.Context, taskID, url string, headers map
 		if headers == nil {
 			headers = make(map[string]string)
 		}
-		headers["Range"] = cutil.ConstructRangeStr(breakRange)
+		headers["Range"] = httputils.ConstructRangeStr(breakRange)
 		checkCode = http.StatusPartialContent
 	}
 
 	logrus.Infof("start to download for taskId(%s) with fileUrl: %s header: %v checkCode: %d", taskID, url, headers, checkCode)
-	return getWithURL(url, headers, checkCode)
-}
-
-func getWithURL(url string, headers map[string]string, checkCode int) (*http.Response, error) {
-	// TODO: add timeout
-	resp, err := cutil.HTTPGet(url, headers)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode == checkCode {
-		return resp, nil
-	}
-	return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	return cm.originClient.Download(url, headers, checkCode)
 }

@@ -18,25 +18,25 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"time"
 
-	dferr "github.com/dragonflyoss/Dragonfly/common/errors"
-	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
-	"github.com/dragonflyoss/Dragonfly/version"
+	dferr "github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/rate"
+
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
-
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"gopkg.in/yaml.v2"
 )
 
 var rootCmd = &cobra.Command{
@@ -45,16 +45,11 @@ var rootCmd = &cobra.Command{
 	Long:              "The dfdaemon is a proxy between container engine and registry used for pulling images.",
 	DisableAutoGenTag: true, // disable displaying auto generation tag in cli docs
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if viper.GetBool("version") {
-			fmt.Println("dfdaemon version:", version.DFDaemonVersion)
-			return nil
-		}
-
 		if err := readConfigFile(viper.GetViper(), cmd); err != nil {
 			return errors.Wrap(err, "read config file")
 		}
 
-		cfg, err := getConfigFromViper(viper.GetViper())
+		cfg, err := getConfigFromViper(cmd, viper.GetViper())
 		if err != nil {
 			return errors.Wrap(err, "get config from viper")
 		}
@@ -83,7 +78,6 @@ func init() {
 
 	rf := rootCmd.Flags()
 
-	rf.BoolP("version", "v", false, "version")
 	rf.String("config", constant.DefaultConfigPath, "the path of dfdaemon's configuration file")
 
 	rf.Bool("verbose", false, "verbose")
@@ -98,20 +92,17 @@ func init() {
 	rf.String("registry", "https://index.docker.io", "registry mirror url, which will override the registry mirror settings in the config file if presented")
 
 	// dfget download config
-	rf.String("localrepo", filepath.Join(os.Getenv("HOME"), ".small-dragonfly/dfdaemon/data/"), "temp output dir of dfdaemon")
-	rf.String("callsystem", "com_ops_dragonfly", "caller name")
+	rf.String("localrepo", "", "temp output dir of dfdaemon")
+	rf.String("workHome", filepath.Join(os.Getenv("HOME"), ".small-dragonfly"), "the work home directory of dfdaemon.")
 	rf.String("dfpath", defaultDfgetPath, "dfget path")
-	rf.String("ratelimit", util.NetLimit(), "net speed limit,format:xxxM/K")
-	rf.String("urlfilter", "Signature&Expires&OSSAccessKeyId", "filter specified url fields")
-	rf.Bool("notbs", true, "not try back source to download if throw exception")
-	rf.StringSlice("node", nil, "specify the addresses(IP:port) of supernodes that will be passed to dfget.")
+	rf.Var(netutils.NetLimit(), "ratelimit", "net speed limit")
+	rf.StringSlice("node", nil, "specify the addresses(host:port) of supernodes that will be passed to dfget.")
 
 	exitOnError(bindRootFlags(viper.GetViper()), "bind root command flags")
 }
 
-// bindRootFlags binds flags on rootCmd to the given viper instance
+// bindRootFlags binds flags on rootCmd to the given viper instance.
 func bindRootFlags(v *viper.Viper) error {
-	v.RegisterAlias("supernodes", "node")
 	if err := v.BindPFlags(rootCmd.Flags()); err != nil {
 		return err
 	}
@@ -142,7 +133,7 @@ func exitOnError(err error, msg string) {
 	}
 }
 
-// Execute runs dfdaemon
+// Execute runs dfdaemon.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		logrus.Errorf("dfdaemon failed: %v", err)
@@ -155,7 +146,14 @@ func Execute() {
 }
 
 // getConfigFromViper returns dfdaemon config from the given viper instance
-func getConfigFromViper(v *viper.Viper) (*config.Properties, error) {
+func getConfigFromViper(cmd *cobra.Command, v *viper.Viper) (*config.Properties, error) {
+	// override supernodes in config file if --node is specified in cli.
+	// use default value if no supernodes is configured in config file
+	if cmd.Flags().Lookup("node").Changed ||
+		len(v.GetStringSlice("supernodes")) == 0 {
+		v.Set("supernodes", v.GetStringSlice("node"))
+	}
+
 	var cfg config.Properties
 	if err := v.Unmarshal(&cfg, func(dc *mapstructure.DecoderConfig) {
 		dc.TagName = "yaml"
@@ -163,15 +161,23 @@ func getConfigFromViper(v *viper.Viper) (*config.Properties, error) {
 			reflect.TypeOf(config.Regexp{}),
 			reflect.TypeOf(config.URL{}),
 			reflect.TypeOf(config.CertPool{}),
+			reflect.TypeOf(time.Second),
+			reflect.TypeOf(rate.B),
 		)
 	}); err != nil {
 		return nil, errors.Wrap(err, "unmarshal yaml")
 	}
+
+	// use `{WorkHome}/dfdaemon/data/` as repo dir if localrepo is not configured.
+	if cfg.DFRepo == "" {
+		cfg.DFRepo = filepath.Join(cfg.WorkHome, "dfdaemon/data/")
+	}
+
 	return &cfg, cfg.Validate()
 }
 
 // decodeWithYAML returns a mapstructure.DecodeHookFunc to decode the given
-// types by unmarshalling from yaml text
+// types by unmarshalling from yaml text.
 func decodeWithYAML(types ...reflect.Type) mapstructure.DecodeHookFunc {
 	return func(f, t reflect.Type, data interface{}) (interface{}, error) {
 		for _, typ := range types {

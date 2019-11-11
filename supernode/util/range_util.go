@@ -26,29 +26,51 @@ const (
 	separator = "-"
 )
 
+// CalculatePieceSize calculates the size of piece
+// according to the parameter range.
+func CalculatePieceSize(rangeStr string) int64 {
+	startIndex, endIndex, err := ParsePieceIndex(rangeStr)
+	if err != nil {
+		return 0
+	}
+
+	return endIndex - startIndex + 1
+}
+
 // CalculatePieceNum calculates the number of piece
 // according to the parameter range.
 func CalculatePieceNum(rangeStr string) int {
-	ranges := strings.Split(rangeStr, separator)
-	if len(ranges) != 2 {
-		return -1
-	}
-
-	startIndex, err := strconv.ParseInt(ranges[0], 10, 64)
+	startIndex, endIndex, err := ParsePieceIndex(rangeStr)
 	if err != nil {
-		return -1
-	}
-	endIndex, err := strconv.ParseInt(ranges[1], 10, 64)
-	if err != nil {
-		return -1
-	}
-	if endIndex < startIndex {
 		return -1
 	}
 
 	pieceSize := endIndex - startIndex + 1
 
 	return int(startIndex / pieceSize)
+}
+
+// ParsePieceIndex parses the start and end index ​​according to range string.
+func ParsePieceIndex(rangeStr string) (start, end int64, err error) {
+	ranges := strings.Split(rangeStr, separator)
+	if len(ranges) != 2 {
+		return -1, -1, fmt.Errorf("range value(%s) is illegal which should be like 0-45535", rangeStr)
+	}
+
+	startIndex, err := strconv.ParseInt(ranges[0], 10, 64)
+	if err != nil {
+		return -1, -1, fmt.Errorf("range(%s) start is not a number", rangeStr)
+	}
+	endIndex, err := strconv.ParseInt(ranges[1], 10, 64)
+	if err != nil {
+		return -1, -1, fmt.Errorf("range(%s) end is not a number", rangeStr)
+	}
+
+	if endIndex < startIndex {
+		return -1, -1, fmt.Errorf("range(%s) start is larger than end", rangeStr)
+	}
+
+	return startIndex, endIndex, nil
 }
 
 // CalculateBreakRange calculates the start and end of piece

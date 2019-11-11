@@ -1,3 +1,19 @@
+/*
+ * Copyright The Dragonfly Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package cdn
 
 import (
@@ -6,7 +22,8 @@ import (
 	"strings"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/digest"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
 	"github.com/dragonflyoss/Dragonfly/supernode/util"
@@ -143,7 +160,7 @@ func (mm *fileMetaDataManager) updateStatusAndResult(ctx context.Context, taskID
 	originMetaData.Success = metaData.Success
 	if originMetaData.Success {
 		originMetaData.FileLength = metaData.FileLength
-		if !cutil.IsEmptyStr(metaData.RealMd5) {
+		if !stringutils.IsEmptyStr(metaData.RealMd5) {
 			originMetaData.RealMd5 = metaData.RealMd5
 		}
 	}
@@ -151,7 +168,7 @@ func (mm *fileMetaDataManager) updateStatusAndResult(ctx context.Context, taskID
 	return mm.writeFileMetaData(ctx, originMetaData)
 }
 
-// writePieceMD5s write the piece md5s to storage for the md5 file of taskID.
+// writePieceMD5s writes the piece md5s to storage for the md5 file of taskID.
 //
 // And it should append the fileMD5 which means that the md5 of the task file
 // and the SHA-1 digest of fileMD5 at the end of the file.
@@ -159,22 +176,22 @@ func (mm *fileMetaDataManager) writePieceMD5s(ctx context.Context, taskID, fileM
 	mm.locker.GetLock(taskID, false)
 	defer mm.locker.ReleaseLock(taskID, false)
 
-	if cutil.IsEmptySlice(pieceMD5s) {
+	if len(pieceMD5s) == 0 {
 		logrus.Warnf("failed to write empty pieceMD5s for taskID: %s", taskID)
 		return nil
 	}
 
 	// append fileMD5
 	pieceMD5s = append(pieceMD5s, fileMD5)
-	// append the the SHA-1 checksum of pieceMD5s
-	pieceMD5s = append(pieceMD5s, cutil.Sha1(pieceMD5s))
+	// append the SHA-1 checksum of pieceMD5s
+	pieceMD5s = append(pieceMD5s, digest.Sha1(pieceMD5s))
 
 	pieceMD5Str := strings.Join(pieceMD5s, "\n")
 
 	return mm.fileStore.PutBytes(ctx, getMd5DataRawFunc(taskID), []byte(pieceMD5Str))
 }
 
-// readPieceMD5s read the md5 file of the taskID and returns the pieceMD5s.
+// readPieceMD5s reads the md5 file of the taskID and returns the pieceMD5s.
 func (mm *fileMetaDataManager) readPieceMD5s(ctx context.Context, taskID, fileMD5 string) (pieceMD5s []string, err error) {
 	mm.locker.GetLock(taskID, true)
 	defer mm.locker.ReleaseLock(taskID, true)
@@ -185,14 +202,14 @@ func (mm *fileMetaDataManager) readPieceMD5s(ctx context.Context, taskID, fileMD
 	}
 	pieceMD5s = strings.Split(strings.TrimSpace(string(bytes)), "\n")
 
-	if cutil.IsEmptySlice(pieceMD5s) {
+	if len(pieceMD5s) == 0 {
 		return nil, nil
 	}
 
 	// validate the SHA-1 checksum of pieceMD5s
 	pieceMD5sLength := len(pieceMD5s)
 	pieceMD5sWithoutSha1Value := pieceMD5s[:pieceMD5sLength-1]
-	expectedSha1Value := cutil.Sha1(pieceMD5sWithoutSha1Value)
+	expectedSha1Value := digest.Sha1(pieceMD5sWithoutSha1Value)
 	realSha1Value := pieceMD5s[pieceMD5sLength-1]
 	if expectedSha1Value != realSha1Value {
 		logrus.Errorf("failed to validate the SHA-1 checksum of pieceMD5s, expected: %s, real: %s", expectedSha1Value, realSha1Value)

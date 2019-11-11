@@ -17,22 +17,26 @@
 package regist
 
 import (
+	"io/ioutil"
 	"os"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/constants"
-	"github.com/dragonflyoss/Dragonfly/common/errors"
-	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
+	"github.com/dragonflyoss/Dragonfly/pkg/constants"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/util"
 	"github.com/dragonflyoss/Dragonfly/version"
+
 	"github.com/sirupsen/logrus"
 )
 
 // SupernodeRegister encapsulates the Register steps into a struct.
 type SupernodeRegister interface {
-	Register(peerPort int) (*RegisterResult, *errors.DfError)
+	Register(peerPort int) (*RegisterResult, *errortypes.DfError)
 }
 
 type supernodeRegister struct {
@@ -51,7 +55,7 @@ func NewSupernodeRegister(cfg *config.Config, api api.SupernodeAPI) SupernodeReg
 }
 
 // Register processes the flow of register.
-func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errors.DfError) {
+func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errortypes.DfError) {
 	var (
 		resp       *types.RegisterResponse
 		e          error
@@ -60,18 +64,19 @@ func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errors.DfE
 		start      = time.Now()
 	)
 
-	logrus.Infof("do register to one of %v", s.cfg.Node)
-	nodes, nLen := s.cfg.Node, len(s.cfg.Node)
+	logrus.Infof("do register to one of %v", s.cfg.Nodes)
+	nodes, nLen := s.cfg.Nodes, len(s.cfg.Nodes)
 	req := s.constructRegisterRequest(peerPort)
 	for i = 0; i < nLen; i++ {
-		req.SupernodeIP = util.ExtractHost(nodes[i])
+		req.SupernodeIP = netutils.ExtractHost(nodes[i])
 		resp, e = s.api.Register(nodes[i], req)
 		logrus.Infof("do register to %s, res:%s error:%v", nodes[i], resp, e)
 		if e != nil {
 			logrus.Errorf("register to node:%s error:%v", nodes[i], e)
 			continue
 		}
-		if resp.Code == constants.Success || resp.Code == constants.CodeNeedAuth {
+		if resp.Code == constants.Success || resp.Code == constants.CodeNeedAuth ||
+			resp.Code == constants.CodeURLNotReachable {
 			break
 		}
 		if resp.Code == constants.CodeWaitAuth && retryTimes < 3 {
@@ -87,7 +92,7 @@ func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errors.DfE
 		return nil, err
 	}
 
-	result := NewRegisterResult(nodes[i], s.cfg.Node, s.cfg.URL,
+	result := NewRegisterResult(nodes[i], s.cfg.Nodes, s.cfg.URL,
 		resp.Data.TaskID, resp.Data.FileLength, resp.Data.PieceSize)
 
 	logrus.Infof("do register result:%s and cost:%.3fs", resp,
@@ -95,28 +100,28 @@ func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errors.DfE
 	return result, nil
 }
 
-func (s *supernodeRegister) checkResponse(resp *types.RegisterResponse, e error) *errors.DfError {
+func (s *supernodeRegister) checkResponse(resp *types.RegisterResponse, e error) *errortypes.DfError {
 	if e != nil {
-		return errors.New(constants.HTTPError, e.Error())
+		return errortypes.New(constants.HTTPError, e.Error())
 	}
 	if resp == nil {
-		return errors.New(constants.HTTPError, "empty response, unknown error")
+		return errortypes.New(constants.HTTPError, "empty response, unknown error")
 	}
 	if resp.Code != constants.Success {
-		return errors.New(resp.Code, resp.Msg)
+		return errortypes.New(resp.Code, resp.Msg)
 	}
 	return nil
 }
 
 func (s *supernodeRegister) setRemainderNodes(idx int) {
-	nLen := len(s.cfg.Node)
+	nLen := len(s.cfg.Nodes)
 	if nLen <= 0 {
 		return
 	}
 	if idx < nLen {
-		s.cfg.Node = s.cfg.Node[idx+1:]
+		s.cfg.Nodes = s.cfg.Nodes[idx+1:]
 	} else {
-		s.cfg.Node = []string{}
+		s.cfg.Nodes = []string{}
 	}
 }
 
@@ -135,23 +140,34 @@ func (s *supernodeRegister) constructRegisterRequest(port int) *types.RegisterRe
 		CallSystem: cfg.CallSystem,
 		Headers:    cfg.Header,
 		Dfdaemon:   cfg.DFDaemon,
+		Insecure:   cfg.Insecure,
 	}
 	if cfg.Md5 != "" {
 		req.Md5 = cfg.Md5
 	} else if cfg.Identifier != "" {
 		req.Identifier = cfg.Identifier
 	}
+
+	for _, certPath := range cfg.Cacerts {
+		caBytes, err := ioutil.ReadFile(certPath)
+		if err != nil {
+			logrus.Errorf("read cert file fail:%v", err)
+			continue
+		}
+		req.RootCAs = append(req.RootCAs, caBytes)
+	}
+
 	return req
 }
 
 func getTaskPath(taskFileName string) string {
-	if !util.IsEmptyStr(taskFileName) {
+	if !stringutils.IsEmptyStr(taskFileName) {
 		return config.PeerHTTPPathPrefix + taskFileName
 	}
 	return ""
 }
 
-// NewRegisterResult creates a instance of RegisterResult.
+// NewRegisterResult creates an instance of RegisterResult.
 func NewRegisterResult(node string, remainder []string, url string,
 	taskID string, fileLen int64, pieceSize int32) *RegisterResult {
 	return &RegisterResult{

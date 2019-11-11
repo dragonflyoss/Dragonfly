@@ -19,29 +19,30 @@ package app
 import (
 	"fmt"
 	"os"
-	"path"
-	"strconv"
+	"os/user"
+	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/dflog"
-	"github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/dflog"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/printer"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 
-	errHandler "github.com/pkg/errors"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-var (
-	localLimit string
-	totalLimit string
-	minRate    string
-	filter     string
-)
+type propertiesResult struct {
+	prop     *config.Properties
+	fileName string
+	err      error
+}
+
+var filter string
 
 var cfg = config.NewConfig()
 
@@ -68,65 +69,79 @@ func init() {
 	initFlags()
 }
 
-// runDfget do some init operations and start to download.
+// runDfget does some init operations and starts to download.
 func runDfget() error {
+	// get config from property files
+	propResults, err := initProperties()
+	if err != nil {
+		return err
+	}
+
 	// initialize logger
 	if err := initClientLog(); err != nil {
-		util.Printer.Println(fmt.Sprintf("init log error: %v", err))
 		return err
 	}
 
-	// get config from property files
-	initProperties()
-
-	if err := transParams(); err != nil {
-		util.Printer.Println(err.Error())
-		return err
-	}
-	if err := handleNodes(); err != nil {
-		util.Printer.Println(err.Error())
-		return err
+	// TODO: make the result print of initproperties elegant.
+	// print property load result
+	for _, propRst := range propResults {
+		if propRst.err != nil {
+			logrus.Debugf("initProperties[%s] fail: %v", propRst.fileName, propRst.err)
+			continue
+		}
+		logrus.Debugf("initProperties[%s] success: %v", propRst.fileName, propRst.prop)
 	}
 
-	checkParameters()
+	cfg.Filter = transFilter(filter)
+
+	if err := checkParameters(); err != nil {
+		return err
+	}
 	logrus.Infof("get cmd params:%q", os.Args)
 
 	if err := config.AssertConfig(cfg); err != nil {
-		util.Printer.Println(fmt.Sprintf("assert context error: %v", err))
-		return err
+		return errors.Wrap(err, "failed to assert context")
 	}
 	logrus.Infof("get init config:%v", cfg)
 
 	// enter the core process
-	err := core.Start(cfg)
-	util.Printer.Println(resultMsg(cfg, time.Now(), err))
-	if err != nil {
-		os.Exit(err.Code)
+	dfError := core.Start(cfg)
+	printer.Println(resultMsg(cfg, time.Now(), dfError))
+	if dfError != nil {
+		os.Exit(dfError.Code)
 	}
 	return nil
 }
 
-func checkParameters() {
+func checkParameters() error {
 	if len(os.Args) < 2 {
-		fmt.Println("Please use the command 'help' to show the help information.")
-		os.Exit(0)
+		return errortypes.New(-1, "Please use the command 'help' to show the help information.")
 	}
+	return nil
 }
 
-// load config from property files.
-func initProperties() {
+// initProperties loads config from property files.
+func initProperties() ([]*propertiesResult, error) {
+	var results []*propertiesResult
 	properties := config.NewProperties()
 	for _, v := range cfg.ConfigFiles {
-		if err := properties.Load(v); err == nil {
-			logrus.Debugf("initProperties[%s] success: %v", v, properties)
+		err := properties.Load(v)
+		if err == nil {
 			break
-		} else {
-			logrus.Debugf("initProperties[%s] fail: %v", v, err)
 		}
+		results = append(results, &propertiesResult{
+			prop:     properties,
+			fileName: v,
+			err:      err,
+		})
 	}
 
-	if cfg.Node == nil {
-		cfg.Node = properties.Nodes
+	supernodes := cfg.Supernodes
+	if supernodes == nil {
+		supernodes = properties.Supernodes
+	}
+	if supernodes != nil {
+		cfg.Nodes = config.NodeWightSlice2StringSlice(supernodes)
 	}
 
 	if cfg.LocalLimit == 0 {
@@ -144,27 +159,24 @@ func initProperties() {
 	if cfg.ClientQueueSize == 0 {
 		cfg.ClientQueueSize = properties.ClientQueueSize
 	}
-}
 
-// transParams trans the user-friendly parameter formats
-// to the format corresponding to the `Config` struct.
-func transParams() error {
-	cfg.Filter = transFilter(filter)
-
-	var err error
-	if cfg.LocalLimit, err = transLimit(localLimit); err != nil {
-		return errHandler.Wrapf(errors.ErrConvertFailed, "locallimit: %v", err)
+	currentUser, err := user.Current()
+	if err != nil {
+		printer.Println(fmt.Sprintf("get user error: %s", err))
+		os.Exit(config.CodeGetUserError)
 	}
-
-	if cfg.MinRate, err = transLimit(minRate); err != nil {
-		return errHandler.Wrapf(errors.ErrConvertFailed, "minrate: %v", err)
+	cfg.User = currentUser.Username
+	if cfg.WorkHome == "" {
+		cfg.WorkHome = properties.WorkHome
+		if cfg.WorkHome == "" {
+			cfg.WorkHome = filepath.Join(currentUser.HomeDir, ".small-dragonfly")
+		}
 	}
+	cfg.RV.MetaPath = filepath.Join(cfg.WorkHome, "meta", "host.meta")
+	cfg.RV.SystemDataDir = filepath.Join(cfg.WorkHome, "data")
+	cfg.RV.FileLength = -1
 
-	if cfg.TotalLimit, err = transLimit(totalLimit); err != nil {
-		return errHandler.Wrapf(errors.ErrConvertFailed, "totallimit: %v", err)
-	}
-
-	return nil
+	return results, nil
 }
 
 // initClientLog initializes dfget client's logger.
@@ -173,15 +185,20 @@ func transParams() error {
 // while console log will output the dfget client's log in console/terminal for
 // debugging usage.
 func initClientLog() error {
-	logFilePath := path.Join(cfg.WorkHome, "logs", "dfclient.log")
+	logFilePath := filepath.Join(cfg.WorkHome, "logs", "dfclient.log")
 
-	dflog.InitLog(cfg.Verbose, logFilePath, cfg.Sign)
-
-	// once cfg.Console is set, process should also output log to console
-	if cfg.Console {
-		dflog.InitConsoleLog(cfg.Verbose, cfg.Sign)
+	opts := []dflog.Option{
+		dflog.WithLogFile(logFilePath),
+		dflog.WithSign(cfg.Sign),
+		dflog.WithDebug(cfg.Verbose),
 	}
-	return nil
+
+	// Once cfg.Console is set, process should also output log to console.
+	if cfg.Console {
+		opts = append(opts, dflog.WithConsole())
+	}
+
+	return dflog.Init(logrus.StandardLogger(), opts...)
 }
 
 func initFlags() {
@@ -191,26 +208,27 @@ func initFlags() {
 	// url & output
 	flagSet.StringVarP(&cfg.URL, "url", "u", "", "URL of user requested downloading file(only HTTP/HTTPs supported)")
 	flagSet.StringVarP(&cfg.Output, "output", "o", "",
-		"Destination path which is used to store the requested downloading file. It must contain detailed directory and specific filename, for example, '/tmp/file.mp4'")
+		"destination path which is used to store the requested downloading file. It must contain detailed directory and specific filename, for example, '/tmp/file.mp4'")
 
 	// localLimit & minRate & totalLimit & timeout
-	flagSet.StringVarP(&localLimit, "locallimit", "s", "",
-		"network bandwidth rate limit for single download task, in format of 20M/m/K/k")
-	flagSet.StringVar(&minRate, "minrate", "",
-		"minimal network bandwidth rate for downloading a file, in format of 20M/m/K/k")
-	flagSet.StringVar(&totalLimit, "totallimit", "",
-		"network bandwidth rate limit for the whole host, in format of 20M/m/K/k")
-	flagSet.IntVarP(&cfg.Timeout, "timeout", "e", 0,
-		"Timeout set for file downloading task. If dfget has not finished downloading all pieces of file before --timeout, the dfget will throw an error and exit")
+	flagSet.VarP(&cfg.LocalLimit, "locallimit", "s",
+		"network bandwidth rate limit for single download task, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte")
+	flagSet.Var(&cfg.MinRate, "minrate",
+		"minimal network bandwidth rate for downloading a file, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte")
+	flagSet.Var(&cfg.TotalLimit, "totallimit",
+		"network bandwidth rate limit for the whole host, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte")
+	flagSet.DurationVarP(&cfg.Timeout, "timeout", "e", 0,
+		"timeout set for file downloading task. If dfget has not finished downloading all pieces of file before --timeout, the dfget will throw an error and exit")
 
 	// md5 & identifier
 	flagSet.StringVarP(&cfg.Md5, "md5", "m", "",
 		"md5 value input from user for the requested downloading file to enhance security")
 	flagSet.StringVarP(&cfg.Identifier, "identifier", "i", "",
-		"The usage of identifier is making different downloading tasks generate different downloading task IDs even if they have the same URLs. conflict with --md5.")
-
+		"the usage of identifier is making different downloading tasks generate different downloading task IDs even if they have the same URLs. conflict with --md5.")
 	flagSet.StringVar(&cfg.CallSystem, "callsystem", "",
-		"The name of dfget caller which is for debugging. Once set, it will be passed to all components around the request to make debugging easy")
+		"the name of dfget caller which is for debugging. Once set, it will be passed to all components around the request to make debugging easy")
+	flagSet.StringSliceVar(&cfg.Cacerts, "cacerts", nil,
+		"the cacert file which is used to verify remote server when supernode interact with the source.")
 	flagSet.StringVarP(&cfg.Pattern, "pattern", "p", "p2p",
 		"download pattern, must be p2p/cdn/source, cdn and source do not support flag --totallimit")
 	flagSet.StringVarP(&filter, "filter", "f", "",
@@ -219,12 +237,14 @@ func initFlags() {
 			"\nin this way, different but actually the same URLs can reuse the same downloading task")
 	flagSet.StringSliceVar(&cfg.Header, "header", nil,
 		"http header, eg: --header='Accept: *' --header='Host: abc'")
-	flagSet.StringSliceVarP(&cfg.Node, "node", "n", nil,
-		"specify the addresses(IP:port) of supernodes")
+	flagSet.VarP(config.NewSupernodesValue(&cfg.Supernodes, nil), "node", "n",
+		"specify the addresses(host:port=weight) of supernodes where the host is necessary, the port(default: 8002) and the weight(default:1) are optional. And the type of weight must be integer")
 	flagSet.BoolVar(&cfg.Notbs, "notbs", false,
 		"disable back source downloading for requested file when p2p fails to download it")
 	flagSet.BoolVar(&cfg.DFDaemon, "dfdaemon", false,
 		"identify whether the request is from dfdaemon")
+	flagSet.BoolVar(&cfg.Insecure, "insecure", false,
+		"identify whether supernode should skip secure verify when interact with the source.")
 	flagSet.IntVar(&cfg.ClientQueueSize, "clientqueue", config.DefaultClientQueueSize,
 		"specify the size of client queue which controls the number of pieces that can be processed simultaneously")
 
@@ -235,68 +255,36 @@ func initFlags() {
 		"show log on console, it's conflict with '--showbar'")
 	flagSet.BoolVar(&cfg.Verbose, "verbose", false,
 		"be verbose")
+	flagSet.StringVar(&cfg.WorkHome, "home", cfg.WorkHome,
+		"the work home directory of dfget")
 
-	// pass to server
+	// pass to peer server which as a uploader server
+	flagSet.StringVar(&cfg.RV.LocalIP, "ip", "",
+		"IP address that server will listen on")
+	flagSet.IntVar(&cfg.RV.PeerPort, "port", 0,
+		"port number that server will listen on")
 	flagSet.DurationVar(&cfg.RV.DataExpireTime, "expiretime", config.DataExpireTime,
 		"caching duration for which cached file keeps no accessed by any process, after this period cache file will be deleted")
 	flagSet.DurationVar(&cfg.RV.ServerAliveTime, "alivetime", config.ServerAliveTime,
-		"Alive duration for which uploader keeps no accessing by any uploading requests, after this period uploader will automically exit")
+		"alive duration for which uploader keeps no accessing by any uploading requests, after this period uploader will automatically exit")
 
 	flagSet.MarkDeprecated("exceed", "please use '--timeout' or '-e' instead")
 }
 
-// Helper functions.
-func transLimit(limit string) (int, error) {
-	if cutil.IsEmptyStr(limit) {
-		return 0, nil
-	}
-	l := len(limit)
-	i, err := strconv.Atoi(limit[:l-1])
-
-	if err != nil {
-		return 0, err
-	}
-
-	unit := limit[l-1]
-	if unit == 'k' || unit == 'K' {
-		return i * 1024, nil
-	}
-	if unit == 'm' || unit == 'M' {
-		return i * 1024 * 1024, nil
-	}
-	return 0, fmt.Errorf("invalid unit '%c' of '%s', 'KkMm' are supported",
-		unit, limit)
-}
-
 func transFilter(filter string) []string {
-	if cutil.IsEmptyStr(filter) {
+	if stringutils.IsEmptyStr(filter) {
 		return nil
 	}
 	return strings.Split(filter, "&")
 }
 
-func handleNodes() error {
-	nodes := make([]string, 0)
-
-	for _, v := range cfg.Node {
-		// TODO: check the validity of v.
-		if strings.IndexByte(v, ':') > 0 {
-			nodes = append(nodes, v)
-			continue
-		}
-		nodes = append(nodes, fmt.Sprintf("%s:%d", v, config.DefaultSupernodePort))
-	}
-	cfg.Node = nodes
-	return nil
-}
-
-func resultMsg(cfg *config.Config, end time.Time, e *errors.DfError) string {
+func resultMsg(cfg *config.Config, end time.Time, e *errortypes.DfError) string {
 	if e != nil {
 		return fmt.Sprintf("download FAIL(%d) cost:%.3fs length:%d reason:%d error:%v",
 			e.Code, end.Sub(cfg.StartTime).Seconds(), cfg.RV.FileLength,
 			cfg.BackSourceReason, e)
 	}
-	return fmt.Sprintf("download SUCCESS(0) cost:%.3fs length:%d reason:%d",
+	return fmt.Sprintf("download SUCCESS cost:%.3fs length:%d reason:%d",
 		end.Sub(cfg.StartTime).Seconds(), cfg.RV.FileLength, cfg.BackSourceReason)
 }
 
@@ -314,9 +302,10 @@ func dfgetExample() string {
 $ dfget -u https://www.taobao.com -o /tmp/test/b.test --notbs --expiretime 20s
 --2019-02-02 18:56:34--  https://www.taobao.com
 dfget version:0.3.0
-workspace:/root/.small-dragonfly sign:96414-1549104994.143
+workspace:/root/.small-dragonfly
+sign:96414-1549104994.143
 client:127.0.0.1 connected to node:127.0.0.1
-start download by dragonfly
-download SUCCESS(0) cost:0.026s length:141898 reason:0
+start download by dragonfly...
+download SUCCESS cost:0.026s length:141898 reason:0
 `
 }

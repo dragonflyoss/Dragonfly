@@ -22,8 +22,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 )
 
 // UploaderAPI defines the communication methods between dfget and uploader.
@@ -61,7 +61,7 @@ func (u *uploaderAPI) ParseRate(ip string, port int, req *ParseRateRequest) (str
 	headers[config.StrRateLimit] = strconv.Itoa(req.RateLimit)
 
 	url := fmt.Sprintf("http://%s:%d%s%s", ip, port, config.LocalHTTPPathRate, req.TaskFileName)
-	return util.Do(url, headers, u.timeout)
+	return httputils.Do(url, headers, u.timeout)
 }
 
 func (u *uploaderAPI) CheckServer(ip string, port int, req *CheckServerRequest) (string, error) {
@@ -70,7 +70,7 @@ func (u *uploaderAPI) CheckServer(ip string, port int, req *CheckServerRequest) 
 	headers[config.StrTotalLimit] = strconv.Itoa(req.TotalLimit)
 
 	url := fmt.Sprintf("http://%s:%d%s%s", ip, port, config.LocalHTTPPathCheck, req.TaskFileName)
-	return util.Do(url, headers, u.timeout)
+	return httputils.Do(url, headers, u.timeout)
 }
 
 func (u *uploaderAPI) FinishTask(ip string, port int, req *FinishTaskRequest) error {
@@ -82,7 +82,7 @@ func (u *uploaderAPI) FinishTask(ip string, port int, req *FinishTaskRequest) er
 		ip, port, config.LocalHTTPPathClient,
 		req.TaskFileName, req.TaskID, req.ClientID, req.Node)
 
-	code, body, err := util.Get(url, u.timeout)
+	code, body, err := httputils.Get(url, u.timeout)
 	if code == http.StatusOK {
 		return nil
 	}
@@ -94,6 +94,6 @@ func (u *uploaderAPI) FinishTask(ip string, port int, req *FinishTaskRequest) er
 
 func (u *uploaderAPI) PingServer(ip string, port int) bool {
 	url := fmt.Sprintf("http://%s:%d%s", ip, port, config.LocalHTTPPing)
-	code, _, _ := util.Get(url, u.timeout)
+	code, _, _ := httputils.Get(url, u.timeout)
 	return code == http.StatusOK
 }

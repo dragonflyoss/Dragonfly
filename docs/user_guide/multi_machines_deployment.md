@@ -6,11 +6,11 @@ If you are using Dragonfly in your production environment to handle production i
 
 ## Prerequisites
 
-Assuming that experiement requires us to prepare three host machines, one to play a role of supernode, and the other two for dfclient. Then the topology of the three nodes cluster is like the following:
+Assuming that experiment requires us to prepare three host machines, one to play a role of supernode, and the other two for dfclient. Then the topology of the three nodes cluster is like the following:
 
 ![quick start cluster topology](../images/quick-start-topo.png)
 
-Then, we must provice:
+Then, we must provide:
 
 1. three host nodes in a LAN, and we assume that 3 machine IPs are replaced by the following names.
 
@@ -25,13 +25,10 @@ Then, we must provice:
 Deploy the Dragonfly server (Supernode) on the machine `dfsupernode`.
 
 ```bash
-docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 \
-    dragonflyoss/supernode:0.3.0 -Dsupernode.advertiseIp=dfsupernode
+docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 -v /home/admin/supernode:/home/admin/supernode dragonflyoss/supernode:0.4.3 --download-port=8001
 ```
 
-> **NOTE**: `supernode.advertiseIp` should be the ip that clients can connect to, `127.0.0.1` here is an example for testing, and it can only be used if the server and client are in the same machine.
-
-## Step 2：Deploy Dragonfly Client (dfclient)
+## Step 2: Deploy Dragonfly Client (dfclient)
 
 The following operations should be performed both on the client machine `dfclient0`, `dfclient1`.
 
@@ -53,7 +50,8 @@ EOD
 ```bash
 docker run -d --name dfclient --restart=always -p 65001:65001 \
     -v /etc/dragonfly:/etc/dragonfly \
-    dragonflyoss/dfclient:0.4.0 --registry https://index.docker.io
+    -v $HOME/.small-dragonfly:/root/.small-dragonfly \
+    dragonflyoss/dfclient:0.4.3 --registry https://index.docker.io
 ```
 
 **NOTE**: The `--registry` parameter specifies the mirrored image registry address, and `https://index.docker.io` is the address of official image registry, you can also set it to the others.
@@ -72,13 +70,13 @@ We need to modify the Docker Daemon configuration to use the Dragonfly as a pull
 
 **Tip:** For more information on `/etc/docker/daemon.json`, see [Docker documentation](https://docs.docker.com/registry/recipes/mirror/#configure-the-cache).
 
-2. Restart Docker Daemon。
+2. Restart Docker Daemon.
 
 ```bash
 systemctl restart docker
 ```
 
-## Step 4：Pull images with Dragonfly
+## Step 4: Pull images with Dragonfly
 
 Through the above steps, we can start to validate if Dragonfly works as expected.
 
@@ -88,7 +86,7 @@ And you can pull the image as usual on either `dfclient0` or `dfclient1`, for ex
 docker pull nginx:latest
 ```
 
-## Step 5：Validate Dragonfly
+## Step 5: Validate Dragonfly
 
 You can execute the following command to check if the nginx image is distributed via Dragonfly.
 

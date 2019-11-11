@@ -27,11 +27,11 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/go-check/check"
-
-	"github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+
+	"github.com/go-check/check"
 )
 
 func Test(t *testing.T) {
@@ -220,18 +220,17 @@ func (s *UploaderTestSuite) TestServerGC(c *check.C) {
 		v := &cases[i]
 		expire := time.Duration(v.expire) * time.Minute
 		v.name = createTestFile(p2p, v.store, v.finished, expire)
-
 	}
 
 	time.AfterFunc(500*time.Millisecond, func() {
-		c.Assert(util.PathExist(dirName), check.Equals, false)
+		c.Assert(fileutils.PathExist(dirName), check.Equals, false)
 		for _, v := range cases {
 			dir := cfg.RV.SystemDataDir
 			cmt := check.Commentf("%v", v)
 			srvFile := helper.GetServiceFile(v.name, dir)
 			taskFile := helper.GetTaskFile(v.name, dir)
-			c.Assert(!util.PathExist(srvFile), check.Equals, v.deleted, cmt)
-			c.Assert(!util.PathExist(taskFile), check.Equals, v.deleted, cmt)
+			c.Assert(!fileutils.PathExist(srvFile), check.Equals, v.deleted, cmt)
+			c.Assert(!fileutils.PathExist(taskFile), check.Equals, v.deleted, cmt)
 		}
 
 		p2p.setFinished()
@@ -276,7 +275,10 @@ func createTestFile(srv *peerServer, store bool, finished bool, expire time.Dura
 	os.Chtimes(taskFile, expireTime, expireTime)
 
 	if store {
-		srv.syncTaskMap.Store(name, &taskConfig{finished: finished})
+		srv.syncTaskMap.Store(name, &taskConfig{
+			finished:   finished,
+			accessTime: expireTime,
+		})
 	}
 	return name
 }

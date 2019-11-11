@@ -21,7 +21,7 @@ import (
 	"io/ioutil"
 )
 
-// NewMetaData create a MetaData instance.
+// NewMetaData creates a MetaData instance.
 func NewMetaData(metaPath string) *MetaData {
 	return &MetaData{
 		MetaPath: metaPath,
@@ -30,7 +30,7 @@ func NewMetaData(metaPath string) *MetaData {
 
 // MetaData stores meta information that should be persisted.
 type MetaData struct {
-	// ServicePort the the TCP port on which the file upload service listens.
+	// ServicePort the TCP port on which the file upload service listens.
 	ServicePort int `json:"servicePort"`
 
 	// MetaPath the path of meta file.

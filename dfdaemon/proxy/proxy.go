@@ -1,3 +1,19 @@
+/*
+ * Copyright The Dragonfly Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package proxy
 
 import (
@@ -130,7 +146,7 @@ func NewFromConfig(c config.Properties) (*Proxy, error) {
 	if len(c.SuperNodes) > 0 {
 		logrus.Infof("use supernodes: %s", strings.Join(c.SuperNodes, ","))
 	}
-	logrus.Infof("rate limit set to %s", c.RateLimit)
+	logrus.Infof("rate limit set to %s", c.RateLimit.String())
 
 	if c.HijackHTTPS != nil {
 		opts = append(opts, WithHTTPSHosts(c.HijackHTTPS.Hosts...))
@@ -172,7 +188,7 @@ func (proxy *Proxy) mirrorRegistry(w http.ResponseWriter, r *http.Request) {
 }
 
 // remoteConfig returns the tls.Config used to connect to the given remote host.
-// If the host should not be hijacked, nil will be returned.
+// If the host should not be hijacked, and it will return nil.
 func (proxy *Proxy) remoteConfig(host string) *tls.Config {
 	for _, h := range proxy.httpsHosts {
 		if h.Regx.MatchString(host) {
@@ -186,7 +202,7 @@ func (proxy *Proxy) remoteConfig(host string) *tls.Config {
 	return nil
 }
 
-// SetRules change the rule lists of the proxy to the given rules
+// SetRules changes the rule lists of the proxy to the given rules.
 func (proxy *Proxy) SetRules(rules []*config.Proxy) error {
 	proxy.rules = rules
 	return nil
@@ -216,7 +232,7 @@ func (proxy *Proxy) handleHTTP(w http.ResponseWriter, req *http.Request) {
 	copyHeader(w.Header(), resp.Header)
 	w.WriteHeader(resp.StatusCode)
 	if _, err := io.Copy(w, resp.Body); err != nil {
-		logrus.Errorf("failed to write http body")
+		logrus.Errorf("failed to write http body: %v", err)
 	}
 }
 
@@ -314,14 +330,19 @@ func (proxy *Proxy) handleHTTPS(w http.ResponseWriter, r *http.Request) {
 	// We have to wait until the connection is closed
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	http.Serve(&singleUseListener{&customCloseConn{sConn, wg.Done}}, rp)
+	if err := http.Serve(&singleUseListener{&customCloseConn{sConn, wg.Done}}, rp); err != nil {
+		logrus.Errorf("failed to accept incoming HTTP connections: %v", err)
+	}
 	wg.Wait()
 }
 
-func copyAndClose(dst io.WriteCloser, src io.ReadCloser) {
-	io.Copy(dst, src)
-	dst.Close()
-	src.Close()
+func copyAndClose(dst io.WriteCloser, src io.ReadCloser) error {
+	defer src.Close()
+	defer dst.Close()
+	if _, err := io.Copy(dst, src); err != nil {
+		return err
+	}
+	return nil
 }
 
 func copyHeader(dst, src http.Header) {
@@ -356,7 +377,7 @@ func handshake(w http.ResponseWriter, config *tls.Config) (net.Conn, error) {
 }
 
 // A singleUseListener implements a net.Listener that returns the net.Conn specified
-// in c for the first Accept call, and return errors for the subsequent calls.
+// in c for the first Accept call, and returns errors for the subsequent calls.
 type singleUseListener struct {
 	c net.Conn
 }
@@ -374,7 +395,7 @@ func (l *singleUseListener) Close() error { return nil }
 
 func (l *singleUseListener) Addr() net.Addr { return l.c.LocalAddr() }
 
-// A customCloseConn implements net.Conn and calls f before closing the underlying net.Conn
+// A customCloseConn implements net.Conn and calls f before closing the underlying net.Conn.
 type customCloseConn struct {
 	net.Conn
 	f func()

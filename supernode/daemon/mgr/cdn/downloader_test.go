@@ -24,11 +24,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
+	"github.com/dragonflyoss/Dragonfly/supernode/httpclient"
 
 	"github.com/go-check/check"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func Test(t *testing.T) {
@@ -43,21 +46,21 @@ func init() {
 }
 
 func (s *CDNDownloadTestSuite) TestDownload(c *check.C) {
-	cm, _ := NewManager(config.NewConfig(), nil, nil)
+	cm, _ := NewManager(config.NewConfig(), nil, nil, httpclient.NewOriginClient(), prometheus.DefaultRegisterer)
 	bytes := []byte("hello world")
 	bytesLength := int64(len(bytes))
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rangeStr := r.Header.Get("Range")
-		if cutil.IsEmptyStr(rangeStr) {
+		if stringutils.IsEmptyStr(rangeStr) {
 			w.WriteHeader(http.StatusOK)
 			fmt.Fprint(w, string(bytes[:]))
 			return
 		}
 
-		rangeStruct, err := cutil.GetRangeSE(rangeStr, bytesLength)
+		rangeStruct, err := httputils.GetRangeSE(rangeStr, bytesLength)
 		if err != nil {
-			if errorType.IsRangeNotSatisfiable(err) {
+			if errortypes.IsRangeNotSatisfiable(err) {
 				w.WriteHeader(http.StatusRequestedRangeNotSatisfiable)
 				return
 			}
@@ -85,7 +88,7 @@ func (s *CDNDownloadTestSuite) TestDownload(c *check.C) {
 			startPieceNum:      0,
 			httpFileLength:     bytesLength,
 			pieceContSize:      2,
-			errCheck:           errorType.IsNilError,
+			errCheck:           errortypes.IsNilError,
 			exceptedStatusCode: http.StatusOK,
 			exceptedBody:       "hello world",
 		},
@@ -94,7 +97,7 @@ func (s *CDNDownloadTestSuite) TestDownload(c *check.C) {
 			startPieceNum:      2,
 			httpFileLength:     bytesLength,
 			pieceContSize:      3,
-			errCheck:           errorType.IsNilError,
+			errCheck:           errortypes.IsNilError,
 			exceptedStatusCode: http.StatusPartialContent,
 			exceptedBody:       "world",
 		},

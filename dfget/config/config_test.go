@@ -23,14 +23,14 @@ import (
 	"io/ioutil"
 	"os"
 	"os/user"
-	"path"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/errors"
-	"github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/rate"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 
 	"github.com/go-check/check"
 	"github.com/sirupsen/logrus"
@@ -56,11 +56,11 @@ func (suite *ConfigSuite) TestConfig_String(c *check.C) {
 	cfg := NewConfig()
 	expected := "{\"url\":\"\",\"output\":\"\""
 	c.Assert(strings.Contains(cfg.String(), expected), check.Equals, true)
-	cfg.LocalLimit = 20971520
+	cfg.LocalLimit = 20 * rate.MB
+	cfg.MinRate = 64 * rate.KB
 	cfg.Pattern = "p2p"
-	cfg.Version = true
-	expected = "\"url\":\"\",\"output\":\"\",\"localLimit\":20971520," +
-		"\"pattern\":\"p2p\",\"version\":true"
+	expected = "\"url\":\"\",\"output\":\"\",\"pattern\":\"p2p\"," +
+		"\"localLimit\":\"20MB\",\"minRate\":\"64KB\""
 	c.Assert(strings.Contains(cfg.String(), expected), check.Equals, true)
 }
 
@@ -83,7 +83,7 @@ func (suite *ConfigSuite) TestNewConfig(c *check.C) {
 
 	if curUser, err := user.Current(); err != nil {
 		c.Assert(cfg.User, check.Equals, curUser.Username)
-		c.Assert(cfg.WorkHome, check.Equals, path.Join(curUser.HomeDir, ".small-dragonfly"))
+		c.Assert(cfg.WorkHome, check.Equals, filepath.Join(curUser.HomeDir, ".small-dragonfly"))
 	}
 }
 
@@ -100,10 +100,10 @@ func (suite *ConfigSuite) TestAssertConfig(c *check.C) {
 		output    string
 		checkFunc func(err error) bool
 	}{
-		{clog: clog, checkFunc: errors.IsInvalidValue},
-		{clog: clog, url: "http://a", checkFunc: errors.IsInvalidValue},
-		{clog: clog, url: "http://a.b.com", output: "/tmp/output", checkFunc: errors.IsNilError},
-		{clog: clog, url: "http://a.b.com", output: "/root", checkFunc: errors.IsInvalidValue},
+		{clog: clog, checkFunc: errortypes.IsInvalidValue},
+		{clog: clog, url: "http://a", checkFunc: errortypes.IsInvalidValue},
+		{clog: clog, url: "http://a.b.com", output: "/tmp/output", checkFunc: errortypes.IsNilError},
+		{clog: clog, url: "http://a.b.com", output: "/root", checkFunc: errortypes.IsInvalidValue},
 	}
 
 	var f = func() (err error) {
@@ -146,7 +146,7 @@ func (suite *ConfigSuite) TestCheckOutput(c *check.C) {
 	for _, v := range cases {
 		cfg.URL = v.url
 		cfg.Output = v.output
-		if util.IsEmptyStr(v.expected) {
+		if stringutils.IsEmptyStr(v.expected) {
 			c.Assert(checkOutput(cfg), check.NotNil, check.Commentf("%v", v))
 		} else {
 			c.Assert(checkOutput(cfg), check.IsNil, check.Commentf("%v", v))
@@ -172,25 +172,38 @@ func (suite *ConfigSuite) TestProperties_Load(c *check.C) {
 			content: "nodes:\n\t- 10.10.10.1", errMsg: "yaml", expected: nil},
 		{create: true, ext: "yaml",
 			content: "nodes:\n  - 10.10.10.1\n  - 10.10.10.2\n",
-			errMsg:  "", expected: &Properties{Nodes: []string{"10.10.10.1", "10.10.10.2"}}},
+			errMsg:  "", expected: &Properties{Supernodes: []*NodeWight{
+				{"10.10.10.1:8002", 1},
+				{"10.10.10.2:8002", 1},
+			}}},
 		{create: true, ext: "yaml",
-			content: "totalLimit: 10485760",
-			errMsg:  "", expected: &Properties{TotalLimit: 10485760}},
+			content: "totalLimit: 10M",
+			errMsg:  "", expected: &Properties{TotalLimit: 10 * rate.MB}},
 		{create: false, ext: "ini", content: "[node]\naddress=1.1.1.1", errMsg: "read ini config"},
 		{create: true, ext: "ini", content: "[node]\naddress=1.1.1.1",
-			expected: &Properties{Nodes: []string{"1.1.1.1"}}},
+			expected: &Properties{Supernodes: []*NodeWight{
+				{"1.1.1.1:8002", 1},
+			}}},
 		{create: true, ext: "conf", content: "[node]\naddress=1.1.1.1",
-			expected: &Properties{Nodes: []string{"1.1.1.1"}}},
+			expected: &Properties{Supernodes: []*NodeWight{
+				{"1.1.1.1:8002", 1},
+			}}},
 		{create: true, ext: "conf", content: "[node]\naddress=1.1.1.1,1.1.1.2",
-			expected: &Properties{Nodes: []string{"1.1.1.1", "1.1.1.2"}}},
+			expected: &Properties{Supernodes: []*NodeWight{
+				{"1.1.1.1:8002", 1},
+				{"1.1.1.2:8002", 1},
+			}}},
 		{create: true, ext: "conf", content: "[node]\naddress=1.1.1.1\n[totalLimit]",
-			expected: &Properties{Nodes: []string{"1.1.1.1"}}},
+			expected: &Properties{Supernodes: []*NodeWight{
+				{"1.1.1.1:8002", 1},
+			}}},
 	}
 
 	for idx, v := range cases {
 		filename := filepath.Join(dirName, fmt.Sprintf("%d.%s", idx, v.ext))
 		if v.create {
-			ioutil.WriteFile(filename, []byte(v.content), os.ModePerm)
+			err := ioutil.WriteFile(filename, []byte(v.content), os.ModePerm)
+			c.Assert(err, check.IsNil)
 		}
 		p := &Properties{}
 		err := p.Load(filename)

@@ -22,16 +22,17 @@ import (
 	"fmt"
 	"os"
 	"os/user"
-	"path"
 	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
 
-	errType "github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
-
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/printer"
+	"github.com/dragonflyoss/Dragonfly/pkg/rate"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/pkg/errors"
 	"gopkg.in/gcfg.v1"
 	"gopkg.in/warnings.v0"
@@ -48,38 +49,50 @@ import (
 // Since 0.2.0, the INI config is just to be compatible with previous versions.
 // The YAML config will have more properties:
 // 		nodes:
-// 		    - 127.0.0.1
-// 		    - 10.10.10.1
-// 		localLimit: 20971520
-// 		totalLimit: 20971520
+// 		    - 127.0.0.1=1
+// 		    - 10.10.10.1:8002=2
+// 		localLimit: 20M
+// 		totalLimit: 20M
 // 		clientQueueSize: 6
 type Properties struct {
-	// Nodes specify supernodes.
-	Nodes []string `yaml:"nodes"`
+	// Supernodes specify supernodes with weight.
+	// The type of weight must be integer.
+	// All weights will be divided by the greatest common divisor in the end.
+	//
+	// E.g. ["192.168.33.21=1", "192.168.33.22=2"]
+	Supernodes []*NodeWight `yaml:"nodes,omitempty" json:"nodes,omitempty"`
 
-	// LocalLimit rate limit about a single download task,format: 20M/m/K/k.
-	LocalLimit int `yaml:"localLimit"`
+	// LocalLimit rate limit about a single download task, format: G(B)/g/M(B)/m/K(B)/k/B
+	// pure number will also be parsed as Byte.
+	LocalLimit rate.Rate `yaml:"localLimit,omitempty" json:"localLimit,omitempty"`
 
-	// Minimal rate about a single download task,format: 20M/m/K/k.
-	MinRate int `yaml:"minRate"`
+	// Minimal rate about a single download task, format: G(B)/g/M(B)/m/K(B)/k/B
+	// pure number will also be parsed as Byte.
+	MinRate rate.Rate `yaml:"minRate,omitempty" json:"minRate,omitempty"`
 
-	// TotalLimit rate limit about the whole host,format: 20M/m/K/k.
-	TotalLimit int `yaml:"totalLimit"`
+	// TotalLimit rate limit about the whole host, format: G(B)/g/M(B)/m/K(B)/k/B
+	// pure number will also be parsed as Byte.
+	TotalLimit rate.Rate `yaml:"totalLimit,omitempty" json:"totalLimit,omitempty"`
 
 	// ClientQueueSize is the size of client queue
 	// which controls the number of pieces that can be processed simultaneously.
 	// It is only useful when the Pattern equals "source".
 	// The default value is 6.
-	ClientQueueSize int `yaml:"clientQueueSize"`
+	ClientQueueSize int `yaml:"clientQueueSize" json:"clientQueueSize,omitempty"`
+
+	// WorkHome work home path,
+	// default: `$HOME/.small-dragonfly`.
+	WorkHome string `yaml:"workHome" json:"workHome,omitempty"`
 }
 
-// NewProperties create a new properties with default values.
+// NewProperties creates a new properties with default values.
 func NewProperties() *Properties {
 	return &Properties{
-		Nodes:           []string{DefaultNode},
+		Supernodes:      GetDefaultSupernodesValue(),
 		LocalLimit:      DefaultLocalLimit,
 		MinRate:         DefaultMinRate,
 		ClientQueueSize: DefaultClientQueueSize,
+		TotalLimit:      DefaultTotalLimit,
 	}
 }
 
@@ -94,7 +107,7 @@ func (p *Properties) Load(path string) error {
 	case "ini":
 		return p.loadFromIni(path)
 	case "yaml":
-		return cutil.LoadYaml(path, p)
+		return fileutils.LoadYaml(path, p)
 	}
 	return fmt.Errorf("extension of %s is not in 'conf/ini/yaml/yml'", path)
 }
@@ -113,8 +126,13 @@ func (p *Properties) loadFromIni(path string) error {
 			return fmt.Errorf("read ini config from %s error: %v", path, err)
 		}
 	}
-	p.Nodes = strings.Split(oldConfig.Node.Address, ",")
-	return nil
+
+	nodes, err := ParseNodesString(oldConfig.Node.Address)
+	if err != nil {
+		return errors.Wrapf(err, "failed to handle nodes")
+	}
+	p.Supernodes = nodes
+	return err
 }
 
 func (p *Properties) fileType(path string) string {
@@ -140,17 +158,8 @@ type Config struct {
 	// Output full output path.
 	Output string `json:"output"`
 
-	// LocalLimit rate limit about a single download task,format: 20M/m/K/k.
-	LocalLimit int `json:"localLimit,omitempty"`
-
-	// Minimal rate about a single download task,format: 20M/m/K/k.
-	MinRate int `json:"minRate,omitempty"`
-
-	// TotalLimit rate limit about the whole host,format: 20M/m/K/k.
-	TotalLimit int `json:"totalLimit,omitempty"`
-
 	// Timeout download timeout(second).
-	Timeout int `json:"timeout,omitempty"`
+	Timeout time.Duration `json:"timeout,omitempty"`
 
 	// Md5 expected file md5.
 	Md5 string `json:"md5,omitempty"`
@@ -165,6 +174,9 @@ type Config struct {
 	// default:`p2p`.
 	Pattern string `json:"pattern,omitempty"`
 
+	// CA certificate to verify when supernode interact with the source.
+	Cacerts []string `json:"cacert,omitempty"`
+
 	// Filter filter some query params of url, use char '&' to separate different params.
 	// eg: -f 'key&sign' will filter 'key' and 'sign' query param.
 	// in this way, different urls correspond one same download task that can use p2p mode.
@@ -174,63 +186,53 @@ type Config struct {
 	// eg: --header='Accept: *' --header='Host: abc'.
 	Header []string `json:"header,omitempty"`
 
-	// Node specify supernodes.
-	Node []string `json:"node,omitempty"`
-
 	// Notbs indicates whether to not back source to download when p2p fails.
 	Notbs bool `json:"notbs,omitempty"`
 
 	// DFDaemon indicates whether the caller is from dfdaemon
 	DFDaemon bool `json:"dfdaemon,omitempty"`
 
-	// Version show version.
-	Version bool `json:"version,omitempty"`
+	// Insecure indicates whether skip secure verify when supernode interact with the source.
+	Insecure bool `json:"insecure,omitempty"`
 
-	// ShowBar show progress bar, it's conflict with `--console`.
+	// ShowBar shows progress bar, it's conflict with `--console`.
 	ShowBar bool `json:"showBar,omitempty"`
 
-	// Console show log on console, it's conflict with `--showbar`.
+	// Console shows log on console, it's conflict with `--showbar`.
 	Console bool `json:"console,omitempty"`
 
 	// Verbose indicates whether to be verbose.
 	// If set true, log level will be 'debug'.
 	Verbose bool `json:"verbose,omitempty"`
 
-	// Help show help information.
-	Help bool `json:"help,omitempty"`
-
-	// ClientQueueSize is the size of client queue
-	// which controls the number of pieces that can be processed simultaneously.
-	// It is only useful when the pattern not equals "source".
-	// The default value is 6.
-	ClientQueueSize int `json:"clientQueueSize,omitempty"`
+	// Nodes specify supernodes.
+	Nodes []string `json:"-"`
 
 	// Start time.
-	StartTime time.Time `json:"startTime"`
+	StartTime time.Time `json:"-"`
 
 	// Sign the value is 'Pid + float64(time.Now().UnixNano())/float64(time.Second) format: "%d-%.3f"'.
 	// It is unique for downloading task, and is used for debugging.
-	Sign string `json:"sign"`
+	Sign string `json:"-"`
 
 	// Username of the system currently logged in.
-	User string `json:"user"`
-
-	// WorkHome work home path,
-	// default: `$HOME/.small-dragonfly`.
-	WorkHome string `json:"workHome"`
+	User string `json:"-"`
 
 	// Config file paths,
 	// default:["/etc/dragonfly/dfget.yml","/etc/dragonfly.conf"].
 	//
 	// NOTE: It is recommended to use `/etc/dragonfly/dfget.yml` as default,
 	// and the `/etc/dragonfly.conf` is just to ensure compatibility with previous versions.
-	ConfigFiles []string `json:"configFile"`
+	ConfigFiles []string `json:"-"`
 
 	// RV stores the variables that are initialized and used at downloading task executing.
 	RV RuntimeVariable `json:"-"`
 
 	// The reason of backing to source.
 	BackSourceReason int `json:"-"`
+
+	// Embedded Properties holds all configurable properties.
+	Properties
 }
 
 func (cfg *Config) String() string {
@@ -245,17 +247,12 @@ func NewConfig() *Config {
 	cfg.Sign = fmt.Sprintf("%d-%.3f",
 		os.Getpid(), float64(time.Now().UnixNano())/float64(time.Second))
 
-	// TODO: Use parameters instead of currentUser.HomeDir.
 	currentUser, err := user.Current()
 	if err != nil {
-		util.Printer.Println(fmt.Sprintf("get user error: %s", err))
+		printer.Println(fmt.Sprintf("get user error: %s", err))
 		os.Exit(CodeGetUserError)
 	}
-
 	cfg.User = currentUser.Username
-	cfg.WorkHome = path.Join(currentUser.HomeDir, ".small-dragonfly")
-	cfg.RV.MetaPath = path.Join(cfg.WorkHome, "meta", "host.meta")
-	cfg.RV.SystemDataDir = path.Join(cfg.WorkHome, "data")
 	cfg.RV.FileLength = -1
 	cfg.ConfigFiles = []string{DefaultYamlConfigFile, DefaultIniConfigFile}
 	return cfg
@@ -263,23 +260,23 @@ func NewConfig() *Config {
 
 // AssertConfig checks the config and return errors.
 func AssertConfig(cfg *Config) (err error) {
-	if cutil.IsNil(cfg) {
-		return errors.Wrap(errType.ErrNotInitialized, "runtime config")
+	if cfg == nil {
+		return errors.Wrap(errortypes.ErrNotInitialized, "runtime config")
 	}
 
-	if !cutil.IsValidURL(cfg.URL) {
-		return errors.Wrapf(errType.ErrInvalidValue, "url: %v", err)
+	if !netutils.IsValidURL(cfg.URL) {
+		return errors.Wrapf(errortypes.ErrInvalidValue, "url: %v", err)
 	}
 
 	if err := checkOutput(cfg); err != nil {
-		return errors.Wrapf(errType.ErrInvalidValue, "output: %v", err)
+		return errors.Wrapf(errortypes.ErrInvalidValue, "output: %v", err)
 	}
 	return nil
 }
 
 // This function must be called after checkURL
 func checkOutput(cfg *Config) error {
-	if cutil.IsEmptyStr(cfg.Output) {
+	if stringutils.IsEmptyStr(cfg.Output) {
 		url := strings.TrimRight(cfg.URL, "/")
 		idx := strings.LastIndexByte(url, '/')
 		if idx < 0 {
@@ -301,7 +298,7 @@ func checkOutput(cfg *Config) error {
 	}
 
 	// check permission
-	for dir := cfg.Output; !cutil.IsEmptyStr(dir); dir = filepath.Dir(dir) {
+	for dir := cfg.Output; !stringutils.IsEmptyStr(dir); dir = filepath.Dir(dir) {
 		if err := syscall.Access(dir, syscall.O_RDWR); err == nil {
 			break
 		} else if os.IsPermission(err) {
@@ -318,16 +315,16 @@ type RuntimeVariable struct {
 	// Only server port information is stored currently.
 	MetaPath string
 
-	// SystemDataDir specify a default directory to store temporary files.
+	// SystemDataDir specifies a default directory to store temporary files.
 	SystemDataDir string
 
-	// DataDir specify a directory to store temporary files.
+	// DataDir specifies a directory to store temporary files.
 	// For now, the value of `DataDir` always equals `SystemDataDir`,
 	// and there is no difference between them.
 	// TODO: If there is insufficient disk space, we should set it to the `TargetDir`.
 	DataDir string
 
-	// RealTarget specify the full target path whose value is equal to the `Output`.
+	// RealTarget specifies the full target path whose value is equal to the `Output`.
 	RealTarget string
 
 	// TargetDir is the directory of the RealTarget path.
@@ -357,14 +354,14 @@ type RuntimeVariable struct {
 	// FileLength the length of the file to download.
 	FileLength int64
 
-	// DataExpireTime specify the caching duration for which
+	// DataExpireTime specifies the caching duration for which
 	// cached files keep no accessed by any process.
 	// After this period, the cached files will be deleted.
 	DataExpireTime time.Duration
 
-	// ServerAliveTime specify the alive duration for which
+	// ServerAliveTime specifies the alive duration for which
 	// uploader keeps no accessing by any uploading requests.
-	// After this period, the uploader will automically exit.
+	// After this period, the uploader will automatically exit.
 	ServerAliveTime time.Duration
 }
 

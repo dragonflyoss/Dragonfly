@@ -29,17 +29,20 @@ import (
 	"time"
 )
 
-// UnixScheme is a scheme for unix.
-const UnixScheme = "unix"
+const (
 
-// TCPScheme is a scheme for TCP.
-const TCPScheme = "tcp"
+	// UnixScheme is a scheme for unix.
+	UnixScheme = "unix"
 
-// HTTPScheme is a scheme for HTTP.
-const HTTPScheme = "http"
+	// TCPScheme is a scheme for TCP.
+	TCPScheme = "tcp"
 
-// HTTPSScheme is a scheme for HTTPS.
-const HTTPSScheme = "https"
+	// HTTPScheme is a scheme for HTTP.
+	HTTPScheme = "http"
+
+	// HTTPSScheme is a scheme for HTTPS.
+	HTTPSScheme = "https"
+)
 
 // ParseHost inputs a host address string, and output four type:
 // url.URL, basePath, address without scheme and an error.
@@ -66,7 +69,7 @@ func ParseHost(host string) (*url.URL, string, string, error) {
 	return u, basePath, strings.TrimPrefix(host, u.Scheme+"://"), nil
 }
 
-// GenTLSConfig returns a tls config object according to inputting parameters.
+// GenTLSConfig returns a TLS config object according to inputting parameters.
 func GenTLSConfig(key, cert, ca string) (*tls.Config, error) {
 	tlsConfig := &tls.Config{}
 	tlsCert, err := tls.LoadX509KeyPair(cert, key)
@@ -90,7 +93,7 @@ func GenTLSConfig(key, cert, ca string) (*tls.Config, error) {
 	return tlsConfig, nil
 }
 
-// NewHTTPClient creates a http client using url and tlsconfig
+// NewHTTPClient creates a http client using url and tlsconfig.
 func NewHTTPClient(u *url.URL, tlsConfig *tls.Config, dialTimeout time.Duration) *http.Client {
 	tr := &http.Transport{
 		TLSClientConfig: tlsConfig,

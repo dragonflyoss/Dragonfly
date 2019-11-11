@@ -1,3 +1,19 @@
+/*
+ * Copyright The Dragonfly Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package cdn
 
 import (
@@ -8,11 +24,11 @@ import (
 	"hash"
 	"io"
 
-	"github.com/pkg/errors"
-
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/util"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -42,7 +58,7 @@ func (sr *superReader) readFile(ctx context.Context, reader io.Reader, calculate
 
 	for {
 		// read header and get piece content length
-		ret, err := readHeader(ctx, reader, pieceMd5)
+		ret, err := readHeader(reader, pieceMd5)
 		if err != nil {
 			if err == io.EOF {
 				return result, nil
@@ -55,14 +71,14 @@ func (sr *superReader) readFile(ctx context.Context, reader io.Reader, calculate
 		logrus.Debugf("get piece length: %d with count: %d from header", pieceLen, result.pieceCount)
 
 		// read content
-		if err := readContent(ctx, reader, pieceLen, pieceMd5, result.fileMd5); err != nil {
+		if err := readContent(reader, pieceLen, pieceMd5, result.fileMd5); err != nil {
 			logrus.Errorf("failed to read content for count %d: %v", result.pieceCount, err)
 			return result, err
 		}
 		result.fileLength += int64(pieceLen)
 
 		// read tailer
-		if err := readTailer(ctx, reader, pieceMd5); err != nil {
+		if err := readTailer(reader, pieceMd5); err != nil {
 			return result, errors.Wrapf(err, "failed to read tailer for count %d", result.pieceCount)
 		}
 		result.fileLength++
@@ -70,7 +86,7 @@ func (sr *superReader) readFile(ctx context.Context, reader io.Reader, calculate
 		result.pieceCount++
 
 		if calculatePieceMd5 {
-			pieceSum := fmt.Sprintf("%x", pieceMd5.Sum(nil))
+			pieceSum := fileutils.GetMd5Sum(pieceMd5, nil)
 			pieceLength := pieceLen + config.PieceWrapSize
 			result.pieceMd5s = append(result.pieceMd5s, getPieceMd5Value(pieceSum, pieceLength))
 			pieceMd5.Reset()
@@ -78,7 +94,7 @@ func (sr *superReader) readFile(ctx context.Context, reader io.Reader, calculate
 	}
 }
 
-func readHeader(ctx context.Context, reader io.Reader, pieceMd5 hash.Hash) (uint32, error) {
+func readHeader(reader io.Reader, pieceMd5 hash.Hash) (uint32, error) {
 	header := make([]byte, 4)
 
 	n, err := reader.Read(header)
@@ -89,14 +105,14 @@ func readHeader(ctx context.Context, reader io.Reader, pieceMd5 hash.Hash) (uint
 		return 0, fmt.Errorf("unexected head size: %d", n)
 	}
 
-	if !cutil.IsNil(pieceMd5) {
+	if pieceMd5 != nil {
 		pieceMd5.Write(header)
 	}
 
 	return binary.BigEndian.Uint32(header), nil
 }
 
-func readContent(ctx context.Context, reader io.Reader, pieceLen int32, pieceMd5 hash.Hash, fileMd5 hash.Hash) error {
+func readContent(reader io.Reader, pieceLen int32, pieceMd5 hash.Hash, fileMd5 hash.Hash) error {
 	bufSize := int32(256 * 1024)
 	if pieceLen < bufSize {
 		bufSize = pieceLen
@@ -112,10 +128,10 @@ func readContent(ctx context.Context, reader io.Reader, pieceLen int32, pieceMd5
 			curContent += bufSize
 
 			// calculate the md5
-			if !cutil.IsNil(pieceMd5) {
+			if !util.IsNil(pieceMd5) {
 				pieceMd5.Write(pieceContent)
 			}
-			if !cutil.IsNil(fileMd5) {
+			if !util.IsNil(fileMd5) {
 				fileMd5.Write(pieceContent)
 			}
 		} else {
@@ -126,10 +142,10 @@ func readContent(ctx context.Context, reader io.Reader, pieceLen int32, pieceMd5
 			curContent += readLen
 
 			// calculate the md5
-			if !cutil.IsNil(pieceMd5) {
+			if !util.IsNil(pieceMd5) {
 				pieceMd5.Write(pieceContent[:readLen])
 			}
-			if !cutil.IsNil(fileMd5) {
+			if !util.IsNil(fileMd5) {
 				fileMd5.Write(pieceContent[:readLen])
 			}
 		}
@@ -142,7 +158,7 @@ func readContent(ctx context.Context, reader io.Reader, pieceLen int32, pieceMd5
 	return nil
 }
 
-func readTailer(ctx context.Context, reader io.Reader, pieceMd5 hash.Hash) error {
+func readTailer(reader io.Reader, pieceMd5 hash.Hash) error {
 	tailer := make([]byte, 1)
 	if err := binary.Read(reader, binary.BigEndian, tailer); err != nil {
 		return err
@@ -151,8 +167,21 @@ func readTailer(ctx context.Context, reader io.Reader, pieceMd5 hash.Hash) error
 		return fmt.Errorf("unexpected tailer: %v", tailer[0])
 	}
 
-	if !cutil.IsNil(pieceMd5) {
+	if !util.IsNil(pieceMd5) {
 		pieceMd5.Write(tailer)
 	}
 	return nil
+}
+
+func getMD5ByReadFile(reader io.Reader, pieceLen int32) (string, error) {
+	if pieceLen <= 0 {
+		return fileutils.GetMd5Sum(md5.New(), nil), nil
+	}
+
+	pieceMd5 := md5.New()
+	if err := readContent(reader, pieceLen, pieceMd5, nil); err != nil {
+		return "", err
+	}
+
+	return fileutils.GetMd5Sum(pieceMd5, nil), nil
 }

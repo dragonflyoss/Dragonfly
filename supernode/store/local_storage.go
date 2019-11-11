@@ -22,9 +22,10 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	statutils "github.com/dragonflyoss/Dragonfly/pkg/stat"
 	"github.com/dragonflyoss/Dragonfly/supernode/util"
 
 	"github.com/pkg/errors"
@@ -71,10 +72,10 @@ func NewLocalStorage(conf string) (StorageDriver, error) {
 	}
 
 	// prepare the base dir
-	if !path.IsAbs(cfg.BaseDir) {
+	if !filepath.IsAbs(cfg.BaseDir) {
 		return nil, fmt.Errorf("not absolute path: %s", cfg.BaseDir)
 	}
-	if err := cutil.CreateDirectory(cfg.BaseDir); err != nil {
+	if err := fileutils.CreateDirectory(cfg.BaseDir); err != nil {
 		return nil, err
 	}
 
@@ -173,7 +174,7 @@ func (ls *localStorage) Put(ctx context.Context, raw *Raw, data io.Reader) error
 	lock(path, raw.Offset, false)
 	defer unLock(path, raw.Offset, false)
 
-	f, err := cutil.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0644)
+	f, err := fileutils.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return err
 	}
@@ -209,7 +210,7 @@ func (ls *localStorage) PutBytes(ctx context.Context, raw *Raw, data []byte) err
 	lock(path, raw.Offset, false)
 	defer unLock(path, raw.Offset, false)
 
-	f, err := cutil.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_SYNC, 0644)
+	f, err := fileutils.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return err
 	}
@@ -229,21 +230,21 @@ func (ls *localStorage) PutBytes(ctx context.Context, raw *Raw, data []byte) err
 	return nil
 }
 
-// Stat determine whether the file exists.
+// Stat determines whether the file exists.
 func (ls *localStorage) Stat(ctx context.Context, raw *Raw) (*StorageInfo, error) {
 	_, fileInfo, err := ls.statPath(raw.Bucket, raw.Key)
 	if err != nil {
 		return nil, err
 	}
 
-	sys, ok := cutil.GetSys(fileInfo)
+	sys, ok := fileutils.GetSys(fileInfo)
 	if !ok {
 		return nil, fmt.Errorf("get create time error")
 	}
 	return &StorageInfo{
-		Path:       path.Join(raw.Bucket, raw.Key),
+		Path:       filepath.Join(raw.Bucket, raw.Key),
 		Size:       fileInfo.Size(),
-		CreateTime: cutil.Ctime(sys),
+		CreateTime: statutils.Ctime(sys),
 		ModTime:    fileInfo.ModTime(),
 	}, nil
 }
@@ -261,27 +262,53 @@ func (ls *localStorage) Remove(ctx context.Context, raw *Raw) error {
 	return os.RemoveAll(path)
 }
 
+// GetAvailSpace returns the available disk space in B.
+func (ls *localStorage) GetAvailSpace(ctx context.Context, raw *Raw) (fileutils.Fsize, error) {
+	path, _, err := ls.statPath(raw.Bucket, raw.Key)
+	if err != nil {
+		return 0, err
+	}
+
+	lock(path, -1, true)
+	defer unLock(path, -1, true)
+	return fileutils.GetFreeSpace(path)
+}
+
+// Walk walks the file tree rooted at root which determined by raw.Bucket and raw.Key,
+// calling walkFn for each file or directory in the tree, including root.
+func (ls *localStorage) Walk(ctx context.Context, raw *Raw) error {
+	path, _, err := ls.statPath(raw.Bucket, raw.Key)
+	if err != nil {
+		return err
+	}
+
+	lock(path, -1, true)
+	defer unLock(path, -1, true)
+
+	return filepath.Walk(path, raw.WalkFn)
+}
+
 // helper function
 
 // preparePath gets the target path and creates the upper directory if it does not exist.
 func (ls *localStorage) preparePath(bucket, key string) (string, error) {
-	dir := path.Join(ls.BaseDir, bucket)
+	dir := filepath.Join(ls.BaseDir, bucket)
 
-	if err := cutil.CreateDirectory(dir); err != nil {
+	if err := fileutils.CreateDirectory(dir); err != nil {
 		return "", err
 	}
 
-	target := path.Join(dir, key)
+	target := filepath.Join(dir, key)
 	return target, nil
 }
 
 // statPath determines whether the target file exists and returns an fileMutex if so.
 func (ls *localStorage) statPath(bucket, key string) (string, os.FileInfo, error) {
-	filePath := path.Join(ls.BaseDir, bucket, key)
+	filePath := filepath.Join(ls.BaseDir, bucket, key)
 	f, err := os.Stat(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return "", nil, errors.Wrapf(ErrKeyNotFound, "key: %s", key)
+			return "", nil, errors.Wrapf(ErrKeyNotFound, "bucket(%s) key(%s)", bucket, key)
 		}
 		return "", nil, err
 	}

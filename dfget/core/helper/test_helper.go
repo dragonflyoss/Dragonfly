@@ -22,33 +22,35 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
-	"path"
+	"path/filepath"
 
-	"github.com/dragonflyoss/Dragonfly/common/constants"
-	"github.com/dragonflyoss/Dragonfly/common/util"
+	api_types "github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
+	"github.com/dragonflyoss/Dragonfly/pkg/constants"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+
 	"github.com/sirupsen/logrus"
 )
 
-// CreateConfig create a temporary config
+// CreateConfig creates a temporary config.
 func CreateConfig(writer io.Writer, workHome string) *config.Config {
 	if writer == nil {
 		writer = ioutil.Discard
 	}
 	cfg := config.NewConfig()
 	cfg.WorkHome = workHome
-	cfg.RV.MetaPath = path.Join(cfg.WorkHome, "meta", "host.meta")
-	cfg.RV.SystemDataDir = path.Join(cfg.WorkHome, "data")
-	util.CreateDirectory(path.Dir(cfg.RV.MetaPath))
-	util.CreateDirectory(cfg.RV.SystemDataDir)
+	cfg.RV.MetaPath = filepath.Join(cfg.WorkHome, "meta", "host.meta")
+	cfg.RV.SystemDataDir = filepath.Join(cfg.WorkHome, "data")
+	fileutils.CreateDirectory(filepath.Dir(cfg.RV.MetaPath))
+	fileutils.CreateDirectory(cfg.RV.SystemDataDir)
 
 	logrus.StandardLogger().Out = writer
 	return cfg
 }
 
-// CreateTestFile create a temp file and write a string.
+// CreateTestFile creates a temp file and write a string.
 func CreateTestFile(path string, content string) error {
 	f, err := createFile(path, content)
 	if f != nil {
@@ -57,7 +59,7 @@ func CreateTestFile(path string, content string) error {
 	return err
 }
 
-// CreateTestFileWithMD5 create a temp file and write a string
+// CreateTestFileWithMD5 creates a temp file and write a string
 // and return the md5 of the file.
 func CreateTestFileWithMD5(path string, content string) string {
 	f, err := createFile(path, content)
@@ -65,7 +67,7 @@ func CreateTestFileWithMD5(path string, content string) string {
 		return ""
 	}
 	defer f.Close()
-	return util.Md5Sum(f.Name())
+	return fileutils.Md5Sum(f.Name())
 }
 
 func createFile(path string, content string) (*os.File, error) {
@@ -79,7 +81,7 @@ func createFile(path string, content string) (*os.File, error) {
 	return f, nil
 }
 
-// CreateRandomString create a random string of specified length.
+// CreateRandomString creates a random string of specified length.
 func CreateRandomString(cap int) string {
 	var letterBytes = "abcdefghijklmnopqrstuvwxyz"
 	var length = len(letterBytes)
@@ -109,18 +111,22 @@ type ServiceDownFuncType func(ip string, taskID string, cid string) (*types.Base
 // ClientErrorFuncType function type of SupernodeAPI#ReportClientError
 type ClientErrorFuncType func(ip string, req *types.ClientErrorRequest) (*types.BaseResponse, error)
 
-// MockSupernodeAPI mock SupernodeAPI
+// ClientErrorFuncType function type of SupernodeAPI#ReportMetricsType
+type ReportMetricsFuncType func(node string, req *api_types.TaskMetricsRequest) (*types.BaseResponse, error)
+
+// MockSupernodeAPI mocks the SupernodeAPI.
 type MockSupernodeAPI struct {
-	RegisterFunc    RegisterFuncType
-	PullFunc        PullFuncType
-	ReportFunc      ReportFuncType
-	ServiceDownFunc ServiceDownFuncType
-	ClientErrorFunc ClientErrorFuncType
+	RegisterFunc      RegisterFuncType
+	PullFunc          PullFuncType
+	ReportFunc        ReportFuncType
+	ServiceDownFunc   ServiceDownFuncType
+	ClientErrorFunc   ClientErrorFuncType
+	ReportMetricsFunc ReportMetricsFuncType
 }
 
 var _ api.SupernodeAPI = &MockSupernodeAPI{}
 
-// Register implements SupernodeAPI#Register
+// Register implements SupernodeAPI#Register.
 func (m *MockSupernodeAPI) Register(ip string, req *types.RegisterRequest) (
 	*types.RegisterResponse, error) {
 	if m.RegisterFunc != nil {
@@ -129,7 +135,7 @@ func (m *MockSupernodeAPI) Register(ip string, req *types.RegisterRequest) (
 	return nil, nil
 }
 
-// PullPieceTask implements SupernodeAPI#PullPiece
+// PullPieceTask implements SupernodeAPI#PullPiece.
 func (m *MockSupernodeAPI) PullPieceTask(ip string, req *types.PullPieceTaskRequest) (
 	*types.PullPieceTaskResponse, error) {
 	if m.PullFunc != nil {
@@ -138,7 +144,7 @@ func (m *MockSupernodeAPI) PullPieceTask(ip string, req *types.PullPieceTaskRequ
 	return nil, nil
 }
 
-// ReportPiece implements SupernodeAPI#ReportPiece
+// ReportPiece implements SupernodeAPI#ReportPiece.
 func (m *MockSupernodeAPI) ReportPiece(ip string, req *types.ReportPieceRequest) (
 	*types.BaseResponse, error) {
 	if m.ReportFunc != nil {
@@ -147,7 +153,7 @@ func (m *MockSupernodeAPI) ReportPiece(ip string, req *types.ReportPieceRequest)
 	return nil, nil
 }
 
-// ServiceDown implements SupernodeAPI#ServiceDown
+// ServiceDown implements SupernodeAPI#ServiceDown.
 func (m *MockSupernodeAPI) ServiceDown(ip string, taskID string, cid string) (
 	*types.BaseResponse, error) {
 	if m.ServiceDownFunc != nil {
@@ -156,7 +162,7 @@ func (m *MockSupernodeAPI) ServiceDown(ip string, taskID string, cid string) (
 	return nil, nil
 }
 
-// ReportClientError implements SupernodeAPI#ReportClientError
+// ReportClientError implements SupernodeAPI#ReportClientError.
 func (m *MockSupernodeAPI) ReportClientError(ip string, req *types.ClientErrorRequest) (resp *types.BaseResponse, e error) {
 	if m.ClientErrorFunc != nil {
 		return m.ClientErrorFunc(ip, req)
@@ -164,7 +170,14 @@ func (m *MockSupernodeAPI) ReportClientError(ip string, req *types.ClientErrorRe
 	return nil, nil
 }
 
-// CreateRegisterFunc creates a mock register function
+func (m *MockSupernodeAPI) ReportMetrics(ip string, req *api_types.TaskMetricsRequest) (resp *types.BaseResponse, e error) {
+	if m.ClientErrorFunc != nil {
+		return m.ReportMetricsFunc(ip, req)
+	}
+	return nil, nil
+}
+
+// CreateRegisterFunc creates a mock register function.
 func CreateRegisterFunc() RegisterFuncType {
 	var newResponse = func(code int, msg string) *types.RegisterResponse {
 		return &types.RegisterResponse{

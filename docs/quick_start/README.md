@@ -1,29 +1,30 @@
 # Dragonfly Quick Start
 
-Dragonfly Quick Start document aims to help you to quick start Dragonfly journey. This experiement is quite easy and simplified.
+Dragonfly Quick Start document aims to help you to quick start Dragonfly journey. This experiment is quite easy and simplified.
 
-If you are using Dragonfly in your production environment to handle production image distribution, please refer to supernode and dfget's detailed production parameter configuration.
+If you are using Dragonfly in your **production environment** to handle production image distribution, please refer to supernode and dfget's detailed production parameter configuration.
 
 ## Prerequisites
 
-All steps in this document are done on the same machine using the docker container, so make sure the docker container engine is installed and started on your machine. You can also refer to the documentation: [multi-machine deployment] (../userguide/multi_machines_deployment.md) to experience Dragonfly.
+All steps in this document are done on the same machine using the docker container, so make sure the docker container engine is installed and started on your machine. You can also refer to the documentation: [multi-machine deployment](../user_guide/multi_machines_deployment.md) to experience Dragonfly.
 
 ## Step 1: Deploy Dragonfly Server (SuperNode)
 
 ```bash
-docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 \
-    dragonflyoss/supernode:0.4.0 -Dsupernode.advertiseIp=127.0.0.1
+docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 -v /home/admin/supernode:/home/admin/supernode dragonflyoss/supernode:0.4.3
 ```
 
-> **NOTE**: `supernode.advertiseIp` should be the ip that clients can connect to, `127.0.0.1` here is an example for testing, and it can only be used if the server and client are in the same machine.
-
-## Step 2：Deploy Dragonfly Client (dfclient)
+## Step 2: Deploy Dragonfly Client (dfclient)
 
 ```bash
-docker run -d --name dfclient -p 65001:65001 dragonflyoss/dfclient:0.4.0 --registry https://index.docker.io
+SUPERNODE_IP=`docker inspect supernode -f '{{.NetworkSettings.Networks.bridge.IPAddress}}'`
+docker run -d --name dfclient --restart=always -p 65001:65001 -v $HOME/.small-dragonfly:/root/.small-dragonfly dragonflyoss/dfclient:0.4.3 --registry https://index.docker.io --node $SUPERNODE_IP
 ```
 
-**NOTE**: The `--registry` parameter specifies the mirrored image registry address, and `https://index.docker.io` is the address of official image registry, you can also set it to the others.
+**NOTE**:
+
+- The `--registry` parameter specifies the mirrored image registry address, and `https://index.docker.io` is the address of official image registry, you can also set it to the other **non-https image registries**.
+- The `--node` parameter specifies the supernode's address in the format of **HOST:IP**. And the default value `8002` will be used if the port is not specified. Here we use `docker inspect` to get the ip of supernode container as the host value. Since the supernode container exposes its ports, you can specify this parameter to node ip address as well.
 
 ## Step 3. Configure Docker Daemon
 
@@ -39,13 +40,13 @@ We need to modify the Docker Daemon configuration to use the Dragonfly as a pull
 
 **Tip:** For more information on `/etc/docker/daemon.json`, see [Docker documentation](https://docs.docker.com/registry/recipes/mirror/#configure-the-cache).
 
-2. Restart Docker Daemon。
+2. Restart Docker Daemon.
 
 ```bash
 systemctl restart docker
 ```
 
-## Step 4：Pull images with Dragonfly
+## Step 4: Pull images with Dragonfly
 
 Through the above steps, we can start to validate if Dragonfly works as expected.
 
@@ -55,7 +56,7 @@ And you can pull the image as usual, for example:
 docker pull nginx:latest
 ```
 
-## Step 5：Validate Dragonfly
+## Step 5: Validate Dragonfly
 
 You can execute the following command to check if the nginx image is distributed via Dragonfly.
 
@@ -70,3 +71,12 @@ If the output of command above has content like
 ```
 
 then Dragonfly is proved to work successfully.
+
+## SEE ALSO
+
+- [multi machines deployment](../user_guide/multi_machines_deployment.md) - experience Dragonfly on multiple machines
+- [install server](../user_guide/install_server.md) - how to install the Dragonfly server
+- [install client](../user_guide/install_client.md) - how to install the Dragonfly dfclient
+- [docker proxy](../user_guide/docker_proxy.md) - make Dragonfly as HTTP proxy for docker daemon
+- [proxy](../user_guide/proxy.md) - config proxy
+- [download files](../user_guide/download_files.md) - download files with Dragonfly

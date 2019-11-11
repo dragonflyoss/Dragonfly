@@ -24,7 +24,7 @@ import (
 	"math/rand"
 	"net"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -65,7 +65,7 @@ func (s *CoreTestSuite) TearDownSuite(c *check.C) {
 func (s *CoreTestSuite) TestPrepare(c *check.C) {
 	buf := &bytes.Buffer{}
 	cfg := s.createConfig(buf)
-	cfg.Output = path.Join(s.workHome, "test.output")
+	cfg.Output = filepath.Join(s.workHome, "test.output")
 
 	err := prepare(cfg)
 	fmt.Printf("%s\nerror:%v", buf.String(), err)
@@ -94,20 +94,13 @@ func (s *CoreTestSuite) TestRegisterToSupernode(c *check.C) {
 
 	uploader.SetupPeerServerExecutor(nil)
 	cfg.Pattern = config.PatternP2P
-	cfg.Node = []string{"x"}
+	cfg.Nodes = []string{"x"}
 	cfg.URL = "http://x.com"
 	f(config.BackSourceReasonRegisterFail, true, nil)
 
-	cfg.Node = []string{"x"}
+	cfg.Nodes = []string{"x"}
 	cfg.URL = "http://taobao.com"
 	cfg.BackSourceReason = config.BackSourceReasonNone
-	// f(config.BackSourceReasonNone, false, nil)
-
-	cfg.Node = []string{"x"}
-	cfg.URL = "http://lowzj.com"
-	f(config.BackSourceReasonNone, true, &regist.RegisterResult{
-		Node: "x", RemainderNodes: []string{}, URL: cfg.URL, TaskID: "a",
-		FileLength: 100, PieceSize: 10})
 }
 
 func (s *CoreTestSuite) TestAdjustSupernodeList(c *check.C) {

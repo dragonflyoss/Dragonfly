@@ -17,35 +17,37 @@
 package dfget
 
 import (
+	"context"
 	"fmt"
+	netUrl "net/url"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/exception"
+
+	log "github.com/sirupsen/logrus"
 )
 
-// DFGetter implements Downloader to download file by dragonfly
+// DFGetter implements Downloader to download file by dragonfly.
 type DFGetter struct {
 	config config.DFGetConfig
 }
 
-// NewGetter returns a dfget downloader from the given config
+// NewGetter returns a dfget downloader from the given config.
 func NewGetter(cfg config.DFGetConfig) *DFGetter {
 	return &DFGetter{config: cfg}
 }
 
-// Download is the method of DFGetter to download by dragonfly.
-func (dfGetter *DFGetter) Download(url string, header map[string][]string, name string) (string, error) {
+// DownloadContext downloads the resources as specified in url.
+func (dfGetter *DFGetter) DownloadContext(ctx context.Context, url string, header map[string][]string, name string) (string, error) {
 	startTime := time.Now()
 	dstPath := filepath.Join(dfGetter.config.DFRepo, name)
-	cmd := dfGetter.getCommand(url, header, dstPath)
+	cmd := dfGetter.getCommand(ctx, url, header, dstPath)
 	err := cmd.Run()
 	if cmd.ProcessState.Success() {
 		log.Infof("dfget url:%s [SUCCESS] cost:%.3fs", url, time.Since(startTime).Seconds())
@@ -59,31 +61,26 @@ func (dfGetter *DFGetter) Download(url string, header map[string][]string, name 
 	return "", fmt.Errorf("dfget fail(%s):%v", cmd.ProcessState.String(), err)
 }
 
-// getCommand returns the command to download the given resource
+// getCommand returns the command to download the given resource.
 func (dfGetter *DFGetter) getCommand(
-	url string, header map[string][]string, output string,
+	ctx context.Context, url string, header map[string][]string, output string,
 ) (cmd *exec.Cmd) {
 	args := []string{
-		"--dfdaemon",
 		"-u", url,
 		"-o", output,
 	}
-
-	if dfGetter.config.Notbs {
-		args = append(args, "--notbs")
-	}
+	args = append(args, dfGetter.config.DfgetFlags...)
 
 	add := func(key, value string) {
 		if v := strings.TrimSpace(value); v != "" {
 			args = append(args, key, v)
 		}
 	}
-
-	add("--callsystem", dfGetter.config.CallSystem)
-	add("-f", dfGetter.config.URLFilter)
 	add("-s", dfGetter.config.RateLimit)
 	add("--totallimit", dfGetter.config.RateLimit)
-	add("--node", strings.Join(dfGetter.config.SuperNodes, ","))
+	if len(dfGetter.config.SuperNodes) > 0 {
+		add("--node", strings.Join(dfGetter.config.SuperNodes, ","))
+	}
 
 	for key, value := range header {
 		// discard HTTP host header for backing to source successfully
@@ -99,5 +96,17 @@ func (dfGetter *DFGetter) getCommand(
 		}
 	}
 
-	return exec.Command(dfGetter.config.DFPath, args...)
+	urlInfo, _ := netUrl.Parse(url)
+	for _, h := range dfGetter.config.HostsConfig {
+		if urlInfo != nil && h.Regx.MatchString(urlInfo.Host) {
+			if h.Insecure {
+				args = append(args, "--insecure")
+			}
+			if h.Certs != nil && len(h.Certs.Files) != 0 {
+				add("--cacerts", strings.Join(h.Certs.Files, ","))
+			}
+		}
+	}
+
+	return exec.CommandContext(ctx, dfGetter.config.DFPath, args...)
 }

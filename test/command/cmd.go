@@ -31,7 +31,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 	"github.com/dragonflyoss/Dragonfly/test/environment"
 )
 
@@ -67,7 +67,7 @@ func checkExist(s string) {
 	}
 }
 
-// NewStarter create an instance of Starter.
+// NewStarter creates an instance of Starter.
 // It checks the binary files whether is existing and creates a temporary
 // directory for testing.
 func NewStarter(name string) *Starter {
@@ -122,6 +122,9 @@ type Starter struct {
 	// is killed.
 	fileSrv map[*exec.Cmd]*http.Server
 
+	// supernodeFileServerHome is the home dir of supernode file server.
+	supernodeFileServerHome string
+
 	lock sync.Mutex
 }
 
@@ -130,6 +133,7 @@ func (s *Starter) getCmdGo(dir string, running time.Duration, args ...string) (c
 		"--home-dir=" + dir,
 		"--port=" + strconv.Itoa(environment.SupernodeListenPort),
 		"--advertise-ip=127.0.0.1",
+		"--download-port=" + strconv.Itoa(environment.SupernodeDownloadPort),
 		"--debug",
 	}, args...)
 
@@ -149,11 +153,17 @@ func (s *Starter) Supernode(running time.Duration, args ...string) (
 		s.Kill(cmd)
 		return nil, err
 	}
-	if _, err = s.fileServer(cmd, fp.Join(dir, "repo")); err != nil {
+	s.supernodeFileServerHome = fp.Join(dir, "repo")
+	if _, err = s.fileServer(cmd, s.supernodeFileServerHome, environment.SupernodeDownloadPort); err != nil {
 		s.Kill(cmd)
 		return nil, err
 	}
 	return cmd, err
+}
+
+// WriteSupernodeFileServer writes a file to the supernode file server.
+func (s *Starter) WriteSupernodeFileServer(filePath string, data []byte, perm os.FileMode) error {
+	return ioutil.WriteFile(fp.Join(s.supernodeFileServerHome, filePath), data, perm)
 }
 
 // DFDaemon starts dfdaemon.
@@ -225,7 +235,7 @@ func (s *Starter) kill(cmd *exec.Cmd) {
 	}
 }
 
-// execCmd execute a command.
+// execCmd executes a command.
 // param running indicates that how much time the process can run at most,
 // after the running duration, the process will be killed automatically.
 // When the value of running is less than 0, it will not be killed automatically,
@@ -253,9 +263,9 @@ func (s *Starter) addCmd(cmd *exec.Cmd) {
 	s.listMap[cmd] = el
 }
 
-func (s *Starter) fileServer(cmd *exec.Cmd, root string) (*http.Server, error) {
+func (s *Starter) fileServer(cmd *exec.Cmd, root string, port int) (*http.Server, error) {
 	server := &http.Server{
-		Addr:    ":8001",
+		Addr:    ":" + strconv.Itoa(port),
 		Handler: http.FileServer(http.Dir(root)),
 	}
 	err := make(chan error)
@@ -289,7 +299,7 @@ func check(ip string, port int, timeout time.Duration) (err error) {
 		case err = <-end:
 			return err
 		case <-ticker.C:
-			if _, err = util.CheckConnect(ip, port, 50); err == nil {
+			if _, err = httputils.CheckConnect(ip, port, 50); err == nil {
 				return nil
 			}
 		}

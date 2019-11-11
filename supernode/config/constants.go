@@ -16,6 +16,22 @@
 
 package config
 
+import (
+	"time"
+
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/rate"
+)
+
+const (
+	// DefaultListenPort is the default port supernode server listens on.
+	DefaultListenPort = 8002
+	// DefaultDownloadPort is the default port for download files from supernode.
+	DefaultDownloadPort = 8001
+	// DefaultSchedulerCorePoolSize is the default core pool size of ScheduledExecutorService.
+	DefaultSchedulerCorePoolSize = 10
+)
+
 const (
 	// DefaultSupernodeConfigFilePath the default supernode config path.
 	DefaultSupernodeConfigFilePath = "/etc/dragonfly/supernode.yml"
@@ -34,17 +50,17 @@ const (
 )
 
 const (
-	// FailCountLimit indicates the limit of fail count as a client.
-	FailCountLimit = 5
+	// DefaultFailCountLimit indicates the default limit of failure count as a client.
+	DefaultFailureCountLimit = 5
 
-	// EliminationLimit indicates limit of fail count as a server.
-	EliminationLimit = 5
+	// DefaultEliminationLimit indicates the default limit of failure count as a server.
+	DefaultEliminationLimit = 5
 
-	// PeerUpLimit indicates the limit of the load count as a server.
-	PeerUpLimit = 5
+	// DefaultPeerUpLimit indicates the default limit of the load count as a server.
+	DefaultPeerUpLimit = 5
 
-	// PeerDownLimit indicates the limit of the download task count as a client.
-	PeerDownLimit = 4
+	// DefaultPeerDownLimit indicates the default limit of the download task count as a client.
+	DefaultPeerDownLimit = 4
 )
 
 const (
@@ -67,4 +83,56 @@ const (
 const (
 	// CDNWriterRoutineLimit 4
 	CDNWriterRoutineLimit = 4
+)
+
+const (
+	// SubsystemSupernode represents metrics from supernode.
+	SubsystemSupernode = "supernode"
+
+	// SubsystemDfget represents metrics from dfget.
+	SubsystemDfget = "dfget"
+)
+
+const (
+	// DefaultFailAccessInterval is the interval time after failed to access the URL.
+	DefaultFailAccessInterval = 3 * time.Minute
+
+	// DefaultGCInitialDelay is the delay time from the start to the first GC execution.
+	DefaultGCInitialDelay = 6 * time.Second
+
+	// DefaultGCMetaInterval is the interval time to execute the GC meta.
+	DefaultGCMetaInterval = 2 * time.Minute
+
+	// DefaultTaskExpireTime when a task is not accessed within the taskExpireTime,
+	// and it will be treated to be expired.
+	DefaultTaskExpireTime = 3 * time.Minute
+
+	// DefaultPeerGCDelay is the delay time to execute the GC after the peer has reported the offline.
+	DefaultPeerGCDelay = 3 * time.Minute
+)
+
+// Default config value for gc disk
+const (
+	DefaultYoungGCThreshold = 100 * fileutils.GB
+
+	DefaultFullGCThreshold = 5 * fileutils.GB
+
+	DefaultIntervalThreshold = 2 * time.Hour
+
+	DefaultGCDiskInterval = 15 * time.Second
+
+	DefaultCleanRatio = 1
+)
+
+const (
+	// DefaultLinkLimit is the default network speed limit for each piece.
+	// unit: MB/s
+	DefaultLinkLimit = 20 * rate.MB
+	// DefaultSystemReservedBandwidth is the default network bandwidth reserved for system software.
+	// unit: MB/s
+	DefaultSystemReservedBandwidth = 20 * rate.MB
+
+	// DefaultMaxBandwidth is the default network bandwidth that supernode can use.
+	// unit: MB/s
+	DefaultMaxBandwidth = 200 * rate.MB
 )

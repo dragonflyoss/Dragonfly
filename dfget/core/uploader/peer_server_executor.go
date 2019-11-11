@@ -28,6 +28,7 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/version"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -52,7 +53,7 @@ func StartPeerServerProcess(cfg *config.Config) (port int, err error) {
 	if defaultExecutor != nil {
 		return defaultExecutor.StartPeerServerProcess(cfg)
 	}
-	return 0, fmt.Errorf("executor of peer server isn't be initiliazed")
+	return 0, fmt.Errorf("executor of peer server hasn't been initialized")
 }
 
 // PeerServerExecutor starts an independent peer server process for uploading downloaded files.
@@ -75,8 +76,10 @@ func (pe *peerServerExecutor) StartPeerServerProcess(cfg *config.Config) (port i
 
 	cmd := exec.Command(os.Args[0], "server",
 		"--ip", cfg.RV.LocalIP,
+		"--port", strconv.Itoa(cfg.RV.PeerPort),
 		"--meta", cfg.RV.MetaPath,
 		"--data", cfg.RV.SystemDataDir,
+		"--home", cfg.WorkHome,
 		"--expiretime", cfg.RV.DataExpireTime.String(),
 		"--alivetime", cfg.RV.ServerAliveTime.String())
 	if cfg.Verbose {
@@ -88,7 +91,7 @@ func (pe *peerServerExecutor) StartPeerServerProcess(cfg *config.Config) (port i
 		return 0, err
 	}
 	if err = cmd.Start(); err == nil {
-		port, err = pe.readPort(stdout)
+		port, err = readPort(stdout)
 	}
 	if err == nil && pe.checkPeerServerExist(cfg, port) <= 0 {
 		err = fmt.Errorf("invalid server on port:%d", port)
@@ -98,7 +101,7 @@ func (pe *peerServerExecutor) StartPeerServerProcess(cfg *config.Config) (port i
 	return
 }
 
-func (pe *peerServerExecutor) readPort(r io.Reader) (int, error) {
+func readPort(r io.Reader) (int, error) {
 	done := make(chan error)
 	var port int32
 
@@ -110,8 +113,9 @@ func (pe *peerServerExecutor) readPort(r io.Reader) (int, error) {
 			done <- err
 		}
 
-		content := strings.TrimSpace(string(buf[:n]))
-		portValue, err := strconv.Atoi(content)
+		content := string(buf[:n])
+		contentSlice := strings.Split(content, " ")
+		portValue, err := strconv.Atoi(strings.TrimSpace(contentSlice[len(contentSlice)-1]))
 		// avoid data race
 		atomic.StoreInt32(&port, int32(portValue))
 		done <- err
@@ -134,7 +138,7 @@ func (pe *peerServerExecutor) checkPeerServerExist(cfg *config.Config, port int)
 	}
 
 	// check the peer server whether is available
-	result, err := checkServer(cfg.RV.LocalIP, port, cfg.RV.DataDir, taskFileName, cfg.TotalLimit)
+	result, err := checkServer(cfg.RV.LocalIP, port, cfg.RV.DataDir, taskFileName, int(cfg.TotalLimit))
 	logrus.Infof("local http result:%s err:%v, port:%d path:%s",
 		result, err, port, config.LocalHTTPPathCheck)
 

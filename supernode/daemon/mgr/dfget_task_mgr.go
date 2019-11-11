@@ -1,3 +1,19 @@
+/*
+ * Copyright The Dragonfly Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package mgr
 
 import (
@@ -21,13 +37,19 @@ type DfgetTaskMgr interface {
 	// GetCIDByPeerIDAndTaskID returns cid with specified peerID and taskID.
 	GetCIDByPeerIDAndTaskID(ctx context.Context, peerID, taskID string) (string, error)
 
+	// GetCIDsByTaskID returns cids as a string slice with specified taskID.
+	GetCIDsByTaskID(ctx context.Context, taskID string) ([]string, error)
+
+	// GetCIDAndTaskIDsByPeerID returns a cid<->taskID map by specified peerID.
+	GetCIDAndTaskIDsByPeerID(ctx context.Context, peerID string) (map[string]string, error)
+
 	// List returns the list of dfgetTask.
 	List(ctx context.Context, filter map[string]string) (dfgetTaskList []*types.DfGetTask, err error)
 
 	// Delete a dfgetTask with clientID and taskID.
 	Delete(ctx context.Context, clientID, taskID string) error
 
-	// UpdateStatus update the status of dfgetTask with specified clientID and taskID.
+	// UpdateStatus updates the status of dfgetTask with specified clientID and taskID.
 	// Supernode will update the status of dfgetTask in the following situations:
 	// 1. after init the dfgetTask
 	// 2. when success/fail to download some pieces

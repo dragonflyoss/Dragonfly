@@ -26,8 +26,9 @@ import (
 	"testing"
 	"time"
 
-	dferr "github.com/dragonflyoss/Dragonfly/common/errors"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/rate"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
@@ -62,7 +63,7 @@ func (ts *configTestSuite) TestValidatePort() {
 		c.Port = p
 		err := c.Validate()
 		r.NotNil(err)
-		de, ok := err.(*dferr.DfError)
+		de, ok := err.(*errortypes.DfError)
 		r.True(ok)
 		r.Equal(constant.CodeExitPortInvalid, de.Code)
 	}
@@ -93,21 +94,6 @@ func (ts *configTestSuite) TestValidateDFPath() {
 
 	c.DFPath = fmt.Sprintf("/df-test-%d-%d", time.Now().UnixNano(), rand.Int())
 	r.Equal(constant.CodeExitDfgetNotFound, getCode(c.Validate()))
-}
-
-func (ts *configTestSuite) TestValidateRateLimit() {
-	c := defaultConfig()
-	r := ts.Require()
-
-	for _, l := range []string{"M", "K", "1KB"} {
-		c.RateLimit = l
-		r.Equal(constant.CodeExitRateLimitInvalid, getCode(c.Validate()))
-	}
-
-	for _, l := range []string{"1M", "20K", "20M"} {
-		c.RateLimit = l
-		r.Nil(c.Validate())
-	}
 }
 
 func (ts *configTestSuite) TestURLNew() {
@@ -252,7 +238,7 @@ func (ts *configTestSuite) TestProxyNew() {
 
 func (ts *configTestSuite) TestProxyMatch() {
 	r := ts.Require()
-	p, err := NewProxy("blobs/sha256:.*", false, false)
+	p, err := NewProxy("blobs/sha256.*", false, false)
 	r.Nil(err)
 	r.NotNil(p)
 
@@ -264,19 +250,6 @@ func (ts *configTestSuite) TestProxyMatch() {
 		r.False(p.Match(unmatch))
 	}
 
-}
-
-func (ts *configTestSuite) TestDFGetConfig() {
-	r := ts.Require()
-	cfg := defaultConfig()
-	dfgetCfg := cfg.DFGetConfig()
-	r.Equal(cfg.SuperNodes, dfgetCfg.SuperNodes)
-	r.Equal(cfg.DFRepo, dfgetCfg.DFRepo)
-	r.Equal(cfg.DFPath, dfgetCfg.DFPath)
-	r.Equal(cfg.RateLimit, dfgetCfg.RateLimit)
-	r.Equal(cfg.URLFilter, dfgetCfg.URLFilter)
-	r.Equal(cfg.CallSystem, dfgetCfg.CallSystem)
-	r.Equal(cfg.Notbs, dfgetCfg.Notbs)
 }
 
 func (ts *configTestSuite) TestMirrorTLSConfig() {
@@ -294,6 +267,65 @@ func (ts *configTestSuite) TestMirrorTLSConfig() {
 
 	m.Insecure = true
 	r.Equal(m.Insecure, m.TLSConfig().InsecureSkipVerify)
+}
+
+func (ts *configTestSuite) TestDFGetConfig() {
+	c := defaultConfig()
+	r := ts.Require()
+
+	{
+		flagsConfigs := c.DFGetConfig()
+		r.Contains(flagsConfigs.DfgetFlags, "--dfdaemon")
+		r.Equal(c.SuperNodes, flagsConfigs.SuperNodes)
+		r.Equal(c.RateLimit.String(), flagsConfigs.RateLimit)
+		r.Equal(c.DFRepo, flagsConfigs.DFRepo)
+		r.Equal(c.DFPath, flagsConfigs.DFPath)
+
+		c.Verbose = true
+		flagsConfigs = c.DFGetConfig()
+		r.Contains(flagsConfigs.DfgetFlags, "--verbose")
+	}
+
+	{
+		aRegex, err := NewRegexp("a.registry.com")
+		r.Nil(err)
+		bRegex, err := NewRegexp("b.registry.com")
+		r.Nil(err)
+		c.HijackHTTPS = &HijackConfig{
+			Hosts: []*HijackHost{
+				{
+					Regx:     aRegex,
+					Insecure: true,
+					Certs:    nil,
+				},
+				{
+					Regx:     bRegex,
+					Insecure: false,
+					Certs: &CertPool{
+						CertPool: x509.NewCertPool(),
+					},
+				},
+			},
+		}
+		r.Equal(c.HijackHTTPS.Hosts, c.DFGetConfig().HostsConfig)
+	}
+
+	{
+		url, err := NewURL("c.registry.com")
+		r.Nil(err)
+		c.RegistryMirror = &RegistryMirror{
+			Remote: url,
+			Certs: &CertPool{
+				CertPool: x509.NewCertPool(),
+			},
+			Insecure: false,
+		}
+		mirrorConfigs := c.DFGetConfig()
+		r.Equal(len(mirrorConfigs.HostsConfig), 3)
+		r.Equal(mirrorConfigs.HostsConfig[len(mirrorConfigs.HostsConfig)-1].Regx.String(), c.RegistryMirror.Remote.Host)
+		r.Equal(mirrorConfigs.HostsConfig[len(mirrorConfigs.HostsConfig)-1].Certs, c.RegistryMirror.Certs)
+		r.Equal(mirrorConfigs.HostsConfig[len(mirrorConfigs.HostsConfig)-1].Insecure, c.RegistryMirror.Insecure)
+	}
 }
 
 func (ts *configTestSuite) TestSerialization() {
@@ -367,7 +399,7 @@ func (m *yamlM) Marshal(d interface{}) ([]byte, error)      { return yaml.Marsha
 func (m *yamlM) Unmarshal(text []byte, d interface{}) error { return yaml.Unmarshal(text, d) }
 
 func getCode(err error) int {
-	if de, ok := err.(*dferr.DfError); ok {
+	if de, ok := err.(*errortypes.DfError); ok {
 		return de.Code
 	}
 	return 0
@@ -379,7 +411,7 @@ func defaultConfig() *Properties {
 		HostIP:    "127.0.0.1",
 		DFRepo:    "/tmp",
 		DFPath:    "/tmp",
-		RateLimit: "20M",
+		RateLimit: 20 * rate.MB,
 	}
 }
 

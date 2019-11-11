@@ -1,5 +1,9 @@
 #!/bin/bash
 
+set -o nounset
+set -o errexit
+set -o pipefail
+
 USE_DOCKER=${USE_DOCKER:-"0"}
 VERSION=${VERSION:-"0.0.$(date +%s)"}
 
@@ -29,7 +33,7 @@ main() {
         FPM="fpm"
     fi
 
-    case "$1" in
+    case "${1-}" in
         rpm )
             build_rpm
             ;;

@@ -16,28 +16,32 @@
 
 package app
 
-import "C"
 import (
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"reflect"
+	"time"
 
+	"github.com/dragonflyoss/Dragonfly/pkg/dflog"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/rate"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
+	"github.com/dragonflyoss/Dragonfly/supernode/daemon"
+
+	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-
-	"github.com/dragonflyoss/Dragonfly/common/dflog"
-	errorType "github.com/dragonflyoss/Dragonfly/common/errors"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
-	"github.com/dragonflyoss/Dragonfly/supernode/config"
-	"github.com/dragonflyoss/Dragonfly/supernode/daemon"
+	"github.com/spf13/viper"
+	"gopkg.in/yaml.v2"
 )
 
 var (
-	configFilePath = config.DefaultSupernodeConfigFilePath
-	cfg            = config.NewConfig()
-	options        = NewOptions()
+	supernodeViper = viper.GetViper()
 )
 
 var rootCmd = &cobra.Command{
@@ -46,16 +50,69 @@ var rootCmd = &cobra.Command{
 	Args:         cobra.NoArgs,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return runSuperNode()
+		// load config file.
+		if err := readConfigFile(supernodeViper, cmd); err != nil {
+			return errors.Wrap(err, "read config file")
+		}
+
+		// get config from viper.
+		cfg, err := getConfigFromViper(supernodeViper)
+		if err != nil {
+			return errors.Wrap(err, "get config from viper")
+		}
+
+		// create home dir
+		if err := fileutils.CreateDirectory(supernodeViper.GetString("base.homeDir")); err != nil {
+			return fmt.Errorf("failed to create home dir %s: %v", supernodeViper.GetString("base.homeDir"), err)
+		}
+
+		// initialize supernode logger.
+		if err := initLog(logrus.StandardLogger(), "app.log"); err != nil {
+			return err
+		}
+
+		// initialize dfget logger.
+		dfgetLogger := logrus.New()
+		if err := initLog(dfgetLogger, "dfget.log"); err != nil {
+			return err
+		}
+
+		// set supernode advertise ip
+		if stringutils.IsEmptyStr(cfg.AdvertiseIP) {
+			if err := setAdvertiseIP(cfg); err != nil {
+				return err
+			}
+		}
+		logrus.Infof("success to init local ip of supernode, use ip: %s", cfg.AdvertiseIP)
+
+		// set up the CIDPrefix
+		cfg.SetCIDPrefix(cfg.AdvertiseIP)
+
+		logrus.Debugf("get supernode config: %+v", cfg)
+		logrus.Info("start to run supernode")
+
+		d, err := daemon.New(cfg, dfgetLogger)
+		if err != nil {
+			logrus.Errorf("failed to initialize daemon in supernode: %v", err)
+			return err
+		}
+
+		// register supernode
+		if err := d.RegisterSuperNode(); err != nil {
+			logrus.Errorf("failed to register super node: %v", err)
+			return err
+		}
+
+		return d.Run()
 	},
 }
 
 func init() {
-	setupFlags(rootCmd, options)
+	setupFlags(rootCmd)
 }
 
 // setupFlags setups flags for command line.
-func setupFlags(cmd *cobra.Command, opt *Options) {
+func setupFlags(cmd *cobra.Command) {
 	// Cobra supports Persistent Flags, which, if defined here,
 	// will be global for your application.
 	// flagSet := cmd.PersistentFlags()
@@ -64,119 +121,223 @@ func setupFlags(cmd *cobra.Command, opt *Options) {
 	// when this action is called directly.
 	flagSet := cmd.Flags()
 
-	flagSet.StringVar(&configFilePath, "config", configFilePath,
+	defaultBaseProperties := config.NewBaseProperties()
+
+	flagSet.String("config", config.DefaultSupernodeConfigFilePath,
 		"the path of supernode's configuration file")
 
-	flagSet.IntVar(&opt.ListenPort, "port", opt.ListenPort,
-		"ListenPort is the port supernode server listens on")
+	flagSet.Int("port", defaultBaseProperties.ListenPort,
+		"listenPort is the port that supernode server listens on")
 
-	flagSet.IntVar(&opt.DownloadPort, "download-port", opt.DownloadPort,
-		"DownloadPort is the port for download files from supernode")
+	flagSet.Int("download-port", defaultBaseProperties.DownloadPort,
+		"downloadPort is the port for download files from supernode")
 
-	flagSet.StringVar(&opt.HomeDir, "home-dir", opt.HomeDir,
-		"HomeDir is working directory of supernode")
+	flagSet.String("home-dir", defaultBaseProperties.HomeDir,
+		"homeDir is the working directory of supernode")
 
-	flagSet.StringVar(&opt.DownloadPath, "download-path", opt.DownloadPath,
-		"specifies the path where to store downloaded filed from source address")
+	flagSet.Var(&defaultBaseProperties.SystemReservedBandwidth, "system-bandwidth",
+		"network rate reserved for system")
 
-	flagSet.IntVar(&opt.SystemReservedBandwidth, "system-bandwidth", opt.SystemReservedBandwidth,
-		"Network rate reserved for system (unit: MB/s)")
+	flagSet.Var(&defaultBaseProperties.MaxBandwidth, "max-bandwidth",
+		"network rate that supernode can use")
 
-	flagSet.IntVar(&opt.MaxBandwidth, "max-bandwidth", opt.MaxBandwidth,
-		"network rate that supernode can use (unit: MB/s)")
+	flagSet.Int("pool-size", defaultBaseProperties.SchedulerCorePoolSize,
+		"pool size is the core pool size of ScheduledExecutorService")
 
-	flagSet.IntVar(&opt.SchedulerCorePoolSize, "pool-size", opt.SchedulerCorePoolSize,
-		"the core pool size of ScheduledExecutorService")
+	flagSet.Bool("profiler", defaultBaseProperties.EnableProfiler,
+		"profiler sets whether supernode HTTP server setups profiler")
 
-	flagSet.BoolVar(&opt.EnableProfiler, "profiler", opt.EnableProfiler,
-		"Set if supernode HTTP server setup profiler")
+	flagSet.BoolP("debug", "D", defaultBaseProperties.Debug,
+		"switch daemon log level to DEBUG mode")
 
-	flagSet.BoolVarP(&opt.Debug, "debug", "D", opt.Debug,
-		"Switch daemon log level to DEBUG mode")
-
-	flagSet.IntVar(&opt.PeerUpLimit, "up-limit", opt.PeerUpLimit,
+	flagSet.Int("up-limit", defaultBaseProperties.PeerUpLimit,
 		"upload limit for a peer to serve download tasks")
 
-	flagSet.IntVar(&opt.PeerDownLimit, "down-limit", opt.PeerDownLimit,
+	flagSet.Int("down-limit", defaultBaseProperties.PeerDownLimit,
 		"download limit for supernode to serve download tasks")
 
-	flagSet.StringVar(&opt.AdvertiseIP, "advertise-ip", "",
-		"the supernode ip that we advertise to other peer in the p2p-network")
+	flagSet.String("advertise-ip", "",
+		"the supernode ip is the ip we advertise to other peers in the p2p-network")
+
+	flagSet.Duration("fail-access-interval", defaultBaseProperties.FailAccessInterval,
+		"fail access interval is the interval time after failed to access the URL")
+
+	flagSet.Duration("gc-initial-delay", defaultBaseProperties.GCInitialDelay,
+		"gc initial delay is the delay time from the start to the first GC execution")
+
+	flagSet.Duration("gc-meta-interval", defaultBaseProperties.GCMetaInterval,
+		"gc meta interval is the interval time to execute the GC meta")
+
+	flagSet.Duration("task-expire-time", defaultBaseProperties.TaskExpireTime,
+		"task expire time is the time that a task is treated expired if the task is not accessed within the time")
+
+	flagSet.Duration("peer-gc-delay", defaultBaseProperties.PeerGCDelay,
+		"peer gc delay is the delay time to execute the GC after the peer has reported the offline")
+
+	exitOnError(bindRootFlags(supernodeViper), "bind root command flags")
 }
 
-// runSuperNode prepares configs, setups essential details and runs supernode daemon.
-func runSuperNode() error {
-	// initialize log.
-	if err := initLog(); err != nil {
-		return err
+// bindRootFlags binds flags on rootCmd to the given viper instance.
+func bindRootFlags(v *viper.Viper) error {
+	flags := []struct {
+		key  string
+		flag string
+	}{
+		{
+			key:  "config",
+			flag: "config",
+		},
+		{
+			key:  "base.listenPort",
+			flag: "port",
+		},
+		{
+			key:  "base.downloadPort",
+			flag: "download-port",
+		},
+		{
+			key:  "base.homeDir",
+			flag: "home-dir",
+		},
+		{
+			key:  "base.systemReservedBandwidth",
+			flag: "system-bandwidth",
+		},
+		{
+			key:  "base.maxBandwidth",
+			flag: "max-bandwidth",
+		},
+		{
+			key:  "base.schedulerCorePoolSize",
+			flag: "pool-size",
+		},
+		{
+			key:  "base.enableProfiler",
+			flag: "profiler",
+		},
+		{
+			key:  "base.debug",
+			flag: "debug",
+		},
+		{
+			key:  "base.peerUpLimit",
+			flag: "up-limit",
+		},
+		{
+			key:  "base.peerDownLimit",
+			flag: "down-limit",
+		},
+		{
+			key:  "base.advertiseIP",
+			flag: "advertise-ip",
+		},
+		{
+			key:  "base.failAccessInterval",
+			flag: "fail-access-interval",
+		},
+		{
+			key:  "base.gcInitialDelay",
+			flag: "gc-initial-delay",
+		},
+		{
+			key:  "base.gcMetaInterval",
+			flag: "gc-meta-interval",
+		},
+		{
+			key:  "base.taskExpireTime",
+			flag: "task-expire-time",
+		},
+		{
+			key:  "base.peerGCDelay",
+			flag: "peer-gc-delay",
+		},
 	}
 
-	if err := initConfig(); err != nil {
-		return err
-	}
-
-	// set supernode advertise ip
-	if cutil.IsEmptyStr(cfg.AdvertiseIP) {
-		if err := setAdvertiseIP(); err != nil {
+	for _, f := range flags {
+		if err := v.BindPFlag(f.key, rootCmd.Flag(f.flag)); err != nil {
 			return err
 		}
 	}
-	logrus.Infof("success to init local ip of supernode, use ip: %s", cfg.AdvertiseIP)
-
-	// set up the CIDPrefix
-	cfg.SetCIDPrefix(cfg.AdvertiseIP)
-
-	logrus.Info("start to run supernode")
-
-	d, err := daemon.New(cfg)
-	if err != nil {
-		logrus.Errorf("failed to initialize daemon in supernode: %v", err)
-		return err
-	}
-
-	// register supernode
-	if err := d.RegisterSuperNode(); err != nil {
-		logrus.Errorf("failed to register super node: %v", err)
-		return err
-	}
-
-	return d.Run()
-}
-
-// initLog initializes log Level and log format of daemon.
-func initLog() error {
-	logPath := path.Join(options.HomeDir, "logs", "app.log")
-	err := dflog.InitLog(options.Debug, logPath, fmt.Sprintf("%d", os.Getpid()))
-	if err != nil {
-		logrus.Errorf("failed to initialize logs: %v", err)
-	}
-	return err
-}
-
-// initConfig load configuration from config file.
-// The properties in config file will be covered by the value that comes from
-// command line parameters.
-func initConfig() error {
-	if err := cfg.Load(configFilePath); err != nil {
-		logrus.Errorf("failed to init properties: %v", err)
-		if configFilePath != config.DefaultSupernodeConfigFilePath ||
-			!os.IsNotExist(err) {
-			return err
-		}
-		cfg.BaseProperties = options.BaseProperties
-		return nil
-	}
-
-	opt := getPureOptionFromCLI()
-	choosePropValue(opt.BaseProperties, cfg.BaseProperties)
 	return nil
 }
 
-func setAdvertiseIP() error {
+// readConfigFile reads config file into the given viper instance. If we're
+// reading the default configuration file and the file does not exist, nil will
+// be returned.
+func readConfigFile(v *viper.Viper, cmd *cobra.Command) error {
+	v.SetConfigFile(v.GetString("config"))
+	v.SetConfigType("yaml")
+
+	if err := v.ReadInConfig(); err != nil {
+		// when the default config file is not found, ignore the error
+		if os.IsNotExist(err) && !cmd.Flag("config").Changed {
+			return nil
+		}
+		return err
+	}
+
+	return nil
+}
+
+// getConfigFromViper returns supernode config from the given viper instance
+func getConfigFromViper(v *viper.Viper) (*config.Config, error) {
+	cfg := config.NewConfig()
+
+	if err := v.Unmarshal(cfg, func(dc *mapstructure.DecoderConfig) {
+		dc.TagName = "yaml"
+		dc.DecodeHook = decodeWithYAML(
+			reflect.TypeOf(time.Second),
+			reflect.TypeOf(rate.B),
+			reflect.TypeOf(fileutils.B),
+		)
+	}); err != nil {
+		return nil, errors.Wrap(err, "unmarshal yaml")
+	}
+
+	// set dynamic configuration
+	cfg.DownloadPath = filepath.Join(cfg.HomeDir, "repo", "download")
+
+	return cfg, nil
+}
+
+// decodeWithYAML returns a mapstructure.DecodeHookFunc to decode the given
+// types by unmarshalling from yaml text.
+func decodeWithYAML(types ...reflect.Type) mapstructure.DecodeHookFunc {
+	return func(f, t reflect.Type, data interface{}) (interface{}, error) {
+		for _, typ := range types {
+			if t == typ {
+				b, _ := yaml.Marshal(data)
+				v := reflect.New(t)
+				return v.Interface(), yaml.Unmarshal(b, v.Interface())
+			}
+		}
+		return data, nil
+	}
+}
+
+// initLog initializes log Level and log format.
+func initLog(logger *logrus.Logger, logPath string) error {
+	logFilePath := filepath.Join(supernodeViper.GetString("base.homeDir"), "logs", logPath)
+
+	opts := []dflog.Option{
+		dflog.WithLogFile(logFilePath),
+		dflog.WithSign(fmt.Sprintf("%d", os.Getpid())),
+		dflog.WithDebug(supernodeViper.GetBool("base.debug")),
+	}
+
+	logrus.Debugf("use log file %s", logFilePath)
+	if err := dflog.Init(logger, opts...); err != nil {
+		return errors.Wrap(err, "init log")
+	}
+
+	return nil
+}
+
+func setAdvertiseIP(cfg *config.Config) error {
 	// use the first non-loop address if the AdvertiseIP is empty
-	ipList, err := cutil.GetAllIPs()
+	ipList, err := netutils.GetAllIPs()
 	if err != nil {
-		return errors.Wrapf(errorType.ErrSystemError, "failed to get ip list: %v", err)
+		return errors.Wrapf(errortypes.ErrSystemError, "failed to get ip list: %v", err)
 	}
 	if len(ipList) == 0 {
 		logrus.Debugf("get empty system's unicast interface addresses")
@@ -188,45 +349,16 @@ func setAdvertiseIP() error {
 	return nil
 }
 
-func choosePropValue(cliProp, cfgProp *config.BaseProperties) {
-	if cliProp == nil || cfgProp == nil {
-		return
-	}
-	var inited = func(v reflect.Value) bool {
-		switch v.Kind() {
-		case reflect.String:
-			return v.String() != ""
-		case reflect.Bool:
-			return v.Bool()
-		case reflect.Int:
-			return v.Int() != 0
-		}
-		return false
-	}
-
-	cliV := reflect.ValueOf(cliProp).Elem()
-	cfgV := reflect.ValueOf(cfgProp).Elem()
-
-	for i := cliV.NumField() - 1; i >= 0; i-- {
-		v := cliV.Field(i)
-		if inited(v) {
-			cfgV.Field(i).Set(v)
-		}
-	}
-}
-
-func getPureOptionFromCLI() *Options {
-	cmd := &cobra.Command{}
-	opt := &Options{&config.BaseProperties{}}
-	setupFlags(cmd, opt)
-	cmd.ParseFlags(os.Args)
-	return opt
-}
-
 // Execute will process supernode.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		logrus.Error(err)
 		os.Exit(1)
+	}
+}
+
+func exitOnError(err error, msg string) {
+	if err != nil {
+		logrus.Fatalf("%s: %v", msg, err)
 	}
 }

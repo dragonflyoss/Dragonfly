@@ -30,10 +30,10 @@ import (
 	"time"
 	"unsafe"
 
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
+	"github.com/dragonflyoss/Dragonfly/pkg/queue"
 
 	"github.com/sirupsen/logrus"
 )
@@ -47,21 +47,21 @@ var (
 )
 
 var (
-	aliveQueue  = util.NewQueue(0)
-	uploaderAPI = api.NewUploaderAPI(cutil.DefaultTimeout)
+	aliveQueue  = queue.NewQueue(0)
+	uploaderAPI = api.NewUploaderAPI(httputils.DefaultTimeout)
 )
 
 // -----------------------------------------------------------------------------
 // dfget server functions
 
-// WaitForShutdown wait for peer server shutdown
+// WaitForShutdown waits for peer server shutdown.
 func WaitForShutdown() {
 	if p2p != nil {
 		p2p.waitForShutdown()
 	}
 }
 
-// LaunchPeerServer launch a server to send piece data
+// LaunchPeerServer launches a server to send piece data.
 func LaunchPeerServer(cfg *config.Config) (int, error) {
 	// avoid data race caused by reading and writing variable 'p2p'
 	// in different routines
@@ -106,7 +106,7 @@ func launch(cfg *config.Config, p2pPtr *unsafe.Pointer) error {
 		tmp := newPeerServer(cfg, port)
 		storeSrvPtr(p2pPtr, tmp)
 		if err := tmp.ListenAndServe(); err != nil {
-			if strings.Index(err.Error(), "address already in use") < 0 {
+			if !strings.Contains(err.Error(), "address already in use") {
 				// start failed or shutdown
 				return err
 			} else if uploaderAPI.PingServer(tmp.host, tmp.port) {
@@ -138,7 +138,7 @@ func waitForStartup(result chan error, p2pPtr *unsafe.Pointer) error {
 			return fmt.Errorf("initialize peer server error")
 		}
 		if !uploaderAPI.PingServer(tmp.host, tmp.port) {
-			return fmt.Errorf("cann't ping port:%d", tmp.port)
+			return fmt.Errorf("can't ping port:%d", tmp.port)
 		}
 		return nil
 	}
@@ -173,8 +173,8 @@ func serverGC(cfg *config.Config, interval time.Duration) {
 }
 
 func captureQuitSignal() {
-	c := make(chan os.Signal)
-	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGSTOP)
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM)
 	s := <-c
 	logrus.Infof("capture stop signal: %s, will shutdown...", s)
 

@@ -105,7 +105,7 @@ Register to a Supernode
 
 - Dfget should be registered as a peer node before it can download files from the P2P network.
 - In `Dragonfly`, a file is uniquely identified by taskID and a download task is also scheduled according to taskID. So when Dfget needs to tell the Supernode the information about the file to be downloaded to get the taskID before actually starting to download the file.
-  - Supernode will generate a specific taskID based on the information passed by `Dfget`, and check if the file corresponding to taskID exists locally which is managered by CDNMgr.
+  - Supernode will generate a specific taskID based on the information passed by `Dfget`, and check if the file corresponding to taskID exists locally which is managed by CDNMgr.
   - If in the previous check, the corresponding file is not found locally, it will trigger CDN to download the file asynchronously.
   - A download process corresponds to a`DfgetTask` object in the Supernode, so create a new object to track the progress of the download process.
   - Update the bitmap information for the P2P network.
@@ -116,7 +116,7 @@ Download from the p2p network in pieces with a loop
 
 - Dfget should report the info and status of the piece downloaded when each success/fail to download a piece from the P2P network.
   - Supernode will update the bitmap information for the P2P network for better scheduling work.
-- Dfget will not download the the entire file at once but in pieces. So the Supernode will schedule several pieces of information each time for Dfget to download.
+- Dfget will not download the entire file at once but in pieces. So the Supernode will schedule several pieces of information each time for Dfget to download.
   - The scheduler will determine the next scheduling behavior according to certain scheduling rules.
   - Supernode will update the status of DfgetTask when success/fail to download some pieces or the entire download process ends in success/failure.
 

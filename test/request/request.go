@@ -1,3 +1,19 @@
+/*
+ * Copyright The Dragonfly Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package request
 
 import (
@@ -41,7 +57,7 @@ func WithQuery(query url.Values) Option {
 	}
 }
 
-// WithRawData sets the input data with raw data
+// WithRawData sets the input data with raw data.
 func WithRawData(data io.ReadCloser) Option {
 	return func(r *http.Request) error {
 		r.Body = data
@@ -49,7 +65,7 @@ func WithRawData(data io.ReadCloser) Option {
 	}
 }
 
-// WithJSONBody encodes the input data to JSON and sets it to the body in http.Request
+// WithJSONBody encodes the input data to JSON and sets it to the body in http.Request.
 func WithJSONBody(obj interface{}) Option {
 	return func(r *http.Request) error {
 		b := bytes.NewBuffer([]byte{})
@@ -90,7 +106,7 @@ func Delete(endpoint string, opts ...Option) (*http.Response, error) {
 
 // Debug sends request to the default pouchd server to get the debug info.
 //
-// NOTE: without any vesion information.
+// NOTE: without any version information.
 func Debug(endpoint string) (*http.Response, error) {
 	apiClient, err := newAPIClient(environment.DragonflyAddress, environment.TLSConfig)
 	if err != nil {
@@ -133,14 +149,14 @@ func Post(endpoint string, opts ...Option) (*http.Response, error) {
 		return nil, err
 	}
 
-	// By default, if Content-Type in header is not set, set it to application/json
+	// By default, if Content-Type in header is not set, set it to application/json.
 	if req.Header.Get("Content-Type") == "" {
 		WithHeader("Content-Type", "application/json")(req)
 	}
 	return apiClient.HTTPCli.Do(req)
 }
 
-// newAPIClient return new HTTP client with tls.
+// newAPIClient returns a new HTTP client with TLS.
 //
 // FIXME: Could we make some functions exported in alibaba/pouch/client?
 func newAPIClient(host string, tls client.TLSConfig) (*client.APIClient, error) {

@@ -31,7 +31,7 @@ Things are done differently when you download container images and download gene
     tailf ~/.small-dragonfly/logs/dfdaemon.log
     ```
 
-    **Tip:** To list all available parameters for dfdaemon, run `dfdeaemon -h`.
+    **Tip:** To list all available parameters for dfdaemon, run `dfdaemon -h`.
 
 3. Configure the Daemon Mirror.
 
@@ -67,10 +67,10 @@ Things are done differently when you download container images and download gene
     }
     ```
 
-    The ${auth_value} is `base64("${usename}:${password}")`.
+    The ${auth_value} is `base64("${username}:${password}")`.
 
     ```bash
-    echo "${usename}:${password}" | base64
+    echo "${username}:${password}" | base64
     ```
 
 4. Download an image with Dragonfly.
@@ -102,7 +102,7 @@ Things are done differently when you download container images and download gene
         dfget -u "http://www.taobao.com" -o /tmp/test.html --node supernode01:port,supernode02:port,supernode03:port
         ```
 
-        **Note:** When using this method, you must add the `node` parameter every time when you run the dfget command. And the parameter in the command line takes precedence over the configuration file.
+        **Note:** When using this method, you must add the `node` parameter whenever you run the dfget command. And the parameter in the command line takes precedence over the configuration file.
 
 2. Download general files with Dragonfly in one of the following ways.
 

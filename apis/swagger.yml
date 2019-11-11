@@ -44,6 +44,31 @@ paths:
         500:
           $ref: "#/responses/500ErrorResponse"
 
+  /version:
+    get:
+      summary: "Get version and build information"
+      description: |
+        Get version and build information, including GoVersion, OS,
+        Arch, Version, BuildDate, and GitCommit.
+      responses:
+        200:
+          description: "no error"
+          schema:
+            $ref: "#/definitions/DragonflyVersion"
+        500:
+          $ref: "#/responses/500ErrorResponse"
+
+  /metrics:
+    get:
+      summary: "Get Prometheus metrics"
+      description: "Get Prometheus metrics"
+      responses:
+        200:
+          description: "no error"
+          schema:
+            type: "string"
+            example: "go_goroutines 1"
+
   /peer/registry:
     post:
       summary: "registry a task"
@@ -72,8 +97,8 @@ paths:
       summary: "Get pieces in task"
       description: |
         When dfget starts to download pieces of a task, it should get fixed
-        number of pieces in a task and the use pieces information to download
-        the pirces. The request piece number is set in query.
+        number of pieces in a task and then use pieces information to download
+        the pieces. The request piece number is set in query.
       produces:
         - "application/json"
       parameters:
@@ -389,6 +414,13 @@ paths:
           required: true
           description: "ID of task"
           type: string
+        - name: full
+          in: query
+          type: "boolean"
+          default: false
+          description: |
+            supernode will also delete the cdn files when the value of full equals true.
+
       responses:
         204:
           description: "no error"
@@ -404,8 +436,8 @@ paths:
       summary: "Get pieces in task"
       description: |
         When dfget starts to download pieces of a task, it should get fixed
-        number of pieces in a task and the use pieces information to download
-        the pirces. The request piece number is set in query.
+        number of pieces in a task and then use pieces information to download
+        the pieces. The request piece number is set in query.
       produces:
         - "application/json"
       parameters:
@@ -488,6 +520,43 @@ paths:
         500:
             $ref: "#/responses/500ErrorResponse"
 
+  /tasks/{id}/pieces/{pieceRange}/error:
+    post:
+      summary: "report a piece error"
+      description: |
+        When a peer failed to download a piece from supernode or
+        failed to validate the pieceMD5,
+        and then dfget should report the error info to supernode.
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: "ID of task"
+          type: string
+        - name: pieceRange
+          in: path
+          required: true
+          description: |
+            the range of specific piece in the task, example "0-45565".
+          type: string
+        - name: "PieceErrorRequest"
+          in: "body"
+          description: |
+            request body which contains piece error information.
+          schema:
+            $ref: "#/definitions/PieceErrorRequest"
+      responses:
+        200:
+          description: "no error"
+        404:
+            $ref: "#/responses/404ErrorResponse"
+        500:
+            $ref: "#/responses/500ErrorResponse"
+
   /preheats:
     post:
       summary: "Create a Preheat Task"
@@ -559,6 +628,25 @@ paths:
         500:
           $ref: "#/responses/500ErrorResponse"   
 
+  /task/metrics:
+    post:
+      summary: "upload dfclient download metrics"
+      description: |
+        This endpoint is mainly for observability. Dfget is a short-live job
+        and we use this endpoint to upload dfget download related metrics.
+      parameters:
+        - name: "body"
+          in: "body"
+          description: "request body which contains dfget download related information"
+          schema:
+            $ref: "#/definitions/TaskMetricsRequest"
+      responses:
+        200:
+          description: "no error"
+          schema:
+            $ref: "#/definitions/ResultInfo"
+        500:
+          $ref: "#/responses/500ErrorResponse"
 
 definitions:
   Error:
@@ -566,6 +654,30 @@ definitions:
     properties:
       message:
         type: string
+
+  DragonflyVersion:
+    type: "object"
+    description: |
+      Version and build information of Dragonfly components.
+    properties:
+      Version:
+        type: "string"
+        description: "Version of Dragonfly components"
+      Revision:
+        type: "string"
+        description: "Git commit when building Dragonfly components"
+      BuildDate:
+        type: "string"
+        description: "Build Date of Dragonfly components"
+      GoVersion:
+        type: "string"
+        description: "Golang runtime version"
+      OS:
+        type: "string"
+        description: "Dragonfly components's operating system"
+      Arch:
+        type: "string"
+        description: "Dragonfly components's architecture target"
 
   ResultInfo: 
     type: "object"
@@ -593,8 +705,7 @@ definitions:
         format: "ipv4"
       superNodeIp:
          type: "string"
-         description: "IP address of supernode that the client can connect to"
-         format: "ipv4"
+         description: "The address of supernode that the client can connect to"
       hostName:
         type: "string"
         description: "host name of peer client node."
@@ -664,6 +775,24 @@ definitions:
           tells whether it is a call from dfdaemon. dfdaemon is a long running
           process which works for container engines. It translates the image
           pulling request into raw requests into those dfget recognizes.
+      insecure:
+        type: "boolean"
+        description: |
+          tells whether skip secure verify when supernode download the remote source file.
+      rootCAs:
+        type: "array"
+        description: |
+          The root ca cert from client used to download the remote source file.
+        items:
+          type: "string"
+          format: byte
+      callSystem:
+        type: "string"
+        description: |
+          This attribute represents where the dfget requests come from. Dfget will pass
+          this field to supernode and supernode can do some checking and filtering via
+          black/white list mechanism to guarantee security, or some other purposes like debugging.
+        minLength: 1
 
   PeerCreateRequest:
     type: "object"
@@ -741,86 +870,90 @@ definitions:
         type : "string"
         format : "date-time"
         description: "the time to join the P2P network"
-  
+
   TaskCreateRequest:
-    type: "object"
-    description: ""
-    properties:
-      cID:
-        type: "string"
-        description: |
-          CID means the client ID. It maps to the specific dfget process. 
-          When user wishes to download an image/file, user would start a dfget process to do this. 
-          This dfget is treated a client and carries a client ID. 
-          Thus, multiple dfget processes on the same peer have different CIDs.
-      rawURL:
-        type: "string"
-        description: |
-          The is the resource's URL which user uses dfget to download. The location of URL can be anywhere, LAN or WAN.
-          For image distribution, this is image layer's URL in image registry.
-          The resource url is provided by command line parameter.
-      taskURL:
-        type: "string"
-        description: |
-          taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via
-          --filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.
-      md5:
-        type: "string"
-        description: |
-          md5 checksum for the resource to distribute. dfget catches this parameter from dfget's CLI
-          and passes it to supernode. When supernode finishes downloading file/image from the source location,
-          it will validate the source file with this md5 value to check whether this is a valid file.
-      identifier:
-        type: "string"
-        description: |
-          special attribute of remote source file. This field is used with taskURL to generate new taskID to
-          identify different downloading task of remote source file. For example, if user A and user B uses
-          the same taskURL and taskID to download file, A and B will share the same peer network to distribute files.
-          If user A additionally adds an identifier with taskURL, while user B still carries only taskURL, then A's
-          generated taskID is different from B, and the result is that two users use different peer networks.
-      path:
-        type: "string"
-        description: |
-          path is used in one peer A for uploading functionality. When peer B hopes
-          to get piece C from peer A, B must provide a URL for piece C.
-          Then when creating a task in supernode, peer A must provide this URL in request.
-      headers:
-        type: "object"
-        description: |
-          extra HTTP headers sent to the rawURL.
-          This field is carried with the request to supernode. 
-          Supernode will extract these HTTP headers, and set them in HTTP downloading requests
-          from source server as user's wish.
-        additionalProperties:
+      type: "object"
+      description: ""
+      properties:
+        cID:
           type: "string"
-      dfdaemon:
-        type: "boolean"
-        description: |
-          tells whether it is a call from dfdaemon. dfdaemon is a long running
-          process which works for container engines. It translates the image
-          pulling request into raw requests into those dfget recognizes.
-      callSystem:
-        type: "string"
-        description: |
-          This field is for debugging. When caller of dfget is using it to files, he can pass callSystem
-          name to dfget. When this field is passing to supernode, supernode has ability to filter them via 
-          some black/white list to guarantee security, or some other purposes.
-        minLength: 1
-      filter:
-        type: "array"
-        description: |
-          filter is used to filter request queries in URL.
-          For example, when a user wants to start to download a task which has a remote URL of 
-          a.b.com/fileA?user=xxx&auth=yyy, user can add a filter parameter ["user", "auth"]
-          to filter the url to a.b.com/fileA. Then this parameter can potentially avoid repeatable
-          downloads, if there is already a task a.b.com/fileA.
-        items:
+          description: |
+            CID means the client ID. It maps to the specific dfget process.
+            When user wishes to download an image/file, user would start a dfget process to do this.
+            This dfget is treated a client and carries a client ID.
+            Thus, multiple dfget processes on the same peer have different CIDs.
+        rawURL:
           type: "string"
-      peerID:
-        type: "string"
-        description: |
-          PeerID is used to uniquely identifies a peer which will be used to create a dfgetTask.
-          The value must be the value in the response after registering a peer.
+          description: |
+            The is the resource's URL which user uses dfget to download. The location of URL can be anywhere, LAN or WAN.
+            For image distribution, this is image layer's URL in image registry.
+            The resource url is provided by command line parameter.
+        taskURL:
+          type: "string"
+          description: |
+            taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via
+            --filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.
+        md5:
+          type: "string"
+          description: |
+            md5 checksum for the resource to distribute. dfget catches this parameter from dfget's CLI
+            and passes it to supernode. When supernode finishes downloading file/image from the source location,
+            it will validate the source file with this md5 value to check whether this is a valid file.
+        identifier:
+          type: "string"
+          description: |
+            special attribute of remote source file. This field is used with taskURL to generate new taskID to
+            identify different downloading task of remote source file. For example, if user A and user B uses
+            the same taskURL and taskID to download file, A and B will share the same peer network to distribute files.
+            If user A additionally adds an identifier with taskURL, while user B still carries only taskURL, then A's
+            generated taskID is different from B, and the result is that two users use different peer networks.
+        path:
+          type: "string"
+          description: |
+            path is used in one peer A for uploading functionality. When peer B hopes
+            to get piece C from peer A, B must provide a URL for piece C.
+            Then when creating a task in supernode, peer A must provide this URL in request.
+        headers:
+          type: "object"
+          description: |
+            extra HTTP headers sent to the rawURL.
+            This field is carried with the request to supernode.
+            Supernode will extract these HTTP headers, and set them in HTTP downloading requests
+            from source server as user's wish.
+          additionalProperties:
+            type: "string"
+        dfdaemon:
+          type: "boolean"
+          description: |
+            tells whether it is a call from dfdaemon. dfdaemon is a long running
+            process which works for container engines. It translates the image
+            pulling request into raw requests into those dfget recognizes.
+        callSystem:
+          type: "string"
+          description: |
+            This attribute represents where the dfget requests come from. Dfget will pass
+            this field to supernode and supernode can do some checking and filtering via
+            black/white list mechanism to guarantee security, or some other purposes like debugging.
+          minLength: 1
+        filter:
+          type: "array"
+          description: |
+            filter is used to filter request queries in URL.
+            For example, when a user wants to start to download a task which has a remote URL of
+            a.b.com/fileA?user=xxx&auth=yyy, user can add a filter parameter ["user", "auth"]
+            to filter the url to a.b.com/fileA. Then this parameter can potentially avoid repeatable
+            downloads, if there is already a task a.b.com/fileA.
+          items:
+            type: "string"
+        peerID:
+          type: "string"
+          description: |
+            PeerID is used to uniquely identifies a peer which will be used to create a dfgetTask.
+            The value must be the value in the response after registering a peer.
+        supernodeIP:
+          type: "string"
+          description: "IP address of supernode which the peer connects to"
+        
 
   TaskCreateResponse:
     type: "object"
@@ -843,93 +976,80 @@ definitions:
         format: int32
 
   TaskInfo:
-    type: "object"
-    description: "detailed information about task in supernode."
-    properties:
-      ID:
-        type: "string"
-        description: "ID of the task."
-      fileLength:
-        type: "integer"
-        description: |
-          The length of the file dfget requests to download in bytes
-          which including the header and the trailer of each piece.
-        format: "int64"
-      httpFileLength:
-        type: "integer"
-        description: |
-          The length of the source file in bytes.
-        format: "int64"
-      pieceSize:
-        type: "integer"
-        description: |
-          The size of pieces which is calculated as per the following strategy
-          1. If file's total size is less than 200MB, then the piece size is 4MB by default.
-          2. Otherwise, it equals to the smaller value between totalSize/100MB + 2 MB and 15MB.
-        format: "int32"
-      pieceTotal:
-        type: "integer"
-        description: ""
-        format: "int32"
-      cdnStatus:
-        type: "string"
-        description: |
-          The status of the created task related to CDN functionality.
-        enum: ["WAITING", "RUNNING", "FAILED", "SUCCESS", "SOURCE_ERROR"]
-      rawURL:
-        type: "string"
-        description: |
-          The is the resource's URL which user uses dfget to download. The location of URL can be anywhere, LAN or WAN.
-          For image distribution, this is image layer's URL in image registry.
-          The resource url is provided by command line parameter.
-      taskURL:
-        type: "string"
-        description: |
-          taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via
-          --filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.
-      md5:
-        type: "string"
-        description: |
-          md5 checksum for the resource to distribute. dfget catches this parameter from dfget's CLI
-          and passes it to supernode. When supernode finishes downloading file/image from the source location,
-          it will validate the source file with this md5 value to check whether this is a valid file.
-      realMd5:
-        type: "string"
-        description: |
-          when supernode finishes downloading file/image from the source location,
-          the md5 sum of the source file will be calculated as the value of the realMd5.
-          And it will be used to compare with md5 value to check whether this is a valid file.
-      identifier:
-        type: "string"
-        description: |
-          special attribute of remote source file. This field is used with taskURL to generate new taskID to
-          identify different downloading task of remote source file. For example, if user A and user B uses
-          the same taskURL and taskID to download file, A and B will share the same peer network to distribute files.
-          If user A additionally adds an identifier with taskURL, while user B still carries only taskURL, then A's
-          generated taskID is different from B, and the result is that two users use different peer networks.
-      headers:
-        type: "object"
-        description: |
-          extra HTTP headers sent to the rawURL.
-          This field is carried with the request to supernode. 
-          Supernode will extract these HTTP headers, and set them in HTTP downloading requests
-          from source server as user's wish.
-        additionalProperties:
+      type: "object"
+      description: "detailed information about task in supernode."
+      properties:
+        ID:
           type: "string"
-      dfdaemon:
-        type: "boolean"
-        description: |
-          tells whether it is a call from dfdaemon. dfdaemon is a long running
-          process which works for container engines. It translates the image
-          pulling request into raw requests into those dfget recganises.
-      callSystem:
-        type: "string"
-        description: |
-          This field is for debugging. When caller of dfget is using it to files, he can pass callSystem
-          name to dfget. When this field is passing to supernode, supernode has ability to filter them via 
-          some black/white list to guarantee security, or some other purposes.
-        minLength: 1
-      
+          description: "ID of the task."
+        fileLength:
+          type: "integer"
+          description: |
+            The length of the file dfget requests to download in bytes
+            which including the header and the trailer of each piece.
+          format: "int64"
+        httpFileLength:
+          type: "integer"
+          description: |
+            The length of the source file in bytes.
+          format: "int64"
+        pieceSize:
+          type: "integer"
+          description: |
+            The size of pieces which is calculated as per the following strategy
+            1. If file's total size is less than 200MB, then the piece size is 4MB by default.
+            2. Otherwise, it equals to the smaller value between totalSize/100MB + 2 MB and 15MB.
+          format: "int32"
+        pieceTotal:
+          type: "integer"
+          description: ""
+          format: "int32"
+        cdnStatus:
+          type: "string"
+          description: |
+            The status of the created task related to CDN functionality.
+          enum: ["WAITING", "RUNNING", "FAILED", "SUCCESS", "SOURCE_ERROR"]
+        rawURL:
+          type: "string"
+          description: |
+            The is the resource's URL which user uses dfget to download. The location of URL can be anywhere, LAN or WAN.
+            For image distribution, this is image layer's URL in image registry.
+            The resource url is provided by command line parameter.
+        taskURL:
+          type: "string"
+          description: |
+            taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via
+            --filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.
+        md5:
+          type: "string"
+          description: |
+            md5 checksum for the resource to distribute. dfget catches this parameter from dfget's CLI
+            and passes it to supernode. When supernode finishes downloading file/image from the source location,
+            it will validate the source file with this md5 value to check whether this is a valid file.
+        realMd5:
+          type: "string"
+          description: |
+            when supernode finishes downloading file/image from the source location,
+            the md5 sum of the source file will be calculated as the value of the realMd5.
+            And it will be used to compare with md5 value to check whether this is a valid file.
+        identifier:
+          type: "string"
+          description: |
+            special attribute of remote source file. This field is used with taskURL to generate new taskID to
+            identify different downloading task of remote source file. For example, if user A and user B uses
+            the same taskURL and taskID to download file, A and B will share the same peer network to distribute files.
+            If user A additionally adds an identifier with taskURL, while user B still carries only taskURL, then A's
+            generated taskID is different from B, and the result is that two users use different peer networks.
+        headers:
+          type: "object"
+          description: |
+            extra HTTP headers sent to the rawURL.
+            This field is carried with the request to supernode.
+            Supernode will extract these HTTP headers, and set them in HTTP downloading requests
+            from source server as user's wish.
+          additionalProperties:
+            type: "string"
+
   TaskUpdateRequest:
     type: "object"
     description: "request used to update task attributes."
@@ -1018,6 +1138,47 @@ definitions:
         type: "string"
         description: |
           the range of specific piece in the task, example "0-45565".
+
+  PieceErrorRequest:
+    type: "object"
+    description: "Peer's detailed information in supernode."
+    properties:
+      taskId:
+        type: "string"
+        description: |
+            the taskID of the piece.
+      srcCid:
+        type: "string"
+        description: |
+          the CID of the src Peer.
+      dstPid:
+        type: "string"
+        description: |
+          the peer ID of the target Peer.
+      dstIP:
+        type: "string"
+        description: |
+          the peer ID of the target Peer.
+      range:
+        type: "string"
+        description: |
+          the range of specific piece in the task, example "0-45565".
+      realMd5:
+        type: "string"
+        description: |
+          the MD5 information of piece which calculated by the piece content
+          which downloaded from the target peer.
+      expectedMd5:
+        type: "string"
+        description: |
+          the MD5 value of piece which returned by the supernode that
+          in order to verify the correctness of the piece content which
+          downloaded from the other peers.
+      errorType:
+        type: "string"
+        description: |
+          the error type when failed to download from supernode that dfget will report to supernode
+        enum: ["FILE_NOT_EXIST", "FILE_MD5_NOT_MATCH"]
 
   PreheatInfo:
     type: "object"
@@ -1124,7 +1285,77 @@ definitions:
           PeerID uniquely identifies a peer, and the cID uniquely identifies a 
           download task belonging to a peer. One peer can initiate multiple download tasks, 
           which means that one peer corresponds to multiple cIDs.
- 
+      supernodeIP:
+        type: "string"
+        description: "IP address of supernode which the peer connects to"
+      dfdaemon:
+        type: "boolean"
+        description: |
+          tells whether it is a call from dfdaemon. dfdaemon is a long running
+          process which works for container engines. It translates the image
+          pulling request into raw requests into those dfget recognizes.
+      callSystem:
+        type: "string"
+        description: |
+          This attribute represents where the dfget requests come from. Dfget will pass
+          this field to supernode and supernode can do some checking and filtering via
+          black/white list mechanism to guarantee security, or some other purposes like debugging.
+        minLength: 1
+
+  TaskMetricsRequest:
+    type: "object"
+    description: ""
+    properties:
+      IP:
+        type: "string"
+        description: "IP address which peer client carries"
+        format: "string"
+      port:
+        type: "integer"
+        description: |
+          when registering, dfget will setup one uploader process.
+          This one acts as a server for peer pulling tasks.
+          This port is which this server listens on.
+        format: "int32"
+        minimum: 15000
+        maximum: 65000
+      taskId:
+        type: "string"
+        description: "IP address which peer client carries"
+        format: "string"
+      cID:
+        type: "string"
+        description: |
+          CID means the client ID. It maps to the specific dfget process.
+          When user wishes to download an image/file, user would start a dfget process to do this.
+          This dfget is treated a client and carries a client ID.
+          Thus, multiple dfget processes on the same peer have different CIDs.
+      callSystem:
+        type: "string"
+        description: |
+          This attribute represents where the dfget requests come from. Dfget will pass
+          this field to supernode and supernode can do some checking and filtering via
+          black/white list mechanism to guarantee security, or some other purposes like debugging.
+        minLength: 1
+      duration:
+        type: "number"
+        format: float64
+        description: |
+          Duration for dfget task.
+      success:
+        type: "boolean"
+        description: "whether the download task success or not"
+      backsourceReason:
+        type: "string"
+        description: |
+          when registering, dfget will setup one uploader process.
+          This one acts as a server for peer pulling tasks.
+          This port is which this server listens on.
+      fileLength:
+        type: "integer"
+        format: "int64"
+        description: "The length of the file dfget requests to download in bytes."
+
   ErrorResponse:
     type: "object"
     description: |
@@ -1137,7 +1368,6 @@ definitions:
       message:
         type: "string"
         description: "detailed error message"
-      
 
 responses:
   401ErrorResponse:

@@ -26,10 +26,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-// getEnv returns the environments of dfdaemon
+// getEnv returns the environments of dfdaemon.
 func getEnv(w http.ResponseWriter, r *http.Request) {
 	logrus.Debugf("access:%s", r.URL.String())
-	json.NewEncoder(w).Encode(ensureStringKey(viper.AllSettings()))
+	if err := json.NewEncoder(w).Encode(ensureStringKey(viper.AllSettings())); err != nil {
+		logrus.Errorf("failed to encode env json: %v", err)
+	}
 }
 
 // ensureStringKey recursively ensures all maps in the given interface are string,

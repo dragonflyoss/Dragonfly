@@ -3,9 +3,9 @@
 FAQ contains some frequently asked questions about two aspects:
 
 - First, user-facing functionalities.
-- Second, underlying concept and thoery.
+- Second, underlying concept and theory.
 
-Techinical questiones will not be included in FAQ.
+Technical questions will not be included in FAQ.
 
 ## What is Dragonfly
 
@@ -15,7 +15,7 @@ It aims to resolve issues related to low-efficiency, low-success rate and waste 
 
 In Alibaba, Dragonfly is invoked 2 Billion times and the data distributed is 3.4PB every month. Dragonfly has become one of the most important pieces of infrastructure in Alibaba.
 
-While container technologies makes devops life easier most of time, it sure brings some challenges: the efficiency of image distribution, especially when you have to replicate image distribution on several hosts. Dragonfly works extremely well with both Docker and [PouchContainer](https://github.com/alibaba/pouch) for this scenario. It also is compatible with any other container formats.
+While container technologies make DevOps life easier most of time, it sure brings some challenges: the efficiency of image distribution, especially when you have to replicate image distribution on several hosts. Dragonfly works extremely well with both Docker and [PouchContainer](https://github.com/alibaba/pouch) for this scenario. It also is compatible with any other container formats.
 
 It delivers up to 57 times the throughput of native docker and saves up to 99.5% the out bandwidth of registry(*2).
 
@@ -59,7 +59,7 @@ If the file to be downloaded  has not been cached in supernode yet, supernode wi
 
 If the requested file has already been cached in supernode, supernode will send an HTTP GET request, which contains both HTTP headers `If-None-Match:<eTag>` and `If-Modified-Since:<lastModified>`, to source file network address to determine whether the remote file has been updated.
 
-In addition, supernode does not have to wait for all the piece downloadings finished, so it can concurrently start pieces downloading once one piece has bean downloaded.
+In addition, supernode does not have to wait for all the piece downloading finished, so it can concurrently start pieces downloading once one piece has been downloaded.
 
 ## What will happen  if you kill the dfget server process or delete the source files
 
@@ -141,9 +141,9 @@ Yes, please refer to the [proxy guide](./docs/user_guide/proxy.md).
 
 ## Do we support HA of supernode in Dragonfly
 
-Currently no. In the later release, we will try to realise the HA of Dragonfly.
+Currently no. In the later release, we will try to release the HA of Dragonfly.
 
-In fact, you can [provide multiple supernodes for dfget](#how-to-config-supernodes-for-dfget) as an alternative. When a peer started to download a task, it will register to one of the supernode list randomly. And when the supernode suffers failure, the task being downloaded on it will automatically migrate to the other supdernodes in the supernode list.
+In fact, you can [provide multiple supernodes for dfget](#how-to-config-supernodes-for-dfget) as an alternative. When a peer started to download a task, it will register to one of the supernode list randomly. And when the supernode suffers failure, the task being downloaded on it will automatically migrate to the other supernodes in the supernode list.
 
 ## How to config supernodes for dfget
 
@@ -174,7 +174,7 @@ NOTE: If you use dfdaemon to call dfget, you can also pass this parameter to dfg
 
 ## How to use Dragonfly in Kubernetes
 
-It is very easy to deloy Dragonfly in Kubernetes with [Helm](https://github.com/helm/helm). For more information of Dragonfly's Helm Chart, please refer to project [dragonflyoss/helm-chart](https://github.com/dragonflyoss/helm-chart).
+It is very easy to deploy Dragonfly in Kubernetes with [Helm](https://github.com/helm/helm). For more information of Dragonfly's Helm Chart, please refer to project [dragonflyoss/helm-chart](https://github.com/dragonflyoss/helm-chart).
 
 ## Can an image from a third-party registry be pulled via Dragonfly
 
@@ -240,10 +240,10 @@ Yes, Dragonfly supports users to pull private image which needs username/passwor
 }
 ```
 
-In the above content the `auth_value` base64("${usename}:${password}"). Since users definitely have their own username/password for private images, then use the following command to generate `$auth_value` and fill the generated result in `config.json`:
+In the above content the `auth_value` base64("${username}:${password}"). Since users definitely have their own username/password for private images, then use the following command to generate `$auth_value` and fill the generated result in `config.json`:
 
 ```shell
-echo "${usename}:${password}" | base64
+echo "${username}:${password}" | base64
 ```
 
 ## How to check if block piece is distributed among dfgets nodes
@@ -298,7 +298,26 @@ Name                           | Flag                      | Remark
 ------------------------------ | ------------------------- | ----------
 dfdaemon proxy server port     | dfdaemon --port           | The port should   be in the range of 2000-65535.
 dfget uploader server port     | dfget server --port       | You can use command `dfget server` to start a uploader server before using dfget to download if you don't want to use a random port.
-supernode register port        | supernode --port          | You can use `dfget --node IP:port` to register with the specified supernode register port.
+supernode register port        | supernode --port          | You can use `dfget --node host:port` to register with the specified supernode register port.
 supernode cdn file server port | supernode --download-port | You should prepare a file server firstly and listen on the port that flag `download-port` will use.
 
 **NOTE**: The supernode maintains both Java and Golang versions currently. And the above table is for the Golang version. And you will get a guide [here](https://d7y.io/en-us/docs/userguide/supernode_configuration.html) for Java version.
+
+## Why the time in the log is wrong
+
+If you are in China,docker container uses UTC time(Coordinated Universal Time) and the host uses CST time(China Shanghai Time).So the log's time is 8 hours behind the host time.If you want to make their time consistent,you should add a config `-v /etc/localtime:/etc/localtime:ro` before you start a container.For example,you can run a command as follows to start a dfclient.
+
+```sh
+ docker run -d --name dfclient -v /etc/localtime:/etc/localtime:ro -p 65001:65001 dragonflyoss/dfclient:0.4.0 --registry https://index.docker.io
+```
+
+## How to join Dragonfly as a member
+
+Please check the [CONTRIBUTING.md](CONTRIBUTING.md#join-dragonfly-as-a-member)
+
+## How dfget connect to supernodes in multiple-supernode mode
+
+If supernodes are set in multiple-supernode mode, dfget will connect to one of these supernodes randomly.
+Because dfget will randomize the order of all supernodes it knows and store them in a slice.
+If dfget connects to the first supernode unsuccessfully, it will connect to the second supernode in the slice.
+And so on until all the known supernodes fail to access twice, the dfget will exit with download failure.

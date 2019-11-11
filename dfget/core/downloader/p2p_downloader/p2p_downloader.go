@@ -23,8 +23,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dragonflyoss/Dragonfly/common/constants"
-	cutil "github.com/dragonflyoss/Dragonfly/common/util"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/downloader"
@@ -32,7 +30,12 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/constants"
+	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
+	"github.com/dragonflyoss/Dragonfly/pkg/printer"
+	"github.com/dragonflyoss/Dragonfly/pkg/queue"
+	"github.com/dragonflyoss/Dragonfly/pkg/ratelimiter"
 
 	"github.com/sirupsen/logrus"
 )
@@ -43,7 +46,7 @@ const (
 )
 
 var (
-	uploaderAPI = api.NewUploaderAPI(cutil.DefaultTimeout)
+	uploaderAPI = api.NewUploaderAPI(httputils.DefaultTimeout)
 )
 
 // P2PDownloader is one implementation of Downloader that uses p2p pattern
@@ -71,11 +74,11 @@ type P2PDownloader struct {
 	// queue maintains a queue of tasks that to be downloaded.
 	// The downloader will get download tasks from supernode and put them into this queue.
 	// And the downloader will poll values from this queue constantly and do the actual download actions.
-	queue util.Queue
+	queue queue.Queue
 	// clientQueue maintains a queue of tasks that need to be written to disk.
 	// The downloader will put the piece into this queue after it downloaded a piece successfully.
 	// And clientWriter will poll values from this queue constantly and write to disk.
-	clientQueue util.Queue
+	clientQueue queue.Queue
 
 	// clientFilePath is the full path of the temp file.
 	clientFilePath string
@@ -91,16 +94,21 @@ type P2PDownloader struct {
 	// total indicates the total length of the downloaded file.
 	total int64
 
-	// rateLimiter limit the download speed.
-	rateLimiter *cutil.RateLimiter
+	// rateLimiter limits the download speed.
+	rateLimiter *ratelimiter.RateLimiter
 	// pullRateTime the time when the pull rate API is called to
 	// control the time interval between two calls to the API.
 	pullRateTime time.Time
+
+	// dfget will sleep some time which between minTimeout and maxTimeout
+	// unit: Millisecond
+	minTimeout int
+	maxTimeout int
 }
 
 var _ downloader.Downloader = &P2PDownloader{}
 
-// NewP2PDownloader create P2PDownloader
+// NewP2PDownloader creates a P2PDownloader.
 func NewP2PDownloader(cfg *config.Config,
 	api api.SupernodeAPI,
 	register regist.SupernodeRegister,
@@ -110,6 +118,8 @@ func NewP2PDownloader(cfg *config.Config,
 		API:            api,
 		Register:       register,
 		RegisterResult: result,
+		minTimeout:     50,
+		maxTimeout:     100,
 	}
 	p2p.init()
 	return p2p
@@ -124,17 +134,17 @@ func (p2p *P2PDownloader) init() {
 	p2p.pieceSizeHistory[0], p2p.pieceSizeHistory[1] =
 		p2p.RegisterResult.PieceSize, p2p.RegisterResult.PieceSize
 
-	p2p.queue = util.NewQueue(0)
+	p2p.queue = queue.NewQueue(0)
 	p2p.queue.Put(NewPieceSimple(p2p.taskID, p2p.node, constants.TaskStatusStart))
 
-	p2p.clientQueue = util.NewQueue(p2p.cfg.ClientQueueSize)
+	p2p.clientQueue = queue.NewQueue(p2p.cfg.ClientQueueSize)
 
 	p2p.clientFilePath = helper.GetTaskFile(p2p.taskFileName, p2p.cfg.RV.DataDir)
 	p2p.serviceFilePath = helper.GetServiceFile(p2p.taskFileName, p2p.cfg.RV.DataDir)
 
 	p2p.pieceSet = make(map[string]bool)
 
-	p2p.rateLimiter = cutil.NewRateLimiter(int32(p2p.cfg.LocalLimit), 2)
+	p2p.rateLimiter = ratelimiter.NewRateLimiter(int64(p2p.cfg.LocalLimit), 2)
 	p2p.pullRateTime = time.Now().Add(-3 * time.Second)
 }
 
@@ -166,7 +176,12 @@ func (p2p *P2PDownloader) Run() error {
 		lastItem = nil
 
 		response, err := p2p.pullPieceTask(&curItem)
-		if err == nil {
+		if err != nil {
+			logrus.Errorf("failed to download piece: %v", err)
+			if p2p.cfg.BackSourceReason == 0 {
+				p2p.cfg.BackSourceReason = config.BackSourceReasonDownloadError
+			}
+		} else {
 			code := response.Code
 			if code == constants.CodePeerContinue {
 				p2p.processPiece(response, &curItem)
@@ -175,18 +190,16 @@ func (p2p *P2PDownloader) Run() error {
 				return nil
 			} else {
 				logrus.Warnf("request piece result:%v", response)
+				if code == constants.CodePeerWait {
+					continue
+				}
 				if code == constants.CodeSourceError {
 					p2p.cfg.BackSourceReason = config.BackSourceReasonSourceError
 				}
 			}
-		} else {
-			logrus.Errorf("download piece fail: %v", err)
-			if p2p.cfg.BackSourceReason == 0 {
-				p2p.cfg.BackSourceReason = config.BackSourceReasonDownloadError
-			}
 		}
 
-		// NOTE: Should we call it directly here？
+		// NOTE: Should we call it directly here?
 		// Maybe we should return an error and let the caller decide whether to call it.
 		if p2p.cfg.BackSourceReason != 0 {
 			backDownloader := backDown.NewBackDownloader(p2p.cfg, p2p.RegisterResult)
@@ -195,7 +208,7 @@ func (p2p *P2PDownloader) Run() error {
 	}
 }
 
-// Cleanup clean all temporary resources generated by executing Run.
+// Cleanup cleans all temporary resources generated by executing Run.
 func (p2p *P2PDownloader) Cleanup() {
 }
 
@@ -225,40 +238,53 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 	}
 
 	for {
-		if res, err = p2p.API.PullPieceTask(item.SuperNode, req); err != nil {
-			logrus.Errorf("pull piece task error: %v", err)
-		} else if res.Code == constants.CodePeerWait {
-			sleepTime := time.Duration(rand.Intn(1400)+600) * time.Millisecond
-			logrus.Infof("pull piece task result:%s and sleep %.3fs",
-				res, sleepTime.Seconds())
-			time.Sleep(sleepTime)
-			continue
+		res, err = p2p.API.PullPieceTask(item.SuperNode, req)
+		if err != nil {
+			logrus.Errorf("failed to pull piece task(%+v): %v", item, err)
+			break
 		}
-		break
+		if res.Code != constants.CodePeerWait {
+			break
+		}
+		if p2p.queue.Len() > 0 {
+			break
+		}
+
+		sleepTime := time.Duration(rand.Intn(p2p.maxTimeout-p2p.minTimeout)+p2p.minTimeout) * time.Millisecond
+		logrus.Infof("pull piece task(%+v) result:%s and sleep %.3fs", item, res, sleepTime.Seconds())
+		time.Sleep(sleepTime)
+
+		// gradually increase the sleep time, up to [800-1600]
+		if p2p.minTimeout < 800 {
+			p2p.minTimeout *= 2
+			p2p.maxTimeout *= 2
+		}
 	}
 
-	if res == nil || (res.Code != constants.CodePeerContinue &&
+	// FIXME: try to abstract the judgement to make it more readable.
+	if res != nil && !(res.Code != constants.CodePeerContinue &&
 		res.Code != constants.CodePeerFinish &&
 		res.Code != constants.CodePeerLimited &&
-		res.Code != constants.Success) {
-		logrus.Errorf("pull piece task fail:%v and will migrate", res)
-
-		var registerRes *regist.RegisterResult
-		if registerRes, err = p2p.Register.Register(p2p.cfg.RV.PeerPort); !cutil.IsNil(err) {
-			return nil, err
-		}
-		p2p.pieceSizeHistory[1] = registerRes.PieceSize
-		item.Status = constants.TaskStatusStart
-		item.SuperNode = registerRes.Node
-		item.TaskID = registerRes.TaskID
-		util.Printer.Println("migrated to node:" + item.SuperNode)
-		return p2p.pullPieceTask(item)
+		res.Code != constants.Success &&
+		res.Code != constants.CodePeerWait) {
+		return res, err
 	}
 
-	return res, err
+	logrus.Errorf("pull piece task fail:%v and will migrate", res)
+	var registerRes *regist.RegisterResult
+	registerRes, registerErr := p2p.Register.Register(p2p.cfg.RV.PeerPort)
+	if registerErr != nil {
+		return nil, registerErr
+	}
+	p2p.pieceSizeHistory[1] = registerRes.PieceSize
+	item.Status = constants.TaskStatusStart
+	item.SuperNode = registerRes.Node
+	item.TaskID = registerRes.TaskID
+	printer.Println("migrated to node:" + item.SuperNode)
+	return p2p.pullPieceTask(item)
 }
 
-// getPullRate get download rate limit dynamically.
+// getPullRate gets download rate limit dynamically.
 func (p2p *P2PDownloader) getPullRate(data *types.PullPieceTaskResponseContinueData) {
 	if time.Since(p2p.pullRateTime).Seconds() < 3 {
 		return
@@ -266,11 +292,10 @@ func (p2p *P2PDownloader) getPullRate(data *types.PullPieceTaskResponseContinueD
 	p2p.pullRateTime = time.Now()
 
 	start := time.Now()
-	var localRate int
+
+	localRate := data.DownLink * 1024
 	if p2p.cfg.LocalLimit > 0 {
-		localRate = p2p.cfg.LocalLimit
-	} else {
-		localRate = data.DownLink * 1024
+		localRate = int(p2p.cfg.LocalLimit)
 	}
 
 	// Calculate the download speed limit
@@ -282,19 +307,19 @@ func (p2p *P2PDownloader) getPullRate(data *types.PullPieceTaskResponseContinueD
 	}
 	resp, err := uploaderAPI.ParseRate(p2p.cfg.RV.LocalIP, p2p.cfg.RV.PeerPort, req)
 	if err != nil {
-		logrus.Errorf("failed to pullRate: %v", err)
-		p2p.rateLimiter.SetRate(cutil.TransRate(localRate))
+		logrus.Errorf("failed to parse rate in pull rate: %v", err)
+		p2p.rateLimiter.SetRate(ratelimiter.TransRate(int64(localRate)))
 		return
 	}
 
 	reqRate, err := strconv.Atoi(resp)
 	if err != nil {
 		logrus.Errorf("failed to parse rate from resp %s: %v", resp, err)
-		p2p.rateLimiter.SetRate(cutil.TransRate(localRate))
+		p2p.rateLimiter.SetRate(ratelimiter.TransRate(int64(localRate)))
 		return
 	}
 	logrus.Infof("pull rate result:%d cost:%v", reqRate, time.Since(start))
-	p2p.rateLimiter.SetRate(cutil.TransRate(reqRate))
+	p2p.rateLimiter.SetRate(ratelimiter.TransRate(int64(reqRate)))
 }
 
 func (p2p *P2PDownloader) startTask(data *types.PullPieceTaskResponseContinueData) {
@@ -346,8 +371,8 @@ func (p2p *P2PDownloader) getItem(latestItem *Piece) (bool, *Piece) {
 		logrus.Warnf("get item timeout(2s) from queue.")
 		needMerge = false
 	}
-	if cutil.IsNil(latestItem) {
-		return false, latestItem
+	if latestItem == nil {
+		return false, nil
 	}
 	if latestItem.Result == constants.ResultSuc ||
 		latestItem.Result == constants.ResultFail ||
@@ -424,9 +449,9 @@ func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, clie
 	} else {
 		if _, err := os.Stat(p2p.clientFilePath); err != nil {
 			logrus.Warnf("client file path:%s not found", p2p.clientFilePath)
-			if e := cutil.Link(p2p.serviceFilePath, p2p.clientFilePath); e != nil {
+			if e := fileutils.Link(p2p.serviceFilePath, p2p.clientFilePath); e != nil {
 				logrus.Warnln("hard link failed, instead of use copy")
-				cutil.CopyFile(p2p.serviceFilePath, p2p.clientFilePath)
+				fileutils.CopyFile(p2p.serviceFilePath, p2p.clientFilePath)
 			}
 		}
 		src = p2p.clientFilePath
