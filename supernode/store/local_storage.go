@@ -57,7 +57,7 @@ func unLock(path string, offset int64, ro bool) {
 	fileLocker.ReleaseLock(getLockKey(path, offset), ro)
 }
 
-// localStorage is one of the implementations of StorageDriver by locally.
+// localStorage is one of the implementations of StorageDriver using local file system.
 type localStorage struct {
 	// BaseDir is the dir that local storage driver will store content based on it.
 	BaseDir string `yaml:"baseDir"`
