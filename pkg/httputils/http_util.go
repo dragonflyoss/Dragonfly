@@ -312,7 +312,9 @@ func CheckConnect(ip string, port int, timeout int) (localIP string, e error) {
 
 	var conn net.Conn
 	addr := fmt.Sprintf("%s:%d", ip, port)
-	if conn, e = net.DialTimeout("tcp", addr, t); e == nil {
+	// Just temporarily limit users can only use IP addr for IPv4 format.
+	// In the near future, if we want to support IPv6, we can revise logic as below.
+	if conn, e = net.DialTimeout("tcp4", addr, t); e == nil {
 		localIP = conn.LocalAddr().String()
 		conn.Close()
 		if idx := strings.LastIndexByte(localIP, ':'); idx >= 0 {
