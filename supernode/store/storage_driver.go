@@ -76,6 +76,7 @@ type Raw struct {
 	Key    string
 	Offset int64
 	Length int64
+	Trunc  bool
 	WalkFn filepath.WalkFunc
 }
 
