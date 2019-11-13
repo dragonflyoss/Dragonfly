@@ -168,20 +168,13 @@ func registerToSuperNode(cfg *config.Config, register regist.SupernodeRegister) 
 
 func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 	register regist.SupernodeRegister, result *regist.RegisterResult) error {
-	var getter downloader.Downloader
-	if cfg.BackSourceReason > 0 {
-		getter = backDown.NewBackDownloader(cfg, result)
-	} else {
-		printer.Printf("start download by dragonfly...")
-		getter = p2pDown.NewP2PDownloader(cfg, supernodeAPI, register, result)
-	}
-
 	timeout := netutils.CalculateTimeout(cfg.RV.FileLength, cfg.MinRate, config.DefaultMinRate, 10*time.Second)
 	if timeout == 0 && cfg.Timeout > 0 {
 		timeout = cfg.Timeout
 	}
+
 	success := true
-	err := downloader.DoDownloadTimeout(getter, timeout)
+	err := doDownload(cfg, supernodeAPI, register, result, timeout)
 	if err != nil {
 		success = false
 	} else if cfg.RV.FileLength < 0 && fileutils.IsRegularFile(cfg.RV.RealTarget) {
@@ -190,9 +183,7 @@ func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 		}
 	}
 
-	reportFinishedTask(cfg, getter)
 	os.Remove(cfg.RV.TempTarget)
-
 	downloadTime := time.Since(cfg.StartTime).Seconds()
 	// upload metrics to supernode only if pattern is p2p or cdn and result is not nil
 	if cfg.Pattern != config.PatternSource && result != nil {
@@ -207,6 +198,40 @@ func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 			cfg.Nodes, time.Since(cfg.StartTime).Seconds(), cfg.RV.FileLength, cfg.BackSourceReason)
 	}
 	return err
+}
+
+func doDownload(cfg *config.Config, supernodeAPI api.SupernodeAPI,
+	register regist.SupernodeRegister, result *regist.RegisterResult, timeout time.Duration) error {
+	var getter downloader.Downloader
+	isBackDownload := false
+	if cfg.BackSourceReason > 0 {
+		getter = backDown.NewBackDownloader(cfg, result)
+		isBackDownload = true
+	} else {
+		printer.Printf("start download by dragonfly...")
+		getter = p2pDown.NewP2PDownloader(cfg, supernodeAPI, register, result)
+	}
+
+	err := downloader.DoDownloadTimeout(getter, timeout)
+	if err == nil {
+		// report finished task to uploader when success to download by dragonfly
+		reportFinishedTask(cfg, getter)
+		return nil
+	}
+
+	if isBackDownload {
+		return fmt.Errorf("failed to download file from source: %v", err)
+	}
+
+	logrus.Errorf("failed to download by dragonfly: %v, and start try to download from source", err)
+	printer.Printf("failed to download by dragonfly: %v, and start try to download from source", err)
+
+	// try to download the file from the source directly
+	getter = backDown.NewBackDownloader(cfg, result)
+	if err := downloader.DoDownloadTimeout(getter, timeout); err != nil {
+		return fmt.Errorf("failed to download file from source: %v", err)
+	}
+	return nil
 }
 
 func reportFinishedTask(cfg *config.Config, getter downloader.Downloader) {

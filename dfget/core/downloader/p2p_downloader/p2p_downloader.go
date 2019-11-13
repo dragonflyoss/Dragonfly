@@ -18,6 +18,7 @@ package downloader
 
 import (
 	"bytes"
+	"fmt"
 	"math/rand"
 	"os"
 	"strconv"
@@ -26,7 +27,6 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/downloader"
-	backDown "github.com/dragonflyoss/Dragonfly/dfget/core/downloader/back_downloader"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
@@ -199,11 +199,8 @@ func (p2p *P2PDownloader) Run() error {
 			}
 		}
 
-		// NOTE: Should we call it directly here?
-		// Maybe we should return an error and let the caller decide whether to call it.
 		if p2p.cfg.BackSourceReason != 0 {
-			backDownloader := backDown.NewBackDownloader(p2p.cfg, p2p.RegisterResult)
-			return backDownloader.Run()
+			return fmt.Errorf("failed to download with %s pattern, reason: %d", p2p.cfg.Pattern, p2p.cfg.BackSourceReason)
 		}
 	}
 }
