@@ -64,6 +64,9 @@ var fs = afero.NewOsFs()
 //     # proxy requests directly, without dfget
 //     - regx: no-proxy-reg
 //       direct: true
+//     # proxy requests with redirect
+//     - regx: some-registry
+//       redirect: another-registry
 //
 //     hijack_https:
 //       # key pair used to hijack https requests
@@ -385,10 +388,12 @@ type Proxy struct {
 	Regx     *Regexp `yaml:"regx" json:"regx"`
 	UseHTTPS bool    `yaml:"use_https" json:"use_https"`
 	Direct   bool    `yaml:"direct" json:"direct"`
+	// Redirect is the host to redirect to, if not empty
+	Redirect string `yaml:"redirect" json:"redirect"`
 }
 
 // NewProxy returns a new proxy rule with given attributes.
-func NewProxy(regx string, useHTTPS bool, direct bool) (*Proxy, error) {
+func NewProxy(regx string, useHTTPS bool, direct bool, redirect string) (*Proxy, error) {
 	exp, err := NewRegexp(regx)
 	if err != nil {
 		return nil, errors.Wrap(err, "invalid regexp")
@@ -398,6 +403,7 @@ func NewProxy(regx string, useHTTPS bool, direct bool) (*Proxy, error) {
 		Regx:     exp,
 		UseHTTPS: useHTTPS,
 		Direct:   direct,
+		Redirect: redirect,
 	}, nil
 }
 

@@ -220,7 +220,7 @@ func (ts *configTestSuite) TestProxyNew() {
 		validRegexp := ".*"
 		useHTTPS := false
 		direct := false
-		p, err := NewProxy(validRegexp, useHTTPS, direct)
+		p, err := NewProxy(validRegexp, useHTTPS, direct, "")
 		r.Nil(err)
 		r.NotNil(p)
 		r.Equal(useHTTPS, p.UseHTTPS)
@@ -229,7 +229,7 @@ func (ts *configTestSuite) TestProxyNew() {
 	}
 
 	{
-		p, err := NewProxy(`\K`, false, false)
+		p, err := NewProxy(`\K`, false, false, "")
 		r.Nil(p)
 		r.NotNil(err)
 		r.True(strings.HasPrefix(err.Error(), "invalid regexp:"))
@@ -238,7 +238,7 @@ func (ts *configTestSuite) TestProxyNew() {
 
 func (ts *configTestSuite) TestProxyMatch() {
 	r := ts.Require()
-	p, err := NewProxy("blobs/sha256.*", false, false)
+	p, err := NewProxy("blobs/sha256.*", false, false, "")
 	r.Nil(err)
 	r.NotNil(p)
 

@@ -259,6 +259,10 @@ func (proxy *Proxy) shouldUseDfget(req *http.Request) bool {
 			if rule.UseHTTPS {
 				req.URL.Scheme = "https"
 			}
+			if rule.Redirect != "" {
+				req.URL.Host = rule.Redirect
+				req.Host = rule.Redirect
+			}
 			return !rule.Direct
 		}
 	}
