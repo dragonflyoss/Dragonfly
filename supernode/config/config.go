@@ -148,7 +148,7 @@ type BaseProperties struct {
 	// PeerDownLimit is the download limit of a peer. When a peer starts to download a file/image,
 	// it will download file/image in the form of pieces. PeerDownLimit mean that a peer can only
 	// stand starting PeerDownLimit concurrent downloading tasks.
-	// default: 5
+	// default: 4
 	PeerDownLimit int `yaml:"peerDownLimit"`
 
 	// When dfget node starts to play a role of peer, it will provide services for other peers
@@ -205,19 +205,24 @@ type BaseProperties struct {
 	// gc related
 
 	// GCInitialDelay is the delay time from the start to the first GC execution.
+	// default: 6s
 	GCInitialDelay time.Duration `yaml:"gcInitialDelay"`
 
 	// GCMetaInterval is the interval time to execute GC meta.
+	// default: 2min
 	GCMetaInterval time.Duration `yaml:"gcMetaInterval"`
 
 	// TaskExpireTime when a task is not accessed within the taskExpireTime,
 	// and it will be treated to be expired.
+	// default: 3min
 	TaskExpireTime time.Duration `yaml:"taskExpireTime"`
 
 	// PeerGCDelay is the delay time to execute the GC after the peer has reported the offline.
+	// default: 3min
 	PeerGCDelay time.Duration `yaml:"peerGCDelay"`
 
 	// GCDiskInterval is the interval time to execute GC disk.
+	// default: 15s
 	GCDiskInterval time.Duration `yaml:"gcDiskInterval"`
 
 	// YoungGCThreshold if the available disk space is more than YoungGCThreshold
@@ -233,6 +238,7 @@ type BaseProperties struct {
 	FullGCThreshold fileutils.Fsize `yaml:"fullGCThreshold"`
 
 	// IntervalThreshold is the threshold of the interval at which the task file is accessed.
+	// default: 2h
 	IntervalThreshold time.Duration `yaml:"IntervalThreshold"`
 
 	// CleanRatio is the ratio to clean the disk and it is based on 10.
