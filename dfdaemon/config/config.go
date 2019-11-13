@@ -52,6 +52,8 @@ var fs = afero.NewOsFs()
 //       insecure: false
 //       # optional certificates if the remote server uses self-signed certificates
 //       certs: []
+//       # whether to request the remote registry directly
+//       direct: false
 //
 //     proxies:
 //     # proxy all http image layer download requests with dfget
@@ -185,6 +187,9 @@ type RegistryMirror struct {
 
 	// Whether to ignore certificates errors for the registry
 	Insecure bool `yaml:"insecure" json:"insecure"`
+
+	// Request the remote registry directly.
+	Direct bool `yaml:"direct" json:"direct"`
 }
 
 // TLSConfig returns the tls.Config used to communicate with the mirror.
