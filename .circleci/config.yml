@@ -1,16 +1,20 @@
-# Golang CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-go/ for more details
-version: 2
+# Golang CircleCI 2.1 configuration file
+version: 2.1
+
+orbs:
+  # See https://circleci.com/orbs/registry/orb/circleci/go.
+  go: circleci/go@0.2.0
+
 jobs:
   linters-check:
     docker:
-      # this image is build from Dockerfile
+      # this image is built from Dockerfile
       # https://github.com/pouchcontainer/pouchlinter/blob/master/Dockerfile
       - image: pouchcontainer/pouchlinter:v0.2.4
     working_directory: /go/src/github.com/dragonflyoss/Dragonfly
     steps:
       - checkout
+      - go/load-cache
       - run:
           name: use markdownlint v0.5.0 to lint markdown file (https://github.com/markdownlint/markdownlint)
           command: |
@@ -53,6 +57,7 @@ jobs:
           name: boilerplate check
           command: |
             make boilerplate-check
+      - go/save-cache
 
   unit-test-golang:
     docker:
@@ -60,6 +65,7 @@ jobs:
     working_directory: /go/src/github.com/dragonflyoss/Dragonfly
     steps:
       - checkout
+      - go/load-cache
       - run:
           name: build client
           command: |
@@ -73,6 +79,7 @@ jobs:
       - run:
           name: rm coverage.txt
           command: rm coverage.txt
+      - go/save-cache
 
   api-integration-test:
     docker:
@@ -80,6 +87,7 @@ jobs:
     working_directory: /go/src/github.com/dragonflyoss/Dragonfly
     steps:
       - checkout
+      - go/load-cache
       - run:
           name: build dragonfly & run all integration test cases in test
           command: |
@@ -87,6 +95,7 @@ jobs:
             make build > /dev/null
             echo "start integration test..."
             make integration-test
+      - go/save-cache
 
 workflows:
   version: 2
