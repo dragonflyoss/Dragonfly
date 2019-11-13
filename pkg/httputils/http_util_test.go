@@ -118,6 +118,10 @@ func (s *HTTPUtilTestSuite) TestCheckConnect(c *check.C) {
 	ip, e := CheckConnect("127.0.0.1", s.port, 0)
 	c.Assert(e, check.IsNil)
 	c.Assert(ip, check.Equals, "127.0.0.1")
+
+	// Test IPv6
+	_, e = CheckConnect("[::1]", s.port, 0)
+	c.Assert(e, check.NotNil)
 }
 
 func (s *HTTPUtilTestSuite) TestGetRangeSE(c *check.C) {
