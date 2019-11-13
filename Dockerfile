@@ -1,4 +1,4 @@
-FROM golang:1.12.10-alpine as builder
+FROM golang:1.13.4-alpine as builder
 
 WORKDIR /go/src/github.com/dragonflyoss/Dragonfly
 RUN apk --no-cache add bash make gcc libc-dev git
@@ -9,7 +9,7 @@ COPY . /go/src/github.com/dragonflyoss/Dragonfly
 # write the resulting executable to the dir /opt/dragonfly/df-client.
 RUN make build-client && make install-client
 
-FROM alpine:3.8
+FROM alpine:3.10
 
 RUN apk --no-cache add ca-certificates bash
 
