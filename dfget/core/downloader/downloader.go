@@ -49,6 +49,7 @@ func DoDownloadTimeout(downloader Downloader, timeout time.Duration) error {
 	go func() {
 		ch <- downloader.Run()
 	}()
+
 	var err error
 	select {
 	case err = <-ch:
