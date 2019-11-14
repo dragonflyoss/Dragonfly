@@ -22,6 +22,7 @@
 package downloader
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -33,7 +34,7 @@ import (
 
 // Downloader is the interface to download files
 type Downloader interface {
-	Run() error
+	Run(ctx context.Context) error
 	Cleanup()
 }
 
@@ -44,11 +45,13 @@ func DoDownloadTimeout(downloader Downloader, timeout time.Duration) error {
 		logrus.Warnf("invalid download timeout(%.3fs)", timeout.Seconds())
 		timeout = config.DefaultDownlodTimeout
 	}
+	ctx, cancel := context.WithCancel(context.Background())
 
 	var ch = make(chan error)
 	go func() {
-		ch <- downloader.Run()
+		ch <- downloader.Run(ctx)
 	}()
+	defer cancel()
 
 	var err error
 	select {

@@ -18,6 +18,7 @@ package downloader
 
 import (
 	"bufio"
+	"context"
 	"io"
 	"os"
 	"time"
@@ -107,7 +108,6 @@ func (cw *ClientWriter) init() (err error) {
 	if err != nil {
 		return
 	}
-	go cw.targetWriter.Run()
 
 	cw.syncQueue = startSyncWriter(nil)
 
@@ -116,7 +116,9 @@ func (cw *ClientWriter) init() (err error) {
 }
 
 // Run starts writing downloading file.
-func (cw *ClientWriter) Run() {
+func (cw *ClientWriter) Run(ctx context.Context) {
+	go cw.targetWriter.Run(ctx)
+
 	for {
 		item := cw.clientQueue.Poll()
 		state, ok := item.(string)

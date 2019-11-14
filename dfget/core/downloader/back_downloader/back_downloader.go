@@ -17,6 +17,7 @@
 package downloader
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -77,7 +78,7 @@ func NewBackDownloader(cfg *config.Config, result *regist.RegisterResult) *BackD
 }
 
 // Run starts to download the file.
-func (bd *BackDownloader) Run() error {
+func (bd *BackDownloader) Run(ctx context.Context) error {
 	var (
 		resp *http.Response
 		err  error

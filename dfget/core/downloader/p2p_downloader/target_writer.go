@@ -17,6 +17,7 @@
 package downloader
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -74,7 +75,7 @@ func (tw *TargetWriter) init() error {
 }
 
 // Run starts writing downloading file.
-func (tw *TargetWriter) Run() {
+func (tw *TargetWriter) Run(ctx context.Context) {
 	for {
 		item := tw.pieceQueue.Poll()
 		state, ok := item.(string)
