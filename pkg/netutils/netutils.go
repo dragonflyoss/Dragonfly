@@ -227,7 +227,7 @@ func IsValidIP(ip string) bool {
 	return result
 }
 
-// GetAllIPs returns all non-loopback addresses.
+// GetAllIPs returns all non-loopback IPV4 addresses.
 func GetAllIPs() (ipList []string, err error) {
 	// get all system's unicast interface addresses.
 	addrs, err := net.InterfaceAddrs()
@@ -237,8 +237,8 @@ func GetAllIPs() (ipList []string, err error) {
 
 	// filter all loopback addresses.
 	for _, v := range addrs {
-		if ipNet, ok := v.(*net.IPNet); ok {
-			if !ipNet.IP.IsLoopback() {
+		if ipNet, ok := v.(*net.IPNet); ok && !ipNet.IP.IsLoopback() {
+			if ipNet.IP.To4() != nil {
 				ipList = append(ipList, ipNet.IP.String())
 			}
 		}
