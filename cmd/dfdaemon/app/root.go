@@ -39,6 +39,12 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const (
+	// DFDaemonEnvPrefix is the default environment prefix for Viper.
+	// Both BindEnv and AutomaticEnv will use this prefix.
+	DFDaemonEnvPrefix = "dfdaemon"
+)
+
 var rootCmd = &cobra.Command{
 	Use:               "dfdaemon",
 	Short:             "The dfdaemon is a proxy that intercepts image download requests.",
@@ -106,7 +112,13 @@ func bindRootFlags(v *viper.Viper) error {
 	if err := v.BindPFlags(rootCmd.Flags()); err != nil {
 		return err
 	}
-	return v.BindPFlag("registry_mirror.remote", rootCmd.Flag("registry"))
+	if err := v.BindPFlag("registry_mirror.remote", rootCmd.Flag("registry")); err != nil {
+		return err
+	}
+	v.SetEnvPrefix(DFDaemonEnvPrefix)
+	v.AutomaticEnv()
+
+	return nil
 }
 
 // readConfigFile reads config file into the given viper instance. If we're

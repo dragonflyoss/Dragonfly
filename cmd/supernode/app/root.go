@@ -40,6 +40,12 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const (
+	// SupernodeEnvPrefix is the default environment prefix for Viper.
+	// Both BindEnv and AutomaticEnv will use this prefix.
+	SupernodeEnvPrefix = "supernode"
+)
+
 var (
 	supernodeViper = viper.GetViper()
 )
@@ -258,6 +264,10 @@ func bindRootFlags(v *viper.Viper) error {
 			return err
 		}
 	}
+
+	v.SetEnvPrefix(SupernodeEnvPrefix)
+	v.AutomaticEnv()
+
 	return nil
 }
 

@@ -21,6 +21,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -138,6 +139,33 @@ func (ts *rootTestSuite) TestHomeDirFlag() {
 		r.Equal("/test-home", cfg.HomeDir)
 		r.Equal("/test-home/repo/download", cfg.DownloadPath)
 	}
+}
+
+func (ts *rootTestSuite) TestAutomaticEnv() {
+	r := ts.Require()
+	v := viper.New()
+	r.Nil(bindRootFlags(v))
+
+	listenPortEnvKey := strings.ToUpper(SupernodeEnvPrefix + "_base.listenPort")
+	homeDirEnvKey := strings.ToUpper(SupernodeEnvPrefix + "_base.homeDir")
+	debugEnvKey := strings.ToUpper(SupernodeEnvPrefix + "_base.debug")
+	failAccessIntervalEnvKey := strings.ToUpper(SupernodeEnvPrefix + "_base.failAccessInterval")
+
+	os.Setenv(listenPortEnvKey, "2019")
+	os.Setenv(homeDirEnvKey, "/dragonfly/home")
+	os.Setenv(debugEnvKey, "true")
+	os.Setenv(failAccessIntervalEnvKey, "10m30s")
+	expectFailAccessInterval, _ := time.ParseDuration("10m30s")
+
+	r.Equal(2019, v.GetInt("base.listenPort"))
+	r.Equal("/dragonfly/home", v.GetString("base.homeDir"))
+	r.Equal(true, v.GetBool("base.debug"))
+	r.Equal(expectFailAccessInterval, v.GetDuration("base.failAccessInterval"))
+
+	os.Unsetenv(listenPortEnvKey)
+	os.Unsetenv(homeDirEnvKey)
+	os.Unsetenv(debugEnvKey)
+	os.Unsetenv(failAccessIntervalEnvKey)
 }
 
 func generateFakeFilename(fs afero.Fs) string {

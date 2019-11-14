@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -134,6 +135,28 @@ func (ts *rootTestSuite) TestBindRootFlags() {
 	v := viper.New()
 	r.Nil(bindRootFlags(v))
 	r.Equal(v.GetString("registry"), v.GetString("registry_mirror.remote"))
+}
+
+func (ts *rootTestSuite) TestAutomaticEnv() {
+	r := ts.Require()
+	v := viper.New()
+	r.Nil(bindRootFlags(v))
+
+	maxprocsEnvKey := strings.ToUpper(DFDaemonEnvPrefix + "_maxprocs")
+	workHomeEnvKey := strings.ToUpper(DFDaemonEnvPrefix + "_workHome")
+	registryEnvKey := strings.ToUpper(DFDaemonEnvPrefix + "_registry_mirror.remote")
+
+	os.Setenv(maxprocsEnvKey, "17")
+	os.Setenv(workHomeEnvKey, "/dragonfly/home")
+	os.Setenv(registryEnvKey, "https://dragonfly.io")
+
+	r.Equal(17, v.GetInt("maxprocs"))
+	r.Equal("/dragonfly/home", v.GetString("workHome"))
+	r.Equal("https://dragonfly.io", v.GetString("registry_mirror.remote"))
+
+	os.Unsetenv(maxprocsEnvKey)
+	os.Unsetenv(workHomeEnvKey)
+	os.Unsetenv(registryEnvKey)
 }
 
 var testCrt = `-----BEGIN CERTIFICATE-----
