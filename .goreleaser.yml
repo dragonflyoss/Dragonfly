@@ -1,0 +1,58 @@
+# This is an example goreleaser.yaml file with some sane defaults.
+# Make sure to check the documentation at http://goreleaser.com
+env:
+  - GO111MODULE=on
+  - CGO_ENABLED=0
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - binary: supernode
+    id: "supernode"
+    main: cmd/supernode/main.go
+    goarch:
+      - amd64
+    goos:
+      - linux
+      - darwin
+    ldflags:
+      - -s -w -X github.com/dragonflyoss/Dragonfly/version.version={{.Version}}
+      - -X github.com/dragonflyoss/Dragonfly/version.revision={{.ShortCommit}}
+      - -X github.com/dragonflyoss/Dragonfly/version.buildDate={{.Env.DATE}}
+
+  - binary: dfget
+    id: "dfget"
+    main: cmd/dfget/main.go
+    goarch:
+      - amd64
+    goos:
+      - linux
+      - darwin
+    ldflags:
+      - -s -w -X github.com/dragonflyoss/Dragonfly/version.version={{.Version}}
+      - -X github.com/dragonflyoss/Dragonfly/version.revision={{.ShortCommit}}
+      - -X github.com/dragonflyoss/Dragonfly/version.buildDate={{.Env.DATE}}
+
+  - binary: dfdaemon
+    id: "dfdaemon"
+    main: cmd/dfdaemon/main.go
+    goarch:
+      - amd64
+    goos:
+      - linux
+      - darwin
+    ldflags:
+      - -s -w -X github.com/dragonflyoss/Dragonfly/version.version={{.Version}}
+      - -X github.com/dragonflyoss/Dragonfly/version.revision={{.ShortCommit}}
+      - -X github.com/dragonflyoss/Dragonfly/version.buildDate={{.Env.DATE}}
+
+# archives in the tarball
+archives:
+  - wrap_in_directory: true
+    # additional files
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: 'checksums.txt'
