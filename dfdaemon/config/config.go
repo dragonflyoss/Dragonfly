@@ -26,6 +26,7 @@ import (
 	"regexp"
 
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
+	"github.com/dragonflyoss/Dragonfly/pkg/dflog"
 	dferr "github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/rate"
 
@@ -109,6 +110,8 @@ type Properties struct {
 	WorkHome   string    `yaml:"workHome" json:"workHome,omitempty"`
 	DFRepo     string    `yaml:"localrepo" json:"localrepo"`
 	DFPath     string    `yaml:"dfpath" json:"dfpath"`
+
+	LogConfig dflog.LogConfig `yaml:"logConfig" json:"logConfig"`
 }
 
 // Validate validates the config

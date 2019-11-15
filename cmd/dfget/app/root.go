@@ -188,7 +188,7 @@ func initClientLog() error {
 	logFilePath := filepath.Join(cfg.WorkHome, "logs", "dfclient.log")
 
 	opts := []dflog.Option{
-		dflog.WithLogFile(logFilePath),
+		dflog.WithLogFile(logFilePath, cfg.LogConfig.MaxSize, cfg.LogConfig.MaxBackups),
 		dflog.WithSign(cfg.Sign),
 		dflog.WithDebug(cfg.Verbose),
 	}

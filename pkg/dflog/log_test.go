@@ -52,7 +52,7 @@ func (ts *logTestSuite) TestLogFile() {
 	defer os.RemoveAll(f.Name())
 
 	l := logrus.New()
-	r.Nil(Init(l, WithLogFile(f.Name())))
+	r.Nil(Init(l, WithLogFile(f.Name(), -1, -1)))
 	lumberjack := getLumberjack(l)
 	r.NotNil(lumberjack)
 	r.Equal(f.Name(), lumberjack.Filename)
