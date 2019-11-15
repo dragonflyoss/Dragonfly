@@ -104,8 +104,9 @@ func updateRunningPiece(dstPIDMap *syncmap.SyncMap, srcCID, dstPID string, piece
 		}
 		return err
 	}
+	dstPIDMap.Remove(pieceNumString)
 
-	return dstPIDMap.Remove(pieceNumString)
+	return nil
 }
 
 // updatePieceBitSet adds a new piece for srcCID when it successfully downloads the piece.
