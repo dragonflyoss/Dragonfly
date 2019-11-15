@@ -17,6 +17,7 @@
 package downloader
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -75,16 +76,16 @@ func (s *BackDownloaderTestSuite) TestBackDownloader_Run(c *check.C) {
 	}
 
 	cfg.Notbs = true
-	c.Assert(bd.Run(), check.NotNil)
+	c.Assert(bd.Run(context.TODO()), check.NotNil)
 
 	cfg.Notbs = false
 	bd.cleaned = false
 	cfg.BackSourceReason = config.BackSourceReasonNoSpace
-	c.Assert(bd.Run(), check.NotNil)
+	c.Assert(bd.Run(context.TODO()), check.NotNil)
 
 	cfg.BackSourceReason = 0
 	bd.cleaned = false
-	c.Assert(bd.Run(), check.IsNil)
+	c.Assert(bd.Run(context.TODO()), check.IsNil)
 
 	bd.cleaned = false
 	bd.Md5 = testFileMd5
@@ -93,12 +94,12 @@ func (s *BackDownloaderTestSuite) TestBackDownloader_Run(c *check.C) {
 
 	// test: realMd5 doesn't equal to expectedMd5
 	bd.Md5 = "x"
-	c.Assert(bd.Run(), check.NotNil)
+	c.Assert(bd.Run(context.TODO()), check.NotNil)
 
 	// test: realMd5 equals to expectedMd5
 	bd.cleaned = false
 	bd.Md5 = testFileMd5
-	c.Assert(bd.Run(), check.IsNil)
+	c.Assert(bd.Run(context.TODO()), check.IsNil)
 }
 
 func (s *BackDownloaderTestSuite) TestBackDownloader_Run_NotExist(c *check.C) {
@@ -111,7 +112,7 @@ func (s *BackDownloaderTestSuite) TestBackDownloader_Run_NotExist(c *check.C) {
 		Target: dst,
 	}
 
-	err := bd.Run()
+	err := bd.Run(context.TODO())
 	c.Check(err, check.NotNil)
 	c.Check(err, check.ErrorMatches, ".*404")
 }

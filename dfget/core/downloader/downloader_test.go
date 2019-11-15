@@ -17,6 +17,7 @@
 package downloader
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -83,7 +84,7 @@ type MockDownloader struct {
 	Sleep int
 }
 
-func (md *MockDownloader) Run() error {
+func (md *MockDownloader) Run(ctx context.Context) error {
 	time.Sleep(time.Duration(md.Sleep) * time.Millisecond)
 	return nil
 }

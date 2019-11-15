@@ -120,12 +120,12 @@ func prepare(cfg *config.Config) (err error) {
 	return nil
 }
 
-func launchPeerServer(cfg *config.Config) (err error) {
+func launchPeerServer(cfg *config.Config) error {
 	port, err := uploader.StartPeerServerProcess(cfg)
 	if err == nil && port > 0 {
 		cfg.RV.PeerPort = port
 	}
-	return
+	return err
 }
 
 func registerToSuperNode(cfg *config.Config, register regist.SupernodeRegister) (
