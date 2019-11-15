@@ -27,12 +27,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/pkg/dflog"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/printer"
 	"github.com/dragonflyoss/Dragonfly/pkg/rate"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
+
 	"github.com/pkg/errors"
 	"gopkg.in/gcfg.v1"
 	"gopkg.in/warnings.v0"
@@ -83,6 +85,8 @@ type Properties struct {
 	// WorkHome work home path,
 	// default: `$HOME/.small-dragonfly`.
 	WorkHome string `yaml:"workHome" json:"workHome,omitempty"`
+
+	LogConfig dflog.LogConfig `yaml:"logConfig" json:"logConfig"`
 }
 
 // NewProperties creates a new properties with default values.

@@ -83,7 +83,7 @@ func initLogger(cfg config.Properties) error {
 	logFilePath := filepath.Join(cfg.WorkHome, "logs", "dfdaemon.log")
 
 	opts := []dflog.Option{
-		dflog.WithLogFile(logFilePath),
+		dflog.WithLogFile(logFilePath, cfg.LogConfig.MaxSize, cfg.LogConfig.MaxBackups),
 		dflog.WithSign(fmt.Sprintf("%d", os.Getpid())),
 		dflog.WithDebug(cfg.Verbose),
 	}

@@ -27,6 +27,16 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
+// LogConfig holds all configurable properties of log.
+type LogConfig struct {
+	// MaxSize is the maximum size in megabytes of the log file before it gets rotated.
+	// It defaults to 40 megabytes.
+	MaxSize int `yaml:"maxSize" json:"maxSize"`
+	// MaxBackups is the maximum number of old log files to retain.
+	// The default value is 1.
+	MaxBackups int `yaml:"maxBackups" json:"maxBackups"`
+}
+
 // DefaultLogTimeFormat defines the timestamp format.
 const DefaultLogTimeFormat = "2006-01-02 15:04:05.000"
 
@@ -51,18 +61,31 @@ func getLumberjack(l *logrus.Logger) *lumberjack.Logger {
 }
 
 // WithLogFile sets the logger to output to the given file, with log rotation.
+//
 // If the given file is empty, nothing will be done.
-func WithLogFile(f string) Option {
+//
+// The maxSize is the maximum size in megabytes of the log file before it gets rotated.
+// It defaults to 40 megabytes.
+//
+// The maxBackups is the maximum number of old log files to retain.
+// The default value is 1.
+func WithLogFile(f string, maxSize, maxBackups int) Option {
 	return func(l *logrus.Logger) error {
 		if f == "" {
 			return nil
+		}
+		if maxSize <= 0 {
+			maxSize = 40
+		}
+		if maxBackups <= 0 {
+			maxBackups = 1
 		}
 
 		if logger := getLumberjack(l); logger == nil {
 			l.SetOutput(&lumberjack.Logger{
 				Filename:   f,
-				MaxSize:    40, // mb
-				MaxBackups: 1,
+				MaxSize:    maxSize, // mb
+				MaxBackups: maxBackups,
 			})
 		} else {
 			logger.Filename = f

@@ -73,13 +73,13 @@ var rootCmd = &cobra.Command{
 		}
 
 		// initialize supernode logger.
-		if err := initLog(logrus.StandardLogger(), "app.log"); err != nil {
+		if err := initLog(logrus.StandardLogger(), "app.log", cfg.LogConfig); err != nil {
 			return err
 		}
 
 		// initialize dfget logger.
 		dfgetLogger := logrus.New()
-		if err := initLog(dfgetLogger, "dfget.log"); err != nil {
+		if err := initLog(dfgetLogger, "dfget.log", cfg.LogConfig); err != nil {
 			return err
 		}
 
@@ -326,11 +326,11 @@ func decodeWithYAML(types ...reflect.Type) mapstructure.DecodeHookFunc {
 }
 
 // initLog initializes log Level and log format.
-func initLog(logger *logrus.Logger, logPath string) error {
+func initLog(logger *logrus.Logger, logPath string, logConfig dflog.LogConfig) error {
 	logFilePath := filepath.Join(supernodeViper.GetString("base.homeDir"), "logs", logPath)
 
 	opts := []dflog.Option{
-		dflog.WithLogFile(logFilePath),
+		dflog.WithLogFile(logFilePath, logConfig.MaxSize, logConfig.MaxBackups),
 		dflog.WithSign(fmt.Sprintf("%d", os.Getpid())),
 		dflog.WithDebug(supernodeViper.GetBool("base.debug")),
 	}

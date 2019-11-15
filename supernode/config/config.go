@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/pkg/dflog"
 	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/rate"
 
@@ -246,4 +247,6 @@ type BaseProperties struct {
 	//
 	// default: 1
 	CleanRatio int
+
+	LogConfig dflog.LogConfig `yaml:"logConfig" json:"logConfig"`
 }
