@@ -260,7 +260,7 @@ func (sm *Manager) tryGetPID(ctx context.Context, taskID string, pieceNum int, s
 
 func (sm *Manager) deletePeerIDByPieceNum(ctx context.Context, taskID string, pieceNum int, peerID string) {
 	if err := sm.progressMgr.DeletePeerIDByPieceNum(ctx, taskID, pieceNum, peerID); err != nil {
-		logrus.Warnf("scheduler: failed to delete the peerID %s for pieceNum %d of taskID: %s", peerID, pieceNum, taskID)
+		logrus.Warnf("scheduler: failed to delete the peerID %s for pieceNum %d of taskID: %s: %v", peerID, pieceNum, taskID, err)
 	}
 }
 

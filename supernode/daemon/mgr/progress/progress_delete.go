@@ -19,13 +19,24 @@ package progress
 import (
 	"context"
 
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+
 	"github.com/sirupsen/logrus"
 )
 
 // DeleteTaskID deletes the super progress with specified taskID.
-func (pm *Manager) DeleteTaskID(ctx context.Context, taskID string) (err error) {
+func (pm *Manager) DeleteTaskID(ctx context.Context, taskID string, pieceTotal int) (err error) {
 	pm.superLoad.remove(taskID)
-	return pm.superProgress.remove(taskID)
+	pm.superProgress.remove(taskID)
+
+	for i := 0; i < pieceTotal; i++ {
+		key, err := generatePieceProgressKey(taskID, i)
+		if err != nil {
+			return err
+		}
+		pm.pieceProgress.remove(key)
+	}
+	return nil
 }
 
 // DeleteCID deletes the client progress with specified clientID.
@@ -81,9 +92,10 @@ func (pm *Manager) deletePeerIDByPieceNum(ctx context.Context, taskID string, pi
 // the peer no longer provides the service for the pieceNum of taskID.
 func (pm *Manager) deletePeerIDByPieceProgressKey(ctx context.Context, pieceProgressKey string, peerID string) error {
 	ps, err := pm.pieceProgress.getAsPieceState(pieceProgressKey)
-	if err != nil {
+	if err != nil && !errortypes.IsDataNotFound(err) {
 		return err
 	}
 
-	return ps.delete(peerID)
+	ps.delete(peerID)
+	return nil
 }

@@ -88,7 +88,7 @@ type ProgressMgr interface {
 	UpdateSuperLoad(ctx context.Context, taskID string, delta, limit int32) (updated bool, err error)
 
 	// DeleteTaskID deletes the super progress with specified taskID.
-	DeleteTaskID(ctx context.Context, taskID string) (err error)
+	DeleteTaskID(ctx context.Context, taskID string, pieceTotal int) (err error)
 
 	// DeleteCID deletes the super progress with specified clientID.
 	DeleteCID(ctx context.Context, clientID string) (err error)
