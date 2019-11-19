@@ -116,7 +116,16 @@ func (gcm *Manager) gcCDNByTaskID(ctx context.Context, taskID string, full bool)
 }
 
 func (gcm *Manager) gcTaskByTaskID(ctx context.Context, taskID string) {
-	if err := gcm.progressMgr.DeleteTaskID(ctx, taskID); err != nil {
+	taskInfo, err := gcm.taskMgr.Get(ctx, taskID)
+	if err != nil {
+		logrus.Errorf("gc task: failed to get task info(%s): %v", taskID, err)
+	}
+
+	var pieceTotal int
+	if taskInfo != nil {
+		pieceTotal = int(taskInfo.PieceTotal)
+	}
+	if err := gcm.progressMgr.DeleteTaskID(ctx, taskID, pieceTotal); err != nil {
 		logrus.Errorf("gc task: failed to gc progress info taskID(%s): %v", taskID, err)
 	}
 	if err := gcm.taskMgr.Delete(ctx, taskID); err != nil {

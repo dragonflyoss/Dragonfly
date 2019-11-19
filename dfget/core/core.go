@@ -213,9 +213,9 @@ func doDownload(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 	}
 
 	err := downloader.DoDownloadTimeout(getter, timeout)
+	// report finished task to uploader regardless of the result of downloading from dragonfly
+	reportFinishedTask(cfg, getter)
 	if err == nil {
-		// report finished task to uploader when success to download by dragonfly
-		reportFinishedTask(cfg, getter)
 		return nil
 	}
 

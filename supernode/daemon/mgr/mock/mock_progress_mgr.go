@@ -199,17 +199,17 @@ func (mr *MockProgressMgrMockRecorder) UpdateSuperLoad(ctx, taskID, delta, limit
 }
 
 // DeleteTaskID mocks base method
-func (m *MockProgressMgr) DeleteTaskID(ctx context.Context, taskID string) error {
+func (m *MockProgressMgr) DeleteTaskID(ctx context.Context, taskID string, pieceTotal int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteTaskID", ctx, taskID)
+	ret := m.ctrl.Call(m, "DeleteTaskID", ctx, taskID, pieceTotal)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteTaskID indicates an expected call of DeleteTaskID
-func (mr *MockProgressMgrMockRecorder) DeleteTaskID(ctx, taskID interface{}) *gomock.Call {
+func (mr *MockProgressMgrMockRecorder) DeleteTaskID(ctx, taskID, pieceTotal interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTaskID", reflect.TypeOf((*MockProgressMgr)(nil).DeleteTaskID), ctx, taskID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTaskID", reflect.TypeOf((*MockProgressMgr)(nil).DeleteTaskID), ctx, taskID, pieceTotal)
 }
 
 // DeleteCID mocks base method
