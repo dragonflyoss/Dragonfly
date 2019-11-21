@@ -82,6 +82,10 @@ func (pe *peerServerExecutor) StartPeerServerProcess(cfg *config.Config) (port i
 	}
 	defer fileLock.Unlock()
 
+	if port = pe.checkPeerServerExist(cfg, 0); port > 0 {
+		return port, nil
+	}
+
 	cmd := exec.Command(os.Args[0], "server",
 		"--ip", cfg.RV.LocalIP,
 		"--port", strconv.Itoa(cfg.RV.PeerPort),
