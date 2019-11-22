@@ -42,8 +42,9 @@ type Downloader interface {
 // the given timeout duration.
 func DoDownloadTimeout(downloader Downloader, timeout time.Duration) error {
 	if timeout <= 0 {
-		logrus.Warnf("invalid download timeout(%.3fs)", timeout.Seconds())
-		timeout = config.DefaultDownlodTimeout
+		logrus.Warnf("invalid download timeout(%.3fs), use default:(%.3fs)",
+			timeout.Seconds(), config.DefaultDownloadTimeout.Seconds())
+		timeout = config.DefaultDownloadTimeout
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 
