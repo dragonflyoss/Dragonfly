@@ -168,10 +168,7 @@ func registerToSuperNode(cfg *config.Config, register regist.SupernodeRegister) 
 
 func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 	register regist.SupernodeRegister, result *regist.RegisterResult) error {
-	timeout := netutils.CalculateTimeout(cfg.RV.FileLength, cfg.MinRate, config.DefaultMinRate, 10*time.Second)
-	if timeout == 0 && cfg.Timeout > 0 {
-		timeout = cfg.Timeout
-	}
+	timeout := calculateTimeout(cfg)
 
 	success := true
 	err := doDownload(cfg, supernodeAPI, register, result, timeout)
@@ -327,4 +324,20 @@ func reportMetrics(cfg *config.Config, supernodeAPI api.SupernodeAPI, downloadTi
 			return
 		}
 	}
+}
+
+func calculateTimeout(cfg *config.Config) time.Duration {
+	if cfg == nil {
+		return config.DefaultDownloadTimeout
+	}
+	// the timeout specified by user should be used firstly
+	if cfg.Timeout > 0 {
+		return cfg.Timeout
+	}
+	timeout := netutils.CalculateTimeout(cfg.RV.FileLength, cfg.MinRate,
+		config.DefaultMinRate, 10*time.Second)
+	if timeout > 0 {
+		return timeout
+	}
+	return config.DefaultDownloadTimeout
 }
