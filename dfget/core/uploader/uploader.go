@@ -120,27 +120,51 @@ func launch(cfg *config.Config, p2pPtr *unsafe.Pointer) error {
 	return fmt.Errorf("start peer server error and retried at most %d times", retryCount)
 }
 
-func waitForStartup(result chan error, p2pPtr *unsafe.Pointer) error {
-	select {
-	case err := <-result:
-		tmp := loadSrvPtr(p2pPtr)
-		if err == nil {
-			logrus.Infof("reuse exist server on port:%d", tmp.port)
-			tmp.setFinished()
+// waitForStartup It's a goal to start 'dfget server' process and make it working
+// within 300ms, such as in the case of downloading very small files, especially
+// in parallel.
+// The ticker which has a 5ms period can test the server whether is working
+// successfully as soon as possible.
+// Actually, it costs about 70ms for 'dfget client' to start a `dfget server`
+// process if everything goes right without any failure. So the remaining time
+// for retrying to launch server internal is about 230ms. And '233' is just
+// right the smallest number which is greater than 230, a prime, and not a
+// multiple of '5'.
+// And there is only one situation which should be retried again: the address
+// already in use. The remaining time is enough for it to retry 10 times to find
+// another available address in majority of cases.
+func waitForStartup(result chan error, p2pPtr *unsafe.Pointer) (err error) {
+	ticker := time.NewTicker(5 * time.Millisecond)
+	defer ticker.Stop()
+	timeout := time.After(233 * time.Millisecond)
+
+	for {
+		select {
+		case <-ticker.C:
+			tmp := loadSrvPtr(p2pPtr)
+			if tmp != nil && uploaderAPI.PingServer(tmp.host, tmp.port) {
+				return nil
+			}
+		case err = <-result:
+			tmp := loadSrvPtr(p2pPtr)
+			if err == nil {
+				logrus.Infof("reuse exist server on port:%d", tmp.port)
+				tmp.setFinished()
+			}
+			return err
+		case <-timeout:
+			// The peer server go routine will block and serve if it starts successfully.
+			// So we have to wait a moment and check again whether the peer server is
+			// started.
+			tmp := loadSrvPtr(p2pPtr)
+			if tmp == nil {
+				return fmt.Errorf("initialize peer server error")
+			}
+			if !uploaderAPI.PingServer(tmp.host, tmp.port) {
+				return fmt.Errorf("can't ping port:%d", tmp.port)
+			}
+			return nil
 		}
-		return err
-	case <-time.After(100 * time.Millisecond):
-		// The peer server go routine will block and serve if it starts successfully.
-		// So we have to wait a moment and check again whether the peer server is
-		// started.
-		tmp := loadSrvPtr(p2pPtr)
-		if tmp == nil {
-			return fmt.Errorf("initialize peer server error")
-		}
-		if !uploaderAPI.PingServer(tmp.host, tmp.port) {
-			return fmt.Errorf("can't ping port:%d", tmp.port)
-		}
-		return nil
 	}
 }
 

@@ -148,6 +148,10 @@ func (pe *peerServerExecutor) checkPeerServerExist(cfg *config.Config, port int)
 	if port <= 0 {
 		port = getPortFromMeta(cfg.RV.MetaPath)
 	}
+	if port <= 0 {
+		// port 0 is invalid
+		return 0
+	}
 
 	// check the peer server whether is available
 	result, err := checkServer(cfg.RV.LocalIP, port, cfg.RV.DataDir, taskFileName, int(cfg.TotalLimit))
