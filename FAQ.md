@@ -21,6 +21,17 @@ It delivers up to 57 times the throughput of native docker and saves up to 99.5%
 
 Dragonfly makes it simple and cost-effective to set up, operate, and scale any kinds of files/images/data distribution.
 
+## What is the difference between Dragonfly's P2P algorithm and bit-torrent(BT)
+
+Dragonfly's P2P algorithm and bit-torrent(BT) are both the implementation of peer-to-peer protocol. For the difference between them, we describe them in the following table:
+
+|Aspect|Dragonfly|Bit-Torrent(BT)|
+|:-:|:-:|:-:|
+|seed's dynamically compress| support| no support|
+|resume from break-point|support|no support|
+|dynamically block size setting|support, see [question](#what-is-the-size-of-blockpiece-when-distribution)| no support(block size is fixed)|
+|transparent of seed to client|support(user only needs to provide URL of file)|no support(BT needs to generate seed in tracker first, and then provide it to client) |
+
 ## Is Dragonfly only designed for distribute container images
 
 No, Dragonfly can be used to distribute all kinds of files, not only container images. For downloading files by Dragonfly, please refer to [Download a File](https://github.com/dragonflyoss/Dragonfly/blob/master/docs/quick_start/README.md#downloading-a-file-with-dragonfly). For pulling images by Dragonfly, please refer to [Pull an Image](https://github.com/dragonflyoss/Dragonfly/blob/master/docs/quick_start/README.md#pulling-an-image-with-dragonfly).
@@ -31,13 +42,34 @@ Supernode will maintain a bitmap which records the correspondence between peers 
 
 **NOTE**: The scheduler will decide whether to download from the supernode or other peers. As for the detail of the scheduler, please refer to [scheduler algorithm](#what-is-the-peer-scheduling-algorithm-by-default)
 
+## What is the size of block(piece) when distribution
+
+Dragonfly tries to make block(piece) size dynamically to ensure efficiency.
+
+The size of pieces which is calculated as per the following strategy:
+
+- If file's total size is less than 200MB, then the piece size is `4MB` by default.
+- Otherwise, it equals to `min{ totalSize/100MB + 2 MB, 15MB }`.
+
+## What is the peer scheduling algorithm by default
+
+- Distribute the number of pieces evenly. Select the pieces with the smallest number in the entire P2P network so that the distribution of each piece in the P2P network is balanced to avoid "Nervous resources".
+
+- Nearest distance priority. For a peer, the piece closest to the piece currently being downloaded is preferentially selected, so that the peer can achieve the effect of sequential read and write approximately, which will improve the I/O efficiency of file.
+
+- Local blacklist and global blacklist. An example is easier to understand: When peer A fails to download from peer B, B will become the local blacklist of A, and then the download tasks of A will filter B out; When the number of failed downloads from B reaches a certain threshold, B will become the global blacklist, and all the download tasks will filter B out.
+
+- Self-isolation. PeerA will only download files from the supernode after it fails to download multiple times from other peers, and will also be added to the global blacklist. So the peer A will no longer interact with peers other than the supernode.
+
+- Peer load balancing. This mechanism will control the number of upload pieces and download pieces that each peer can provide simultaneously and the priority as the target peer.
+
 ## How do supernode and peers manage file cache which is ready for other peer's pulling
 
-Supernode will download files and cache them via CDN. For more information, please refer to [The sequence of supernode's CDN functionality](#what-is-the-sequence-of-supernode's-cdn-functionality).
+For supernode, it will download files and cache them via CDN. For more information, please refer to [The sequence of supernode's CDN functionality](#what-is-the-sequence-of-supernode's-cdn-functionality).
 
-After finishing distributing file from other peers, `dfget` should do two kinds of things:
+For one peer, after finishing distributing file from other peers, `dfget` will do these things:
 
-- first, construct all the pieces into unioned file(s);
+- first, construct all the pieces into a unioned file(s);
 - second, backup the unioned file(s) in a configured directory, by default "$HOME/.small-dragonfly/data" with a suffix of ".server";
 - third, move the original unioned file(s) to the destination path.
 
@@ -61,54 +93,23 @@ If the requested file has already been cached in supernode, supernode will send 
 
 In addition, supernode does not have to wait for all the piece downloading finished, so it can concurrently start pieces downloading once one piece has been downloaded.
 
-## What will happen  if you kill the dfget server process or delete the source files
+## What will happen if you kill the dfget server process or delete the source files
 
 If a file on a peer is deleted manually or by GC, the supernode won't know that. And in the subsequent scheduling, if multiple download tasks fail from this peer, the scheduler will add it to a blacklist. So do with that if the server process is killed or other abnormal conditions.
-
-## What is the peer scheduling algorithm by default
-
-- Distribute the number of pieces evenly. Select the pieces with the smallest number in the entire P2P network so that the distribution of each piece in the P2P network is balanced to avoid "Nervous resources".
-
-- Nearest distance priority. For a peer, the piece closest to the piece currently being downloaded is preferentially selected, so that the peer can achieve the effect of sequential read and write approximately, which will improve the I/O efficiency of file.
-
-- Local blacklist and global blacklist. An example is easier to understand: When peer A fails to download from peer B, B will become the local blacklist of A, and then the download tasks of A will filter B out; When the number of failed downloads from B reaches a certain threshold, B will become the global blacklist, and all the download tasks will filter B out.
-
-- Self-isolation. PeerA will only download files from the supernode after it fails to download multiple times from other peers, and will also be added to the global blacklist. So the peer A will no longer interact with peers other than the supernode.
-
-- Peer load balancing. This mechanism will control the number of upload pieces and download pieces that each peer can provide simultaneously and the priority as the target peer.
-
-## What is the size of block(piece) when distribution
-
-Dragonfly tries to make block(piece) size dynamically to ensure efficiency.
-
-The size of pieces which is calculated as per the following strategy:
-
-- If file's total size is less than 200MB, then the piece size is `4MB` by default.
-- Otherwise, it equals to `min{ totalSize/100MB + 2 MB, 15MB }`.
-
-## What is the difference between Dragonfly's P2P algorithm and bit-torrent(BT)
-
-Dragonfly's P2P algorithm and bit-torrent(BT) are both the implementation of peer-to-peer protocol. For the difference between them, we describe them in the following table:
-
-|Aspect|Dragonfly|Bit-Torrent(BT)|
-|:-:|:-:|:-:|
-|seed's dynamically compress| support| no support|
-|resume from break-point|support|no support|
-|dynamically block size setting|support, see [question](#what-is-the-size-of-blockpiece-when-distribution)| no support(block size is fixed)|
-|transparent of seed to client|support(user only needs to provide URL of file)|no support(BT needs to generate seed in tracker first, and then provide it to client) |
 
 ## What is the policy of bandwidth limit in peer network
 
 We can enforce network bandwidth limit on both peer nodes and supernode of Dragonfly cluster.
 
-For peer node itself, Dragonfly can set network bandwidth limit for two parts:
+For one peer node, Dragonfly can set network bandwidth limit for two parts:
 
-- one single downloading task; by default, limit is 10MB/s per downloading task. User can set task network bandwidth limit by parameter `--locallimit` within `dfget`.
-- the whole network bandwidth consumed by P2P distribution on the peer node. This can be configured via parameter `totallimit` within `dfget`. If user has set `--totallimit=40M`, then both TX and RX limit are 40 MB/s.
+- one single downloading task; by default, limit is 20MB/s per downloading task. User can set task RX limit by parameter `--locallimit` within `dfget`.
+- the whole network bandwidth consumed by P2P distribution on the peer node. This can be configured via parameter `totallimit` within `dfget`. If user has set `--totallimit=40M`, then **both TX and RX limit** are 40 MB/s.
 
-For supernode, Dragonfly allows user to limit both the input and output network bandwidth.
+**NOTE**: In fact, there may be multiple download tasks on a node and the RX limit of each task will be affected by `totallimit`.
+Assuming that there are two tasks with localLimit of 20MB and the totalLimit is 20MB. In fact, the RX limit of each task will eventually be adjusted to 10MB.
 
-You can also config it with config files, refer to [link](./docs/cli_reference/dfget.md#etcdragonflyconf).
+For supernode, Dragonfly allows user to config the RX limit by configuration item `MaxBandwidth` and `SystemReservedBandwidth` through flags or [supernode config file](./docs/config/supernode_properties.md).
 
 ## Why does dfget still keep running after file/image distribution finished
 
@@ -123,17 +124,7 @@ Only when there is no new task to download file/images or no other peers coming 
 
 ## Do I have to change my container engine configuration to support Dragonfly
 
-Currently Dragonfly supports almost all kinds of container engines, such as Docker, [PouchContainer](https://github.com/alibaba/pouch). When using Dragonfly, only one part of container engine's configuration needs to be updated. It is the `registry-mirrors` configuration. This configuration update aims at making image pulling requests, which does not contain a third-party non-dockerhub registry address, from container engine will all be sent to `dfdaemon` process locally. And dfget does the request translation thing and proxies it to `dfget` locally.
-
-Configure container engine's `registry-mirrors` is quite easy. We take docker as an example. Administrator should modify configuration file of docker `/etc/docker/daemon.json` to add the following item:
-
-```yml
-"registry-mirrors": ["http://127.0.0.1:65001"]
-```
-
-With updating the configuration, request `docker pull mysql:5.6` will be sent to dfdaemon, while request `docker pull a.b.com/mysql:5.6` will not be sent to dfdaemon. Because docker engine only deals with official images from docker hub to take advantages of registry mirror. However, if you set `--registry a.b.com` in dfdaemon, and send a request `docker pull mysql:5.6`, dfdaemon will proxy the request and distributes image `mysql:5.6` from registry `a.b.com`.
-
-> Note: please remember restarting container engine after updating configuration.
+Sorry to tell you, yes. FYI: [Docker Proxy Configuration](./docs/user_guide/docker_proxy.md)
 
 ## Can I set dfdaemon as HTTP_PROXY?
 
@@ -172,15 +163,19 @@ dfget --node supernode01,supernode02,supernode03
 
 NOTE: If you use dfdaemon to call dfget, you can also pass this parameter to dfget via `dfdaemon --node`.
 
+## How dfget connect to supernodes in multiple-supernode mode
+
+If supernodes are set in multiple-supernode mode, dfget will connect to one of these supernodes randomly.
+Because dfget will randomize the order of all supernodes it knows and store them in a slice.
+If dfget connects to the first supernode unsuccessfully, it will connect to the second supernode in the slice.
+And so on until all the known supernodes fail to access twice, the dfget will exit with download failure.
+
 ## How to use Dragonfly in Kubernetes
 
-It is very easy to deploy Dragonfly in Kubernetes with [Helm](https://github.com/helm/helm). For more information of Dragonfly's Helm Chart, please refer to project [dragonflyoss/helm-chart](https://github.com/dragonflyoss/helm-chart).
+It is very easy to deploy Dragonfly in Kubernetes with [Helm](https://github.com/helm/helm).
+FYI, please refer to [Kubernetes-with-Dragonfly](./docs/ecosystem/Kubernetes-with-Dragonfly.md).
 
-## Can an image from a third-party registry be pulled via Dragonfly
-
-We **CANNOT** pull an image from a third-party registry via Dragonfly. Images from third-party registry means that the name of image has no registry address, for example, image `a.b.com/admin/mysql:5.6` is a third-party image, and it is from registry `a.b.com`. To the opposite, `admin/mysql:5.6` is not from third-party registry, because name of the image does not contain a registry address.
-
-Because administrator needs to configure `--registry-mirrors=["http://127.0.0.1:65001"]` for container engine to proxy part of image pulling requests to `dfdaemon` which listens on 65001 locally, images not from a third-part registry will use this registry mirror. However, when user pulls image `a.b.com/admin/mysql:5.6` which contains a third-party registry address, the container engine will directly access the third-party registry to pull the image, ignoring the configured registry mirror. Then It has nothing to do with the `dfdaemon` within Dragonfly.
+**NOTE**: For more information of Dragonfly's Helm Chart, please refer to project [dragonflyoss/helm-chart](https://github.com/dragonflyoss/helm-chart).
 
 ## Where is the log directory of Dragonfly client dfget
 
@@ -218,13 +213,9 @@ Follow these steps to clean up the data directory manually:
 
 ## Does Dragonfly support pulling images from an HTTPS enabled registry
 
-Currently, Dragonfly **DOES NOT** support pulling images from an HTTPS enabled registry.
+Yes, of course. Please refer to [Docker Proxy](docs/user_guide/docker_proxy.md).
 
-`dfdaemon` is a proxy between container engine and registry. It captures every request sent from container engine to registry, filters out all the image layer downloading requests and uses `dfget` to download them.
-
-We should investigate HTTPS proxy implementation and make it possible for dfdaemon to get HTTP data from tcp data, analysis them and download image layers correctly.
-
-We are planning to support this feature in Dragonfly 0.5.0.
+**NOTE**: Only the version upper 0.4.3(inclusive) support HTTPS enabled registry.
 
 ## Does Dragonfly support pulling an private image which needs username/password authentication
 
@@ -314,10 +305,3 @@ If you are in China,docker container uses UTC time(Coordinated Universal Time) a
 ## How to join Dragonfly as a member
 
 Please check the [CONTRIBUTING.md](CONTRIBUTING.md#join-dragonfly-as-a-member)
-
-## How dfget connect to supernodes in multiple-supernode mode
-
-If supernodes are set in multiple-supernode mode, dfget will connect to one of these supernodes randomly.
-Because dfget will randomize the order of all supernodes it knows and store them in a slice.
-If dfget connects to the first supernode unsuccessfully, it will connect to the second supernode in the slice.
-And so on until all the known supernodes fail to access twice, the dfget will exit with download failure.
