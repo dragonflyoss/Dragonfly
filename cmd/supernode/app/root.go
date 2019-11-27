@@ -23,6 +23,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/pkg/cmd"
 	"github.com/dragonflyoss/Dragonfly/pkg/dflog"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
@@ -50,9 +51,15 @@ var (
 	supernodeViper = viper.GetViper()
 )
 
+// supernodeDescription is used to describe supernode command in details.
+var supernodeDescription = `SuperNode is a long-running process with two primary responsibilities:
+It's the tracker and scheduler in the P2P network that choose appropriate downloading net-path for each peer.
+It's also a CDN server that caches downloaded data from source to avoid downloading the same files from source repeatedly.`
+
 var rootCmd = &cobra.Command{
-	Use:          "Dragonfly Supernode",
-	Long:         "",
+	Use:          "supernode",
+	Short:        "the central control server of Dragonfly used for scheduling and cdn cache",
+	Long:         supernodeDescription,
 	Args:         cobra.NoArgs,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -115,6 +122,7 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	setupFlags(rootCmd)
+	rootCmd.AddCommand(cmd.NewGenDocCommand("supernode"))
 }
 
 // setupFlags setups flags for command line.
