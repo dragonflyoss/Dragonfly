@@ -26,6 +26,7 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core"
+	"github.com/dragonflyoss/Dragonfly/pkg/cmd"
 	"github.com/dragonflyoss/Dragonfly/pkg/dflog"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/printer"
@@ -67,6 +68,7 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	initFlags()
+	rootCmd.AddCommand(cmd.NewGenDocCommand("dfget"))
 }
 
 // runDfget does some init operations and starts to download.

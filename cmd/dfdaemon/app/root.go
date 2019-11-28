@@ -27,6 +27,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfdaemon"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
+	"github.com/dragonflyoss/Dragonfly/pkg/cmd"
 	dferr "github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/rate"
@@ -105,6 +106,7 @@ func init() {
 	rf.StringSlice("node", nil, "specify the addresses(host:port) of supernodes that will be passed to dfget.")
 
 	exitOnError(bindRootFlags(viper.GetViper()), "bind root command flags")
+	rootCmd.AddCommand(cmd.NewGenDocCommand("dfdaemon"))
 }
 
 // bindRootFlags binds flags on rootCmd to the given viper instance.
