@@ -98,7 +98,7 @@ func NetLimit() *rate.Rate {
 				continue
 			}
 			speed := compile.FindStringSubmatch(fields[1])
-			if len(speed) == 0 {
+			if len(speed) <= 1 {
 				continue
 			}
 			if tmpLimit, err := strconv.ParseUint(speed[1], 0, 32); err == nil {
