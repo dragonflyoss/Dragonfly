@@ -57,11 +57,12 @@ It's the tracker and scheduler in the P2P network that choose appropriate downlo
 It's also a CDN server that caches downloaded data from source to avoid downloading the same files from source repeatedly.`
 
 var rootCmd = &cobra.Command{
-	Use:          "supernode",
-	Short:        "the central control server of Dragonfly used for scheduling and cdn cache",
-	Long:         supernodeDescription,
-	Args:         cobra.NoArgs,
-	SilenceUsage: true,
+	Use:               "supernode",
+	Short:             "the central control server of Dragonfly used for scheduling and cdn cache",
+	Long:              supernodeDescription,
+	Args:              cobra.NoArgs,
+	DisableAutoGenTag: true, // disable displaying auto generation tag in cli docs
+	SilenceUsage:      true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// load config file.
 		if err := readConfigFile(supernodeViper, cmd); err != nil {
