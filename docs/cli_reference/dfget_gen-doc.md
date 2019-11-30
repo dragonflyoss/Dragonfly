@@ -1,10 +1,10 @@
 ## dfget gen-doc
 
-Generate Document for dfget command line tool with MarkDown format
+Generate Document for dfget command line tool in MarkDown format
 
 ### Synopsis
 
-Generate Document for dfget command line tool with MarkDown format
+Generate Document for dfget command line tool in MarkDown format
 
 ```
 dfget gen-doc [flags]

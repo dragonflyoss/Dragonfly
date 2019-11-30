@@ -1,10 +1,10 @@
 ## dfdaemon gen-doc
 
-Generate Document for dfdaemon command line tool with MarkDown format
+Generate Document for dfdaemon command line tool in MarkDown format
 
 ### Synopsis
 
-Generate Document for dfdaemon command line tool with MarkDown format
+Generate Document for dfdaemon command line tool in MarkDown format
 
 ```
 dfdaemon gen-doc [flags]

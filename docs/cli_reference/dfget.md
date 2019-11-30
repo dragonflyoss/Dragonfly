@@ -66,7 +66,7 @@ download SUCCESS cost:0.026s length:141898 reason:0
 
 ### SEE ALSO
 
-* [dfget gen-doc](dfget_gen-doc.md)	 - Generate Document for dfget command line tool with MarkDown format
+* [dfget gen-doc](dfget_gen-doc.md)	 - Generate Document for dfget command line tool in MarkDown format
 * [dfget server](dfget_server.md)	 - Launch a peer server for uploading files.
 * [dfget version](dfget_version.md)	 - Show the current version of dfget
 
