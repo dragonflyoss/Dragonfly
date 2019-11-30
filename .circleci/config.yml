@@ -5,6 +5,7 @@ version: 2.1
 orbs:
   # See https://circleci.com/orbs/registry/orb/circleci/go.
   go: circleci/go@0.2.0
+  compare-url: iynere/compare-url@1.2.0
 
 jobs:
   linters-check:
@@ -70,6 +71,9 @@ jobs:
     working_directory: /go/src/github.com/dragonflyoss/Dragonfly
     steps:
       - checkout
+      - compare-url/reconstruct
+      - compare-url/use:
+          custom-logic: hack/check-docs-only-update.sh
       - go/load-cache
       - run:
           name: build client
@@ -92,6 +96,10 @@ jobs:
     working_directory: /go/src/github.com/dragonflyoss/Dragonfly
     steps:
       - checkout
+      - compare-url/reconstruct
+      - run:
+          name: check docs-only update
+          command: hack/check-docs-only-update.sh
       - go/load-cache
       - run:
           name: build dragonfly & run all integration test cases in test
