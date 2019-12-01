@@ -1477,7 +1477,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "process_resident_memory_bytes{job=\"service\", instance=~\".*:8002\"}/1024/1024",
+          "expr": "process_resident_memory_bytes{instance=\"$supernode\"}/1024/1024",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{instance}}",
