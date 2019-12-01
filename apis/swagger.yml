@@ -267,7 +267,7 @@ paths:
           default: "ASC"
           enum: ["ASC", "DESC"]
       responses:
-        201:
+        200:
           description: "no error"
           schema:
             type: "array"
