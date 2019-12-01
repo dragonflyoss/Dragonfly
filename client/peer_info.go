@@ -23,14 +23,13 @@ import (
 )
 
 // PeerInfo gets detailed information of a peer in supernode.
-func (client *APIClient) PeerInfo(ctx context.Context, id string) (*types.PeerInfo, error) {
-	resp, err := client.get(ctx, "/peers/"+id, nil, nil)
+func (client *APIClient) PeerInfo(ctx context.Context, id string) (peerInfoResponse *types.PeerInfo, err error) {
+	resp, err := client.get(ctx, "/api/v1/peers/"+id, nil, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	peer := &types.PeerInfo{}
-
 	err = decodeBody(peer, resp.Body)
 	ensureCloseReader(resp)
 

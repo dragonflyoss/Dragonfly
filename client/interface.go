@@ -25,9 +25,28 @@ import (
 // CommonAPIClient defines common methods of api client.
 type CommonAPIClient interface {
 	PreheatAPIClient
+	PeerAPIClient
+	TaskAPIClient
 }
 
 // PreheatAPIClient defines methods of Container client.
 type PreheatAPIClient interface {
-	PreheatCreate(ctx context.Context, config *types.PreheatCreateRequest) (*types.PreheatCreateResponse, error)
+	PreheatCreate(ctx context.Context, request *types.PreheatCreateRequest) (preheatCreateResponse *types.PreheatCreateResponse, err error)
+	PreheatInfo(ctx context.Context, id string) (preheatInfoResponse *types.PreheatInfo, err error)
+}
+
+// PeerAPIClient defines methods of peer related client.
+type PeerAPIClient interface {
+	PeerCreate(ctx context.Context, request *types.PeerCreateRequest) (peerCreateResponse *types.PeerCreateResponse, err error)
+	PeerDelete(ctx context.Context, id string) error
+	PeerInfo(ctx context.Context, id string) (peerInfoResponse *types.PeerInfo, err error)
+	PeerList(ctx context.Context, id string) (peersInfoResponse []*types.PeerInfo, err error)
+}
+
+// TaskAPIClient defines methods of task related client.
+type TaskAPIClient interface {
+	TaskCreate(ctx context.Context, request *types.TaskCreateRequest) (taskCreateResponse *types.TaskCreateResponse, err error)
+	TaskDelete(ctx context.Context, id string) error
+	TaskInfo(ctx context.Context, id string) (taskInfoResponse *types.TaskInfo, err error)
+	TaskUpdate(ctx context.Context, id string, config *types.TaskUpdateRequest) error
 }

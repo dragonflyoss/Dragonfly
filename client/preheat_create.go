@@ -23,7 +23,7 @@ import (
 )
 
 // PreheatCreate creates a preheat task.
-func (client *APIClient) PreheatCreate(ctx context.Context, config *types.PreheatCreateRequest) (*types.PreheatCreateResponse, error) {
+func (client *APIClient) PreheatCreate(ctx context.Context, config *types.PreheatCreateRequest) (preheatCreateResponse *types.PreheatCreateResponse, err error) {
 	resp, err := client.post(ctx, "/preheats", nil, config, nil)
 	if err != nil {
 		return nil, err
