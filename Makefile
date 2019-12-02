@@ -114,13 +114,6 @@ integration-test:  ## Run integration test
 	@go test ./test
 .PHONY: integration-test
 
-check: boilerplate-check  ## Check code formats
-	@echo "Begin to check code formats."
-	./hack/check.sh
-	@echo "Begin to check dockerd whether is startup"
-	./hack/check-docker.sh
-.PHONY: check
-
 boilerplate-check:  ## Check code boilerplate
 	@echo "Begin to check code boilerplate."
 	./hack/boilerplate-check.sh
@@ -130,11 +123,6 @@ go-mod-tidy:  ## Tidy up go.mod and go.sum
 	@echo "Begin to tidy up go.mod and go.sum"
 	@go mod tidy
 .PHONY: go-mod-tidy
-
-go-mod-vendor:  ## Vendor go mod dependency
-	@echo "Begin to vendor go mod dependency"
-	@go mod vendor
-.PHONY: go-mod-vendor
 
 check-go-mod: go-mod-tidy  ## Check for unused/missing packages in go.mod
 	@echo "Begin to check for unused/missing packages in go.mod"
