@@ -281,7 +281,7 @@ dfget sends request to register in Supernode as a peer node
 
 |HTTP Code|Description|Schema|
 |---|---|---|
-|**201**|no error|< [PeerInfo](#peerinfo) > array|
+|**200**|no error|< [PeerInfo](#peerinfo) > array|
 |**400**|bad parameter|[Error](#error)|
 |**500**|An unexpected server error occurred.|[Error](#error)|
 
