@@ -23,8 +23,8 @@ import (
 )
 
 // PeerList lists detailed information of all peers in supernode.
-func (client *APIClient) PeerList(ctx context.Context, id string) ([]*types.PeerInfo, error) {
-	resp, err := client.get(ctx, "/peers", nil, nil)
+func (client *APIClient) PeerList(ctx context.Context, id string) (peersInfoResponse []*types.PeerInfo, err error) {
+	resp, err := client.get(ctx, "/api/v1/peers", nil, nil)
 	if err != nil {
 		return nil, err
 	}

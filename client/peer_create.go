@@ -23,8 +23,8 @@ import (
 )
 
 // PeerCreate creates a peer node in supernode.
-func (client *APIClient) PeerCreate(ctx context.Context, config *types.PeerCreateRequest) (*types.PeerCreateResponse, error) {
-	resp, err := client.post(ctx, "/peers", nil, config, nil)
+func (client *APIClient) PeerCreate(ctx context.Context, request *types.PeerCreateRequest) (peerCreateResponse *types.PeerCreateResponse, err error) {
+	resp, err := client.post(ctx, "/api/v1/peers", nil, request, nil)
 	if err != nil {
 		return nil, err
 	}

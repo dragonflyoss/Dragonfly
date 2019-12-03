@@ -23,8 +23,8 @@ import (
 )
 
 // TaskCreate creates a task in supernode.
-func (client *APIClient) TaskCreate(ctx context.Context, config *types.TaskCreateRequest) (*types.TaskCreateResponse, error) {
-	resp, err := client.post(ctx, "/tasks", nil, config, nil)
+func (client *APIClient) TaskCreate(ctx context.Context, request *types.TaskCreateRequest) (taskCreateResponse *types.TaskCreateResponse, err error) {
+	resp, err := client.post(ctx, "/api/v1/tasks", nil, request, nil)
 	if err != nil {
 		return nil, err
 	}

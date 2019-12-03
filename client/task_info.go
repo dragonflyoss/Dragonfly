@@ -23,7 +23,7 @@ import (
 )
 
 // TaskInfo gets detailed information of a task in supernode.
-func (client *APIClient) TaskInfo(ctx context.Context, id string) (*types.TaskInfo, error) {
+func (client *APIClient) TaskInfo(ctx context.Context, id string) (taskInfoResponse *types.TaskInfo, err error) {
 	resp, err := client.get(ctx, "/tasks/"+id, nil, nil)
 	if err != nil {
 		return nil, err

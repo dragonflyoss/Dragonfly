@@ -22,7 +22,7 @@ import (
 
 // PeerDelete deletes the specified peer in supernode.
 func (client *APIClient) PeerDelete(ctx context.Context, id string) error {
-	resp, err := client.delete(ctx, "/peers/"+id, nil, nil)
+	resp, err := client.delete(ctx, "/api/v1/peers/"+id, nil, nil)
 	if err != nil {
 		return err
 	}
