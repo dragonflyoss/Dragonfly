@@ -1,14 +1,12 @@
 # Installing Dragonfly Server
 
-This topic explains how to install the Dragonfly server with **Golang version**.
-
-**NOTE**: The Golang version supernode is **not ready for production usage**. However, you can use it more easily in your test environment.
+This topic explains how to install the Dragonfly server.
 
 ## Context
 
-Install the SuperNodes in one of the following ways:
+Install supernode in one of the following ways:
 
-- Deploying with Docker: Recommended for quick local deployment and test.
+- Deploying with Docker.
 - Deploying with physical machines: Recommended for production usage.
 
 ## Prerequisites
@@ -30,14 +28,14 @@ Nginx|0.8+
 
 ## Procedure - When Deploying with Docker
 
-### Get SuperNode image
+### Get supernode image
 
 You can get it from [DockerHub](https://hub.docker.com/) directly.
 
-1. Obtain the latest Docker image ID of the SuperNode.
+1. Obtain the latest Docker image ID of the supernode.
 
     ```sh
-    docker pull dragonflyoss/supernode:0.4.3
+    docker pull dragonflyoss/supernode:1.0.0
     ```
 
 Or you can build your own supernode image.
@@ -57,29 +55,46 @@ Or you can build your own supernode image.
 3. Build the Docker image.
 
     ```sh
-    TAG="0.4.3"
+    TAG="1.0.0"
     make docker-build-supernode DF_VERSION=$TAG
     ```
 
-4. Obtain the latest Docker image ID of the SuperNode.
+4. Obtain the latest Docker image ID of the supernode.
 
     ```sh
-    docker image ls|grep 'supernode' |awk '{print $3}' | head -n1
+    docker image ls | grep 'supernode' | awk '{print $3}' | head -n1
     ```
 
-### Start the SuperNode
+### Start supernode
 
-**NOTE**: Replace ${supernodeDockerImageId} with the ID obtained at the previous step.
+**NOTE:** Replace ${supernodeDockerImageId} with the ID obtained at the previous step.
 
 ```sh
-docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 -v /home/admin/supernode:/home/admin/supernode dragonflyoss/supernode:0.4.3 --download-port=8001
-
-or
-
-docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 -v /home/admin/supernode:/home/admin/supernode ${supernodeDockerImageId} --download-port=8001
+version=1.0.0
+docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 -v /home/admin/supernode:/home/admin/supernode dragonflyoss/supernode:$version --download-port=8001
 ```
 
 ## Procedure - When Deploying with Physical Machines
+
+### Get supernode executable file
+
+1. Download a binary package of the supernode. You can download one of the latest builds for Dragonfly on the [github releases page](https://github.com/dragonflyoss/Dragonfly/releases).
+
+    ```sh
+    version=1.0.0
+    wget https://github.com/dragonflyoss/Dragonfly/releases/download/v$version/Dragonfly_$version_linux_amd64.tar.gz
+    ```
+
+2. Unzip the package.
+
+    ```bash
+    # Replace `xxx` with the installation directory.
+    tar -zxf Dragonfly_1.0.0_linux_amd64.tar.gz -C xxx
+    ```
+
+3. Move the `supernode` to your `PATH` environment variable to make sure you can directly use `supernode` command.
+
+Or you can build your own supernode executable file.
 
 1. Obtain the source code of Dragonfly.
 
@@ -99,41 +114,53 @@ docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 -v /ho
     make build-supernode && make install-supernode
     ```
 
-4. Start the SuperNode.
+### Start supernode
 
     ```sh
-    supernode --home-dir=/home/admin/supernode --port=8002 --download-port=8001
+    supernodeHomeDir=/home/admin/supernode
+    supernodeDownloadPort=8001
+    supernode --home-dir=$supernodeHomeDir --port=8002 --download-port=$supernodeDownloadPort
     ```
 
-5. Add the following configuration items to the Nginx configuration file.
+### Start file server
 
-    ```conf
-    server {
-    listen 8001;
-    location / {
-      # Must be ${supernode.baseHome}/repo
-      root /home/admin/supernode/repo;
-     }
+You can start a file server in any way. However, the following conditions must be met:
+
+- It must be rooted at `${supernodeHomeDir}/repo` which is defined in the previous step.
+- It must listen on the port `supernodeDownloadPort` which is defined in the previous step.
+
+And let's take nginx as an example.
+
+1. Add the following configuration items to the Nginx configuration file.
+
+   ```conf
+   server {
+   # Must be ${supernodeDownloadPort}
+   listen 8001;
+   location / {
+     # Must be ${supernodeHomeDir}/repo
+     root /home/admin/supernode/repo;
     }
-    ```
+   }
+   ```
 
-6. Start Nginx.
+2. Start Nginx.
 
-    ```sh
-    sudo nginx
-    ```
+   ```sh
+   sudo nginx
+   ```
 
 ## After this Task
 
-- After the SuperNode is installed, run the following commands to verify if Nginx and **Supernode** are started, and if Port `8001` and `8002` are available.
+- After supernode is installed, run the following commands to verify if Nginx and **supernode** are started, and if Port `8001` and `8002` are available.
 
     ```sh
     telnet 127.0.0.1 8001
     telnet 127.0.0.1 8002
     ```
 
-- Install the Dragonfly client and test if the downloading works.
+- [Install the Dragonfly client](./install_client.md) and test if the downloading works.
 
     ```sh
-    dfget --url "http://${resourceUrl}" --output ./resource.png --node "127.0.0.1:8002"
+    dfget --url "http://${resourceUrl}" --output ./resource.png --node "127.0.0.1:8002=1"
     ```
