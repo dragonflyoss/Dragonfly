@@ -96,7 +96,6 @@ func NewProperties() *Properties {
 		LocalLimit:      DefaultLocalLimit,
 		MinRate:         DefaultMinRate,
 		ClientQueueSize: DefaultClientQueueSize,
-		TotalLimit:      DefaultTotalLimit,
 	}
 }
 

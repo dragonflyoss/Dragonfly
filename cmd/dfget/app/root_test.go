@@ -39,7 +39,7 @@ func (suit *dfgetSuit) Test_initFlagsNoArguments() {
 	initProperties()
 	suit.Equal(cfg.Nodes, []string{"127.0.0.1:8002"})
 	suit.Equal(cfg.LocalLimit, 20*rate.MB)
-	suit.Equal(cfg.TotalLimit, 20*rate.MB)
+	suit.Equal(cfg.TotalLimit, rate.Rate(0))
 	suit.Equal(cfg.Notbs, false)
 	suit.Equal(cfg.DFDaemon, false)
 	suit.Equal(cfg.Console, false)
