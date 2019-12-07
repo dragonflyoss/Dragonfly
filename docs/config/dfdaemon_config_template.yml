@@ -2,41 +2,42 @@
 # You can configure your dfdaemon by change the parameter according your requirement.
 
 # RegistryMirror configures the mirror of the official docker registry
+---
 registry_mirror:
-    # url for the registry mirror
-    # Remote url for the registry mirror, default is https://index.docker.io
-　　remote: https://index.docker.io
-    # whether to ignore https certificate errors
-　　insecure: false
-    # optional certificates if the remote server uses self-signed certificates
-　　certs: []
+   # url for the registry mirror
+   # Remote url for the registry mirror, default is https://index.docker.io
+   remote: https://index.docker.io
+   # whether to ignore https certificate errors
+   insecure: false
+   # optional certificates if the remote server uses self-signed certificates
+   certs: []
 
 # Proxies is the list of rules for the transparent proxy. If no rules
 # are provided, all requests will be proxied directly. Request will be
 # proxied with the first matching rule.
 proxies:
-    # proxy all http image layer download requests with dfget
-　　- regx: blobs/sha256.*
-    # change http requests to some-registry to https and proxy them with dfget
-　　- regx: some-registry/
-　　　　use_https: true
-    # proxy requests directly, without dfget
-　　- regx: no-proxy-reg
-　　　　direct: true
+   # proxy all http image layer download requests with dfget
+   - regx: blobs/sha256.*
+   # change http requests to some-registry to https and proxy them with dfget
+   - regx: some-registry/
+     use_https: true
+   # proxy requests directly, without dfget
+   - regx: no-proxy-reg
+     direct: true
 
 # HijackHTTPS is the list of hosts whose https requests should be hijacked
 # by dfdaemon. Dfdaemon will be able to proxy requests from them with dfget
 # if the url matches the proxy rules. The first matched rule will be used.
 hijack_https:
-    # key pair used to hijack https requests
-　　cert: df.crt
-　　key: df.key
-　　hosts:
-　　　　- regx: mirror.aliyuncs.com:443  # regexp to match request hosts
-       # whether to ignore https certificate errors
-　　　　insecure: false
-       # optional certificates if the host uses self-signed certificates
-　　　　certs: []
+   # key pair used to hijack https requests
+   cert: df.crt
+   key: df.key
+   hosts:
+      - regx: mirror.aliyuncs.com:443  # regexp to match request hosts
+        # whether to ignore https certificate errors
+        insecure: false
+        # optional certificates if the host uses self-signed certificates
+        certs: []
 
 # dfget properties
 # node: specify the addresses
@@ -45,14 +46,13 @@ hijack_https:
 # expiretime: caching duration for which cached file keeps no accessed by any process(default 3min). Deploying with Docker, this param is supported after dragonfly 0.4.3
 # alivetime: Alive duration for which uploader keeps no accessing by any uploading requests, after this period uploader will automically exit (default 5m0s)
 # f: filter some query params of URL, use char '&' to separate different params
-dfget_flags: ["--node","192.168.33.21","--verbose","--ip","192.168.33.23",
-              "--port","15001","--expiretime","3m0s","--alivetime","5m0s",
-              "-f","filterParam1&filterParam2"]
+dfget_flags: ["--node", "192.168.33.21", "--verbose", "--ip", "192.168.33.23", "--port", "15001",
+              "--expiretime", "3m0s", "--alivetime", "5m0s", "-f", "filterParam1&filterParam2"]
 
 # Specify the addresses(host:port) of supernodes, it is just to be compatible with previous versions
 supernodes:
-    - 127.0.0.1
-    - 10.10.10.1
+   - 127.0.0.1
+   - 10.10.10.1
 
 # Net speed limit,format:xxxM/K
 ratelimit: 20M
@@ -69,7 +69,7 @@ dfpath: ./dfget
 # certpem: ""
 # keypem: ""
 
-#Open detail info switch
+# Open detail info switch
 verbose: false
 
 # The maximum number of CPUs that the dfdaemon can use

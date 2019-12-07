@@ -1,4 +1,5 @@
 # Golang CircleCI 2.1 configuration file
+---
 version: 2.1
 
 orbs:
@@ -10,7 +11,7 @@ jobs:
     docker:
       # this image is built from Dockerfile
       # https://github.com/pouchcontainer/pouchlinter/blob/master/Dockerfile
-      - image: pouchcontainer/pouchlinter:v0.2.4
+      - image: dragonflyoss/linter:v0.2.7
     working_directory: /go/src/github.com/dragonflyoss/Dragonfly
     steps:
       - checkout
@@ -36,11 +37,15 @@ jobs:
       - run:
           name: use opensource tool client9/misspell to correct commonly misspelled English words
           command: |
-            find  ./* -name  "*" | xargs misspell -error
+            find  . -name  "*" | xargs misspell -error
+      - run:
+          name: use yamllint tool to check the format of all yaml files
+          command: |
+            find . -name "*.yml" | xargs yamllint -d "{extends: default, rules: {line-length: disable}}"
       - run:
           name: use ShellCheck (https://github.com/koalaman/shellcheck) to check the validateness of shell scripts in pouch repo
           command: |
-            find ./ -name "*.sh" | xargs shellcheck
+            find . -name "*.sh" | xargs shellcheck
       - run:
           name: validate go mod files
           command: |
@@ -111,7 +116,7 @@ jobs:
       - run: curl -sL https://git.io/goreleaser | bash
       - go/save-cache
 
-# TODO(yeya24): Consider changing to use goreleaser to publish images later
+  # TODO(yeya24): Consider changing to use goreleaser to publish images later
   publish-images:
     docker:
       - image: circleci/golang:1.12.10

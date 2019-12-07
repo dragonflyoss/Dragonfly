@@ -1,5 +1,6 @@
 # This is an example goreleaser.yaml file with some sane defaults.
 # Make sure to check the documentation at http://goreleaser.com
+---
 env:
   - GO111MODULE=on
   - CGO_ENABLED=0
