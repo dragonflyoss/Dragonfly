@@ -3,9 +3,10 @@
 
 # Nodes specify supernodes.
 # Where the host is necessary, the port(default: 8002) and the weight(default:1) are optional.
+---
 nodes:
-  　- 127.0.0.1=1
-  　- 10.10.10.1:8002=2
+   - 127.0.0.1=1
+   - 10.10.10.1:8002=2
 
 # LocalLimit rate limit about a single download task, format: G(B)/g/M(B)/m/K(B)/k/B
 # pure number will also be parsed as Byte.

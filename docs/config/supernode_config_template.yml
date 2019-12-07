@@ -1,6 +1,6 @@
 # This file is the template of supernode configuration file.
 # You can configure your supernode by change the parameter according your requirement.
-
+---
 base:
   # AdvertiseIP is used to set the ip that we advertise to other peer in the p2p-network.
   # By default, the first non-loop address is advertised.
