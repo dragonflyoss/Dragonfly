@@ -51,16 +51,17 @@ func initRoute(s *Server) *mux.Router {
 
 		// v1
 		// peer
-		{Method: http.MethodPost, Path: "/peers", HandlerFunc: s.registerPeer},
-		{Method: http.MethodDelete, Path: "/peers/{id}", HandlerFunc: s.deRegisterPeer},
-		{Method: http.MethodGet, Path: "/peers/{id}", HandlerFunc: s.getPeer},
-		{Method: http.MethodGet, Path: "/peers", HandlerFunc: s.listPeers},
+		{Method: http.MethodPost, Path: "/api/v1/peers", HandlerFunc: s.registerPeer},
+		{Method: http.MethodDelete, Path: "/api/v1/peers/{id}", HandlerFunc: s.deRegisterPeer},
+		{Method: http.MethodGet, Path: "/api/v1/peers/{id}", HandlerFunc: s.getPeer},
+		{Method: http.MethodGet, Path: "/api/v1/peers", HandlerFunc: s.listPeers},
+		{Method: http.MethodGet, Path: "/api/v1/tasks/{id}", HandlerFunc: s.getTaskInfo},
 
 		// task
-		{Method: http.MethodDelete, Path: "/tasks/{id}", HandlerFunc: s.deleteTask},
+		{Method: http.MethodDelete, Path: "/api/v1/tasks/{id}", HandlerFunc: s.deleteTask},
 
 		// piece
-		{Method: http.MethodGet, Path: "/tasks/{id}/pieces/{pieceRange}/error", HandlerFunc: s.handlePieceError},
+		{Method: http.MethodGet, Path: "/api/v1/tasks/{id}/pieces/{pieceRange}/error", HandlerFunc: s.handlePieceError},
 
 		// metrics
 		{Method: http.MethodGet, Path: "/metrics", HandlerFunc: handleMetrics},

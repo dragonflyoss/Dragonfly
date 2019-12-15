@@ -219,7 +219,7 @@ paths:
         500:
           $ref: "#/responses/500ErrorResponse"
 
-  /peers:
+  /api/v1/peers:
     post:
       summary: "register dfget in Supernode as a peer node"
       description: "dfget sends request to register in Supernode as a peer node"
@@ -280,7 +280,7 @@ paths:
         500:
           $ref: "#/responses/500ErrorResponse"
 
-  /peers/{id}:
+  /api/v1/peers/{id}:
     get:
       summary: "get a peer in supernode"
       description: "return low-level information of a peer in supernode."
@@ -324,7 +324,7 @@ paths:
         500:
           $ref: "#/responses/500ErrorResponse"
 
-  /tasks:
+  /api/v1/tasks:
     post:
       summary: "create a task"
       description: |
@@ -347,7 +347,7 @@ paths:
         500:
           $ref: "#/responses/500ErrorResponse"
 
-  /tasks/{id}:
+  /api/v1/tasks/{id}:
     get:
       summary: "get a task"
       description: |
@@ -431,7 +431,7 @@ paths:
         500:
           $ref: "#/responses/500ErrorResponse"
 
-  /tasks/{id}/pieces:
+  /api/v1/tasks/{id}/pieces:
     get:
       summary: "Get pieces in task"
       description: |
@@ -481,7 +481,7 @@ paths:
         500:
           $ref: "#/responses/500ErrorResponse"
 
-  /tasks/{id}/pieces/{pieceRange}:
+  /api/v1/tasks/{id}/pieces/{pieceRange}:
     put:
       summary: "Update a piece"
       description: |
@@ -520,7 +520,7 @@ paths:
         500:
           $ref: "#/responses/500ErrorResponse"
 
-  /tasks/{id}/pieces/{pieceRange}/error:
+  /api/v1/tasks/{id}/pieces/{pieceRange}/error:
     post:
       summary: "report a piece error"
       description: |
@@ -557,7 +557,7 @@ paths:
         500:
           $ref: "#/responses/500ErrorResponse"
 
-  /preheats:
+  /api/v1/preheats:
     post:
       summary: "Create a Preheat Task"
       description: |
@@ -603,7 +603,7 @@ paths:
         500:
           $ref: "#/responses/500ErrorResponse"
 
-  /preheats/{id}:
+  /api/v1/preheats/{id}:
     get:
       summary: "Get a preheat task"
       description: |
