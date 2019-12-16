@@ -32,7 +32,7 @@ var (
 
 	// ErrUnknowError represents the error should not happen
 	// and the cause of that is unknown.
-	ErrUnknowError = DfError{codeUnknowError, "unknow error"}
+	ErrUnknowError = DfError{codeUnknowError, "unknown error"}
 
 	// PeerContinue represents the peer should wait.
 	PeerContinue = DfError{codePeerContinue, "peer continue"}
