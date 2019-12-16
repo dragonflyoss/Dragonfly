@@ -163,7 +163,7 @@ func (sm *Manager) getPieceResults(ctx context.Context, taskID, clientID, srcPID
 			peerIDs, err := sm.progressMgr.GetPeerIDsByPieceNum(ctx, taskID, pieceNums[i])
 			logrus.Debugf("scheduler: success to get peerIDs(%v) pieceNum(%d) taskID(%s), clientID(%s)", peerIDs, pieceNums[i], taskID, clientID)
 			if err != nil {
-				return nil, errors.Wrapf(errortypes.ErrUnknowError, "failed to get peerIDs for pieceNum: %d of taskID: %s", pieceNums[i], taskID)
+				return nil, errors.Wrapf(errortypes.ErrUnknownError, "failed to get peerIDs for pieceNum: %d of taskID: %s", pieceNums[i], taskID)
 			}
 			dstPID = sm.tryGetPID(ctx, taskID, pieceNums[i], srcPID, peerIDs)
 		}

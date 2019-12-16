@@ -56,7 +56,7 @@ const (
 	codeCDNFail
 	codeCDNWait
 	codePeerWait
-	codeUnknowError
+	codeUnknownError
 	codePeerContinue
 	codeURLNotReachable
 	codeTaskIDDuplicate

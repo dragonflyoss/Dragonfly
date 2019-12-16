@@ -30,9 +30,9 @@ var (
 	// ErrPeerWait represents the peer should wait.
 	ErrPeerWait = DfError{codePeerWait, "peer should wait"}
 
-	// ErrUnknowError represents the error should not happen
+	// ErrUnknownError represents the error should not happen
 	// and the cause of that is unknown.
-	ErrUnknowError = DfError{codeUnknowError, "unknown error"}
+	ErrUnknownError = DfError{codeUnknownError, "unknown error"}
 
 	// PeerContinue represents the peer should wait.
 	PeerContinue = DfError{codePeerContinue, "peer continue"}
@@ -69,7 +69,7 @@ func IsPeerWait(err error) bool {
 
 // IsUnknowError checks the error is UnknowError or not.
 func IsUnknowError(err error) bool {
-	return checkError(err, codeUnknowError)
+	return checkError(err, codeUnknownError)
 }
 
 // IsPeerContinue checks the error is PeerContinue or not.
