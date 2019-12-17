@@ -105,7 +105,7 @@ func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateReq
 	}
 
 	// calculate piece size and update the PieceSize and PieceTotal
-	pieceSize := computePieceSize(fileLength)
+	pieceSize := computePieceSize(tm.cfg, fileLength)
 	task.PieceSize = pieceSize
 	task.PieceTotal = int32((fileLength + (int64(pieceSize) - 1)) / int64(pieceSize))
 
@@ -496,15 +496,15 @@ func generateTaskID(taskURL, md5, identifier string) string {
 //
 // If the fileLength<=0, which means failed to get fileLength
 // and then use the DefaultPieceSize.
-func computePieceSize(length int64) int32 {
+func computePieceSize(cfg *config.Config, length int64) int32 {
 	if length <= 0 || length <= 200*1024*1024 {
 		return config.DefaultPieceSize
 	}
 
 	gapCount := length / int64(100*1024*1024)
 	tmpSize := (gapCount-2)*1024*1024 + config.DefaultPieceSize
-	if tmpSize > config.DefaultPieceSizeLimit {
-		return config.DefaultPieceSizeLimit
+	if tmpSize > cfg.PieceSizeLimit {
+		return int32(cfg.PieceSizeLimit)
 	}
 	return int32(tmpSize)
 }

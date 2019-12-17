@@ -81,7 +81,7 @@ func (client *OriginClient) RegisterTLSConfig(rawURL string, insecure bool, caBl
 		Transport: &http.Transport{
 			Proxy: http.ProxyFromEnvironment,
 			DialContext: (&net.Dialer{
-				Timeout:   3 * time.Second,
+				Timeout:   10 * time.Second,
 				KeepAlive: 30 * time.Second,
 				DualStack: true,
 			}).DialContext,
@@ -90,6 +90,7 @@ func (client *OriginClient) RegisterTLSConfig(rawURL string, insecure bool, caBl
 			TLSHandshakeTimeout:   10 * time.Second,
 			ExpectContinueTimeout: 1 * time.Second,
 			TLSClientConfig:       tlsConfig,
+			ResponseHeaderTimeout: 10 * time.Second,
 		},
 	})
 }

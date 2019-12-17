@@ -95,6 +95,7 @@ func NewBaseProperties() *BaseProperties {
 		HomeDir:                 home,
 		SchedulerCorePoolSize:   DefaultSchedulerCorePoolSize,
 		DownloadPath:            filepath.Join(home, "repo", "download"),
+		PieceSizeLimit:          DefaultPieceSizeLimit,
 		PeerUpLimit:             DefaultPeerUpLimit,
 		PeerDownLimit:           DefaultPeerDownLimit,
 		EliminationLimit:        DefaultEliminationLimit,
@@ -140,6 +141,9 @@ type BaseProperties struct {
 
 	// DownloadPath specifies the path where to store downloaded files from source address.
 	DownloadPath string
+
+	// DefaultPieceSizeLimit = 15 * 1024 * 1024
+	PieceSizeLimit int64 `yaml:"pieceSizeLimit"`
 
 	// PeerUpLimit is the upload limit of a peer. When dfget starts to play a role of peer,
 	// it can only stand PeerUpLimit upload tasks from other peers.

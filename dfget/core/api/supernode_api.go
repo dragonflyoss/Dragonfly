@@ -43,7 +43,7 @@ const (
 func NewSupernodeAPI() SupernodeAPI {
 	return &supernodeAPI{
 		Scheme:     "http",
-		Timeout:    5 * time.Second,
+		Timeout:    15 * time.Second,
 		HTTPClient: httputils.DefaultHTTPClient,
 	}
 }
@@ -97,9 +97,17 @@ func (api *supernodeAPI) PullPieceTask(node string, req *types.PullPieceTaskRequ
 	url := fmt.Sprintf("%s://%s%s?%s",
 		api.Scheme, node, peerPullPieceTaskPath, httputils.ParseQuery(req))
 
-	resp = new(types.PullPieceTaskResponse)
-	if e = api.get(url, resp); e != nil {
-		return nil, e
+	logrus.Debugf("start to Pull PieceTask taskId:%s, req: %s", req.TaskID, url)
+	for i := 0; i < 3; i++ {
+		resp = new(types.PullPieceTaskResponse)
+		if e = api.get(url, resp); e != nil {
+			if i < 3 {
+				continue
+			} else {
+				logrus.Errorf("failed to Pull PieceTask taskId:%s, req: %s", req.TaskID, url)
+				return nil, e
+			}
+		}
 	}
 	return
 }

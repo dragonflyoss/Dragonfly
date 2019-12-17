@@ -150,6 +150,9 @@ func setupFlags(cmd *cobra.Command) {
 	flagSet.String("home-dir", defaultBaseProperties.HomeDir,
 		"homeDir is the working directory of supernode")
 
+	flagSet.Int64("piece-size-limit", defaultBaseProperties.PieceSizeLimit,
+		"the max piece size for download file from supernode")
+
 	flagSet.Var(&defaultBaseProperties.SystemReservedBandwidth, "system-bandwidth",
 		"network rate reserved for system")
 
@@ -213,6 +216,10 @@ func bindRootFlags(v *viper.Viper) error {
 		{
 			key:  "base.homeDir",
 			flag: "home-dir",
+		},
+		{
+			key:  "base.pieceSizeLimit",
+			flag: "piece-size-limit",
 		},
 		{
 			key:  "base.systemReservedBandwidth",
