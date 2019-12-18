@@ -101,12 +101,9 @@ func (api *supernodeAPI) PullPieceTask(node string, req *types.PullPieceTaskRequ
 	for i := 0; i < 3; i++ {
 		resp = new(types.PullPieceTaskResponse)
 		if e = api.get(url, resp); e != nil {
-			if i < 3 {
-				continue
-			} else {
-				logrus.Errorf("failed to Pull PieceTask taskId:%s, req: %s", req.TaskID, url)
-				return nil, e
-			}
+			continue
+		} else {
+			return
 		}
 	}
 	return
