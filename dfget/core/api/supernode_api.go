@@ -43,7 +43,7 @@ const (
 func NewSupernodeAPI() SupernodeAPI {
 	return &supernodeAPI{
 		Scheme:     "http",
-		Timeout:    15 * time.Second,
+		Timeout:    10 * time.Second,
 		HTTPClient: httputils.DefaultHTTPClient,
 	}
 }
