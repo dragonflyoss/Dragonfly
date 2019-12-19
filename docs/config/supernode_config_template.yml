@@ -18,6 +18,9 @@ base:
   # default: /home/admin/supernode
   homeDir: /home/admin/supernode
 
+  # default DefaultPieceSizeLimit 15M
+  pieceSizeLimit: 15728640
+
   # the core pool size of ScheduledExecutorService.
   # When a request to start a download task, supernode will construct a thread concurrent pool
   # to download pieces of source file and write to specified storage.
