@@ -27,11 +27,11 @@ var getCurrentTimeMillisFunc = timeutils.GetCurrentTimeMillis
 
 // getContentLengthByHeader calculates the piece content length by piece header.
 func getContentLengthByHeader(pieceHeader uint32) int32 {
-	return int32(pieceHeader & 0xffffff)
+	return int32(pieceHeader & 0x3ffffff)
 }
 
 func getPieceHeader(dataSize, pieceSize int32) uint32 {
-	return uint32(dataSize | (pieceSize << 4))
+	return uint32(dataSize | (pieceSize << 6))
 }
 
 func getUpdateTaskInfoWithStatusOnly(cdnStatus string) *types.TaskInfo {
