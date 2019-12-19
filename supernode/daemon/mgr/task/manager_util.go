@@ -527,7 +527,7 @@ func isWait(CDNStatus string) bool {
 func (tm *Manager) getHTTPFileLength(taskID, url string, headers map[string]string) (int64, error) {
 	fileLength, code, err := tm.originClient.GetContentLength(url, headers)
 	if err != nil {
-		return -1, errors.Wrapf(errortypes.ErrUnknowError, "failed to get http file Length: %v", err)
+		return -1, errors.Wrapf(errortypes.ErrUnknownError, "failed to get http file Length: %v", err)
 	}
 
 	if code == http.StatusUnauthorized || code == http.StatusProxyAuthRequired {
