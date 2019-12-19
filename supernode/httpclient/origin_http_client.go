@@ -98,7 +98,7 @@ func (client *OriginClient) RegisterTLSConfig(rawURL string, insecure bool, caBl
 // GetContentLength sends a head request to get file length.
 func (client *OriginClient) GetContentLength(url string, headers map[string]string) (int64, int, error) {
 	// send request
-	resp, err := client.HTTPWithHeaders("GET", url, headers, 4*time.Second)
+	resp, err := client.HTTPWithHeaders(http.MethodHead, url, headers, 4*time.Second)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -116,7 +116,7 @@ func (client *OriginClient) IsSupportRange(url string, headers map[string]string
 	headers["Range"] = "bytes=0-0"
 
 	// send request
-	resp, err := client.HTTPWithHeaders("GET", url, headers, 4*time.Second)
+	resp, err := client.HTTPWithHeaders(http.MethodGet, url, headers, 4*time.Second)
 	if err != nil {
 		return false, err
 	}
@@ -147,7 +147,7 @@ func (client *OriginClient) IsExpired(url string, headers map[string]string, las
 	}
 
 	// send request
-	resp, err := client.HTTPWithHeaders("GET", url, headers, 4*time.Second)
+	resp, err := client.HTTPWithHeaders(http.MethodGet, url, headers, 4*time.Second)
 	if err != nil {
 		return false, err
 	}
@@ -159,7 +159,7 @@ func (client *OriginClient) IsExpired(url string, headers map[string]string, las
 // Download downloads the file from the original address
 func (client *OriginClient) Download(url string, headers map[string]string, checkCode int) (*http.Response, error) {
 	// TODO: add timeout
-	resp, err := client.HTTPWithHeaders("GET", url, headers, 0)
+	resp, err := client.HTTPWithHeaders(http.MethodGet, url, headers, 0)
 	if err != nil {
 		return nil, err
 	}
