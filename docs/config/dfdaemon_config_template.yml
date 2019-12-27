@@ -77,5 +77,5 @@ maxprocs: 10
 
 # Logging
 logConfig:
-  # Log file path
-  path: /dev/stdout
+   # Log file path
+   path: /dev/stdout
