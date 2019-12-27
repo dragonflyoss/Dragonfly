@@ -10,6 +10,7 @@ The following startup parameters are supported for `dfdaemon`
 | ------------- | ------------- |
 | dfget_flags |	dfget properties |
 | dfpath | dfget bin path |
+| logConfig | Logging properties |
 | hijack_https | HijackHTTPS is the list of hosts whose https requests should be hijacked by dfdaemon. The first matched rule will be used |
 | localrepo | Temp output dir of dfdaemon, by default `$HOME/.small-dragonfly/dfdaemon/data/` |
 | proxies | Proxies is the list of rules for the transparent proxy |
