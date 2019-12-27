@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -35,6 +36,10 @@ type LogConfig struct {
 	// MaxBackups is the maximum number of old log files to retain.
 	// The default value is 1.
 	MaxBackups int `yaml:"maxBackups" json:"maxBackups"`
+
+	// Path is the location of log file
+	// The default value is logs/dfdaemon.log
+	Path string `yaml:"path" json:"path"`
 }
 
 // DefaultLogTimeFormat defines the timestamp format.
@@ -72,7 +77,7 @@ func getLumberjack(l *logrus.Logger) *lumberjack.Logger {
 func WithLogFile(f string, maxSize, maxBackups int) Option {
 	return func(l *logrus.Logger) error {
 		if f == "" {
-			return nil
+			f = filepath.Join("logs", "dfdaemon.log")
 		}
 		if maxSize <= 0 {
 			maxSize = 40

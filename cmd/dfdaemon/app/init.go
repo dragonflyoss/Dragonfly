@@ -80,15 +80,13 @@ func initLogger(cfg config.Properties) error {
 		cfg.WorkHome = filepath.Join(current.HomeDir, ".small-dragonfly")
 	}
 
-	logFilePath := filepath.Join(cfg.WorkHome, "logs", "dfdaemon.log")
-
 	opts := []dflog.Option{
-		dflog.WithLogFile(logFilePath, cfg.LogConfig.MaxSize, cfg.LogConfig.MaxBackups),
+		dflog.WithLogFile(cfg.LogConfig.Path, cfg.LogConfig.MaxSize, cfg.LogConfig.MaxBackups),
 		dflog.WithSign(fmt.Sprintf("%d", os.Getpid())),
 		dflog.WithDebug(cfg.Verbose),
 	}
 
-	logrus.Debugf("use log file %s", logFilePath)
+	logrus.Debugf("use log file %s", cfg.LogConfig.Path)
 
 	return errors.Wrap(dflog.Init(logrus.StandardLogger(), opts...), "init log")
 }
