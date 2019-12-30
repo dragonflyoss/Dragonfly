@@ -123,7 +123,10 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	setupFlags(rootCmd)
+
+	// add sub commands
 	rootCmd.AddCommand(cmd.NewGenDocCommand("supernode"))
+	rootCmd.AddCommand(cmd.NewConfigCommand("supernode", getDefaultConfig))
 }
 
 // setupFlags setups flags for command line.
@@ -296,6 +299,11 @@ func readConfigFile(v *viper.Viper, cmd *cobra.Command) error {
 	}
 
 	return nil
+}
+
+// getDefaultConfig returns the default configuration of supernode
+func getDefaultConfig() (interface{}, error) {
+	return getConfigFromViper(viper.GetViper())
 }
 
 // getConfigFromViper returns supernode config from the given viper instance

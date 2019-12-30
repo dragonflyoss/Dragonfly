@@ -35,6 +35,13 @@ type StdPrinter struct {
 }
 
 // Println outputs info to console directly.
+func (sp *StdPrinter) Print(msg string) {
+	if sp.Out != nil {
+		fmt.Fprint(sp.Out, msg)
+	}
+}
+
+// Println outputs info to console directly.
 func (sp *StdPrinter) Println(msg string) {
 	if sp.Out != nil {
 		fmt.Fprintln(sp.Out, msg)
@@ -45,6 +52,13 @@ func (sp *StdPrinter) Println(msg string) {
 func (sp *StdPrinter) Printf(format string, a ...interface{}) {
 	if sp.Out != nil {
 		fmt.Fprintf(sp.Out, format+"\n", a...)
+	}
+}
+
+// Print outputs info to console directly.
+func Print(msg string) {
+	if Printer.Out != nil {
+		fmt.Fprint(Printer.Out, msg)
 	}
 }
 

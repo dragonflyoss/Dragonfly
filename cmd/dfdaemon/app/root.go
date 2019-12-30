@@ -106,7 +106,10 @@ func init() {
 	rf.StringSlice("node", nil, "specify the addresses(host:port) of supernodes that will be passed to dfget.")
 
 	exitOnError(bindRootFlags(viper.GetViper()), "bind root command flags")
+
+	// add sub commands
 	rootCmd.AddCommand(cmd.NewGenDocCommand("dfdaemon"))
+	rootCmd.AddCommand(cmd.NewConfigCommand("dfdaemon", getDefaultConfig))
 }
 
 // bindRootFlags binds flags on rootCmd to the given viper instance.
@@ -157,6 +160,11 @@ func Execute() {
 			os.Exit(1)
 		}
 	}
+}
+
+// getDefaultConfig returns the default configuration of dfdaemon
+func getDefaultConfig() (interface{}, error) {
+	return getConfigFromViper(rootCmd, viper.GetViper())
 }
 
 // getConfigFromViper returns dfdaemon config from the given viper instance
