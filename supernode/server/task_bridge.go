@@ -34,3 +34,13 @@ func (s *Server) deleteTask(ctx context.Context, rw http.ResponseWriter, req *ht
 	rw.WriteHeader(http.StatusOK)
 	return nil
 }
+
+func (s *Server) getTaskInfo(ctx context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
+	id := mux.Vars(req)["id"]
+	task, err := s.TaskMgr.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+	return EncodeResponse(rw, http.StatusOK, task)
+
+}
