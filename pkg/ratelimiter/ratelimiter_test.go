@@ -115,3 +115,20 @@ func (suite *RateLimiterSuite) TestRateLimiter_AcquireNonBlocking(c *check.C) {
 	rl.blocking(1000)
 	c.Assert(rl.AcquireNonBlocking(1000), check.Equals, int64(1000))
 }
+
+func (suite *RateLimiterSuite) TestTransRate(c *check.C) {
+	var cases = []struct {
+		r int64
+		e int64
+	}{
+		{666, 1000},
+		{2048, 3000},
+		{123456, 124000},
+		{0, 10486000},
+		{-233, 10486000},
+	}
+	for _, cc := range cases {
+		v := TransRate(cc.r)
+		c.Assert(v, check.Equals, cc.e)
+	}
+}
