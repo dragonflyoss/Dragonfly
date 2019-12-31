@@ -37,6 +37,7 @@ supernode [flags]
 
 ### SEE ALSO
 
+* [supernode config](supernode_config.md)	 - Manage the configurations of supernode
 * [supernode gen-doc](supernode_gen-doc.md)	 - Generate Document for supernode command line tool in MarkDown format
 * [supernode version](supernode_version.md)	 - Show the current version of supernode
 
