@@ -40,8 +40,9 @@ type SupernodeRegister interface {
 }
 
 type supernodeRegister struct {
-	api api.SupernodeAPI
-	cfg *config.Config
+	api                api.SupernodeAPI
+	cfg                *config.Config
+	lastRegisteredNode string
 }
 
 var _ SupernodeRegister = &supernodeRegister{}
@@ -68,6 +69,10 @@ func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errortypes
 	nodes, nLen := s.cfg.Nodes, len(s.cfg.Nodes)
 	req := s.constructRegisterRequest(peerPort)
 	for i = 0; i < nLen; i++ {
+		if s.lastRegisteredNode == nodes[i] {
+			logrus.Warnf("the last registered node is the same(%s)", nodes[i])
+			continue
+		}
 		req.SupernodeIP = netutils.ExtractHost(nodes[i])
 		resp, e = s.api.Register(nodes[i], req)
 		logrus.Infof("do register to %s, res:%s error:%v", nodes[i], resp, e)
@@ -86,6 +91,7 @@ func (s *supernodeRegister) Register(peerPort int) (*RegisterResult, *errortypes
 			time.Sleep(2500 * time.Millisecond)
 		}
 	}
+	s.setLastRegisteredNode(i)
 	s.setRemainderNodes(i)
 	if err := s.checkResponse(resp, e); err != nil {
 		logrus.Errorf("register fail:%v", err)
@@ -113,16 +119,29 @@ func (s *supernodeRegister) checkResponse(resp *types.RegisterResponse, e error)
 	return nil
 }
 
+func (s *supernodeRegister) setLastRegisteredNode(idx int) {
+	nLen := len(s.cfg.Nodes)
+	if nLen <= 0 {
+		return
+	}
+	if idx >= nLen {
+		s.lastRegisteredNode = ""
+		return
+	}
+	s.lastRegisteredNode = s.cfg.Nodes[idx]
+}
+
 func (s *supernodeRegister) setRemainderNodes(idx int) {
 	nLen := len(s.cfg.Nodes)
 	if nLen <= 0 {
 		return
 	}
-	if idx < nLen {
-		s.cfg.Nodes = s.cfg.Nodes[idx+1:]
-	} else {
+	if idx >= nLen {
 		s.cfg.Nodes = []string{}
+		return
 	}
+
+	s.cfg.Nodes = s.cfg.Nodes[idx+1:]
 }
 
 func (s *supernodeRegister) constructRegisterRequest(port int) *types.RegisterRequest {
