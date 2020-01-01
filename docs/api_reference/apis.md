@@ -68,6 +68,460 @@ json :
 ```
 
 
+<a name="api-v1-peers-post"></a>
+### register dfget in Supernode as a peer node
+```
+POST /api/v1/peers
+```
+
+
+#### Description
+dfget sends request to register in Supernode as a peer node
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|
+|---|---|---|---|
+|**Body**|**body**  <br>*optional*|request body which contains peer registrar information.|[PeerCreateRequest](#peercreaterequest)|
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**201**|no error|[PeerCreateResponse](#peercreateresponse)|
+|**400**|bad parameter|[Error](#error)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
+<a name="api-v1-peers-get"></a>
+### get all peers
+```
+GET /api/v1/peers
+```
+
+
+#### Description
+dfget sends request to register in Supernode as a peer node
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|Default|
+|---|---|---|---|---|
+|**Query**|**pageNum**  <br>*optional*||integer|`0`|
+|**Query**|**pageSize**  <br>*required*||integer||
+|**Query**|**sortDirect**  <br>*optional*|Determine the direction of sorting rules|enum (ASC, DESC)|`"ASC"`|
+|**Query**|**sortKey**  <br>*optional*|"The keyword used to sort. You can provide multiple keys, if two peers have the same first key, sort by the second key, and so on"|< string > array||
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|< [PeerInfo](#peerinfo) > array|
+|**400**|bad parameter|[Error](#error)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
+<a name="api-v1-peers-id-get"></a>
+### get a peer in supernode
+```
+GET /api/v1/peers/{id}
+```
+
+
+#### Description
+return low-level information of a peer in supernode.
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|
+|---|---|---|---|
+|**Path**|**id**  <br>*required*|ID of peer|string|
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|[PeerInfo](#peerinfo)|
+|**404**|An unexpected 404 error occurred.|[Error](#error)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
+#### Produces
+
+* `application/json`
+
+
+<a name="api-v1-peers-id-delete"></a>
+### delete a peer in supernode
+```
+DELETE /api/v1/peers/{id}
+```
+
+
+#### Description
+dfget stops playing a role as a peer in peer network constructed by supernode.
+When dfget lasts in five minutes without downloading or uploading task, the uploader of dfget
+automatically sends a DELETE /peers/{id} request to supernode.
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|
+|---|---|---|---|
+|**Path**|**id**  <br>*required*|ID of peer|string|
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**204**|no error|No Content|
+|**404**|no such peer|[4ErrorResponse](#4errorresponse)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
+<a name="api-v1-preheats-post"></a>
+### Create a Preheat Task
+```
+POST /api/v1/preheats
+```
+
+
+#### Description
+Create a preheat task in supernode to first download image/file which is ready.
+Preheat action will shorten the period for dfget to get what it wants. In details,
+after preheat action finishes downloading image/file to supernode, dfget can send
+request to setup a peer-to-peer network immediately.
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|
+|---|---|---|---|
+|**Body**|**PreheatCreateRequest**  <br>*optional*|request body which contains preheat task creation information|[PreheatCreateRequest](#preheatcreaterequest)|
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|[PreheatCreateResponse](#preheatcreateresponse)|
+|**400**|bad parameter|[Error](#error)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
+<a name="api-v1-preheats-get"></a>
+### List Preheat Tasks
+```
+GET /api/v1/preheats
+```
+
+
+#### Description
+List preheat tasks in supernode of Dragonfly. This API can list all the existing preheat tasks
+in supernode. Note, when a preheat is finished after PreheatGCThreshold, it will be GCed, then
+this preheat will not be gotten by preheat tasks list API.
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|< [PreheatInfo](#preheatinfo) > array|
+|**400**|bad parameter|[Error](#error)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
+<a name="api-v1-preheats-id-get"></a>
+### Get a preheat task
+```
+GET /api/v1/preheats/{id}
+```
+
+
+#### Description
+get detailed information of a preheat task in supernode.
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|
+|---|---|---|---|
+|**Path**|**id**  <br>*required*|ID of preheat task|string|
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|[PreheatInfo](#preheatinfo)|
+|**404**|no such preheat task|[4ErrorResponse](#4errorresponse)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
+#### Produces
+
+* `application/json`
+
+
+<a name="api-v1-tasks-post"></a>
+### create a task
+```
+POST /api/v1/tasks
+```
+
+
+#### Description
+Create a peer-to-peer downloading task in supernode.
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|
+|---|---|---|---|
+|**Body**|**body**  <br>*optional*|request body which contains task creation information|[TaskCreateRequest](#taskcreaterequest)|
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**201**|no error|[TaskCreateResponse](#taskcreateresponse)|
+|**400**|bad parameter|[Error](#error)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
+<a name="api-v1-tasks-id-get"></a>
+### get a task
+```
+GET /api/v1/tasks/{id}
+```
+
+
+#### Description
+return low-level information of a task in supernode.
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|
+|---|---|---|---|
+|**Path**|**id**  <br>*required*|ID of task|string|
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|[TaskInfo](#taskinfo)|
+|**404**|An unexpected 404 error occurred.|[Error](#error)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
+#### Produces
+
+* `application/json`
+
+
+<a name="api-v1-tasks-id-put"></a>
+### update a task
+```
+PUT /api/v1/tasks/{id}
+```
+
+
+#### Description
+Update information of a task.
+This endpoint is mainly for operation usage. When the peer network or peer
+meet some load issues, operation team can update a task directly, such as pause
+a downloading task to ease the situation.
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|
+|---|---|---|---|
+|**Path**|**id**  <br>*required*|ID of task|string|
+|**Body**|**TaskUpdateRequest**  <br>*optional*|request body which contains task update information"|[TaskUpdateRequest](#taskupdaterequest)|
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|No Content|
+|**404**|An unexpected 404 error occurred.|[Error](#error)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
+#### Consumes
+
+* `application/json`
+
+
+#### Produces
+
+* `application/json`
+
+
+<a name="api-v1-tasks-id-delete"></a>
+### delete a task
+```
+DELETE /api/v1/tasks/{id}
+```
+
+
+#### Description
+delete a peer-to-peer task in supernode.
+This endpoint is mainly for operation usage. When the peer network or peer
+meet some load issues, operation team can delete a task directly to ease
+the situation.
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|Default|
+|---|---|---|---|---|
+|**Path**|**id**  <br>*required*|ID of task|string||
+|**Query**|**full**  <br>*optional*|supernode will also delete the cdn files when the value of full equals true.|boolean|`"false"`|
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**204**|no error|No Content|
+|**404**|no such task|[4ErrorResponse](#4errorresponse)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
+<a name="api-v1-tasks-id-pieces-get"></a>
+### Get pieces in task
+```
+GET /api/v1/tasks/{id}/pieces
+```
+
+
+#### Description
+When dfget starts to download pieces of a task, it should get fixed
+number of pieces in a task and then use pieces information to download
+the pieces. The request piece number is set in query.
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|
+|---|---|---|---|
+|**Path**|**id**  <br>*required*|ID of task|string|
+|**Query**|**clientID**  <br>*required*|When dfget needs to get pieces of specific task, it must mark which peer it plays role of.|string|
+|**Query**|**num**  <br>*optional*|Request number of pieces of task. If request number is larger than the total pieces in supernode,<br>supernode returns the total pieces of task. If not set, supernode will set 4 by default.|integer (int64)|
+|**Body**|**PiecePullRequest**  <br>*required*|request body which contains the information of pieces that have been downloaded or being downloaded.|[PiecePullRequest](#piecepullrequest)|
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|< [PieceInfo](#pieceinfo) > array|
+|**404**|no such task|[4ErrorResponse](#4errorresponse)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
+#### Produces
+
+* `application/json`
+
+
+<a name="api-v1-tasks-id-pieces-piecerange-put"></a>
+### Update a piece
+```
+PUT /api/v1/tasks/{id}/pieces/{pieceRange}
+```
+
+
+#### Description
+Update some information of piece. When peer A finishes to download
+piece B, A must send request to supernode to update piece B's info
+to mark that peer A has the complete piece B. Then when other peers
+request to download this piece B, supernode could schedule peer A
+to those peers.
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|
+|---|---|---|---|
+|**Path**|**id**  <br>*required*|ID of task|string|
+|**Path**|**pieceRange**  <br>*required*|the range of specific piece in the task, example "0-45565".|string|
+|**Body**|**PieceUpdateRequest**  <br>*optional*|request body which contains task update information.|[PieceUpdateRequest](#pieceupdaterequest)|
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|No Content|
+|**404**|An unexpected 404 error occurred.|[Error](#error)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
+#### Consumes
+
+* `application/json`
+
+
+#### Produces
+
+* `application/json`
+
+
+<a name="api-v1-tasks-id-pieces-piecerange-error-post"></a>
+### report a piece error
+```
+POST /api/v1/tasks/{id}/pieces/{pieceRange}/error
+```
+
+
+#### Description
+When a peer failed to download a piece from supernode or
+failed to validate the pieceMD5,
+and then dfget should report the error info to supernode.
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|
+|---|---|---|---|
+|**Path**|**id**  <br>*required*|ID of task|string|
+|**Path**|**pieceRange**  <br>*required*|the range of specific piece in the task, example "0-45565".|string|
+|**Body**|**PieceErrorRequest**  <br>*optional*|request body which contains piece error information.|[PieceErrorRequest](#pieceerrorrequest)|
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|No Content|
+|**404**|An unexpected 404 error occurred.|[Error](#error)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
+#### Consumes
+
+* `application/json`
+
+
+#### Produces
+
+* `application/json`
+
+
 <a name="metrics-get"></a>
 ### Get Prometheus metrics
 ```
@@ -229,208 +683,6 @@ the pieces. The request piece number is set in query.
 * `application/json`
 
 
-<a name="peers-post"></a>
-### register dfget in Supernode as a peer node
-```
-POST /peers
-```
-
-
-#### Description
-dfget sends request to register in Supernode as a peer node
-
-
-#### Parameters
-
-|Type|Name|Description|Schema|
-|---|---|---|---|
-|**Body**|**body**  <br>*optional*|request body which contains peer registrar information.|[PeerCreateRequest](#peercreaterequest)|
-
-
-#### Responses
-
-|HTTP Code|Description|Schema|
-|---|---|---|
-|**201**|no error|[PeerCreateResponse](#peercreateresponse)|
-|**400**|bad parameter|[Error](#error)|
-|**500**|An unexpected server error occurred.|[Error](#error)|
-
-
-<a name="peers-get"></a>
-### get all peers
-```
-GET /peers
-```
-
-
-#### Description
-dfget sends request to register in Supernode as a peer node
-
-
-#### Parameters
-
-|Type|Name|Description|Schema|Default|
-|---|---|---|---|---|
-|**Query**|**pageNum**  <br>*optional*||integer|`0`|
-|**Query**|**pageSize**  <br>*required*||integer||
-|**Query**|**sortDirect**  <br>*optional*|Determine the direction of sorting rules|enum (ASC, DESC)|`"ASC"`|
-|**Query**|**sortKey**  <br>*optional*|"The keyword used to sort. You can provide multiple keys, if two peers have the same first key, sort by the second key, and so on"|< string > array||
-
-
-#### Responses
-
-|HTTP Code|Description|Schema|
-|---|---|---|
-|**200**|no error|< [PeerInfo](#peerinfo) > array|
-|**400**|bad parameter|[Error](#error)|
-|**500**|An unexpected server error occurred.|[Error](#error)|
-
-
-<a name="peers-id-get"></a>
-### get a peer in supernode
-```
-GET /peers/{id}
-```
-
-
-#### Description
-return low-level information of a peer in supernode.
-
-
-#### Parameters
-
-|Type|Name|Description|Schema|
-|---|---|---|---|
-|**Path**|**id**  <br>*required*|ID of peer|string|
-
-
-#### Responses
-
-|HTTP Code|Description|Schema|
-|---|---|---|
-|**200**|no error|[PeerInfo](#peerinfo)|
-|**404**|An unexpected 404 error occurred.|[Error](#error)|
-|**500**|An unexpected server error occurred.|[Error](#error)|
-
-
-#### Produces
-
-* `application/json`
-
-
-<a name="peers-id-delete"></a>
-### delete a peer in supernode
-```
-DELETE /peers/{id}
-```
-
-
-#### Description
-dfget stops playing a role as a peer in peer network constructed by supernode.
-When dfget lasts in five minutes without downloading or uploading task, the uploader of dfget
-automatically sends a DELETE /peers/{id} request to supernode.
-
-
-#### Parameters
-
-|Type|Name|Description|Schema|
-|---|---|---|---|
-|**Path**|**id**  <br>*required*|ID of peer|string|
-
-
-#### Responses
-
-|HTTP Code|Description|Schema|
-|---|---|---|
-|**204**|no error|No Content|
-|**404**|no such peer|[4ErrorResponse](#4errorresponse)|
-|**500**|An unexpected server error occurred.|[Error](#error)|
-
-
-<a name="preheats-post"></a>
-### Create a Preheat Task
-```
-POST /preheats
-```
-
-
-#### Description
-Create a preheat task in supernode to first download image/file which is ready.
-Preheat action will shorten the period for dfget to get what it wants. In details,
-after preheat action finishes downloading image/file to supernode, dfget can send
-request to setup a peer-to-peer network immediately.
-
-
-#### Parameters
-
-|Type|Name|Description|Schema|
-|---|---|---|---|
-|**Body**|**PreheatCreateRequest**  <br>*optional*|request body which contains preheat task creation information|[PreheatCreateRequest](#preheatcreaterequest)|
-
-
-#### Responses
-
-|HTTP Code|Description|Schema|
-|---|---|---|
-|**200**|no error|[PreheatCreateResponse](#preheatcreateresponse)|
-|**400**|bad parameter|[Error](#error)|
-|**500**|An unexpected server error occurred.|[Error](#error)|
-
-
-<a name="preheats-get"></a>
-### List Preheat Tasks
-```
-GET /preheats
-```
-
-
-#### Description
-List preheat tasks in supernode of Dragonfly. This API can list all the existing preheat tasks
-in supernode. Note, when a preheat is finished after PreheatGCThreshold, it will be GCed, then
-this preheat will not be gotten by preheat tasks list API.
-
-
-#### Responses
-
-|HTTP Code|Description|Schema|
-|---|---|---|
-|**200**|no error|< [PreheatInfo](#preheatinfo) > array|
-|**400**|bad parameter|[Error](#error)|
-|**500**|An unexpected server error occurred.|[Error](#error)|
-
-
-<a name="preheats-id-get"></a>
-### Get a preheat task
-```
-GET /preheats/{id}
-```
-
-
-#### Description
-get detailed information of a preheat task in supernode.
-
-
-#### Parameters
-
-|Type|Name|Description|Schema|
-|---|---|---|---|
-|**Path**|**id**  <br>*required*|ID of preheat task|string|
-
-
-#### Responses
-
-|HTTP Code|Description|Schema|
-|---|---|---|
-|**200**|no error|[PreheatInfo](#preheatinfo)|
-|**404**|no such preheat task|[4ErrorResponse](#4errorresponse)|
-|**500**|An unexpected server error occurred.|[Error](#error)|
-
-
-#### Produces
-
-* `application/json`
-
-
 <a name="task-metrics-post"></a>
 ### upload dfclient download metrics
 ```
@@ -456,258 +708,6 @@ and we use this endpoint to upload dfget download related metrics.
 |---|---|---|
 |**200**|no error|[ResultInfo](#resultinfo)|
 |**500**|An unexpected server error occurred.|[Error](#error)|
-
-
-<a name="tasks-post"></a>
-### create a task
-```
-POST /tasks
-```
-
-
-#### Description
-Create a peer-to-peer downloading task in supernode.
-
-
-#### Parameters
-
-|Type|Name|Description|Schema|
-|---|---|---|---|
-|**Body**|**body**  <br>*optional*|request body which contains task creation information|[TaskCreateRequest](#taskcreaterequest)|
-
-
-#### Responses
-
-|HTTP Code|Description|Schema|
-|---|---|---|
-|**201**|no error|[TaskCreateResponse](#taskcreateresponse)|
-|**400**|bad parameter|[Error](#error)|
-|**500**|An unexpected server error occurred.|[Error](#error)|
-
-
-<a name="tasks-id-get"></a>
-### get a task
-```
-GET /tasks/{id}
-```
-
-
-#### Description
-return low-level information of a task in supernode.
-
-
-#### Parameters
-
-|Type|Name|Description|Schema|
-|---|---|---|---|
-|**Path**|**id**  <br>*required*|ID of task|string|
-
-
-#### Responses
-
-|HTTP Code|Description|Schema|
-|---|---|---|
-|**200**|no error|[TaskInfo](#taskinfo)|
-|**404**|An unexpected 404 error occurred.|[Error](#error)|
-|**500**|An unexpected server error occurred.|[Error](#error)|
-
-
-#### Produces
-
-* `application/json`
-
-
-<a name="tasks-id-put"></a>
-### update a task
-```
-PUT /tasks/{id}
-```
-
-
-#### Description
-Update information of a task.
-This endpoint is mainly for operation usage. When the peer network or peer
-meet some load issues, operation team can update a task directly, such as pause
-a downloading task to ease the situation.
-
-
-#### Parameters
-
-|Type|Name|Description|Schema|
-|---|---|---|---|
-|**Path**|**id**  <br>*required*|ID of task|string|
-|**Body**|**TaskUpdateRequest**  <br>*optional*|request body which contains task update information"|[TaskUpdateRequest](#taskupdaterequest)|
-
-
-#### Responses
-
-|HTTP Code|Description|Schema|
-|---|---|---|
-|**200**|no error|No Content|
-|**404**|An unexpected 404 error occurred.|[Error](#error)|
-|**500**|An unexpected server error occurred.|[Error](#error)|
-
-
-#### Consumes
-
-* `application/json`
-
-
-#### Produces
-
-* `application/json`
-
-
-<a name="tasks-id-delete"></a>
-### delete a task
-```
-DELETE /tasks/{id}
-```
-
-
-#### Description
-delete a peer-to-peer task in supernode.
-This endpoint is mainly for operation usage. When the peer network or peer
-meet some load issues, operation team can delete a task directly to ease
-the situation.
-
-
-#### Parameters
-
-|Type|Name|Description|Schema|Default|
-|---|---|---|---|---|
-|**Path**|**id**  <br>*required*|ID of task|string||
-|**Query**|**full**  <br>*optional*|supernode will also delete the cdn files when the value of full equals true.|boolean|`"false"`|
-
-
-#### Responses
-
-|HTTP Code|Description|Schema|
-|---|---|---|
-|**204**|no error|No Content|
-|**404**|no such task|[4ErrorResponse](#4errorresponse)|
-|**500**|An unexpected server error occurred.|[Error](#error)|
-
-
-<a name="tasks-id-pieces-get"></a>
-### Get pieces in task
-```
-GET /tasks/{id}/pieces
-```
-
-
-#### Description
-When dfget starts to download pieces of a task, it should get fixed
-number of pieces in a task and then use pieces information to download
-the pieces. The request piece number is set in query.
-
-
-#### Parameters
-
-|Type|Name|Description|Schema|
-|---|---|---|---|
-|**Path**|**id**  <br>*required*|ID of task|string|
-|**Query**|**clientID**  <br>*required*|When dfget needs to get pieces of specific task, it must mark which peer it plays role of.|string|
-|**Query**|**num**  <br>*optional*|Request number of pieces of task. If request number is larger than the total pieces in supernode,<br>supernode returns the total pieces of task. If not set, supernode will set 4 by default.|integer (int64)|
-|**Body**|**PiecePullRequest**  <br>*required*|request body which contains the information of pieces that have been downloaded or being downloaded.|[PiecePullRequest](#piecepullrequest)|
-
-
-#### Responses
-
-|HTTP Code|Description|Schema|
-|---|---|---|
-|**200**|no error|< [PieceInfo](#pieceinfo) > array|
-|**404**|no such task|[4ErrorResponse](#4errorresponse)|
-|**500**|An unexpected server error occurred.|[Error](#error)|
-
-
-#### Produces
-
-* `application/json`
-
-
-<a name="tasks-id-pieces-piecerange-put"></a>
-### Update a piece
-```
-PUT /tasks/{id}/pieces/{pieceRange}
-```
-
-
-#### Description
-Update some information of piece. When peer A finishes to download
-piece B, A must send request to supernode to update piece B's info
-to mark that peer A has the complete piece B. Then when other peers
-request to download this piece B, supernode could schedule peer A
-to those peers.
-
-
-#### Parameters
-
-|Type|Name|Description|Schema|
-|---|---|---|---|
-|**Path**|**id**  <br>*required*|ID of task|string|
-|**Path**|**pieceRange**  <br>*required*|the range of specific piece in the task, example "0-45565".|string|
-|**Body**|**PieceUpdateRequest**  <br>*optional*|request body which contains task update information.|[PieceUpdateRequest](#pieceupdaterequest)|
-
-
-#### Responses
-
-|HTTP Code|Description|Schema|
-|---|---|---|
-|**200**|no error|No Content|
-|**404**|An unexpected 404 error occurred.|[Error](#error)|
-|**500**|An unexpected server error occurred.|[Error](#error)|
-
-
-#### Consumes
-
-* `application/json`
-
-
-#### Produces
-
-* `application/json`
-
-
-<a name="tasks-id-pieces-piecerange-error-post"></a>
-### report a piece error
-```
-POST /tasks/{id}/pieces/{pieceRange}/error
-```
-
-
-#### Description
-When a peer failed to download a piece from supernode or
-failed to validate the pieceMD5,
-and then dfget should report the error info to supernode.
-
-
-#### Parameters
-
-|Type|Name|Description|Schema|
-|---|---|---|---|
-|**Path**|**id**  <br>*required*|ID of task|string|
-|**Path**|**pieceRange**  <br>*required*|the range of specific piece in the task, example "0-45565".|string|
-|**Body**|**PieceErrorRequest**  <br>*optional*|request body which contains piece error information.|[PieceErrorRequest](#pieceerrorrequest)|
-
-
-#### Responses
-
-|HTTP Code|Description|Schema|
-|---|---|---|
-|**200**|no error|No Content|
-|**404**|An unexpected 404 error occurred.|[Error](#error)|
-|**500**|An unexpected server error occurred.|[Error](#error)|
-
-
-#### Consumes
-
-* `application/json`
-
-
-#### Produces
-
-* `application/json`
 
 
 <a name="version-get"></a>

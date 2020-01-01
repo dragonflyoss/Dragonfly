@@ -31,6 +31,7 @@ dfdaemon [flags]
 
 ### SEE ALSO
 
+* [dfdaemon config](dfdaemon_config.md)	 - Manage the configurations of dfdaemon
 * [dfdaemon gen-doc](dfdaemon_gen-doc.md)	 - Generate Document for dfdaemon command line tool in MarkDown format
 * [dfdaemon version](dfdaemon_version.md)	 - Show the current version of dfdaemon
 
