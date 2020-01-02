@@ -146,7 +146,7 @@ func ParseNodesSlice(value []string) ([]*NodeWight, error) {
 	}
 
 	var result []*NodeWight
-	// get the the greatest common divisor of the weight slice and
+	// get the greatest common divisor of the weight slice and
 	// divide all weights by the greatest common divisor.
 	gcdNumber := algorithm.GCDSlice(weightKey)
 	for _, v := range nodeWightSlice {
