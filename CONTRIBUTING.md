@@ -74,22 +74,41 @@ To put forward a PR, we assume you have registered a GitHub ID. Then you could f
 
 1. **Set Remote** upstream to be `https://github.com/dragonflyoss/Dragonfly.git` using the following two commands:
 
-```
-git remote add upstream https://github.com/dragonflyoss/Dragonfly.git
-git remote set-url --push upstream no-pushing
-```
+	```
+	git remote add upstream https://github.com/dragonflyoss/Dragonfly.git
+	git remote set-url --push upstream no-pushing
+	```
 
-With this remote setting, you can check your git remote configuration like this:
+	With this remote setting, you can check your git remote configuration like this:
 
-```
-$ git remote -v
-origin     https://github.com/<your-username>/Dragonfly.git (fetch)
-origin     https://github.com/<your-username>/Dragonfly.git (push)
-upstream   https://github.com/dragonflyoss/Dragonfly.git (fetch)
-upstream   no-pushing (push)
-```
+	```
+	$ git remote -v
+	origin     https://github.com/<your-username>/Dragonfly.git (fetch)
+	origin     https://github.com/<your-username>/Dragonfly.git (push)
+	upstream   https://github.com/dragonflyoss/Dragonfly.git (fetch)
+	upstream   no-pushing (push)
+	```
 
-Adding this, we can easily synchronize local branches with upstream branches.
+	Adding this, we can easily synchronize local branches with upstream branches.
+
+1. **Create a branch** to add a new feature or fix issues
+
+	Update local working directory:
+
+	```
+	cd Dragonfly
+	git fetch upstream
+	git checkout master
+	git rebase upstream/master
+	```
+
+	Create a new branch:
+
+	```
+	git checkout -b <new-branch>
+	```
+
+	Make any change on the `new-branch` then build and test your codes.
 
 ### Branch Definition
 
