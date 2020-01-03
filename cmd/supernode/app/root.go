@@ -126,6 +126,7 @@ func init() {
 
 	// add sub commands
 	rootCmd.AddCommand(cmd.NewGenDocCommand("supernode"))
+	rootCmd.AddCommand(cmd.NewVersionCommand("supernode"))
 	rootCmd.AddCommand(cmd.NewConfigCommand("supernode", getDefaultConfig))
 }
 

@@ -109,6 +109,7 @@ func init() {
 
 	// add sub commands
 	rootCmd.AddCommand(cmd.NewGenDocCommand("dfdaemon"))
+	rootCmd.AddCommand(cmd.NewVersionCommand("dfdaemon"))
 	rootCmd.AddCommand(cmd.NewConfigCommand("dfdaemon", getDefaultConfig))
 }
 

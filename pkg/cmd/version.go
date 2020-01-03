@@ -14,43 +14,44 @@
  * limitations under the License.
  */
 
-package app
+package cmd
 
 import (
-	"github.com/dragonflyoss/Dragonfly/pkg/printer"
+	"fmt"
 
+	"github.com/dragonflyoss/Dragonfly/pkg/printer"
 	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/spf13/cobra"
 )
 
-// versionDescription is used to describe version command in detail and auto generate command doc.
-var versionDescription = "Display the version and build information of Dragonfly supernode, " +
+// versionDescriptionTmp is used to describe version command in detail and auto generate command doc.
+var versionDescriptionTmp = "Display the version and build information of Dragonfly %s, " +
 	"including GoVersion, OS, Arch, Version, BuildDate and GitCommit."
 
-var versionCmd = &cobra.Command{
-	Use:           "version",
-	Short:         "Show the current version of supernode",
-	Long:          versionDescription,
-	SilenceErrors: true,
-	SilenceUsage:  true,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		printer.Printf(version.Print("supernode"))
-		return nil
-	},
-	Example: versionExample(),
-}
-
-func init() {
-	rootCmd.AddCommand(versionCmd)
+// NewVersionCommand returns cobra.Command for "<component> version" command
+func NewVersionCommand(name string) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:           "version",
+		Short:         fmt.Sprintf("Show the current version of %s", name),
+		Long:          fmt.Sprintf(versionDescriptionTmp, name),
+		SilenceErrors: true,
+		SilenceUsage:  true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			printer.Printf(version.Print(name))
+			return nil
+		},
+		Example: versionExample(name),
+	}
+	return cmd
 }
 
 // versionExample shows examples in version command, and is used in auto-generated cli docs.
-func versionExample() string {
-	return `supernode version  0.4.1
+func versionExample(name string) string {
+	return fmt.Sprintf(`%s version  0.4.1
   Git commit:     6fd5c8f
   Build date:     20190717-15:57:52
   Go version:     go1.12.10
   OS/Arch:        linux/amd64
-`
+`, name)
 }
