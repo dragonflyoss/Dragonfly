@@ -69,6 +69,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	initFlags()
 	rootCmd.AddCommand(cmd.NewGenDocCommand("dfget"))
+	rootCmd.AddCommand(cmd.NewVersionCommand("dfget"))
 }
 
 // runDfget does some init operations and starts to download.
