@@ -19,6 +19,8 @@ package util
 import (
 	"testing"
 
+	"github.com/dragonflyoss/Dragonfly/pkg/util"
+
 	"github.com/go-check/check"
 )
 
@@ -111,6 +113,59 @@ func (suite *RangeUtilSuite) TestCalculatePieceNum(c *check.C) {
 	for _, v := range cases {
 		result := CalculatePieceNum(v.rangeStr)
 		c.Assert(result, check.Equals, v.expected)
+	}
+}
+
+func (suite *RangeUtilSuite) TestParsePieceIndex(c *check.C) {
+	var cases = []struct {
+		rangeStr      string
+		expectedStart int64
+		expectedEnd   int64
+		errNil        bool
+	}{
+		{
+			rangeStr:      "2-3",
+			expectedStart: 2,
+			expectedEnd:   3,
+			errNil:        true,
+		},
+		{
+			rangeStr:      "2-2",
+			expectedStart: 2,
+			expectedEnd:   2,
+			errNil:        true,
+		},
+		{
+			rangeStr:      "2-3-3",
+			expectedStart: -1,
+			expectedEnd:   -1,
+			errNil:        false,
+		},
+		{
+			rangeStr:      "2 -3",
+			expectedStart: -1,
+			expectedEnd:   -1,
+			errNil:        false,
+		},
+		{
+			rangeStr:      "2- 3",
+			expectedStart: -1,
+			expectedEnd:   -1,
+			errNil:        false,
+		},
+		{
+			rangeStr:      "3-2",
+			expectedStart: -1,
+			expectedEnd:   -1,
+			errNil:        false,
+		},
+	}
+
+	for _, v := range cases {
+		start, end, err := ParsePieceIndex(v.rangeStr)
+		c.Assert(start, check.Equals, v.expectedStart)
+		c.Assert(end, check.Equals, v.expectedEnd)
+		c.Assert(util.IsNil(err), check.Equals, v.errNil)
 	}
 }
 
