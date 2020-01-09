@@ -238,7 +238,7 @@ func initFlags() {
 		"filter some query params of URL, use char '&' to separate different params"+
 			"\neg: -f 'key&sign' will filter 'key' and 'sign' query param"+
 			"\nin this way, different but actually the same URLs can reuse the same downloading task")
-	flagSet.StringSliceVar(&cfg.Header, "header", nil,
+	flagSet.StringArrayVar(&cfg.Header, "header", nil,
 		"http header, eg: --header='Accept: *' --header='Host: abc'")
 	flagSet.VarP(config.NewSupernodesValue(&cfg.Supernodes, nil), "node", "n",
 		"specify the addresses(host:port=weight) of supernodes where the host is necessary, the port(default: 8002) and the weight(default:1) are optional. And the type of weight must be integer")
