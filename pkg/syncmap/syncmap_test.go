@@ -54,3 +54,16 @@ func (suite *SyncMapUtilSuite) TestListKeyAsIntSlice(c *check.C) {
 	sort.Ints(result)
 	c.Check(result, check.DeepEquals, []int{1, 2})
 }
+
+func (suite *SyncMapUtilSuite) TestRemove(c *check.C) {
+	mmap := NewSyncMap()
+	mmap.Add("aaa", true)
+	mmap.Add("bbb", true)
+	mmap.Add("ccc", true)
+
+	mmap.Remove("ccc")
+
+	result := mmap.ListKeyAsStringSlice()
+	sort.Strings(result)
+	c.Check(result, check.DeepEquals, []string{"aaa", "bbb"})
+}
