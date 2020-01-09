@@ -34,7 +34,7 @@ type StdPrinter struct {
 	Out io.Writer
 }
 
-// Println outputs info to console directly.
+// Print outputs info to console directly.
 func (sp *StdPrinter) Print(msg string) {
 	if sp.Out != nil {
 		fmt.Fprint(sp.Out, msg)
