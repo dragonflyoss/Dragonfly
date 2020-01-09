@@ -129,7 +129,7 @@ func ParseNodesString(value string) ([]*NodeWight, error) {
 	return ParseNodesSlice(strings.Split(value, ","))
 }
 
-// ParseNodesString parses the value in string slice type to []*NodeWight.
+// ParseNodesSlice parses the value in string slice type to []*NodeWight.
 func ParseNodesSlice(value []string) ([]*NodeWight, error) {
 	nodeWightSlice := make([]*NodeWight, 0)
 	weightKey := make([]int, 0)
