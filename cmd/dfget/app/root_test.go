@@ -27,6 +27,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/rate"
+
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/suite"
 )
@@ -89,6 +90,17 @@ func (suit *dfgetSuit) Test_initProperties() {
 		suit.Equal(cfg.TotalLimit, v.expected.TotalLimit)
 		suit.Equal(cfg.ClientQueueSize, v.expected.ClientQueueSize)
 	}
+}
+
+func (suit *dfgetSuit) Test_HeaderFlags() {
+	originCfg := *cfg
+	defer func() {
+		cfg = &originCfg
+	}()
+	flagSet := rootCmd.Flags()
+	flagSet.Parse([]string{"--header", "Host: abc", "--header", "Date:Mon, 30 Dec 2019"})
+
+	suit.Equal(cfg.Header, []string{"Host: abc", "Date:Mon, 30 Dec 2019"})
 }
 
 func (suit *dfgetSuit) Test_transFilter() {
