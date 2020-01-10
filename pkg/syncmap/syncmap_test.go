@@ -75,3 +75,11 @@ func (suite *SyncMapUtilSuite) TestGetAsInt(c *check.C) {
 	result, _ := mmap.GetAsInt("aaa")
 	c.Check(result, check.DeepEquals, 111)
 }
+
+func (suite *SyncMapUtilSuite) TestGetAsString(c *check.C) {
+	mmap := NewSyncMap()
+	mmap.Add("aaa", "value")
+
+	result, _ := mmap.GetAsString("aaa")
+	c.Check(result, check.DeepEquals, "value")
+}
