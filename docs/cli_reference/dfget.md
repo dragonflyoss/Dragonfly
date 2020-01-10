@@ -43,7 +43,7 @@ download SUCCESS cost:0.026s length:141898 reason:0
   -f, --filter string         filter some query params of URL, use char '&' to separate different params
                               eg: -f 'key&sign' will filter 'key' and 'sign' query param
                               in this way, different but actually the same URLs can reuse the same downloading task
-      --header strings        http header, eg: --header='Accept: *' --header='Host: abc'
+      --header stringArray    http header, eg: --header='Accept: *' --header='Host: abc'
   -h, --help                  help for dfget
       --home string           the work home directory of dfget
   -i, --identifier string     the usage of identifier is making different downloading tasks generate different downloading task IDs even if they have the same URLs. conflict with --md5.
