@@ -65,6 +65,16 @@ func (f *FilterTestSuite) TestParseFilter(c *check.C) {
 			errNil:   false,
 		},
 		{
+			name: "err pageSize test",
+			req: &http.Request{
+				URL: &url.URL{
+					RawQuery: "pageNum=1&pageSize=-1&sortDirect=ASC",
+				},
+			},
+			excepted: nil,
+			errNil:   false,
+		},
+		{
 			name: "err sortDirect test",
 			req: &http.Request{
 				URL: &url.URL{
