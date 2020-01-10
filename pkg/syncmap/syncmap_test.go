@@ -67,3 +67,11 @@ func (suite *SyncMapUtilSuite) TestRemove(c *check.C) {
 	sort.Strings(result)
 	c.Check(result, check.DeepEquals, []string{"aaa", "bbb"})
 }
+
+func (suite *SyncMapUtilSuite) TestGetAsInt(c *check.C) {
+	mmap := NewSyncMap()
+	mmap.Add("aaa", 111)
+
+	result, _ := mmap.GetAsInt("aaa")
+	c.Check(result, check.DeepEquals, 111)
+}
