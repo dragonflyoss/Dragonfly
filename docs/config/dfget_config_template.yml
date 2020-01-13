@@ -14,11 +14,15 @@ localLimit: 20M
 
 # Minimal rate about a single download task, format: G(B)/g/M(B)/m/K(B)/k/B
 # pure number will also be parsed as Byte.
-minRate: 512
+minRate: 64KB
 
-# TotalLimit rate limit about the whole host, format: G(B)/g/M(B)/m/K(B)/k/B
+# TotalLimit rate limit about the whole host includes download and upload, format: G(B)/g/M(B)/m/K(B)/k/B
 # pure number will also be parsed as Byte.
-totalLimit: 40M
+#
+# Suppose that there are two tasks on the same host
+#  and the `localLimit` for each task is 20MB.
+#  The actual download speed limit for each task will be 10MB when the `totalLimit` is 20MB.
+# totalLimit: 20M
 
 # ClientQueueSize is the size of client queue
 # which controls the number of pieces that can be processed simultaneously.

@@ -9,15 +9,12 @@ The following startup parameters are supported for `dfdaemon`
 | Parameter | Description |
 | ------------- | ------------- |
 | dfget_flags |	dfget properties |
-| dfpath | dfget path |
+| dfpath | dfget bin path |
 | hijack_https | HijackHTTPS is the list of hosts whose https requests should be hijacked by dfdaemon. The first matched rule will be used |
 | localrepo | Temp output dir of dfdaemon, by default `$HOME/.small-dragonfly/dfdaemon/data/` |
-| maxprocs| The maximum number of CPUs that the dfdaemon can use |
 | proxies | Proxies is the list of rules for the transparent proxy |
-| ratelimit | Net speed limit,format:xxxM/K |
 | registry_mirror | Registry mirror settings |
-| supernodes | Specify the addresses(host:port) of supernodes, it is just to be compatible with previous versions |
-| verbose | Open detail info switch |
+| verbose | Verbose mode. If true, set log level to 'debug'. |
 
 ## Examples
 

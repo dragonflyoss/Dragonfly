@@ -13,14 +13,11 @@ The following startup parameters are supported for `supernode`
 | listenPort | 8002 | listenPort is the port that supernode server listens on |
 | downloadPort | 8001 | downloadPort is the port for download files from supernode |
 | homeDir | /home/admin/supernode | homeDir is the working directory of supernode |
-| advertiseIP | the first non-loop address | the supernode ip is the ip we advertise to other peers in the p2p-network |
 | schedulerCorePoolSize | 10 | pool size is the core pool size of ScheduledExecutorService(the parameter is aborted) |
-| downloadPath | /home/admin/supernode/repo/download | DownloadPath specifies the path where to store downloaded files from source address |
 | peerUpLimit | 5 | upload limit for a peer to serve download tasks |
 | peerDownLimit | 4 |the task upload limit of a peer when dfget starts to play a role of peer |
 | eliminationLimit | 5 | if a dfget fails to provide service for other peers up to eliminationLimit, it will be isolated |
 | failureCountLimit | 5 | when dfget client fails to finish distribution task up to failureCountLimit, supernode will add it to blacklist|
-| linkLimit | 20M | LinkLimit is set for supernode to limit every piece download network speed |
 | systemReservedBandwidth | 20M |  network rate reserved for system |
 | maxBandwidth | 200M | network rate that supernode can use |
 | enableProfiler | false | profiler sets whether supernode HTTP server setups profiler |
