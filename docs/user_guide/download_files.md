@@ -33,7 +33,7 @@ Things are done differently when you download container images and download gene
 
     **Tip:** To list all available parameters for dfdaemon, run `dfdaemon -h`.
 
-3. Configure the Daemon Mirror.
+3. Configure the Docker daemon.
 
     a. Modify the configuration file `/etc/docker/daemon.json`.
 
