@@ -76,9 +76,8 @@ func (s *RegistTestSuite) TestSupernodeRegister_Register(c *check.C) {
 	m := new(MockSupernodeAPI)
 	m.RegisterFunc = CreateRegisterFunc()
 
-	register := NewSupernodeRegister(cfg, m)
-
 	var f = func(ec int, msg string, data *RegisterResult) {
+		register := NewSupernodeRegister(cfg, m)
 		resp, e := register.Register(0)
 		if msg == "" {
 			c.Assert(e, check.IsNil)
@@ -92,7 +91,7 @@ func (s *RegistTestSuite) TestSupernodeRegister_Register(c *check.C) {
 	}
 
 	cfg.Nodes = []string{""}
-	f(constants.HTTPError, "connection refused", nil)
+	f(constants.HTTPError, "empty response, unknown error", nil)
 
 	cfg.Nodes = []string{"x"}
 	f(501, "invalid source url", nil)
@@ -117,7 +116,7 @@ func (s *RegistTestSuite) TestSupernodeRegister_Register(c *check.C) {
 func (s *RegistTestSuite) TestSupernodeRegister_constructRegisterRequest(c *check.C) {
 	buf := &bytes.Buffer{}
 	cfg := s.createConfig(buf)
-	register := &supernodeRegister{nil, cfg}
+	register := &supernodeRegister{nil, cfg, ""}
 
 	cfg.Identifier = "id"
 	req := register.constructRegisterRequest(0)

@@ -188,11 +188,11 @@ func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 	}
 
 	if success {
-		logrus.Infof("download SUCCESS from supernode %s cost:%.3fs length:%d",
-			cfg.Nodes, time.Since(cfg.StartTime).Seconds(), cfg.RV.FileLength)
+		logrus.Infof("download SUCCESS cost:%.3fs length:%d",
+			time.Since(cfg.StartTime).Seconds(), cfg.RV.FileLength)
 	} else {
-		logrus.Infof("download FAIL from supernode %s cost:%.3fs length:%d reason:%d",
-			cfg.Nodes, time.Since(cfg.StartTime).Seconds(), cfg.RV.FileLength, cfg.BackSourceReason)
+		logrus.Infof("download FAIL cost:%.3fs length:%d reason:%d error:%v",
+			time.Since(cfg.StartTime).Seconds(), cfg.RV.FileLength, cfg.BackSourceReason, err)
 	}
 	return err
 }

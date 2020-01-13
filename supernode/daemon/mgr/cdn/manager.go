@@ -153,7 +153,7 @@ func (cm *Manager) TriggerCDN(ctx context.Context, task *types.TaskInfo) (*types
 	downloadMetadata, err := cm.writer.startWriter(ctx, cm.cfg, reader, task, startPieceNum, httpFileLength, pieceContSize)
 	if err != nil {
 		logrus.Errorf("failed to write for task %s: %v", task.ID, err)
-		return nil, err
+		return getUpdateTaskInfoWithStatusOnly(types.TaskInfoCdnStatusFAILED), err
 	}
 
 	realMD5 := reader.Md5()
