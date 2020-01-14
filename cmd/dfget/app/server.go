@@ -82,10 +82,11 @@ func runServer() error {
 }
 
 func initServerLog() error {
-	logFilePath := filepath.Join(cfg.WorkHome, "logs", "dfserver.log")
-
+	if cfg.LogConfig.Path == "" {
+		cfg.LogConfig.Path = filepath.Join(cfg.WorkHome, "logs", "dfserver.log")
+	}
 	opts := []dflog.Option{
-		dflog.WithLogFile(logFilePath, cfg.LogConfig.MaxSize, cfg.LogConfig.MaxBackups),
+		dflog.WithLogFile(cfg.LogConfig.Path, cfg.LogConfig.MaxSize, cfg.LogConfig.MaxBackups),
 		dflog.WithSign(cfg.Sign),
 		dflog.WithDebug(cfg.Verbose),
 	}

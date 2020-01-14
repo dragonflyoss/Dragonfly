@@ -79,7 +79,9 @@ func initLogger(cfg config.Properties) error {
 		}
 		cfg.WorkHome = filepath.Join(current.HomeDir, ".small-dragonfly")
 	}
-
+	if cfg.LogConfig.Path == "" {
+		cfg.LogConfig.Path = filepath.Join(cfg.WorkHome, "logs", "dfdaemon.log")
+	}
 	opts := []dflog.Option{
 		dflog.WithLogFile(cfg.LogConfig.Path, cfg.LogConfig.MaxSize, cfg.LogConfig.MaxBackups),
 		dflog.WithSign(fmt.Sprintf("%d", os.Getpid())),

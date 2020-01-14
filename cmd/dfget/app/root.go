@@ -188,10 +188,12 @@ func initProperties() ([]*propertiesResult, error) {
 // while console log will output the dfget client's log in console/terminal for
 // debugging usage.
 func initClientLog() error {
-	logFilePath := filepath.Join(cfg.WorkHome, "logs", "dfclient.log")
+	if cfg.LogConfig.Path == "" {
+		cfg.LogConfig.Path = filepath.Join(cfg.WorkHome, "logs", "dfclient.log")
+	}
 
 	opts := []dflog.Option{
-		dflog.WithLogFile(logFilePath, cfg.LogConfig.MaxSize, cfg.LogConfig.MaxBackups),
+		dflog.WithLogFile(cfg.LogConfig.Path, cfg.LogConfig.MaxSize, cfg.LogConfig.MaxBackups),
 		dflog.WithSign(cfg.Sign),
 		dflog.WithDebug(cfg.Verbose),
 	}
