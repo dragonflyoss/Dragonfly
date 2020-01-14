@@ -163,7 +163,7 @@ func (client *OriginClient) Download(url string, headers map[string]string, chec
 		return nil, err
 	}
 
-	if resp.StatusCode == checkCode {
+	if (resp.StatusCode & checkCode) == resp.StatusCode {
 		return resp, nil
 	}
 	return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)

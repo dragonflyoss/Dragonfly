@@ -42,7 +42,7 @@ func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateReq
 	if stringutils.IsEmptyStr(req.TaskURL) {
 		taskURL = netutils.FilterURLParam(req.RawURL, req.Filter)
 	}
-	taskID := generateTaskID(taskURL, req.Md5, req.Identifier)
+	taskID := generateTaskID(taskURL, req.Md5, req.Identifier, req.Headers)
 
 	util.GetLock(taskID, true)
 	defer util.ReleaseLock(taskID, true)
@@ -480,15 +480,19 @@ func validateParams(req *types.TaskCreateRequest) error {
 
 // generateTaskID generates taskID with taskURL,md5 and identifier
 // and returns the SHA-256 checksum of the data.
-func generateTaskID(taskURL, md5, identifier string) string {
+func generateTaskID(taskURL, md5, identifier string, header map[string]string) string {
 	sign := ""
 	if !stringutils.IsEmptyStr(md5) {
 		sign = md5
 	} else if !stringutils.IsEmptyStr(identifier) {
 		sign = identifier
 	}
-	id := fmt.Sprintf("%s%s%s%s", key, taskURL, sign, key)
-
+	var id string
+	if r, ok := header["Range"]; ok {
+		id = fmt.Sprintf("%s%s%s%s%s", key, taskURL, sign, r, key)
+	} else {
+		id = fmt.Sprintf("%s%s%s%s", key, taskURL, sign, key)
+	}
 	return digest.Sha256(id)
 }
 
@@ -533,7 +537,7 @@ func (tm *Manager) getHTTPFileLength(taskID, url string, headers map[string]stri
 	if code == http.StatusUnauthorized || code == http.StatusProxyAuthRequired {
 		return -1, errors.Wrapf(errortypes.ErrAuthenticationRequired, "taskID: %s,code: %d", taskID, code)
 	}
-	if code != http.StatusOK {
+	if code != http.StatusOK && code != http.StatusPartialContent {
 		logrus.Warnf("failed to get http file length with unexpected code: %d", code)
 		if code == http.StatusNotFound {
 			return -1, errors.Wrapf(errortypes.ErrURLNotReachable, "taskID: %s, url: %s", taskID, url)

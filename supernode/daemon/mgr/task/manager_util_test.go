@@ -73,7 +73,7 @@ func (s *TaskUtilTestSuite) TestEqualsTask(c *check.C) {
 	}{
 		{
 			existTask: &types.TaskInfo{
-				ID:             generateTaskID("http://aa.bb.com", "", ""),
+				ID:             generateTaskID("http://aa.bb.com", "", "", nil),
 				CdnStatus:      types.TaskInfoCdnStatusRUNNING,
 				HTTPFileLength: 1000,
 				PieceSize:      config.DefaultPieceSize,
@@ -83,7 +83,7 @@ func (s *TaskUtilTestSuite) TestEqualsTask(c *check.C) {
 				Md5:            "fooMD5",
 			},
 			task: &types.TaskInfo{
-				ID:             generateTaskID("http://aa.bb.com", "", ""),
+				ID:             generateTaskID("http://aa.bb.com", "", "", nil),
 				CdnStatus:      types.TaskInfoCdnStatusWAITING,
 				HTTPFileLength: 1000,
 				PieceSize:      config.DefaultPieceSize,
@@ -97,7 +97,7 @@ func (s *TaskUtilTestSuite) TestEqualsTask(c *check.C) {
 		{
 
 			existTask: &types.TaskInfo{
-				ID:             generateTaskID("http://aa.bb.com", "", ""),
+				ID:             generateTaskID("http://aa.bb.com", "", "", nil),
 				CdnStatus:      types.TaskInfoCdnStatusWAITING,
 				HTTPFileLength: 1000,
 				PieceSize:      config.DefaultPieceSize,
@@ -108,7 +108,7 @@ func (s *TaskUtilTestSuite) TestEqualsTask(c *check.C) {
 				Md5:            "fooMD5",
 			},
 			task: &types.TaskInfo{
-				ID:             generateTaskID("http://aa.bb.com", "", ""),
+				ID:             generateTaskID("http://aa.bb.com", "", "", nil),
 				CdnStatus:      types.TaskInfoCdnStatusWAITING,
 				HTTPFileLength: 1000,
 				PieceSize:      config.DefaultPieceSize,

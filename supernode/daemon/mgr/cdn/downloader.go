@@ -35,7 +35,7 @@ import (
 // Body which the caller is expected to close.
 func (cm *Manager) download(ctx context.Context, taskID, url string, headers map[string]string,
 	startPieceNum int, httpFileLength int64, pieceContSize int32) (*http.Response, error) {
-	var checkCode = http.StatusOK
+	var checkCode = http.StatusOK | http.StatusPartialContent
 
 	if startPieceNum > 0 {
 		breakRange, err := util.CalculateBreakRange(startPieceNum, int(pieceContSize), httpFileLength)
@@ -46,7 +46,10 @@ func (cm *Manager) download(ctx context.Context, taskID, url string, headers map
 		if headers == nil {
 			headers = make(map[string]string)
 		}
-		headers["Range"] = httputils.ConstructRangeStr(breakRange)
+		// check if Range in header? if Range already in Header, use this range directly
+		if _, ok := headers["Range"]; !ok {
+			headers["Range"] = httputils.ConstructRangeStr(breakRange)
+		}
 		checkCode = http.StatusPartialContent
 	}
 
