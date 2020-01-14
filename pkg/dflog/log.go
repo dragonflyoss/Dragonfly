@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -77,7 +76,7 @@ func getLumberjack(l *logrus.Logger) *lumberjack.Logger {
 func WithLogFile(f string, maxSize, maxBackups int) Option {
 	return func(l *logrus.Logger) error {
 		if f == "" {
-			f = filepath.Join("logs", "dfdaemon.log")
+			return nil
 		}
 		if maxSize <= 0 {
 			maxSize = 40
