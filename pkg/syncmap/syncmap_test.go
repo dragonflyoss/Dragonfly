@@ -83,3 +83,11 @@ func (suite *SyncMapUtilSuite) TestGetAsString(c *check.C) {
 	result, _ := mmap.GetAsString("aaa")
 	c.Check(result, check.DeepEquals, "value")
 }
+
+func (suite *SyncMapUtilSuite) TestGetAsBool(c *check.C) {
+	mmap := NewSyncMap()
+	mmap.Add("aaa", true)
+
+	result, _ := mmap.GetAsBool("aaa")
+	c.Check(result, check.DeepEquals, true)
+}
