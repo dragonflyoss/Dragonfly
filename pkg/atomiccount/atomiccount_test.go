@@ -40,3 +40,13 @@ func (suite *AtomicCountUtilSuite) TestAdd(c *check.C) {
 	result := acount.Get()
 	c.Check(result, check.Equals, (int32)(12))
 }
+
+func (suite *AtomicCountUtilSuite) TestSet(c *check.C) {
+	acount := NewAtomicInt(3)
+	acount.Add(4)
+	acount.Add(5)
+
+	_ = acount.Set(1)
+	result := acount.Get()
+	c.Check(result, check.Equals, (int32)(1))
+}
