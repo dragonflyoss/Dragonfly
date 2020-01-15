@@ -35,7 +35,7 @@ import (
 // Body which the caller is expected to close.
 func (cm *Manager) download(ctx context.Context, taskID, url string, headers map[string]string,
 	startPieceNum int, httpFileLength int64, pieceContSize int32) (*http.Response, error) {
-	var checkCode = http.StatusOK | http.StatusPartialContent
+	checkCode := []int{http.StatusOK, http.StatusPartialContent}
 
 	if startPieceNum > 0 {
 		breakRange, err := util.CalculateBreakRange(startPieceNum, int(pieceContSize), httpFileLength)
@@ -50,9 +50,20 @@ func (cm *Manager) download(ctx context.Context, taskID, url string, headers map
 		if _, ok := headers["Range"]; !ok {
 			headers["Range"] = httputils.ConstructRangeStr(breakRange)
 		}
-		checkCode = http.StatusPartialContent
+		checkCode = []int{http.StatusPartialContent}
 	}
 
 	logrus.Infof("start to download for taskId(%s) with fileUrl: %s header: %v checkCode: %d", taskID, url, headers, checkCode)
-	return cm.originClient.Download(url, headers, checkCode)
+	return cm.originClient.Download(url, headers, checkStatusCode(checkCode))
+}
+
+func checkStatusCode(statusCode []int) func(int) bool {
+	return func(status int) bool {
+		for _, s := range statusCode {
+			if status == s {
+				return true
+			}
+		}
+		return false
+	}
 }

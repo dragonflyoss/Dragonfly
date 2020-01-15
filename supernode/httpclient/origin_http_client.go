@@ -35,13 +35,15 @@ import (
 	"github.com/pkg/errors"
 )
 
+type StatusCodeChecker func(int) bool
+
 // OriginHTTPClient supply apis that interact with the source.
 type OriginHTTPClient interface {
 	RegisterTLSConfig(rawURL string, insecure bool, caBlock []strfmt.Base64)
 	GetContentLength(url string, headers map[string]string) (int64, int, error)
 	IsSupportRange(url string, headers map[string]string) (bool, error)
 	IsExpired(url string, headers map[string]string, lastModified int64, eTag string) (bool, error)
-	Download(url string, headers map[string]string, checkCode int) (*http.Response, error)
+	Download(url string, headers map[string]string, checkCode StatusCodeChecker) (*http.Response, error)
 }
 
 // OriginClient is an implementation of the interface of OriginHTTPClient.
@@ -156,14 +158,14 @@ func (client *OriginClient) IsExpired(url string, headers map[string]string, las
 }
 
 // Download downloads the file from the original address
-func (client *OriginClient) Download(url string, headers map[string]string, checkCode int) (*http.Response, error) {
+func (client *OriginClient) Download(url string, headers map[string]string, checkCode StatusCodeChecker) (*http.Response, error) {
 	// TODO: add timeout
 	resp, err := client.HTTPWithHeaders("GET", url, headers, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	if (resp.StatusCode & checkCode) == resp.StatusCode {
+	if checkCode(resp.StatusCode) {
 		return resp, nil
 	}
 	return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)

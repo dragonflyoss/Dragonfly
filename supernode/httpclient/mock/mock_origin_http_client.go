@@ -10,6 +10,8 @@ import (
 
 	strfmt "github.com/go-openapi/strfmt"
 	gomock "github.com/golang/mock/gomock"
+
+	"github.com/dragonflyoss/Dragonfly/supernode/httpclient"
 )
 
 // MockOriginHTTPClient is a mock of OriginHTTPClient interface
@@ -94,7 +96,7 @@ func (mr *MockOriginHTTPClientMockRecorder) IsExpired(url, headers, lastModified
 }
 
 // Download mocks base method
-func (m *MockOriginHTTPClient) Download(url string, headers map[string]string, checkCode int) (*http.Response, error) {
+func (m *MockOriginHTTPClient) Download(url string, headers map[string]string, checkCode httpclient.StatusCodeChecker) (*http.Response, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Download", url, headers, checkCode)
 	ret0, _ := ret[0].(*http.Response)
