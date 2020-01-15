@@ -25,6 +25,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/constants"
 	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
+	"github.com/pkg/errors"
 
 	"github.com/sirupsen/logrus"
 )
@@ -114,10 +115,11 @@ func (api *supernodeAPI) ReportPiece(node string, req *types.ReportPieceRequest)
 	resp = new(types.BaseResponse)
 	if e = api.get(url, resp); e != nil {
 		logrus.Errorf("failed to report piece{taskid:%s,range:%s},err: %v", req.TaskID, req.PieceRange, e)
-		return nil, e
+		return nil, errors.Wrapf(e, "failed to report piece{taskid:%s,range:%s}", req.TaskID, req.PieceRange)
 	}
 	if resp.Code != constants.CodeGetPieceReport {
 		logrus.Errorf("failed to report piece{taskid:%s,range:%s} to supernode: api response code is %d not equal to %d", req.TaskID, req.PieceRange, resp.Code, constants.CodeGetPieceReport)
+		return nil, errors.Wrapf(e, "failed to report piece{taskid:%s,range:%s} to supernode: api response code is %d not equal to %d", req.TaskID, req.PieceRange, resp.Code, constants.CodeGetPieceReport)
 	}
 	return
 }
