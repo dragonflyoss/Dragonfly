@@ -103,10 +103,10 @@ func (s *SupernodeAPITestSuite) TestSupernodeAPI_ReportPiece(c *check.C) {
 		TaskID:     "sssss",
 		PieceRange: "0-11",
 	}
-	s.mock.GetFunc = s.mock.CreateGetFunc(200, []byte(`{"Code":700}`), nil)
+	s.mock.GetFunc = s.mock.CreateGetFunc(200, []byte(`{"Code":611}`), nil)
 	r, e := s.api.ReportPiece(localhost, req)
 	c.Check(e, check.IsNil)
-	c.Check(r.Code, check.Equals, 700)
+	c.Check(r.Code, check.Equals, 611)
 }
 
 func (s *SupernodeAPITestSuite) TestSupernodeAPI_ServiceDown(c *check.C) {

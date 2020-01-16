@@ -20,6 +20,7 @@ import (
 	"bufio"
 	"context"
 	"io"
+	"math/rand"
 	"os"
 	"time"
 
@@ -202,12 +203,35 @@ func startSyncWriter(q queue.Queue) queue.Queue {
 }
 
 func (cw *ClientWriter) sendSuccessPiece(piece *Piece, cost time.Duration) {
-	cw.api.ReportPiece(piece.SuperNode, &types.ReportPieceRequest{
+	reportPieceRequest := &types.ReportPieceRequest{
 		TaskID:     piece.TaskID,
 		Cid:        cw.cfg.RV.Cid,
 		DstCid:     piece.DstCid,
 		PieceRange: piece.Range,
-	})
+	}
+
+	var retry = 0
+	var maxRetryTime = 3
+	for {
+		if retry >= maxRetryTime {
+			logrus.Errorf("failed to report piece to supernode with request(%+v) even after retrying max retry time", reportPieceRequest)
+			break
+		}
+
+		_, err := cw.api.ReportPiece(piece.SuperNode, reportPieceRequest)
+		if err == nil {
+			if retry > 0 {
+				logrus.Warnf("success to report piece with request(%+v) after retrying (%d) times", reportPieceRequest, retry)
+			}
+			break
+		}
+
+		sleepTime := time.Duration(rand.Intn(500)+50) * time.Millisecond
+		logrus.Warnf("failed to report piece to supernode with request(%+v) for (%d) times and will retry after sleep %.3fs", reportPieceRequest, retry, sleepTime.Seconds())
+		time.Sleep(sleepTime)
+		retry++
+	}
+
 	if cost.Seconds() > 2.0 {
 		logrus.Infof(
 			"async writer and report suc from dst:%s... cost:%.3f for range:%s",
