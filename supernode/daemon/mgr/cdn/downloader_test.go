@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
@@ -112,5 +113,50 @@ func (s *CDNDownloadTestSuite) TestDownload(c *check.C) {
 		result, _ := ioutil.ReadAll(resp.Body)
 		resp.Body.Close()
 		c.Check(string(result), check.Equals, string(v.exceptedBody))
+	}
+}
+
+func Test_checkStatusCode(t *testing.T) {
+	type args struct {
+		statusCode       []int
+		targetStatusCode int
+	}
+	tests := []struct {
+		name       string
+		args       args
+		statusCode int
+		want       bool
+	}{
+		{
+			name: "200",
+			args: args{
+				statusCode:       []int{http.StatusOK},
+				targetStatusCode: 200,
+			},
+			want: true,
+		},
+		{
+			name: "200|206",
+			args: args{
+				statusCode:       []int{http.StatusOK, http.StatusPartialContent},
+				targetStatusCode: 206,
+			},
+			want: true,
+		},
+		{
+			name: "204",
+			args: args{
+				statusCode:       []int{http.StatusOK, http.StatusPartialContent},
+				targetStatusCode: 204,
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := checkStatusCode(tt.args.statusCode)(tt.args.targetStatusCode); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("checkStatusCode() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
