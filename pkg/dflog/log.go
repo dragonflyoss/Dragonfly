@@ -35,6 +35,10 @@ type LogConfig struct {
 	// MaxBackups is the maximum number of old log files to retain.
 	// The default value is 1.
 	MaxBackups int `yaml:"maxBackups" json:"maxBackups"`
+
+	// Path is the location of log file
+	// The default value is logs/dfdaemon.log
+	Path string `yaml:"path" json:"path"`
 }
 
 // DefaultLogTimeFormat defines the timestamp format.

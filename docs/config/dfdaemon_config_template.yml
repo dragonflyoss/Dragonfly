@@ -74,3 +74,8 @@ verbose: false
 
 # The maximum number of CPUs that the dfdaemon can use
 maxprocs: 10
+
+# Logging
+logConfig:
+   # Log file path
+   path: /dev/stdout
