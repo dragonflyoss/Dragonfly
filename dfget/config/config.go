@@ -330,6 +330,12 @@ type RuntimeVariable struct {
 	// RealTarget specifies the full target path whose value is equal to the `Output`.
 	RealTarget string
 
+	// StreamMode specifies that all pieces will be wrote to a Pipe, currently only support cdn mode.
+	// when StreamMode is true, all data will write directly.
+	// the mode is prepared for this issue https://github.com/dragonflyoss/Dragonfly/issues/1164
+	// TODO: support p2p mode
+	StreamMode bool
+
 	// TargetDir is the directory of the RealTarget path.
 	TargetDir string
 

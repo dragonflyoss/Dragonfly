@@ -34,6 +34,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// RunWaiter will be used in p2p downloader
+//
+type RunWaiter interface {
+	Run(ctx context.Context)
+	Wait()
+}
+
 // ClientWriter writes a file for uploading and a target file.
 type ClientWriter struct {
 	// clientQueue maintains a queue of tasks that need to be written to disk.
@@ -75,7 +82,7 @@ type ClientWriter struct {
 
 // NewClientWriter creates and initialize a ClientWriter instance.
 func NewClientWriter(clientFilePath, serviceFilePath string,
-	clientQueue queue.Queue, api api.SupernodeAPI, cfg *config.Config) (*ClientWriter, error) {
+	clientQueue queue.Queue, api api.SupernodeAPI, cfg *config.Config) (RunWaiter, error) {
 	clientWriter := &ClientWriter{
 		clientQueue:     clientQueue,
 		clientFilePath:  clientFilePath,

@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"math/rand"
 	"os"
 	"strconv"
@@ -86,6 +87,10 @@ type P2PDownloader struct {
 	// always ends with ".service".
 	serviceFilePath string
 
+	// streamMode indicates send piece data into a pipe
+	// this is useful for use dfget as a library
+	streamMode bool
+
 	// pieceSet range -> bool
 	// true: if the range is processed successfully
 	// false: if the range is in processing
@@ -129,6 +134,7 @@ func (p2p *P2PDownloader) init() {
 	p2p.node = p2p.RegisterResult.Node
 	p2p.taskID = p2p.RegisterResult.TaskID
 	p2p.targetFile = p2p.cfg.RV.RealTarget
+	p2p.streamMode = p2p.cfg.RV.StreamMode
 	p2p.taskFileName = p2p.cfg.RV.TaskFileName
 
 	p2p.pieceSizeHistory[0], p2p.pieceSizeHistory[1] =
@@ -153,15 +159,36 @@ func (p2p *P2PDownloader) Run(ctx context.Context) error {
 	var (
 		lastItem *Piece
 		goNext   bool
+		err      error
 	)
 
-	// start ClientWriter
-	clientWriter, err := NewClientWriter(p2p.clientFilePath, p2p.serviceFilePath, p2p.clientQueue, p2p.API, p2p.cfg)
+	// start RunWaiter
+	var rw RunWaiter
+
+	if p2p.streamMode {
+		// TODO switching to stream mode is first step to enhance dfget as a library
+		// hard code here will be changed later
+		rw, err = NewClientStreamWriter(p2p.clientQueue, p2p.API, p2p.cfg)
+		go func() {
+			file, err := fileutils.OpenFile(p2p.clientFilePath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0755)
+			if err != nil {
+				return
+			}
+			defer file.Close()
+			_, err = io.Copy(file, rw.(io.Reader))
+			if err != nil {
+				return
+			}
+		}()
+	} else {
+		rw, err = NewClientWriter(p2p.clientFilePath, p2p.serviceFilePath, p2p.clientQueue, p2p.API, p2p.cfg)
+	}
+
 	if err != nil {
 		return err
 	}
 	go func() {
-		clientWriter.Run(ctx)
+		rw.Run(ctx)
 	}()
 
 	for {
@@ -186,7 +213,7 @@ func (p2p *P2PDownloader) Run(ctx context.Context) error {
 			if code == constants.CodePeerContinue {
 				p2p.processPiece(response, &curItem)
 			} else if code == constants.CodePeerFinish {
-				p2p.finishTask(response, clientWriter)
+				p2p.finishTask(response, rw)
 				return nil
 			} else {
 				logrus.Warnf("request piece result:%v", response)
@@ -425,12 +452,12 @@ func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 	}
 }
 
-func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, clientWriter *ClientWriter) {
+func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, rw RunWaiter) {
 	// wait client writer finished
 	logrus.Infof("remaining piece to be written count:%d", p2p.clientQueue.Len())
 	p2p.clientQueue.Put(last)
 	waitStart := time.Now()
-	clientWriter.Wait()
+	rw.Wait()
 	logrus.Infof("wait client writer finish cost:%.3f,main qu size:%d,client qu size:%d",
 		time.Since(waitStart).Seconds(), p2p.queue.Len(), p2p.clientQueue.Len())
 
@@ -439,18 +466,20 @@ func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, clie
 	}
 
 	// get the temp path where the downloaded file exists.
-	var src string
-	if clientWriter.acrossWrite || !helper.IsP2P(p2p.cfg.Pattern) {
-		src = p2p.cfg.RV.TempTarget
-	} else {
-		if _, err := os.Stat(p2p.clientFilePath); err != nil {
-			logrus.Warnf("client file path:%s not found", p2p.clientFilePath)
-			if e := fileutils.Link(p2p.serviceFilePath, p2p.clientFilePath); e != nil {
-				logrus.Warnln("hard link failed, instead of use copy")
-				fileutils.CopyFile(p2p.serviceFilePath, p2p.clientFilePath)
+	src := p2p.clientFilePath
+	// TODO need optimise for stream mode
+	if cw, ok := rw.(*ClientWriter); ok {
+		if cw.acrossWrite || !helper.IsP2P(p2p.cfg.Pattern) {
+			src = p2p.cfg.RV.TempTarget
+		} else {
+			if _, err := os.Stat(p2p.clientFilePath); err != nil {
+				logrus.Warnf("client file path:%s not found", p2p.clientFilePath)
+				if e := fileutils.Link(p2p.serviceFilePath, p2p.clientFilePath); e != nil {
+					logrus.Warnln("hard link failed, instead of use copy")
+					fileutils.CopyFile(p2p.serviceFilePath, p2p.clientFilePath)
+				}
 			}
 		}
-		src = p2p.clientFilePath
 	}
 
 	// move file to the target file path.
