@@ -112,3 +112,12 @@ func (suite *SyncMapUtilSuite) TestGetAsBitset(c *check.C) {
 	result, _ := mmap.GetAsBitset("aaa")
 	c.Check(result, check.DeepEquals, expected)
 }
+
+func (suite *SyncMapUtilSuite) TestGetAsInt64(c *check.C) {
+	expected := int64(111)
+	mmap := NewSyncMap()
+	mmap.Add("aaa", expected)
+
+	result, _ := mmap.GetAsInt64("aaa")
+	c.Check(result, check.DeepEquals, expected)
+}
