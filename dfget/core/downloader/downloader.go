@@ -24,6 +24,7 @@ package downloader
 import (
 	"context"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
@@ -35,6 +36,8 @@ import (
 // Downloader is the interface to download files
 type Downloader interface {
 	Run(ctx context.Context) error
+	// RunStream return a io.Reader instead of writing a file without any disk io.
+	RunStream(ctx context.Context) (io.Reader, error)
 	Cleanup()
 }
 

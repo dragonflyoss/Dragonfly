@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io"
 	"math/rand"
-	"os"
 	"strconv"
 	"time"
 
@@ -33,7 +32,6 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/constants"
-	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 	"github.com/dragonflyoss/Dragonfly/pkg/printer"
 	"github.com/dragonflyoss/Dragonfly/pkg/queue"
@@ -156,39 +154,40 @@ func (p2p *P2PDownloader) init() {
 
 // Run starts to download the file.
 func (p2p *P2PDownloader) Run(ctx context.Context) error {
+	if p2p.streamMode {
+		return fmt.Errorf("streamMode enabled, should be disable")
+	}
+	clientWriter := NewClientWriter(p2p.clientFilePath, p2p.serviceFilePath, p2p.clientQueue, p2p.API, p2p.cfg)
+	return p2p.run(ctx, clientWriter)
+}
+
+// RunStream starts to download the file, but return a io.Reader instead of writing a file to local disk.
+func (p2p *P2PDownloader) RunStream(ctx context.Context) (io.Reader, error) {
+	if !p2p.streamMode {
+		return nil, fmt.Errorf("streamMode disable, should be enabled")
+	}
+	clientStreamWriter := NewClientStreamWriter(p2p.clientQueue, p2p.API, p2p.cfg)
+	go func() {
+		err := p2p.run(ctx, clientStreamWriter)
+		if err != nil {
+			logrus.Warnf("P2PDownloader run error: %s", err)
+		}
+	}()
+	return clientStreamWriter, nil
+}
+
+func (p2p *P2PDownloader) run(ctx context.Context, pieceWriter PieceWriter) error {
 	var (
 		lastItem *Piece
 		goNext   bool
-		err      error
 	)
 
-	// start RunWaiter
-	var rw RunWaiter
-
-	if p2p.streamMode {
-		// TODO switching to stream mode is first step to enhance dfget as a library
-		// hard code here will be changed later
-		rw, err = NewClientStreamWriter(p2p.clientQueue, p2p.API, p2p.cfg)
-		go func() {
-			file, err := fileutils.OpenFile(p2p.clientFilePath, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0755)
-			if err != nil {
-				return
-			}
-			defer file.Close()
-			_, err = io.Copy(file, rw.(io.Reader))
-			if err != nil {
-				return
-			}
-		}()
-	} else {
-		rw, err = NewClientWriter(p2p.clientFilePath, p2p.serviceFilePath, p2p.clientQueue, p2p.API, p2p.cfg)
-	}
-
-	if err != nil {
+	// start PieceWriter
+	if err := pieceWriter.PreRun(ctx); err != nil {
 		return err
 	}
 	go func() {
-		rw.Run(ctx)
+		pieceWriter.Run(ctx)
 	}()
 
 	for {
@@ -213,7 +212,7 @@ func (p2p *P2PDownloader) Run(ctx context.Context) error {
 			if code == constants.CodePeerContinue {
 				p2p.processPiece(response, &curItem)
 			} else if code == constants.CodePeerFinish {
-				p2p.finishTask(response, rw)
+				p2p.finishTask(ctx, pieceWriter)
 				return nil
 			} else {
 				logrus.Warnf("request piece result:%v", response)
@@ -452,12 +451,12 @@ func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 	}
 }
 
-func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, rw RunWaiter) {
+func (p2p *P2PDownloader) finishTask(ctx context.Context, pieceWriter PieceWriter) {
 	// wait client writer finished
 	logrus.Infof("remaining piece to be written count:%d", p2p.clientQueue.Len())
 	p2p.clientQueue.Put(last)
 	waitStart := time.Now()
-	rw.Wait()
+	pieceWriter.Wait()
 	logrus.Infof("wait client writer finish cost:%.3f,main qu size:%d,client qu size:%d",
 		time.Since(waitStart).Seconds(), p2p.queue.Len(), p2p.clientQueue.Len())
 
@@ -465,28 +464,11 @@ func (p2p *P2PDownloader) finishTask(response *types.PullPieceTaskResponse, rw R
 		return
 	}
 
-	// get the temp path where the downloaded file exists.
-	src := p2p.clientFilePath
-	// TODO need optimise for stream mode
-	if cw, ok := rw.(*ClientWriter); ok {
-		if cw.acrossWrite || !helper.IsP2P(p2p.cfg.Pattern) {
-			src = p2p.cfg.RV.TempTarget
-		} else {
-			if _, err := os.Stat(p2p.clientFilePath); err != nil {
-				logrus.Warnf("client file path:%s not found", p2p.clientFilePath)
-				if e := fileutils.Link(p2p.serviceFilePath, p2p.clientFilePath); e != nil {
-					logrus.Warnln("hard link failed, instead of use copy")
-					fileutils.CopyFile(p2p.serviceFilePath, p2p.clientFilePath)
-				}
-			}
-		}
+	err := pieceWriter.PostRun(ctx)
+	if err != nil {
+		logrus.Warnf("post run error: %s", err)
 	}
 
-	// move file to the target file path.
-	if err := downloader.MoveFile(src, p2p.targetFile, p2p.cfg.Md5); err != nil {
-		return
-	}
-	logrus.Infof("download successfully from dragonfly")
 }
 
 func (p2p *P2PDownloader) refresh(item *Piece) {

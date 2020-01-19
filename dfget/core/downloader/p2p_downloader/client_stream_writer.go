@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math/rand"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
@@ -40,7 +41,6 @@ type ClientStreamWriter struct {
 	// finish indicates whether the task written is completed.
 	finish chan struct{}
 
-	syncQueue queue.Queue
 	// pieceIndex records the number of pieces currently downloaded.
 	pieceIndex int
 	// result records whether the write operation was successful.
@@ -63,7 +63,7 @@ type ClientStreamWriter struct {
 }
 
 // NewClientStreamWriter creates and initialize a ClientStreamWriter instance.
-func NewClientStreamWriter(clientQueue queue.Queue, api api.SupernodeAPI, cfg *config.Config) (*ClientStreamWriter, error) {
+func NewClientStreamWriter(clientQueue queue.Queue, api api.SupernodeAPI, cfg *config.Config) *ClientStreamWriter {
 	pr, pw := io.Pipe()
 	clientWriter := &ClientStreamWriter{
 		clientQueue: clientQueue,
@@ -71,18 +71,20 @@ func NewClientStreamWriter(clientQueue queue.Queue, api api.SupernodeAPI, cfg *c
 		pipeWriter:  pw,
 		api:         api,
 		cfg:         cfg,
+		cache:       make(map[int]*Piece),
 	}
-	if err := clientWriter.init(); err != nil {
-		return nil, err
-	}
-	return clientWriter, nil
+	return clientWriter
 }
 
-func (csw *ClientStreamWriter) init() (err error) {
+func (csw *ClientStreamWriter) PreRun(ctx context.Context) (err error) {
 	csw.p2pPattern = helper.IsP2P(csw.cfg.Pattern)
 	csw.result = true
 	csw.finish = make(chan struct{})
 	return
+}
+
+func (csw *ClientStreamWriter) PostRun(ctx context.Context) (err error) {
+	return nil
 }
 
 // Run starts writing pipe.
@@ -139,7 +141,7 @@ func (csw *ClientStreamWriter) write(piece *Piece) error {
 func (csw *ClientStreamWriter) writePieceToPipe(p *Piece) error {
 	for {
 		// must write piece by order
-		// when received PieceNum is great then pieceIndex, cache it
+		// when received PieceNum is greater then pieceIndex, cache it
 		if p.PieceNum != csw.pieceIndex {
 			if p.PieceNum < csw.pieceIndex {
 				return fmt.Errorf("piece number should great than %d", csw.pieceIndex)
@@ -158,6 +160,7 @@ func (csw *ClientStreamWriter) writePieceToPipe(p *Piece) error {
 		next, ok := csw.cache[csw.pieceIndex]
 		if ok {
 			p = next
+			delete(csw.cache, csw.pieceIndex)
 			continue
 		}
 		break
@@ -166,13 +169,37 @@ func (csw *ClientStreamWriter) writePieceToPipe(p *Piece) error {
 	return nil
 }
 
+// TODO this function is very similar ClientWriter.sendSuccessPiece, refactor later
 func (csw *ClientStreamWriter) sendSuccessPiece(piece *Piece, cost time.Duration) {
-	csw.api.ReportPiece(piece.SuperNode, &types.ReportPieceRequest{
+	reportPieceRequest := &types.ReportPieceRequest{
 		TaskID:     piece.TaskID,
 		Cid:        csw.cfg.RV.Cid,
 		DstCid:     piece.DstCid,
 		PieceRange: piece.Range,
-	})
+	}
+
+	var retry = 0
+	var maxRetryTime = 3
+	for {
+		if retry >= maxRetryTime {
+			logrus.Errorf("failed to report piece to supernode with request(%+v) even after retrying max retry time", reportPieceRequest)
+			break
+		}
+
+		_, err := csw.api.ReportPiece(piece.SuperNode, reportPieceRequest)
+		if err == nil {
+			if retry > 0 {
+				logrus.Warnf("success to report piece with request(%+v) after retrying (%d) times", reportPieceRequest, retry)
+			}
+			break
+		}
+
+		sleepTime := time.Duration(rand.Intn(500)+50) * time.Millisecond
+		logrus.Warnf("failed to report piece to supernode with request(%+v) for (%d) times and will retry after sleep %.3fs", reportPieceRequest, retry, sleepTime.Seconds())
+		time.Sleep(sleepTime)
+		retry++
+	}
+
 	if cost.Seconds() > 2.0 {
 		logrus.Infof(
 			"async writer and report suc from dst:%s... cost:%.3f for range:%s",
