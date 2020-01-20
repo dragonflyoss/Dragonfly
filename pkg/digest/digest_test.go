@@ -36,3 +36,8 @@ func (suite *DigestUtilSuite) TestSha256(c *check.C) {
 	result := Sha256("test")
 	c.Check(result, check.Equals, "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08")
 }
+
+func (suite *DigestUtilSuite) TestSha1(c *check.C) {
+	result := Sha1([]string{"test1", "test2"})
+	c.Check(result, check.Equals, "dff964f6e3c1761b6288f5c75c319d36fb09b2b9")
+}
