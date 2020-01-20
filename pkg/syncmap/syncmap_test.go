@@ -19,6 +19,7 @@ package syncmap
 import (
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/go-check/check"
 	"github.com/willf/bitset"
@@ -119,5 +120,14 @@ func (suite *SyncMapUtilSuite) TestGetAsInt64(c *check.C) {
 	mmap.Add("aaa", expected)
 
 	result, _ := mmap.GetAsInt64("aaa")
+	c.Check(result, check.DeepEquals, expected)
+}
+
+func (suite *SyncMapUtilSuite) TestGetAsTime(c *check.C) {
+	expected := time.Now()
+	mmap := NewSyncMap()
+	mmap.Add("aaa", expected)
+
+	result, _ := mmap.GetAsTime("aaa")
 	c.Check(result, check.DeepEquals, expected)
 }
