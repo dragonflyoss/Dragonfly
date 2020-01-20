@@ -26,7 +26,12 @@ import (
 )
 
 func (gcm *Manager) gcDisk(ctx context.Context) {
-	gcTaskIDs, err := gcm.cdnMgr.GetGCTaskIDs(ctx, gcm.taskMgr)
+	taskMap, err := gcm.taskMgr.List(ctx, nil)
+	if err != nil {
+		logrus.Errorf("gc disk: failed to list tasks: %v", err)
+		return
+	}
+	gcTaskIDs, err := gcm.cdnMgr.GetGCTaskIDs(ctx, taskMap)
 	if err != nil {
 		logrus.Errorf("gc disk: failed to get gc tasks: %v", err)
 		return

@@ -24,6 +24,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
+	"github.com/dragonflyoss/Dragonfly/supernode/cdn"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 
@@ -43,7 +44,7 @@ const (
 // handlerStore stores all registered handler.
 var handlerStore = syncmap.NewSyncMap()
 
-type handlerInitFunc func(gcManager mgr.GCMgr, cdnManager mgr.CDNMgr) (handler Handler, err error)
+type handlerInitFunc func(gcManager mgr.GCMgr, cdnManager cdn.Driver) (handler Handler, err error)
 
 func Register(errType string, initer handlerInitFunc) {
 	handlerStore.Add(errType, initer)
@@ -59,7 +60,7 @@ type Manager struct {
 	handlers map[string]Handler
 
 	gcManager  mgr.GCMgr
-	cdnManager mgr.CDNMgr
+	cdnManager cdn.Driver
 
 	// error handler
 	pieceErrChan       chan *types.PieceErrorRequest
@@ -67,7 +68,7 @@ type Manager struct {
 	handledStore       *syncmap.SyncMap
 }
 
-func NewManager(cfg *config.Config, gcManager mgr.GCMgr, cdnManager mgr.CDNMgr) (*Manager, error) {
+func NewManager(cfg *config.Config, gcManager mgr.GCMgr, cdnManager cdn.Driver) (*Manager, error) {
 	return &Manager{
 		cfg:                cfg,
 		handlers:           make(map[string]Handler),

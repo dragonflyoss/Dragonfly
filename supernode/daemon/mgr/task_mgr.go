@@ -47,7 +47,7 @@ type TaskMgr interface {
 	GetAccessTime(ctx context.Context) (*syncmap.SyncMap, error)
 
 	// List returns the list tasks with filter.
-	List(ctx context.Context, filter map[string]string) ([]*types.TaskInfo, error)
+	List(ctx context.Context, filter map[string]string) (taskMap *syncmap.SyncMap, err error)
 
 	// CheckTaskStatus checks whether the taskID corresponding file exists.
 	CheckTaskStatus(ctx context.Context, taskID string) (bool, error)
