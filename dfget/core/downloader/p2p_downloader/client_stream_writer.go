@@ -144,7 +144,9 @@ func (csw *ClientStreamWriter) writePieceToPipe(p *Piece) error {
 		// when received PieceNum is greater then pieceIndex, cache it
 		if p.PieceNum != csw.pieceIndex {
 			if p.PieceNum < csw.pieceIndex {
-				return fmt.Errorf("piece number should great than %d", csw.pieceIndex)
+				logrus.Warnf("piece number should be greater than %d, received piece number: %d",
+					csw.pieceIndex, p.PieceNum)
+				break
 			}
 			csw.cache[p.PieceNum] = p
 			break
