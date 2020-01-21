@@ -83,3 +83,10 @@ func (suite *ErrorTestSuite) TestIsConvertFailed(c *check.C) {
 	c.Assert(IsConvertFailed(*err1), check.Equals, true)
 	c.Assert(IsConvertFailed(*err2), check.Equals, false)
 }
+
+func (suite *ErrorTestSuite) TestIsRangeNotSatisfiable(c *check.C) {
+	err1 := New(5, "range not satisfiable")
+	err2 := New(11, "test")
+	c.Assert(IsRangeNotSatisfiable(*err1), check.Equals, true)
+	c.Assert(IsRangeNotSatisfiable(*err2), check.Equals, false)
+}
