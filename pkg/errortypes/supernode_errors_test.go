@@ -67,3 +67,10 @@ func (suite *SupernodeErrorTestSuite) IsPeerContinue(c *check.C) {
 	c.Assert(IsPeerContinue(*err1), check.Equals, true)
 	c.Assert(IsPeerContinue(*err2), check.Equals, false)
 }
+
+func (suite *SupernodeErrorTestSuite) TestIsURLNotReachable(c *check.C) {
+	err1 := New(12, "url not reachable")
+	err2 := New(0, "test")
+	c.Assert(IsURLNotReachable(*err1), check.Equals, true)
+	c.Assert(IsURLNotReachable(*err2), check.Equals, false)
+}
