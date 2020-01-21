@@ -32,3 +32,10 @@ func (suite *SupernodeErrorTestSuite) TestIsSystemError(c *check.C) {
 	c.Assert(IsSystemError(*err1), check.Equals, true)
 	c.Assert(IsSystemError(*err2), check.Equals, false)
 }
+
+func (suite *SupernodeErrorTestSuite) TestIsCDNFail(c *check.C) {
+	err1 := New(7, "cdn status is fail")
+	err2 := New(0, "test")
+	c.Assert(IsCDNFail(*err1), check.Equals, true)
+	c.Assert(IsCDNFail(*err2), check.Equals, false)
+}
