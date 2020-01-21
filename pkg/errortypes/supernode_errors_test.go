@@ -81,3 +81,10 @@ func (suite *SupernodeErrorTestSuite) TestIsTaskIDDuplicate(c *check.C) {
 	c.Assert(IsTaskIDDuplicate(*err1), check.Equals, true)
 	c.Assert(IsTaskIDDuplicate(*err2), check.Equals, false)
 }
+
+func (suite *SupernodeErrorTestSuite) TestIsAuthenticationRequired(c *check.C) {
+	err1 := New(14, "authentication required")
+	err2 := New(0, "test")
+	c.Assert(IsAuthenticationRequired(*err1), check.Equals, true)
+	c.Assert(IsAuthenticationRequired(*err2), check.Equals, false)
+}
