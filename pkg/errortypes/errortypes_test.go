@@ -55,3 +55,10 @@ func (suite *ErrorTestSuite) TestIsDataNotFound(c *check.C) {
 	c.Assert(IsDataNotFound(*err1), check.Equals, true)
 	c.Assert(IsDataNotFound(*err2), check.Equals, false)
 }
+
+func (suite *ErrorTestSuite) TestIsEmptyValue(c *check.C) {
+	err1 := New(1, "empty value")
+	err2 := New(11, "test")
+	c.Assert(IsEmptyValue(*err1), check.Equals, true)
+	c.Assert(IsEmptyValue(*err2), check.Equals, false)
+}
