@@ -30,6 +30,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/downloader"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/downloader/dfget"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/downloader/p2p"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/transport"
 
 	"github.com/pkg/errors"
@@ -101,6 +102,20 @@ func WithDownloaderFactory(f downloader.Factory) Option {
 	}
 }
 
+func WithStreamMode(streamMode bool) Option {
+	return func(p *Proxy) error {
+		p.streamMode = streamMode
+		return nil
+	}
+}
+
+func WithStreamDownloaderFactory(f downloader.StreamFactory) Option {
+	return func(p *Proxy) error {
+		p.streamDownloadFactory = f
+		return nil
+	}
+}
+
 // New returns a new transparent proxy with the given rules
 func New(opts ...Option) (*Proxy, error) {
 	proxy := &Proxy{
@@ -124,6 +139,10 @@ func NewFromConfig(c config.Properties) (*Proxy, error) {
 		WithDownloaderFactory(func() downloader.Interface {
 			return dfget.NewGetter(c.DFGetConfig())
 		}),
+		WithStreamDownloaderFactory(func() downloader.Stream {
+			return p2p.NewClient(c.DFGetConfig())
+		}),
+		WithStreamMode(c.StreamMode),
 	}
 
 	logrus.Infof("registry mirror: %s", c.RegistryMirror.Remote)
@@ -171,7 +190,9 @@ type Proxy struct {
 	// directHandler are used to handle non proxy requests
 	directHandler http.Handler
 	// downloadFactory returns the downloader used for p2p downloading
-	downloadFactory downloader.Factory
+	downloadFactory       downloader.Factory
+	streamDownloadFactory downloader.StreamFactory
+	streamMode            bool
 }
 
 func (proxy *Proxy) mirrorRegistry(w http.ResponseWriter, r *http.Request) {
@@ -239,7 +260,7 @@ func (proxy *Proxy) handleHTTP(w http.ResponseWriter, req *http.Request) {
 
 func (proxy *Proxy) roundTripper(tlsConfig *tls.Config) http.RoundTripper {
 	rt, _ := transport.New(
-		transport.WithDownloader(proxy.downloadFactory()),
+		transport.WithStreamDownloader(proxy.streamDownloadFactory()),
 		transport.WithTLS(tlsConfig),
 		transport.WithCondition(proxy.shouldUseDfget),
 	)

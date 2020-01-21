@@ -28,23 +28,58 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
+	dfgetcfg "github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/util"
 	"github.com/dragonflyoss/Dragonfly/pkg/dflog"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
+	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
 	statutil "github.com/dragonflyoss/Dragonfly/pkg/stat"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
+// adjustSupernodeList adjusts the super nodes [a,b] to [a,b,b,a]
+func adjustSupernodeList(nodes []string) []string {
+	switch nodesLen := len(nodes); nodesLen {
+	case 0:
+		return nodes
+	case 1:
+		return append(nodes, nodes[0])
+	default:
+		util.Shuffle(nodesLen, func(i, j int) {
+			nodes[i], nodes[j] = nodes[j], nodes[i]
+		})
+		return append(nodes, nodes...)
+	}
+}
+
+// getLocalIP return the localIP which connects to supper node
+func getLocalIP(nodes []string) (localIP string) {
+	var (
+		e error
+	)
+	for _, n := range nodes {
+		ip, port := netutils.GetIPAndPortFromNode(n, dfgetcfg.DefaultSupernodePort)
+		if localIP, e = httputils.CheckConnect(ip, port, 1000); e == nil {
+			return localIP
+		}
+		logrus.Warnf("Connect to node:%s error: %v", n, e)
+	}
+	return ""
+}
+
 // initDfdaemon sets up running environment for dfdaemon according to the given config.
-func initDfdaemon(cfg config.Properties) error {
+func initDfdaemon(cfg *config.Properties) error {
 	// if Options.MaxProcs <= 0, programs run with GOMAXPROCS set to the number of cores available.
 	if cfg.MaxProcs > 0 {
 		runtime.GOMAXPROCS(cfg.MaxProcs)
 	}
 
-	if err := initLogger(cfg); err != nil {
+	if err := initLogger(*cfg); err != nil {
 		return errors.Wrap(err, "init logger")
 	}
 
@@ -58,14 +93,20 @@ func initDfdaemon(cfg config.Properties) error {
 			"ensure local repo %s exists", cfg.DFRepo,
 		)
 	}
+	cfg.SuperNodes = adjustSupernodeList(cfg.SuperNodes)
+	if stringutils.IsEmptyStr(cfg.LocalIP) {
+		cfg.LocalIP = getLocalIP(cfg.SuperNodes)
+	}
 
 	go cleanLocalRepo(cfg.DFRepo)
 
-	dfgetVersion, err := exec.Command(cfg.DFPath, "version").CombinedOutput()
-	if err != nil {
-		return errors.Wrap(err, "get dfget version")
+	if !cfg.StreamMode {
+		dfgetVersion, err := exec.Command(cfg.DFPath, "version").CombinedOutput()
+		if err != nil {
+			return errors.Wrap(err, "get dfget version")
+		}
+		logrus.Infof("use %s from %s", bytes.TrimSpace(dfgetVersion), cfg.DFPath)
 	}
-	logrus.Infof("use %s from %s", bytes.TrimSpace(dfgetVersion), cfg.DFPath)
 
 	return nil
 }
