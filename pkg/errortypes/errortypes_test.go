@@ -48,3 +48,45 @@ func (suite *ErrorTestSuite) TestError(c *check.C) {
 	err := New(1, "test")
 	c.Assert(err.Error(), check.Equals, "{\"Code\":1,\"Msg\":\"test\"}")
 }
+
+func (suite *ErrorTestSuite) TestIsDataNotFound(c *check.C) {
+	err1 := New(0, "data not found")
+	err2 := New(11, "test")
+	c.Assert(IsDataNotFound(*err1), check.Equals, true)
+	c.Assert(IsDataNotFound(*err2), check.Equals, false)
+}
+
+func (suite *ErrorTestSuite) TestIsEmptyValue(c *check.C) {
+	err1 := New(1, "empty value")
+	err2 := New(11, "test")
+	c.Assert(IsEmptyValue(*err1), check.Equals, true)
+	c.Assert(IsEmptyValue(*err2), check.Equals, false)
+}
+
+func (suite *ErrorTestSuite) TestIsInvalidValue(c *check.C) {
+	err1 := New(2, "invalid value")
+	err2 := New(11, "test")
+	c.Assert(IsInvalidValue(*err1), check.Equals, true)
+	c.Assert(IsInvalidValue(*err2), check.Equals, false)
+}
+
+func (suite *ErrorTestSuite) TestIsNotInitialized(c *check.C) {
+	err1 := New(3, "not initialized")
+	err2 := New(11, "test")
+	c.Assert(IsNotInitialized(*err1), check.Equals, true)
+	c.Assert(IsNotInitialized(*err2), check.Equals, false)
+}
+
+func (suite *ErrorTestSuite) TestIsConvertFailed(c *check.C) {
+	err1 := New(4, "convert failed")
+	err2 := New(11, "test")
+	c.Assert(IsConvertFailed(*err1), check.Equals, true)
+	c.Assert(IsConvertFailed(*err2), check.Equals, false)
+}
+
+func (suite *ErrorTestSuite) TestIsRangeNotSatisfiable(c *check.C) {
+	err1 := New(5, "range not satisfiable")
+	err2 := New(11, "test")
+	c.Assert(IsRangeNotSatisfiable(*err1), check.Equals, true)
+	c.Assert(IsRangeNotSatisfiable(*err2), check.Equals, false)
+}
