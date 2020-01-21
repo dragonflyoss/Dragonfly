@@ -48,3 +48,10 @@ func (suite *ErrorTestSuite) TestError(c *check.C) {
 	err := New(1, "test")
 	c.Assert(err.Error(), check.Equals, "{\"Code\":1,\"Msg\":\"test\"}")
 }
+
+func (suite *ErrorTestSuite) TestIsDataNotFound(c *check.C) {
+	err1 := New(0, "data not found")
+	err2 := New(11, "test")
+	c.Assert(IsDataNotFound(*err1), check.Equals, true)
+	c.Assert(IsDataNotFound(*err2), check.Equals, false)
+}
