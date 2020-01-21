@@ -62,3 +62,10 @@ func (suite *ErrorTestSuite) TestIsEmptyValue(c *check.C) {
 	c.Assert(IsEmptyValue(*err1), check.Equals, true)
 	c.Assert(IsEmptyValue(*err2), check.Equals, false)
 }
+
+func (suite *ErrorTestSuite) TestIsInvalidValue(c *check.C) {
+	err1 := New(2, "invalid value")
+	err2 := New(11, "test")
+	c.Assert(IsInvalidValue(*err1), check.Equals, true)
+	c.Assert(IsInvalidValue(*err2), check.Equals, false)
+}
