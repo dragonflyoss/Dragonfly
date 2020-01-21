@@ -39,3 +39,10 @@ func (suite *SupernodeErrorTestSuite) TestIsCDNFail(c *check.C) {
 	c.Assert(IsCDNFail(*err1), check.Equals, true)
 	c.Assert(IsCDNFail(*err2), check.Equals, false)
 }
+
+func (suite *SupernodeErrorTestSuite) TestIsCDNWait(c *check.C) {
+	err1 := New(8, "cdn status is wait")
+	err2 := New(0, "test")
+	c.Assert(IsCDNWait(*err1), check.Equals, true)
+	c.Assert(IsCDNWait(*err2), check.Equals, false)
+}
