@@ -69,3 +69,10 @@ func (suite *ErrorTestSuite) TestIsInvalidValue(c *check.C) {
 	c.Assert(IsInvalidValue(*err1), check.Equals, true)
 	c.Assert(IsInvalidValue(*err2), check.Equals, false)
 }
+
+func (suite *ErrorTestSuite) TestIsNotInitialized(c *check.C) {
+	err1 := New(3, "not initialized")
+	err2 := New(11, "test")
+	c.Assert(IsNotInitialized(*err1), check.Equals, true)
+	c.Assert(IsNotInitialized(*err2), check.Equals, false)
+}
