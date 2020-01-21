@@ -21,23 +21,16 @@ import (
 	"io"
 	"sort"
 
+	"github.com/dragonflyoss/Dragonfly/dfget/config"
+
 	"github.com/go-check/check"
 )
 
 type ClientStreamWriterTestSuite struct {
-	csw *ClientStreamWriter
 }
 
 func init() {
-	pr, pw := io.Pipe()
-	clientWriter := &ClientStreamWriter{
-		pipeReader: pr,
-		pipeWriter: pw,
-		cache:      make(map[int]*Piece),
-	}
-	check.Suite(&ClientStreamWriterTestSuite{
-		csw: clientWriter,
-	})
+	check.Suite(&ClientStreamWriterTestSuite{})
 }
 
 func (s *ClientStreamWriterTestSuite) SetUpSuite(*check.C) {
@@ -99,9 +92,11 @@ func (s *ClientStreamWriterTestSuite) TestWrite(c *check.C) {
 	}, len(cases))
 	copy(cases2, cases)
 
+	cfg := &config.Config{}
+	csw := NewClientStreamWriter(nil, nil, cfg)
 	go func() {
 		for _, v := range cases2 {
-			err := s.csw.writePieceToPipe(v.piece)
+			err := csw.writePieceToPipe(v.piece)
 			c.Check(err, check.IsNil)
 		}
 	}()
@@ -109,13 +104,13 @@ func (s *ClientStreamWriterTestSuite) TestWrite(c *check.C) {
 		return cases[i].piece.PieceNum < cases[j].piece.PieceNum
 	})
 	for _, v := range cases {
-		content := s.getString(v.piece.RawContent().Len())
+		content := s.getString(csw, v.piece.RawContent().Len())
 		c.Check(content, check.Equals, v.expected)
 	}
 }
 
-func (s *ClientStreamWriterTestSuite) getString(length int) string {
+func (s *ClientStreamWriterTestSuite) getString(reader io.Reader, length int) string {
 	b := make([]byte, length)
-	s.csw.pipeReader.Read(b)
+	reader.Read(b)
 	return string(b)
 }

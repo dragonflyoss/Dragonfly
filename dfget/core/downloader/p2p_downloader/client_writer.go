@@ -215,7 +215,7 @@ func (cw *ClientWriter) write(piece *Piece) error {
 	cw.pieceIndex++
 	err := writePieceToFile(piece, cw.serviceFile)
 	if err == nil {
-		go cw.sendSuccessPiece(piece, time.Since(startTime))
+		go sendSuccessPiece(cw.api, cw.cfg.RV.Cid, piece, time.Since(startTime))
 	}
 	return err
 }
@@ -236,10 +236,10 @@ func startSyncWriter(q queue.Queue) queue.Queue {
 	return nil
 }
 
-func (cw *ClientWriter) sendSuccessPiece(piece *Piece, cost time.Duration) {
+func sendSuccessPiece(api api.SupernodeAPI, cid string, piece *Piece, cost time.Duration) {
 	reportPieceRequest := &types.ReportPieceRequest{
 		TaskID:     piece.TaskID,
-		Cid:        cw.cfg.RV.Cid,
+		Cid:        cid,
 		DstCid:     piece.DstCid,
 		PieceRange: piece.Range,
 	}
@@ -252,7 +252,7 @@ func (cw *ClientWriter) sendSuccessPiece(piece *Piece, cost time.Duration) {
 			break
 		}
 
-		_, err := cw.api.ReportPiece(piece.SuperNode, reportPieceRequest)
+		_, err := api.ReportPiece(piece.SuperNode, reportPieceRequest)
 		if err == nil {
 			if retry > 0 {
 				logrus.Warnf("success to report piece with request(%+v) after retrying (%d) times", reportPieceRequest, retry)

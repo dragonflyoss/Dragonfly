@@ -20,13 +20,12 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"math/rand"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
-	"github.com/dragonflyoss/Dragonfly/dfget/types"
+	"github.com/dragonflyoss/Dragonfly/pkg/limitreader"
 	"github.com/dragonflyoss/Dragonfly/pkg/queue"
 
 	"github.com/sirupsen/logrus"
@@ -55,6 +54,9 @@ type ClientStreamWriter struct {
 	// pipeReader is the read half of a pipe
 	pipeReader *io.PipeReader
 
+	// limitReader supports limit rate and calculates md5
+	limitReader *limitreader.LimitReader
+
 	cache map[int]*Piece
 
 	// api holds an instance of SupernodeAPI to interact with supernode.
@@ -65,10 +67,12 @@ type ClientStreamWriter struct {
 // NewClientStreamWriter creates and initialize a ClientStreamWriter instance.
 func NewClientStreamWriter(clientQueue queue.Queue, api api.SupernodeAPI, cfg *config.Config) *ClientStreamWriter {
 	pr, pw := io.Pipe()
+	limitReader := limitreader.NewLimitReader(pr, int64(cfg.LocalLimit), cfg.Md5 != "")
 	clientWriter := &ClientStreamWriter{
 		clientQueue: clientQueue,
 		pipeReader:  pr,
 		pipeWriter:  pw,
+		limitReader: limitReader,
 		api:         api,
 		cfg:         cfg,
 		cache:       make(map[int]*Piece),
@@ -133,7 +137,7 @@ func (csw *ClientStreamWriter) write(piece *Piece) error {
 
 	err := csw.writePieceToPipe(piece)
 	if err == nil {
-		go csw.sendSuccessPiece(piece, time.Since(startTime))
+		go sendSuccessPiece(csw.api, csw.cfg.RV.Cid, piece, time.Since(startTime))
 	}
 	return err
 }
@@ -171,44 +175,14 @@ func (csw *ClientStreamWriter) writePieceToPipe(p *Piece) error {
 	return nil
 }
 
-// TODO this function is very similar ClientWriter.sendSuccessPiece, refactor later
-func (csw *ClientStreamWriter) sendSuccessPiece(piece *Piece, cost time.Duration) {
-	reportPieceRequest := &types.ReportPieceRequest{
-		TaskID:     piece.TaskID,
-		Cid:        csw.cfg.RV.Cid,
-		DstCid:     piece.DstCid,
-		PieceRange: piece.Range,
-	}
-
-	var retry = 0
-	var maxRetryTime = 3
-	for {
-		if retry >= maxRetryTime {
-			logrus.Errorf("failed to report piece to supernode with request(%+v) even after retrying max retry time", reportPieceRequest)
-			break
-		}
-
-		_, err := csw.api.ReportPiece(piece.SuperNode, reportPieceRequest)
-		if err == nil {
-			if retry > 0 {
-				logrus.Warnf("success to report piece with request(%+v) after retrying (%d) times", reportPieceRequest, retry)
-			}
-			break
-		}
-
-		sleepTime := time.Duration(rand.Intn(500)+50) * time.Millisecond
-		logrus.Warnf("failed to report piece to supernode with request(%+v) for (%d) times and will retry after sleep %.3fs", reportPieceRequest, retry, sleepTime.Seconds())
-		time.Sleep(sleepTime)
-		retry++
-	}
-
-	if cost.Seconds() > 2.0 {
-		logrus.Infof(
-			"async writer and report suc from dst:%s... cost:%.3f for range:%s",
-			piece.DstCid[:25], cost.Seconds(), piece.Range)
-	}
-}
-
 func (csw *ClientStreamWriter) Read(p []byte) (n int, err error) {
-	return csw.pipeReader.Read(p)
+	n, err = csw.limitReader.Read(p)
+	// all data received, calculate md5
+	if err == io.EOF && csw.cfg.Md5 != "" {
+		realMd5 := csw.limitReader.Md5()
+		if realMd5 != csw.cfg.Md5 {
+			return n, fmt.Errorf("md5 not match, expected: %s real: %s", csw.cfg.Md5, realMd5)
+		}
+	}
+	return n, err
 }
