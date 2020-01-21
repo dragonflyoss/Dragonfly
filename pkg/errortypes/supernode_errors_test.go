@@ -74,3 +74,10 @@ func (suite *SupernodeErrorTestSuite) TestIsURLNotReachable(c *check.C) {
 	c.Assert(IsURLNotReachable(*err1), check.Equals, true)
 	c.Assert(IsURLNotReachable(*err2), check.Equals, false)
 }
+
+func (suite *SupernodeErrorTestSuite) TestIsTaskIDDuplicate(c *check.C) {
+	err1 := New(13, "taskId conflict")
+	err2 := New(0, "test")
+	c.Assert(IsTaskIDDuplicate(*err1), check.Equals, true)
+	c.Assert(IsTaskIDDuplicate(*err2), check.Equals, false)
+}
