@@ -53,3 +53,10 @@ func (suite *SupernodeErrorTestSuite) TestIsPeerWait(c *check.C) {
 	c.Assert(IsPeerWait(*err1), check.Equals, true)
 	c.Assert(IsPeerWait(*err2), check.Equals, false)
 }
+
+func (suite *SupernodeErrorTestSuite) TestIsUnknowError(c *check.C) {
+	err1 := New(10, "unknown error")
+	err2 := New(0, "test")
+	c.Assert(IsUnknowError(*err1), check.Equals, true)
+	c.Assert(IsUnknowError(*err2), check.Equals, false)
+}
