@@ -76,3 +76,10 @@ func (suite *ErrorTestSuite) TestIsNotInitialized(c *check.C) {
 	c.Assert(IsNotInitialized(*err1), check.Equals, true)
 	c.Assert(IsNotInitialized(*err2), check.Equals, false)
 }
+
+func (suite *ErrorTestSuite) TestIsConvertFailed(c *check.C) {
+	err1 := New(4, "convert failed")
+	err2 := New(11, "test")
+	c.Assert(IsConvertFailed(*err1), check.Equals, true)
+	c.Assert(IsConvertFailed(*err2), check.Equals, false)
+}
