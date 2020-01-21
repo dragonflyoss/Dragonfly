@@ -46,3 +46,10 @@ func (suite *SupernodeErrorTestSuite) TestIsCDNWait(c *check.C) {
 	c.Assert(IsCDNWait(*err1), check.Equals, true)
 	c.Assert(IsCDNWait(*err2), check.Equals, false)
 }
+
+func (suite *SupernodeErrorTestSuite) TestIsPeerWait(c *check.C) {
+	err1 := New(9, "peer should wait")
+	err2 := New(0, "test")
+	c.Assert(IsPeerWait(*err1), check.Equals, true)
+	c.Assert(IsPeerWait(*err2), check.Equals, false)
+}
