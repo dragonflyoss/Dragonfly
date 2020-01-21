@@ -120,6 +120,24 @@ func prepare(cfg *config.Config) (err error) {
 	return nil
 }
 
+// prepareStream the RV-related information.
+func prepareStream(cfg *config.Config) (err error) {
+	printer.Printf("dfget version:%s", version.DFGetVersion)
+	printer.Printf("sign:%s", cfg.Sign)
+
+	rv := &cfg.RV
+	cfg.Nodes = adjustSupernodeList(cfg.Nodes)
+	if stringutils.IsEmptyStr(rv.LocalIP) {
+		rv.LocalIP = checkConnectSupernode(cfg.Nodes)
+	}
+	rv.Cid = getCid(rv.LocalIP, cfg.Sign)
+	rv.TaskFileName = getTaskFileName(rv.RealTarget, cfg.Sign)
+	rv.TaskURL = netutils.FilterURLParam(cfg.URL, cfg.Filter)
+	logrus.Info("runtimeVariable: " + cfg.RV.String())
+
+	return nil
+}
+
 func launchPeerServer(cfg *config.Config) error {
 	port, err := uploader.StartPeerServerProcess(cfg)
 	if err == nil && port > 0 {
