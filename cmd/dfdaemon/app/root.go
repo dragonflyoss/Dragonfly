@@ -17,7 +17,9 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -32,6 +34,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/rate"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -52,29 +55,38 @@ var rootCmd = &cobra.Command{
 	Long:              "The dfdaemon is a proxy between container engine and registry used for pulling images.",
 	DisableAutoGenTag: true, // disable displaying auto generation tag in cli docs
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if err := readConfigFile(viper.GetViper(), cmd); err != nil {
-			return errors.Wrap(err, "read config file")
-		}
+		for {
+			if err := readConfigFile(viper.GetViper(), cmd); err != nil {
+				return errors.Wrap(err, "read config file")
+			}
 
-		cfg, err := getConfigFromViper(cmd, viper.GetViper())
-		if err != nil {
-			return errors.Wrap(err, "get config from viper")
-		}
+			cfg, err := getConfigFromViper(cmd, viper.GetViper())
+			if err != nil {
+				return errors.Wrap(err, "get config from viper")
+			}
 
-		if err := initDfdaemon(*cfg); err != nil {
-			return errors.Wrap(err, "init dfdaemon")
-		}
+			if err := initDfdaemon(*cfg); err != nil {
+				return errors.Wrap(err, "init dfdaemon")
+			}
 
-		cfgJSON, _ := json.Marshal(cfg)
-		logrus.Infof("using config: %s", cfgJSON)
+			cfgJSON, _ := json.Marshal(cfg)
+			logrus.Infof("using config: %s", cfgJSON)
 
-		s, err := dfdaemon.NewFromConfig(*cfg)
-		if err != nil {
-			return errors.Wrap(err, "create dfdaemon from config")
+			server, err = dfdaemon.NewFromConfig(*cfg)
+			if err != nil {
+				return errors.Wrap(err, "create dfdaemon from config")
+			}
+			err = server.Start()
+			// ErrServerClosed is returned by the Server's Serve, ServeTLS, ListenAndServe,
+			// and ListenAndServeTLS methods after a call to Shutdown or Close.
+			if err != http.ErrServerClosed {
+				return err
+			}
 		}
-		return s.Start()
 	},
 }
+
+var server *dfdaemon.Server
 
 func init() {
 	executable, err := exec.LookPath(os.Args[0])
@@ -106,6 +118,32 @@ func init() {
 	rf.StringSlice("node", nil, "specify the addresses(host:port) of supernodes that will be passed to dfget.")
 
 	exitOnError(bindRootFlags(viper.GetViper()), "bind root command flags")
+
+	// setup viper hot-reload handler
+	viper.GetViper().OnConfigChange(func(e fsnotify.Event) {
+		logrus.Info("config file changes detected, try to verify new configuration")
+		if err := readConfigFile(viper.GetViper(), rootCmd); err != nil {
+			logrus.Warnf("failed to read config file: %v", err)
+			return
+		}
+		_, err := getConfigFromViper(rootCmd, viper.GetViper())
+		if err != nil {
+			logrus.Warnf("found invalid configuration: %v", err)
+			return
+		}
+		logrus.Info("configuration validation successful")
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := server.Stop(ctx); err != nil {
+			logrus.Warnf("dfademon server shutdown failed, err: %v", err)
+		} else {
+			logrus.Info("dfademon server gracefully shutdown")
+		}
+		logrus.Info("dfademon server is rebooting")
+	})
+
+	// start viper hot-reload watcher
+	go viper.GetViper().WatchConfig()
 
 	// add sub commands
 	rootCmd.AddCommand(cmd.NewGenDocCommand("dfdaemon"))

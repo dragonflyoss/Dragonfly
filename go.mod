@@ -8,6 +8,7 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20170903095215-73945b6115bf // indirect
 	github.com/cpuguy83/go-md2man v1.0.7 // indirect
 	github.com/emirpasic/gods v1.12.0
+	github.com/fsnotify/fsnotify v1.4.7
 	github.com/go-check/check v0.0.0-20161208181325-20d25e280405
 	github.com/go-openapi/analysis v0.0.0-20170813233457-8ed83f2ea9f0 // indirect
 	github.com/go-openapi/errors v0.0.0-20170426151106-03cfca65330d

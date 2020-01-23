@@ -21,6 +21,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	"sync"
 
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/handler"
@@ -75,6 +76,8 @@ func WithProxy(p *proxy.Proxy) Option {
 	}
 }
 
+var oncePrometheusRegister sync.Once
+
 // New returns a new server instance.
 func New(opts ...Option) (*Server, error) {
 	p, _ := proxy.New()
@@ -85,7 +88,9 @@ func New(opts ...Option) (*Server, error) {
 		proxy: p,
 	}
 	// register dfdaemon build information
-	version.NewBuildInfo("dfdaemon", prometheus.DefaultRegisterer)
+	oncePrometheusRegister.Do(func() {
+		version.NewBuildInfo("dfdaemon", prometheus.DefaultRegisterer)
+	})
 
 	for _, opt := range opts {
 		if err := opt(s); err != nil {
@@ -115,10 +120,14 @@ func NewFromConfig(cfg config.Properties) (*Server, error) {
 	return New(opts...)
 }
 
+var onceServerHandler sync.Once
+
 // Start runs dfdaemon's http server.
 func (s *Server) Start() error {
-	_ = proxy.WithDirectHandler(handler.New())(s.proxy)
-	s.server.Handler = s.proxy
+	onceServerHandler.Do(func() {
+		_ = proxy.WithDirectHandler(handler.New())(s.proxy)
+		s.server.Handler = s.proxy
+	})
 	if s.server.TLSConfig != nil {
 		logrus.Infof("start dfdaemon https server on %s", s.server.Addr)
 	} else {
