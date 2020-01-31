@@ -19,7 +19,7 @@ Then, we should provide:
     - **dfclient1**: Dragonfly client two
 
 2. every node has deployed docker daemon
-3. assuming that the addresss of harbor server is `core.harbor.domain:32443`
+3. assuming that the address of harbor server is `core.harbor.domain:32443`
 
 ## Step 1: Deploy Dragonfly Server (SuperNode)
 
@@ -130,7 +130,7 @@ We need to modify the Docker Daemon configuration to use the Dragonfly as a pull
 
 Through the above steps, we can start to validate if Dragonfly works as expected.
 
-And you should login the haobor on either `dfclient0` or `dfclient1`, for example:
+And you should login the harbor on either `dfclient0` or `dfclient1`, for example:
 
 ```bash
 $ docker login core.harbor.domain:32443
