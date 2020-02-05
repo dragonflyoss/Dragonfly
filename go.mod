@@ -19,6 +19,7 @@ require (
 	github.com/go-openapi/strfmt v0.0.0-20171222154016-4dd3d302e100
 	github.com/go-openapi/swag v0.0.0-20170606142751-f3f9494671f9
 	github.com/go-openapi/validate v0.0.0-20170705144413-8a82927c942c
+	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef
 	github.com/golang/mock v1.3.1
 	github.com/gorilla/context v0.0.0-20181012153548-51ce91d2eadd // indirect
 	github.com/gorilla/mux v1.5.0
