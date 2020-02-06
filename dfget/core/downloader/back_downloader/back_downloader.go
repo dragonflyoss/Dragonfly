@@ -128,7 +128,7 @@ func (bd *BackDownloader) Run(ctx context.Context) error {
 	return err
 }
 
-// RunStream return a io.Reader without any disk io.
+// RunStream returns a io.Reader without any disk io.
 func (bd *BackDownloader) RunStream(ctx context.Context) (io.Reader, error) {
 	var (
 		resp *http.Response

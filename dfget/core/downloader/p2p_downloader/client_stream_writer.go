@@ -101,7 +101,6 @@ func (csw *ClientStreamWriter) Run(ctx context.Context) {
 		}
 		if ok && state == reset {
 			// stream could not reset, just return error
-			//
 			csw.pipeWriter.CloseWithError(fmt.Errorf("stream writer not support reset"))
 			continue
 		}
