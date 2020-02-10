@@ -16,7 +16,7 @@ Then, we must provide:
 
     - **dfsupernode**: Dragonfly server
     - **dfclient0**: Dragonfly client one
-    - ****dfclient1**: Dragonfly client two
+    - **dfclient1**: Dragonfly client two
 
 2. every node has deployed docker daemon
 
