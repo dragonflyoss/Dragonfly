@@ -184,6 +184,11 @@ func registerToSuperNode(cfg *config.Config, register regist.SupernodeRegister) 
 	return result, nil
 }
 
+func DownloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
+	register regist.SupernodeRegister, result *regist.RegisterResult) error {
+	return downloadFile(cfg, supernodeAPI, register, result)
+}
+
 func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 	register regist.SupernodeRegister, result *regist.RegisterResult) error {
 	timeout := calculateTimeout(cfg)

@@ -21,7 +21,6 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"net/url"
-	"os"
 	"path/filepath"
 	"regexp"
 
@@ -112,6 +111,8 @@ type Properties struct {
 	DFPath     string    `yaml:"dfpath" json:"dfpath"`
 
 	LogConfig dflog.LogConfig `yaml:"logConfig" json:"logConfig"`
+	LocalIP   string          `yaml:"localIP" json:"localIP"`
+	PeerPort  int             `yaml:"peerPort" json:"peerPort"`
 }
 
 // Validate validates the config
@@ -127,13 +128,6 @@ func (p *Properties) Validate() error {
 		return dferr.Newf(
 			constant.CodeExitPathNotAbs,
 			"local repo %s is not absolute", p.DFRepo,
-		)
-	}
-
-	if _, err := os.Stat(p.DFPath); err != nil && os.IsNotExist(err) {
-		return dferr.Newf(
-			constant.CodeExitDfgetNotFound,
-			"dfpath %s not found", p.DFPath,
 		)
 	}
 
@@ -156,6 +150,8 @@ func (p *Properties) DFGetConfig() DFGetConfig {
 		RateLimit:  p.RateLimit.String(),
 		DFRepo:     p.DFRepo,
 		DFPath:     p.DFPath,
+		LocalIP:    p.LocalIP,
+		PeerPort:   p.PeerPort,
 	}
 	if p.HijackHTTPS != nil {
 		dfgetConfig.HostsConfig = p.HijackHTTPS.Hosts
@@ -181,6 +177,8 @@ type DFGetConfig struct {
 	DFRepo      string        `yaml:"localrepo"`
 	DFPath      string        `yaml:"dfpath"`
 	HostsConfig []*HijackHost `yaml:"hosts" json:"hosts"`
+	PeerPort    int           `yaml:"peerPort"`
+	LocalIP     string        `yaml:"localIP"`
 }
 
 // RegistryMirror configures the mirror of the official docker registry

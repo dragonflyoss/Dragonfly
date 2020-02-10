@@ -61,7 +61,7 @@ var rootCmd = &cobra.Command{
 			return errors.Wrap(err, "get config from viper")
 		}
 
-		if err := initDfdaemon(*cfg); err != nil {
+		if err := initDfdaemon(cfg); err != nil {
 			return errors.Wrap(err, "init dfdaemon")
 		}
 
@@ -72,6 +72,7 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			return errors.Wrap(err, "create dfdaemon from config")
 		}
+		go dfdaemon.LaunchPeerServer(*cfg)
 		return s.Start()
 	},
 }
@@ -93,6 +94,7 @@ func init() {
 	// http server config
 	rf.String("hostIp", "127.0.0.1", "dfdaemon host ip, default: 127.0.0.1")
 	rf.Uint("port", 65001, "dfdaemon will listen the port")
+	rf.Uint("peerPort", 0, "peerserver will listen the port")
 	rf.String("certpem", "", "cert.pem file path")
 	rf.String("keypem", "", "key.pem file path")
 

@@ -25,6 +25,8 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/handler"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/proxy"
+	dfgetConfig "github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
 	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/pkg/errors"
@@ -113,6 +115,19 @@ func NewFromConfig(cfg config.Properties) (*Server, error) {
 	}
 
 	return New(opts...)
+}
+
+func LaunchPeerServer(cfg config.Properties) error {
+	peerServerConfig := dfgetConfig.NewConfig()
+	peerServerConfig.RV.LocalIP = cfg.LocalIP
+	peerServerConfig.RV.PeerPort = cfg.PeerPort
+	peerServerConfig.RV.ServerAliveTime = 0
+	port, err := uploader.LaunchPeerServer(peerServerConfig)
+	if err != nil {
+		return err
+	}
+	peerServerConfig.RV.PeerPort = port
+	return nil
 }
 
 // Start runs dfdaemon's http server.

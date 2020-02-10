@@ -19,9 +19,10 @@ package transport
 import (
 	"context"
 	"crypto/tls"
+	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
-	"os"
 	"regexp"
 	"time"
 
@@ -42,10 +43,11 @@ var (
 // It uses http.fileTransport to serve requests that need to use dfget,
 // and uses http.Transport to serve the other requests.
 type DFRoundTripper struct {
-	Round          *http.Transport
-	Round2         http.RoundTripper
-	ShouldUseDfget func(req *http.Request) bool
-	Downloader     downloader.Interface
+	Round            *http.Transport
+	Round2           http.RoundTripper
+	ShouldUseDfget   func(req *http.Request) bool
+	Downloader       downloader.Interface
+	StreamDownloader downloader.Stream
 }
 
 // New returns the default DFRoundTripper.
@@ -62,7 +64,7 @@ func New(opts ...Option) (*DFRoundTripper, error) {
 		}
 	}
 
-	if rt.Downloader == nil {
+	if rt.StreamDownloader == nil {
 		return nil, errors.Errorf("nil downloader")
 	}
 
@@ -105,6 +107,13 @@ func WithDownloader(d downloader.Interface) Option {
 	}
 }
 
+func WithStreamDownloader(d downloader.Stream) Option {
+	return func(rt *DFRoundTripper) error {
+		rt.StreamDownloader = d
+		return nil
+	}
+}
+
 // WithCondition configures how to decide whether to use dfget or not.
 func WithCondition(c func(r *http.Request) bool) Option {
 	return func(rt *DFRoundTripper) error {
@@ -134,31 +143,40 @@ func (roundTripper *DFRoundTripper) RoundTrip(req *http.Request) (*http.Response
 
 // download uses dfget to download.
 func (roundTripper *DFRoundTripper) download(req *http.Request, urlString string) (*http.Response, error) {
-	dstPath, err := roundTripper.downloadByGetter(req.Context(), urlString, req.Header, uuid.New())
+	reader, err := roundTripper.downloadByStream(req.Context(), urlString, req.Header, uuid.New())
 	if err != nil {
 		logrus.Errorf("download fail: %v", err)
 		return nil, err
 	}
-	defer os.Remove(dstPath)
 
-	fileReq, err := http.NewRequest("GET", "file:///"+dstPath, nil)
-	if err != nil {
-		return nil, err
+	// fileReq, err := http.NewRequest("GET", "file:///"+dstPath, nil)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	//
+	// response, err := roundTripper.Round2.RoundTrip(fileReq)
+	// if err == nil {
+	// 	response.Header.Set("Content-Disposition", "attachment; filename="+dstPath)
+	// } else {
+	// 	logrus.Errorf("read response from file:%s error:%v", dstPath, err)
+	// }
+	resp := &http.Response{
+		StatusCode: 200,
+		Body:       ioutil.NopCloser(reader),
 	}
-
-	response, err := roundTripper.Round2.RoundTrip(fileReq)
-	if err == nil {
-		response.Header.Set("Content-Disposition", "attachment; filename="+dstPath)
-	} else {
-		logrus.Errorf("read response from file:%s error:%v", dstPath, err)
-	}
-	return response, err
+	return resp, nil
+	// return response, err
 }
 
 // downloadByGetter is used to download file by DFGetter.
 func (roundTripper *DFRoundTripper) downloadByGetter(ctx context.Context, url string, header map[string][]string, name string) (string, error) {
 	logrus.Infof("start download url:%s to %s in repo", url, name)
 	return roundTripper.Downloader.DownloadContext(ctx, url, header, name)
+}
+
+func (roundTripper *DFRoundTripper) downloadByStream(ctx context.Context, url string, header map[string][]string, name string) (io.Reader, error) {
+	logrus.Infof("start download url:%s to %s in repo", url, name)
+	return roundTripper.StreamDownloader.DownloadStreamContext(ctx, url, header, name)
 }
 
 // needUseGetter is the default value for ShouldUseDfget, which downloads all
