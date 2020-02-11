@@ -31,15 +31,17 @@ func init() {
 
 func (s *PieceTestSuite) TestRawContent(c *check.C) {
 	var cases = []struct {
-		piece    *Piece
-		expected *bytes.Buffer
+		piece     *Piece
+		noWrapper bool
+		expected  *bytes.Buffer
 	}{
-		{piece: &Piece{Content: bytes.NewBufferString("")}, expected: nil},
-		{piece: &Piece{Content: bytes.NewBufferString("000010")}, expected: bytes.NewBufferString("1")},
+		{piece: &Piece{Content: bytes.NewBufferString("")}, noWrapper: false, expected: nil},
+		{piece: &Piece{Content: bytes.NewBufferString("000010")}, noWrapper: false, expected: bytes.NewBufferString("1")},
+		{piece: &Piece{Content: bytes.NewBufferString("000020")}, noWrapper: true, expected: bytes.NewBufferString("000020")},
 	}
 
 	for _, v := range cases {
-		result := v.piece.RawContent()
+		result := v.piece.RawContent(v.noWrapper)
 		c.Assert(result, check.DeepEquals, v.expected)
 	}
 }

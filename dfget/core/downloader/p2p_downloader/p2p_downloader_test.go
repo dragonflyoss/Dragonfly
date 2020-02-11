@@ -32,3 +32,32 @@ type P2PDownloaderTestSuite struct {
 func init() {
 	check.Suite(&P2PDownloaderTestSuite{})
 }
+
+func (s *P2PDownloaderTestSuite) TestWipeOutOfRange(c *check.C) {
+	var cases = []struct {
+		pieceRange string
+		maxLength  int64
+		expected   string
+	}{
+		{
+			pieceRange: "0-5",
+			maxLength:  10,
+			expected:   "0-5",
+		},
+		{
+			pieceRange: "0-5",
+			maxLength:  5,
+			expected:   "0-4",
+		},
+		{
+			pieceRange: "0-5",
+			maxLength:  3,
+			expected:   "0-2",
+		},
+	}
+
+	for _, v := range cases {
+		result := wipeOutOfRange(v.pieceRange, v.maxLength)
+		c.Assert(result, check.Equals, v.expected)
+	}
+}

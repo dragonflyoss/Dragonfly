@@ -25,6 +25,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	. "github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/pkg/constants"
@@ -58,13 +59,14 @@ func (s *RegistTestSuite) TearDownSuite(c *check.C) {
 
 func (s *RegistTestSuite) TestNewRegisterResult(c *check.C) {
 	result := NewRegisterResult("node", []string{"1"}, "url", "taskID",
-		10, 1)
+		10, 1, "supernode")
 	c.Assert(result.Node, check.Equals, "node")
 	c.Assert(result.RemainderNodes, check.DeepEquals, []string{"1"})
 	c.Assert(result.URL, check.Equals, "url")
 	c.Assert(result.TaskID, check.Equals, "taskID")
 	c.Assert(result.FileLength, check.Equals, int64(10))
 	c.Assert(result.PieceSize, check.Equals, int32(1))
+	c.Assert(result.CDNSource, check.Equals, types.CdnSource("supernode"))
 
 	str, _ := json.Marshal(result)
 	c.Assert(result.String(), check.Equals, string(str))

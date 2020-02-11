@@ -72,6 +72,7 @@ const (
 	StrPieceSize    = "pieceSize"
 	StrDataDir      = "dataDir"
 	StrTotalLimit   = "totalLimit"
+	StrCDNSource    = "cdnSource"
 
 	StrBytes = "bytes"
 )
@@ -138,4 +139,8 @@ const (
 
 	// CodeDownloadError represents failed to download file.
 	CodeDownloadError
+)
+
+const (
+	RangeSeparator = "-"
 )

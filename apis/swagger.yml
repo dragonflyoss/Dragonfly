@@ -973,6 +973,13 @@ definitions:
           1. If file's total size is less than 200MB, then the piece size is 4MB by default.
           2. Otherwise, it equals to the smaller value between totalSize/100MB + 2 MB and 15MB.
         format: int32
+      cdnSource:
+        $ref: "#/definitions/CdnSource"
+
+  CdnSource:
+    type: string
+    description: ""
+    enum: ["supernode", "source"]
 
   TaskInfo:
     type: "object"

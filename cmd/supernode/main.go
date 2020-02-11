@@ -18,6 +18,8 @@ package main
 
 import (
 	"github.com/dragonflyoss/Dragonfly/cmd/supernode/app"
+	_ "github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/cdn"
+	_ "github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/sourcecdn"
 )
 
 func main() {

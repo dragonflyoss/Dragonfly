@@ -117,8 +117,19 @@ func NewBaseProperties() *BaseProperties {
 	}
 }
 
+type CDNPattern string
+
+const (
+	CDNPatternLocal  = "local"
+	CDNPatternSource = "source"
+)
+
 // BaseProperties contains all basic properties of supernode.
 type BaseProperties struct {
+	// CDNPattern cdn pattern which must be in ["local", "source"].
+	// default: CDNPatternLocal
+	CDNPattern CDNPattern `yaml:"cdnPattern"`
+
 	// ListenPort is the port supernode server listens on.
 	// default: 8002
 	ListenPort int `yaml:"listenPort"`

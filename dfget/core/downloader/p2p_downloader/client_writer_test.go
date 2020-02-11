@@ -23,6 +23,7 @@ import (
 	"os"
 	"path/filepath"
 
+	apiTypes "github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 
 	"github.com/go-check/check"
@@ -54,8 +55,9 @@ func (s *ClientWriterTestSuite) TearDownSuite(c *check.C) {
 
 func (s *ClientWriterTestSuite) TestWrite(c *check.C) {
 	var cases = []struct {
-		piece    *Piece
-		expected string
+		piece     *Piece
+		cdnSource apiTypes.CdnSource
+		expected  string
 	}{
 		{
 			piece: &Piece{
@@ -63,7 +65,8 @@ func (s *ClientWriterTestSuite) TestWrite(c *check.C) {
 				PieceSize: 6,
 				Content:   bytes.NewBufferString("000010"),
 			},
-			expected: "1",
+			cdnSource: apiTypes.CdnSourceSupernode,
+			expected:  "1",
 		},
 		{
 			piece: &Piece{
@@ -71,15 +74,30 @@ func (s *ClientWriterTestSuite) TestWrite(c *check.C) {
 				PieceSize: 6,
 				Content:   bytes.NewBufferString("000020"),
 			},
-			expected: "2",
+			cdnSource: apiTypes.CdnSourceSupernode,
+			expected:  "2",
+		},
+		{
+			piece: &Piece{
+				PieceNum:  1,
+				PieceSize: 6,
+				Content:   bytes.NewBufferString("000030"),
+			},
+			cdnSource: apiTypes.CdnSourceSource,
+			expected:  "000030",
 		},
 	}
 
 	for _, v := range cases {
-		err := writePieceToFile(v.piece, s.serviceFile)
+		err := writePieceToFile(v.piece, s.serviceFile, v.cdnSource)
 		c.Assert(err, check.IsNil)
-		start := int64(v.piece.PieceNum) * (int64(v.piece.PieceSize) - 5)
-		content := s.getString(start, int(v.piece.PieceSize)-5)
+
+		var pieceHeaderLength = 5
+		if v.cdnSource == apiTypes.CdnSourceSource {
+			pieceHeaderLength = 0
+		}
+		start := int64(v.piece.PieceNum) * (int64(v.piece.PieceSize) - int64(pieceHeaderLength))
+		content := s.getString(start, int(v.piece.PieceSize)-pieceHeaderLength)
 		c.Check(content, check.Equals, v.expected)
 	}
 }

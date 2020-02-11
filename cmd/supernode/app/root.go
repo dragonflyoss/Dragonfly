@@ -145,6 +145,9 @@ func setupFlags(cmd *cobra.Command) {
 	flagSet.String("config", config.DefaultSupernodeConfigFilePath,
 		"the path of supernode's configuration file")
 
+	flagSet.String("cdn-pattern", config.CDNPatternLocal,
+		"cdn pattern, must be in [\"local\", \"source\"]. Default: local")
+
 	flagSet.Int("port", defaultBaseProperties.ListenPort,
 		"listenPort is the port that supernode server listens on")
 
@@ -205,6 +208,10 @@ func bindRootFlags(v *viper.Viper) error {
 		{
 			key:  "config",
 			flag: "config",
+		},
+		{
+			key:  "base.CDNPattern",
+			flag: "cdn-pattern",
 		},
 		{
 			key:  "base.listenPort",

@@ -18,6 +18,8 @@ package types
 
 import (
 	"encoding/json"
+
+	apiTypes "github.com/dragonflyoss/Dragonfly/apis/types"
 )
 
 // RegisterResponse is the response of register request.
@@ -35,7 +37,8 @@ func (res *RegisterResponse) String() string {
 
 // RegisterResponseData is the data when registering supernode successfully.
 type RegisterResponseData struct {
-	TaskID     string `json:"taskId"`
-	FileLength int64  `json:"fileLength"`
-	PieceSize  int32  `json:"pieceSize"`
+	TaskID     string             `json:"taskId"`
+	FileLength int64              `json:"fileLength"`
+	PieceSize  int32              `json:"pieceSize"`
+	CDNSource  apiTypes.CdnSource `json:"cdnSource"`
 }

@@ -95,6 +95,19 @@ func (tm *Manager) addOrUpdateTask(ctx context.Context, req *types.TaskCreateReq
 			return nil, err
 		}
 	}
+	if tm.cfg.CDNPattern == config.CDNPatternSource {
+		if fileLength <= 0 {
+			return nil, fmt.Errorf("failed to get file length and it is required in source CDN pattern")
+		}
+
+		supportRange, err := tm.originClient.IsSupportRange(task.TaskURL, task.Headers)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to check whether the task(%s) supports partial requests", task.ID)
+		}
+		if !supportRange {
+			return nil, fmt.Errorf("the task URL should support range request in source CDN pattern: %s", taskID)
+		}
+	}
 	task.HTTPFileLength = fileLength
 	logrus.Infof("get file length %d from http client for taskID(%s)", fileLength, taskID)
 
@@ -246,7 +259,7 @@ func (tm *Manager) triggerCdnSyncAction(ctx context.Context, task *types.TaskInf
 func (tm *Manager) initCdnNode(ctx context.Context, task *types.TaskInfo) error {
 	var cid = tm.cfg.GetSuperCID(task.ID)
 	var pid = tm.cfg.GetSuperPID()
-	path, err := tm.cdnMgr.GetHTTPPath(ctx, task.ID)
+	path, err := tm.cdnMgr.GetHTTPPath(ctx, task)
 	if err != nil {
 		return err
 	}
@@ -321,7 +334,7 @@ func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, tas
 	cdnSuccess := task.CdnStatus == types.TaskInfoCdnStatusSUCCESS
 	pieceSuccess, _ := tm.progressMgr.GetPieceProgressByCID(ctx, task.ID, clientID, "success")
 	logrus.Debugf("taskID(%s) clientID(%s) get successful pieces: %v", task.ID, clientID, pieceSuccess)
-	if cdnSuccess && (int32(len(pieceSuccess)) == task.PieceTotal) {
+	if cdnSuccess && (task.PieceTotal != 0 && (int32(len(pieceSuccess)) == task.PieceTotal)) {
 		// update dfget task status to success
 		if err := tm.dfgetTaskMgr.UpdateStatus(ctx, clientID, task.ID, types.DfGetTaskStatusSUCCESS); err != nil {
 			logrus.Errorf("failed to update dfget task status with "+
