@@ -1,6 +1,5 @@
 # Dragonfly
 
-[![Join the chat at https://gitter.im/alibaba/Dragonfly](https://badges.gitter.im/alibaba/Dragonfly.svg)](https://gitter.im/alibaba/Dragonfly?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![License](https://img.shields.io/badge/license-Apache%202-brightgreen.svg)](https://github.com/dragonflyoss/Dragonfly/blob/master/LICENSE)
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fdragonflyoss%2FDragonfly.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fdragonflyoss%2FDragonfly?ref=badge_shield)
 [![GoDoc](https://godoc.org/github.com/dragonflyoss/Dragonfly?status.svg)](https://godoc.org/github.com/dragonflyoss/Dragonfly)
@@ -79,11 +78,10 @@ For more details about roadmap, please refer to file [ROADMAP.md](ROADMAP.md).
 
 ## Community
 
-You are encouraged to communicate most things via GitHub issues or pull requests.
+You are encouraged to communicate most things via [GitHub issues](https://github.com/dragonflyoss/Dragonfly/issues/new/choose) or pull requests.
 
 Other active channels:
 
-- Gitter Chat: [dragonfly](https://gitter.im/alibaba/Dragonfly)
 - Twitter: [@dragonfly_oss](https://twitter.com/dragonfly_oss)
 - Dingtalk Group(钉钉群)
 
