@@ -21,6 +21,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/pkg/atomiccount"
+
 	"github.com/go-check/check"
 	"github.com/willf/bitset"
 )
@@ -130,4 +132,17 @@ func (suite *SyncMapUtilSuite) TestGetAsTime(c *check.C) {
 
 	result, _ := mmap.GetAsTime("aaa")
 	c.Check(result, check.DeepEquals, expected)
+}
+
+func (suite *SyncMapUtilSuite) TestGetAsAtomicInt(c *check.C) {
+	expected := atomiccount.NewAtomicInt(10)
+	mmap := NewSyncMap()
+	mmap.Add("aaa", expected)
+
+	result, _ := mmap.GetAsAtomicInt("aaa")
+	c.Check(result, check.DeepEquals, expected)
+
+	result, err := mmap.GetAsAtomicInt("nonexist")
+	c.Check(err, check.NotNil)
+	c.Check(result, check.IsNil)
 }
