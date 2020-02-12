@@ -19,6 +19,7 @@ package downloader
 import (
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"net"
@@ -100,6 +101,52 @@ func (s *BackDownloaderTestSuite) TestBackDownloader_Run(c *check.C) {
 	bd.cleaned = false
 	bd.Md5 = testFileMd5
 	c.Assert(bd.Run(context.TODO()), check.IsNil)
+}
+
+func (s *BackDownloaderTestSuite) TestBackDownloader_RunStream(c *check.C) {
+	testFileMd5 := helper.CreateTestFileWithMD5(filepath.Join(s.workHome, "download.test"), "test downloader")
+	dst := filepath.Join(s.workHome, "back.test")
+
+	cfg := helper.CreateConfig(nil, s.workHome)
+	bd := &BackDownloader{
+		cfg:    cfg,
+		URL:    "http://" + s.host + "/download.test",
+		Target: dst,
+	}
+
+	var reader io.Reader
+	var err error
+	cfg.Notbs = true
+	_, err = bd.RunStream(context.TODO())
+	c.Assert(err, check.NotNil)
+
+	cfg.Notbs = false
+	bd.cleaned = false
+	cfg.BackSourceReason = config.BackSourceReasonNoSpace
+	reader, err = bd.RunStream(context.TODO())
+	c.Assert(reader, check.IsNil)
+	c.Assert(err, check.NotNil)
+
+	// test: realMd5 doesn't equal to expectedMd5
+	bd.Md5 = "x"
+	reader, err = bd.RunStream(context.TODO())
+
+	c.Assert(reader, check.NotNil)
+	if reader != nil {
+		_, err = ioutil.ReadAll(reader)
+	}
+	c.Assert(err, check.NotNil)
+
+	// test: realMd5 equals to expectedMd5
+	bd.cleaned = false
+	bd.Md5 = testFileMd5
+	reader, err = bd.RunStream(context.TODO())
+
+	c.Assert(reader, check.NotNil)
+	if reader != nil {
+		_, err = ioutil.ReadAll(reader)
+	}
+	c.Assert(err, check.IsNil)
 }
 
 func (s *BackDownloaderTestSuite) TestBackDownloader_Run_NotExist(c *check.C) {

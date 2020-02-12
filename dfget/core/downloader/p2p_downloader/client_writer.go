@@ -26,6 +26,7 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/downloader"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
@@ -33,6 +34,22 @@ import (
 
 	"github.com/sirupsen/logrus"
 )
+
+// PieceWriter will be used in p2p downloader
+// we provide 2 implementations, one for downloading file, one for streaming
+type PieceWriter interface {
+	// PreRun initializes PieceWriter
+	PreRun(ctx context.Context) error
+
+	// Run starts to process piece data in background
+	Run(ctx context.Context)
+
+	// PostRun will run when finish a task
+	PostRun(ctx context.Context) error
+
+	// Wait will block util all piece are processed
+	Wait()
+}
 
 // ClientWriter writes a file for uploading and a target file.
 type ClientWriter struct {
@@ -75,7 +92,7 @@ type ClientWriter struct {
 
 // NewClientWriter creates and initialize a ClientWriter instance.
 func NewClientWriter(clientFilePath, serviceFilePath string,
-	clientQueue queue.Queue, api api.SupernodeAPI, cfg *config.Config) (*ClientWriter, error) {
+	clientQueue queue.Queue, api api.SupernodeAPI, cfg *config.Config) PieceWriter {
 	clientWriter := &ClientWriter{
 		clientQueue:     clientQueue,
 		clientFilePath:  clientFilePath,
@@ -83,13 +100,10 @@ func NewClientWriter(clientFilePath, serviceFilePath string,
 		api:             api,
 		cfg:             cfg,
 	}
-	if err := clientWriter.init(); err != nil {
-		return nil, err
-	}
-	return clientWriter, nil
+	return clientWriter
 }
 
-func (cw *ClientWriter) init() (err error) {
+func (cw *ClientWriter) PreRun(ctx context.Context) (err error) {
 	cw.p2pPattern = helper.IsP2P(cw.cfg.Pattern)
 	if cw.p2pPattern {
 		if e := fileutils.Link(cw.cfg.RV.TempTarget, cw.clientFilePath); e != nil {
@@ -114,6 +128,26 @@ func (cw *ClientWriter) init() (err error) {
 
 	cw.finish = make(chan struct{})
 	return
+}
+
+func (cw *ClientWriter) PostRun(ctx context.Context) (err error) {
+	src := cw.clientFilePath
+	if cw.acrossWrite || !helper.IsP2P(cw.cfg.Pattern) {
+		src = cw.cfg.RV.TempTarget
+	} else {
+		if _, err := os.Stat(cw.clientFilePath); err != nil {
+			logrus.Warnf("client file path:%s not found", cw.clientFilePath)
+			if e := fileutils.Link(cw.serviceFilePath, cw.clientFilePath); e != nil {
+				logrus.Warnln("hard link failed, instead of use copy")
+				fileutils.CopyFile(cw.serviceFilePath, cw.clientFilePath)
+			}
+		}
+	}
+	if err = downloader.MoveFile(src, cw.cfg.RV.RealTarget, cw.cfg.Md5); err != nil {
+		return
+	}
+	logrus.Infof("download successfully from dragonfly")
+	return nil
 }
 
 // Run starts writing downloading file.
@@ -181,7 +215,7 @@ func (cw *ClientWriter) write(piece *Piece) error {
 	cw.pieceIndex++
 	err := writePieceToFile(piece, cw.serviceFile)
 	if err == nil {
-		go cw.sendSuccessPiece(piece, time.Since(startTime))
+		go sendSuccessPiece(cw.api, cw.cfg.RV.Cid, piece, time.Since(startTime))
 	}
 	return err
 }
@@ -202,10 +236,10 @@ func startSyncWriter(q queue.Queue) queue.Queue {
 	return nil
 }
 
-func (cw *ClientWriter) sendSuccessPiece(piece *Piece, cost time.Duration) {
+func sendSuccessPiece(api api.SupernodeAPI, cid string, piece *Piece, cost time.Duration) {
 	reportPieceRequest := &types.ReportPieceRequest{
 		TaskID:     piece.TaskID,
-		Cid:        cw.cfg.RV.Cid,
+		Cid:        cid,
 		DstCid:     piece.DstCid,
 		PieceRange: piece.Range,
 	}
@@ -218,7 +252,7 @@ func (cw *ClientWriter) sendSuccessPiece(piece *Piece, cost time.Duration) {
 			break
 		}
 
-		_, err := cw.api.ReportPiece(piece.SuperNode, reportPieceRequest)
+		_, err := api.ReportPiece(piece.SuperNode, reportPieceRequest)
 		if err == nil {
 			if retry > 0 {
 				logrus.Warnf("success to report piece with request(%+v) after retrying (%d) times", reportPieceRequest, retry)

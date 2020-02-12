@@ -18,6 +18,7 @@ package downloader
 
 import (
 	"context"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -87,6 +88,10 @@ type MockDownloader struct {
 func (md *MockDownloader) Run(ctx context.Context) error {
 	time.Sleep(time.Duration(md.Sleep) * time.Millisecond)
 	return nil
+}
+
+func (md *MockDownloader) RunStream(ctx context.Context) (io.Reader, error) {
+	return nil, nil
 }
 
 func (md *MockDownloader) Cleanup() {
