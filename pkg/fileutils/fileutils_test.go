@@ -276,3 +276,17 @@ func (s *FileUtilTestSuite) TestLoadYaml(c *check.C) {
 
 	}
 }
+
+func (s *FileUtilTestSuite) TestIsRegularFile(c *check.C) {
+	pathStr := filepath.Join(s.tmpDir, "TestIsRegularFile")
+	c.Assert(IsRegularFile(pathStr), check.Equals, false)
+
+	os.Create(pathStr)
+	c.Assert(IsRegularFile(pathStr), check.Equals, true)
+	os.Remove(pathStr)
+
+	// Don't set mode to create a non-regular file
+	os.OpenFile(pathStr, 0, 0666)
+	c.Assert(IsRegularFile(pathStr), check.Equals, false)
+	os.Remove(pathStr)
+}
