@@ -35,4 +35,7 @@ func init() {
 func (suite *DfgetSuperCodeUtilSuite) TestGetMsgByCode(c *check.C) {
 	msg := GetMsgByCode(200)
 	c.Check(msg, check.Equals, "success")
+
+	msg = GetMsgByCode(612)
+	c.Check(msg, check.Equals, "")
 }
