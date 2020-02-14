@@ -181,6 +181,38 @@ func (s *FileUtilTestSuite) TestLink(c *check.C) {
 	c.Assert(err, check.NotNil)
 }
 
+func (s *FileUtilTestSuite) TestSymbolicLink(c *check.C) {
+	pathStr := filepath.Join(s.tmpDir, "TestSymLinkFileNonExist")
+	linkStr := filepath.Join(s.tmpDir, "TestSymLinkNameFileNonExist")
+	err := SymbolicLink(pathStr, linkStr)
+	c.Assert(err, check.NotNil)
+	c.Assert(PathExist(linkStr), check.Equals, false)
+
+	pathStr = filepath.Join(s.tmpDir, "TestSymLinkDir")
+	os.Mkdir(pathStr, 0755)
+	linkStr = filepath.Join(s.tmpDir, "TestSymLinkNameDir")
+	err = SymbolicLink(pathStr, linkStr)
+	c.Assert(err, check.IsNil)
+	c.Assert(PathExist(linkStr), check.Equals, true)
+
+	pathStr = filepath.Join(s.tmpDir, "TestSymLinkFile")
+	os.Create(pathStr)
+	linkStr = filepath.Join(s.tmpDir, "TestSymLinkNameFile")
+	err = SymbolicLink(pathStr, linkStr)
+	c.Assert(err, check.IsNil)
+	c.Assert(PathExist(linkStr), check.Equals, true)
+
+	linkStr = filepath.Join(s.tmpDir, "TestSymLinkNameDirExist")
+	os.Mkdir(linkStr, 0755)
+	err = SymbolicLink(pathStr, linkStr)
+	c.Assert(err, check.NotNil)
+
+	linkStr = filepath.Join(s.tmpDir, "TestSymLinkNameFileExist")
+	os.Create(linkStr)
+	err = SymbolicLink(pathStr, linkStr)
+	c.Assert(err, check.IsNil)
+}
+
 func (s *FileUtilTestSuite) TestCopyFile(c *check.C) {
 	srcPath := filepath.Join(s.tmpDir, "TestCopyFileSrc")
 	dstPath := filepath.Join(s.tmpDir, "TestCopyFileDst")
