@@ -144,7 +144,7 @@ func initProperties() ([]*propertiesResult, error) {
 		supernodes = properties.Supernodes
 	}
 	if supernodes != nil {
-		cfg.Nodes = config.NodeWightSlice2StringSlice(supernodes)
+		cfg.Nodes = config.NodeWeightSlice2StringSlice(supernodes)
 	}
 
 	if cfg.LocalLimit == 0 {

@@ -31,15 +31,15 @@ import (
 const weightSeparator = '='
 
 type SupernodesValue struct {
-	Nodes *[]*NodeWight
+	Nodes *[]*NodeWeight
 }
 
-type NodeWight struct {
+type NodeWeight struct {
 	Node   string
 	Weight int
 }
 
-func NewSupernodesValue(p *[]*NodeWight, val []*NodeWight) *SupernodesValue {
+func NewSupernodesValue(p *[]*NodeWeight, val []*NodeWeight) *SupernodesValue {
 	ssv := new(SupernodesValue)
 	ssv.Nodes = p
 	*ssv.Nodes = val
@@ -48,9 +48,9 @@ func NewSupernodesValue(p *[]*NodeWight, val []*NodeWight) *SupernodesValue {
 
 // GetDefaultSupernodesValue returns the default value of supernodes.
 // default: ["127.0.0.1:8002=1"]
-func GetDefaultSupernodesValue() []*NodeWight {
-	var result = make([]*NodeWight, 0)
-	result = append(result, &NodeWight{
+func GetDefaultSupernodesValue() []*NodeWeight {
+	var result = make([]*NodeWeight, 0)
+	result = append(result, &NodeWeight{
 		Node:   fmt.Sprintf("%s:%d", DefaultNode, DefaultSupernodePort),
 		Weight: DefaultSupernodeWeight,
 	})
@@ -83,12 +83,12 @@ func (sv *SupernodesValue) Type() string {
 }
 
 // MarshalYAML implements the yaml.Marshaler interface.
-func (nw *NodeWight) MarshalYAML() (interface{}, error) {
+func (nw *NodeWeight) MarshalYAML() (interface{}, error) {
 	return nw.string(), nil
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface.
-func (nw *NodeWight) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (nw *NodeWeight) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var value string
 	if err := unmarshal(&value); err != nil {
 		return err
@@ -104,12 +104,12 @@ func (nw *NodeWight) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 // MarshalJSON implements the json.Marshaler interface.
-func (nw *NodeWight) MarshalJSON() ([]byte, error) {
+func (nw *NodeWeight) MarshalJSON() ([]byte, error) {
 	return json.Marshal(nw.string())
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface.
-func (nw *NodeWight) UnmarshalJSON(b []byte) error {
+func (nw *NodeWeight) UnmarshalJSON(b []byte) error {
 	str, _ := strconv.Unquote(string(b))
 	nodeWeight, err := string2NodeWeight(str)
 	if err != nil {
@@ -120,18 +120,18 @@ func (nw *NodeWight) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (nw *NodeWight) string() string {
+func (nw *NodeWeight) string() string {
 	return fmt.Sprintf("%s%c%d", nw.Node, weightSeparator, nw.Weight)
 }
 
-// ParseNodesString parses the value in string type to []*NodeWight.
-func ParseNodesString(value string) ([]*NodeWight, error) {
+// ParseNodesString parses the value in string type to []*NodeWeight.
+func ParseNodesString(value string) ([]*NodeWeight, error) {
 	return ParseNodesSlice(strings.Split(value, ","))
 }
 
-// ParseNodesSlice parses the value in string slice type to []*NodeWight.
-func ParseNodesSlice(value []string) ([]*NodeWight, error) {
-	nodeWightSlice := make([]*NodeWight, 0)
+// ParseNodesSlice parses the value in string slice type to []*NodeWeight.
+func ParseNodesSlice(value []string) ([]*NodeWeight, error) {
+	nodeWeightSlice := make([]*NodeWeight, 0)
 	weightKey := make([]int, 0)
 
 	// split node and weight
@@ -142,15 +142,15 @@ func ParseNodesSlice(value []string) ([]*NodeWight, error) {
 		}
 
 		weightKey = append(weightKey, nodeWeight.Weight)
-		nodeWightSlice = append(nodeWightSlice, nodeWeight)
+		nodeWeightSlice = append(nodeWeightSlice, nodeWeight)
 	}
 
-	var result []*NodeWight
+	var result []*NodeWeight
 	// get the greatest common divisor of the weight slice and
 	// divide all weights by the greatest common divisor.
 	gcdNumber := algorithm.GCDSlice(weightKey)
-	for _, v := range nodeWightSlice {
-		result = append(result, &NodeWight{
+	for _, v := range nodeWeightSlice {
+		result = append(result, &NodeWeight{
 			Node:   v.Node,
 			Weight: (v.Weight / gcdNumber),
 		})
@@ -159,9 +159,9 @@ func ParseNodesSlice(value []string) ([]*NodeWight, error) {
 	return result, nil
 }
 
-// NodeWightSlice2StringSlice parses nodeWight slice to string slice.
-// It takes the NodeWight.Node as the value and every value will be appended the corresponding NodeWight.Weight times.
-func NodeWightSlice2StringSlice(supernodes []*NodeWight) []string {
+// NodeWeightSlice2StringSlice parses nodeWeight slice to string slice.
+// It takes the NodeWeight.Node as the value and every value will be appended the corresponding NodeWeight.Weight times.
+func NodeWeightSlice2StringSlice(supernodes []*NodeWeight) []string {
 	var nodes []string
 	for _, v := range supernodes {
 		for i := 0; i < v.Weight; i++ {
@@ -171,7 +171,7 @@ func NodeWightSlice2StringSlice(supernodes []*NodeWight) []string {
 	return nodes
 }
 
-func string2NodeWeight(value string) (*NodeWight, error) {
+func string2NodeWeight(value string) (*NodeWeight, error) {
 	node, weight, err := splitNodeAndWeight(value)
 	if err != nil {
 		return nil, err
@@ -182,7 +182,7 @@ func string2NodeWeight(value string) (*NodeWight, error) {
 		return nil, err
 	}
 
-	return &NodeWight{
+	return &NodeWeight{
 		Node:   node,
 		Weight: weight,
 	}, nil

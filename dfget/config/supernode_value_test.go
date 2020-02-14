@@ -33,38 +33,38 @@ type SupernodeValueSuite struct {
 func (suit *SupernodeValueSuite) TestHandleNodes() {
 	var cases = []struct {
 		nodeWithWeightList []string
-		expectedNodes      []*NodeWight
+		expectedNodes      []*NodeWeight
 		gotError           bool
 	}{
 		{
 			nodeWithWeightList: []string{"127.0.0.1", "127.0.0.2"},
-			expectedNodes: []*NodeWight{
+			expectedNodes: []*NodeWeight{
 				{"127.0.0.1:8002", 1},
 				{"127.0.0.2:8002", 1},
 			},
 		},
 		{
 			nodeWithWeightList: []string{"127.0.0.1=2", "127.0.0.2"},
-			expectedNodes: []*NodeWight{
+			expectedNodes: []*NodeWeight{
 				{"127.0.0.1:8002", 2},
 				{"127.0.0.2:8002", 1},
 			},
 		},
 		{
 			nodeWithWeightList: []string{"127.0.0.1=20", "127.0.0.2=20"},
-			expectedNodes: []*NodeWight{
+			expectedNodes: []*NodeWeight{
 				{"127.0.0.1:8002", 1},
 				{"127.0.0.2:8002", 1}},
 		},
 		{
 			nodeWithWeightList: []string{"127.0.0.1=2", "127.0.0.2=4"},
-			expectedNodes: []*NodeWight{
+			expectedNodes: []*NodeWeight{
 				{"127.0.0.1:8002", 1},
 				{"127.0.0.2:8002", 2}},
 		},
 		{
 			nodeWithWeightList: []string{"127.0.0.1:8002=1", "127.0.0.2:8001=2"},
-			expectedNodes: []*NodeWight{
+			expectedNodes: []*NodeWeight{
 				{"127.0.0.1:8002", 1},
 				{"127.0.0.2:8001", 2}},
 		},

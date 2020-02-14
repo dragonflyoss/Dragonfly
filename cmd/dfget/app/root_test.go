@@ -85,7 +85,7 @@ func (suit *dfgetSuit) Test_initProperties() {
 			"--locallimit", v.expected.LocalLimit.String(),
 			"--totallimit", v.expected.TotalLimit.String()})
 		initProperties()
-		suit.EqualValues(cfg.Nodes, config.NodeWightSlice2StringSlice(v.expected.Supernodes))
+		suit.EqualValues(cfg.Nodes, config.NodeWeightSlice2StringSlice(v.expected.Supernodes))
 		suit.Equal(cfg.LocalLimit, v.expected.LocalLimit)
 		suit.Equal(cfg.TotalLimit, v.expected.TotalLimit)
 		suit.Equal(cfg.ClientQueueSize, v.expected.ClientQueueSize)
