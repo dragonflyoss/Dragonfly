@@ -18,6 +18,7 @@ package peer
 
 import (
 	"context"
+	"sort"
 	"testing"
 	"time"
 
@@ -125,6 +126,37 @@ func (s *PeerMgrTestSuite) TestGet(c *check.C) {
 		Created:  info.Created,
 	}
 	c.Check(info, check.DeepEquals, expected)
+}
+
+func (s *PeerMgrTestSuite) TestGetAllPeerIDs(c *check.C) {
+	manager, _ := NewManager(prometheus.NewRegistry())
+
+	// the first data
+	request := &types.PeerCreateRequest{
+		IP:       "192.168.10.11",
+		HostName: "foo",
+		Port:     65001,
+		Version:  version.DFGetVersion,
+	}
+	resp, err := manager.Register(context.Background(), request)
+	c.Check(err, check.IsNil)
+	id := resp.ID
+
+	// the second data
+	request = &types.PeerCreateRequest{
+		IP:       "192.168.10.11",
+		HostName: "bar",
+		Port:     65001,
+		Version:  version.DFGetVersion,
+	}
+	resp, err = manager.Register(context.Background(), request)
+	c.Check(err, check.IsNil)
+	id2 := resp.ID
+
+	// get all peer ids
+	ids := manager.GetAllPeerIDs(context.Background())
+	sort.Strings(ids)
+	c.Check(ids, check.DeepEquals, []string{id2, id})
 }
 
 func (s *PeerMgrTestSuite) TestList(c *check.C) {
