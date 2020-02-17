@@ -50,7 +50,7 @@ const (
 )
 
 const (
-	// DefaultFailCountLimit indicates the default limit of failure count as a client.
+	// DefaultFailureCountLimit indicates the default limit of failure count as a client.
 	DefaultFailureCountLimit = 5
 
 	// DefaultEliminationLimit indicates the default limit of failure count as a server.
