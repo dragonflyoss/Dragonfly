@@ -36,11 +36,14 @@ const BufferSize = 8 * 1024 * 1024
 // CreateDirectory creates directory recursively.
 func CreateDirectory(dirPath string) error {
 	f, e := os.Stat(dirPath)
-	if e != nil && os.IsNotExist(e) {
-		return os.MkdirAll(dirPath, 0755)
+	if e != nil {
+		if os.IsNotExist(e) {
+			return os.MkdirAll(dirPath, 0755)
+		}
+		return fmt.Errorf("failed to create dir %s: %v", dirPath, e)
 	}
-	if e == nil && !f.IsDir() {
-		return fmt.Errorf("create dir:%s error, not a directory", dirPath)
+	if !f.IsDir() {
+		return fmt.Errorf("failed to create dir %s: dir path already exists and is not a directory", dirPath)
 	}
 	return e
 }
@@ -48,10 +51,10 @@ func CreateDirectory(dirPath string) error {
 // DeleteFile deletes a file not a directory.
 func DeleteFile(filePath string) error {
 	if !PathExist(filePath) {
-		return fmt.Errorf("delete file:%s error, file not exist", filePath)
+		return fmt.Errorf("failed to delete file %s: file not exist", filePath)
 	}
 	if IsDir(filePath) {
-		return fmt.Errorf("delete file:%s error, is a directory instead of a file", filePath)
+		return fmt.Errorf("failed to delete file %s: file path is a directory rather than a file", filePath)
 	}
 	return os.Remove(filePath)
 }
@@ -82,10 +85,10 @@ func OpenFile(path string, flag int, perm os.FileMode) (*os.File, error) {
 func Link(src string, linkName string) error {
 	if PathExist(linkName) {
 		if IsDir(linkName) {
-			return fmt.Errorf("link %s to %s: error, link name already exists and is a directory", linkName, src)
+			return fmt.Errorf("failed to link %s to %s: link name already exists and is a directory", linkName, src)
 		}
 		if err := DeleteFile(linkName); err != nil {
-			return err
+			return fmt.Errorf("failed to link %s to %s when deleting target file: %v", linkName, src, err)
 		}
 
 	}
@@ -105,19 +108,19 @@ func CopyFile(src string, dst string) (err error) {
 		d *os.File
 	)
 	if !IsRegularFile(src) {
-		return fmt.Errorf("copy file:%s error, is not a regular file", src)
+		return fmt.Errorf("failed to copy %s to %s: src is not a regular file", src, dst)
 	}
 	if s, err = os.Open(src); err != nil {
-		return err
+		return fmt.Errorf("failed to copy %s to %s when opening source file: %v", src, dst, err)
 	}
 	defer s.Close()
 
 	if PathExist(dst) {
-		return fmt.Errorf("copy file:%s error, dst file already exists", dst)
+		return fmt.Errorf("failed to copy %s to %s: dst file already exists", src, dst)
 	}
 
 	if d, err = OpenFile(dst, os.O_RDWR|os.O_TRUNC|os.O_CREATE, 0755); err != nil {
-		return err
+		return fmt.Errorf("failed to copy %s to %s when opening destination file: %v", src, dst, err)
 	}
 	defer d.Close()
 
@@ -125,13 +128,13 @@ func CopyFile(src string, dst string) (err error) {
 	for {
 		n, err := s.Read(buf)
 		if err != nil && err != io.EOF {
-			return err
+			return fmt.Errorf("failed to copy %s to %s when reading src file: %v", src, dst, err)
 		}
 		if n == 0 || err == io.EOF {
 			break
 		}
 		if _, err := d.Write(buf[:n]); err != nil {
-			return err
+			return fmt.Errorf("failed to copy %s to %s when writing dst file: %v", src, dst, err)
 		}
 	}
 	return nil
@@ -140,11 +143,11 @@ func CopyFile(src string, dst string) (err error) {
 // MoveFile moves the file src to dst.
 func MoveFile(src string, dst string) error {
 	if !IsRegularFile(src) {
-		return fmt.Errorf("move file:%s error, is not a regular file", src)
+		return fmt.Errorf("failed to move %s to %s: src is not a regular file", src, dst)
 	}
 	if PathExist(dst) && !IsDir(dst) {
 		if err := DeleteFile(dst); err != nil {
-			return err
+			return fmt.Errorf("failed to move %s to %s when deleting dst file: %v", src, dst, err)
 		}
 	}
 	return os.Rename(src, dst)
@@ -154,13 +157,11 @@ func MoveFile(src string, dst string) error {
 // before move the file src to dst.
 func MoveFileAfterCheckMd5(src string, dst string, md5 string) error {
 	if !IsRegularFile(src) {
-		return fmt.Errorf("move file with md5 check:%s error, is not a "+
-			"regular file", src)
+		return fmt.Errorf("failed to move file with md5 check %s to %s: src is not a regular file", src, dst)
 	}
 	m := Md5Sum(src)
 	if m != md5 {
-		return fmt.Errorf("move file with md5 check:%s error, md5 of source "+
-			"file doesn't match against the given md5 value", src)
+		return fmt.Errorf("failed to move file with md5 check %s to %s: md5 of source file doesn't match against the given md5 value", src, dst)
 	}
 	return MoveFile(src, dst)
 }
@@ -227,10 +228,10 @@ func GetSys(info os.FileInfo) (*syscall.Stat_t, bool) {
 func LoadYaml(path string, out interface{}) error {
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to load yaml %s when reading file: %v", path, err)
 	}
 	if err = yaml.Unmarshal(content, out); err != nil {
-		return fmt.Errorf("path:%s err:%s", path, err)
+		return fmt.Errorf("failed to load yaml %s: %v", path, err)
 	}
 	return nil
 }
