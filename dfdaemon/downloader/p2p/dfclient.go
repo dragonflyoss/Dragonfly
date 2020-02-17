@@ -103,26 +103,7 @@ func (c *DFClient) doDownload(ctx context.Context, url string, header map[string
 	runtimeConfig.Output = destPath
 	runtimeConfig.RV.RealTarget = destPath
 	runtimeConfig.RV.TargetDir = filepath.Dir(destPath)
-	// if err := fileutils.CreateDirectory(runtimeConfig.RV.TargetDir); err != nil {
-	// 	return err
-	// }
-	//
-	// tempTarget, err := createTempTargetFile(runtimeConfig.RV.TargetDir, runtimeConfig.Sign)
-	// if err != nil {
-	// 	return err
-	// }
-	// runtimeConfig.RV.TempTarget = tempTarget
-	//
-	// register := regist.NewSupernodeRegister(&runtimeConfig, c.supernodeAPI)
-	// result, e := register.Register(c.dfGetConfig.RV.PeerPort)
-	// if e != nil {
-	// 	if e.Code == constants.CodeNeedAuth {
-	// 		return e
-	// 	}
-	// 	c.dfGetConfig.BackSourceReason = dfgetcfg.BackSourceReasonRegisterFail
-	// 	return e
-	// }
-	// c.dfGetConfig.RV.FileLength = result.FileLength
+
 	return c.dfClient.GetReader(ctx, &runtimeConfig)
 }
 

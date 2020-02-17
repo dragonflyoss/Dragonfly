@@ -65,7 +65,7 @@ func checkConnectSupernode(nodes []string) (localIP string) {
 		if localIP, e = httputils.CheckConnect(ip, port, 1000); e == nil {
 			return localIP
 		}
-		logrus.Errorf("Connect to node:%s error: %v", n, e)
+		logrus.Warnf("Connect to node:%s error: %v", n, e)
 	}
 	return ""
 }
