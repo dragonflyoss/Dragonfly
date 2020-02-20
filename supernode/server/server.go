@@ -39,6 +39,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
+	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/seed_task"
 )
 
 var dfgetLogger *logrus.Logger
@@ -53,6 +54,7 @@ type Server struct {
 	GCMgr         mgr.GCMgr
 	PieceErrorMgr mgr.PieceErrorMgr
 	PreheatMgr    mgr.PreheatManager
+	seedTaskMgr   mgr.SeedTaskMgr
 
 	originClient httpclient.OriginHTTPClient
 }
@@ -106,7 +108,12 @@ func New(cfg *config.Config, logger *logrus.Logger, register prometheus.Register
 		return nil, err
 	}
 
-	gcMgr, err := gc.NewManager(cfg, taskMgr, peerMgr, dfgetTaskMgr, progressMgr, cdnMgr, register)
+	seedTaskMgr, err := seed_task.NewManager(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	gcMgr, err := gc.NewManager(cfg, taskMgr, peerMgr, dfgetTaskMgr, progressMgr, cdnMgr, seedTaskMgr, register)
 	if err != nil {
 		return nil, err
 	}
@@ -131,6 +138,7 @@ func New(cfg *config.Config, logger *logrus.Logger, register prometheus.Register
 		PieceErrorMgr: pieceErrorMgr,
 		PreheatMgr:    preheatMgr,
 		originClient:  originClient,
+		seedTaskMgr:   seedTaskMgr,
 	}, nil
 }
 

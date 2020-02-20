@@ -136,3 +136,9 @@ const (
 	// unit: MB/s
 	DefaultMaxBandwidth = 200 * rate.MB
 )
+
+const (
+	DefaultPeerExpireTime = 2 * 60
+
+	DefaultMaxSeedPerObj = 64
+)

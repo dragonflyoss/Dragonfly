@@ -52,6 +52,11 @@ func (s *Server) registerPeer(ctx context.Context, rw http.ResponseWriter, req *
 func (s *Server) deRegisterPeer(ctx context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
 	id := mux.Vars(req)["id"]
 
+	if err = s.seedTaskMgr.DeRegisterPeer(ctx, id); err == nil {
+		rw.WriteHeader(http.StatusOK)
+		return nil
+	}
+
 	if err = s.PeerMgr.DeRegister(ctx, id); err != nil {
 		return err
 	}
