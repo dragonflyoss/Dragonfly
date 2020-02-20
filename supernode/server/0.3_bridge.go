@@ -18,6 +18,7 @@ package server
 
 import (
 	"context"
+	"strconv"
 	"encoding/json"
 	"net/http"
 
@@ -32,6 +33,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/rangeutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/digest"
 )
 
 // RegisterResponseData is the data when registering supernode successfully.
@@ -101,6 +103,23 @@ func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http
 		return errors.Wrap(errortypes.ErrInvalidValue, err.Error())
 	}
 
+	if s.seedTaskMgr.IsSeedTask(ctx, req) {
+		resp, err := s.seedTaskMgr.Register(ctx, request)
+		if err != nil {
+			return err
+		}
+		return EncodeResponse(rw, http.StatusOK, &types.ResultInfo{
+			Code: constants.Success,
+			Data: &RegisterResponseData{
+				TaskID: resp.TaskID,
+				FileLength: request.FileLength,
+				PieceSize: int32(request.FileLength),
+				AsSeed: resp.AsSeed,
+				SeedTaskID: resp.TaskID,
+			},
+		})
+	}
+
 	peerCreateRequest := &types.PeerCreateRequest{
 		IP:       request.IP,
 		HostName: strfmt.Hostname(request.HostName),
@@ -128,6 +147,7 @@ func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http
 		TaskURL:     request.TaskURL,
 		SupernodeIP: request.SuperNodeIP,
 	}
+
 	s.originClient.RegisterTLSConfig(taskCreateRequest.RawURL, request.Insecure, request.RootCAs)
 	resp, err := s.TaskMgr.Register(ctx, taskCreateRequest)
 	if err != nil {
@@ -259,6 +279,15 @@ func (s *Server) reportServiceDown(ctx context.Context, rw http.ResponseWriter, 
 	taskID := params.Get("taskId")
 	cID := params.Get("cid")
 
+	if req.Header.Get("X-report-resource") != "" {
+		err := s.seedTaskMgr.DeRegisterTask(ctx, cID, taskID)
+		if err != nil {
+			return err
+		}
+		return EncodeResponse(rw, http.StatusOK, &types.ResultInfo{
+			Code: constants.CodeGetPeerDown,
+		})
+	}
 	// get peerID according to the CID and taskID
 	dfgetTask, err := s.DfgetTaskMgr.Get(ctx, cID, taskID)
 	if err != nil {
@@ -316,9 +345,82 @@ func (s *Server) reportPieceError(ctx context.Context, rw http.ResponseWriter, r
 }
 
 func (s *Server) fetchP2PNetworkInfo(ctx context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
-	return EncodeResponse(rw, http.StatusOK, &types.NetworkInfoFetchResponse{})
+	request := &types.NetworkInfoFetchRequest{}
+
+	params := req.URL.Query()
+	start, err := strconv.Atoi(params.Get("start"))
+	if err != nil {
+		start = 0
+	}
+	limit, err := strconv.Atoi(params.Get("limit"))
+	if err != nil {
+		limit = 500
+	}
+
+	// parse body, get requested urls
+	if err := json.NewDecoder(req.Body).Decode(request); err != nil {
+		return errors.Wrap(errortypes.ErrInvalidValue, err.Error())
+	}
+	if len(request.Urls) < start {
+		return EncodeResponse(rw, http.StatusOK, types.ResultInfo{
+			Code: 0,
+			Data: &types.NetworkInfoFetchResponse{},
+		})
+	}
+	end := start + limit - 1
+	if end > len(request.Urls) {
+		end = len(request.Urls)
+	}
+	nodes := make(map[string]*types.Node)
+	for _, url := range request.Urls[start:end] {
+		taskId := digest.Sha256(url)
+		tasksInfo, err := s.seedTaskMgr.GetTasksInfo(ctx, taskId)
+		if err != nil {
+			continue
+		}
+		for _, taskInfo := range tasksInfo {
+			peer := taskInfo.P2pInfo.PeerInfo
+			node, ok := nodes[peer.ID]
+			if !ok {
+				node = new(types.Node)
+				node.Basic = peer
+				node.Extra = make(map[string]string)
+				node.Load = int64(taskInfo.P2pInfo.Load())
+				nodes[peer.ID] = node
+			}
+			// append tasks
+			node.Tasks = append(node.Tasks, &types.TaskFetchInfo{
+				Task: taskInfo.TaskInfo,
+				Pieces: []*types.PieceInfo{{
+					Path: taskInfo.RequestPath,
+				}},
+			})
+		}
+	}
+	var nodesArray []*types.Node
+
+	for _, node := range nodes {
+		nodesArray = append(nodesArray, node)
+	}
+
+	return EncodeResponse(rw, http.StatusOK, types.ResultInfo{
+		Code: constants.Success,
+		Data: &types.NetworkInfoFetchResponse {
+			Nodes: nodesArray,
+		},
+	})
 }
 
-func (s *Server) reportPeerHealth(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
-	return EncodeResponse(rw, http.StatusOK, &types.HeartBeatResponse{})
+func (s *Server) reportPeerHealth (ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+	hbRequest := &types.HeartBeatRequest{}
+	reader := req.Body
+	if err := json.NewDecoder(reader).Decode(hbRequest); err != nil {
+		return errors.Wrap(errortypes.ErrInvalidValue, err.Error())
+	}
+	if err := s.seedTaskMgr.ReportPeerHealth(ctx, hbRequest.CID); err != nil {
+		return err
+	}
+	return EncodeResponse(rw, http.StatusOK, types.ResultInfo{
+		Code: constants.Success,
+	})
 }
