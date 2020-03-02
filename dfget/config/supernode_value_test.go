@@ -98,3 +98,14 @@ func (suit *SupernodeValueSuite) TestHandleNodes() {
 		}
 	}
 }
+
+func (suit *SupernodeValueSuite) TestNodeWeightSlice2StringSlice() {
+	var nodeWithWeight = []*NodeWeight{
+		{"127.0.0.1:8002", 0},
+		{"127.0.0.2:8003", 1},
+		{"127.0.0.2:8004", 2},
+	}
+	var expectedString = []string{"127.0.0.2:8003", "127.0.0.2:8004", "127.0.0.2:8004"}
+	str := NodeWeightSlice2StringSlice(nodeWithWeight)
+	suit.Equal(expectedString, str)
+}
