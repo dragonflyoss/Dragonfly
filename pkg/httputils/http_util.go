@@ -28,6 +28,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
@@ -53,6 +54,8 @@ const (
 
 // DefaultHTTPClient is the default implementation of SimpleHTTPClient.
 var DefaultHTTPClient SimpleHTTPClient = &defaultHTTPClient{}
+
+var protocols = sync.Map{}
 
 // SimpleHTTPClient defines some http functions used frequently.
 type SimpleHTTPClient interface {
@@ -255,11 +258,23 @@ func HTTPWithHeaders(method, url string, headers map[string]string, timeout time
 		req.Header.Add(k, v)
 	}
 
-	var transport http.RoundTripper
+	// copy from http.DefaultTransport
+	transport := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+	RegisterProtocolOnTransport(transport)
+
 	if tlsConfig != nil {
-		transport = &http.Transport{
-			TLSClientConfig: tlsConfig,
-		}
+		transport.TLSClientConfig = tlsConfig
 	}
 
 	c := &http.Client{
@@ -455,4 +470,23 @@ func handlePairRange(rangeStr string, length int64) (*RangeStruct, error) {
 		StartIndex: startIndex,
 		EndIndex:   endIndex,
 	}, nil
+}
+
+// RegisterProtocol registers custom protocols in global variable "protocols" which will use in dfget and supernode
+// Example:
+//   protocols := "helloworld"
+//   newTransport := funcNewTransport
+//   httputils.RegisterProtocol(protocols, newTransport)
+func RegisterProtocol(scheme string, rt http.RoundTripper) {
+	protocols.Store(scheme, rt)
+}
+
+// RegisterProtocolOnTransport registers all new protocols in "protocols" for a special Transport
+// this function will be used in supernode and dfwget
+func RegisterProtocolOnTransport(tr *http.Transport) {
+	protocols.Range(
+		func(key, value interface{}) bool {
+			tr.RegisterProtocol(key.(string), value.(http.RoundTripper))
+			return true
+		})
 }
