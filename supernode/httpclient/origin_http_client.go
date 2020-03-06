@@ -49,13 +49,30 @@ type OriginHTTPClient interface {
 
 // OriginClient is an implementation of the interface of OriginHTTPClient.
 type OriginClient struct {
-	clientMap *sync.Map
+	clientMap         *sync.Map
+	defaultHTTPClient *http.Client
 }
 
 // NewOriginClient returns a new OriginClient.
 func NewOriginClient() OriginHTTPClient {
+	defaultTransport := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   3 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+	httputils.RegisterProtocolOnTransport(defaultTransport)
 	return &OriginClient{
 		clientMap: &sync.Map{},
+		defaultHTTPClient: &http.Client{
+			Transport: defaultTransport,
+		},
 	}
 }
 
@@ -195,7 +212,8 @@ func (client *OriginClient) HTTPWithHeaders(method, url string, headers map[stri
 
 	httpClientObject, existed := client.clientMap.Load(req.Host)
 	if !existed {
-		httpClientObject = http.DefaultClient
+		// use client.defaultHTTPClient to support custom protocols
+		httpClientObject = client.defaultHTTPClient
 	}
 
 	httpClient, ok := httpClientObject.(*http.Client)
