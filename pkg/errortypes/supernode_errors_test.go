@@ -61,7 +61,7 @@ func (suite *SupernodeErrorTestSuite) TestIsUnknowError(c *check.C) {
 	c.Assert(IsUnknowError(*err2), check.Equals, false)
 }
 
-func (suite *SupernodeErrorTestSuite) IsPeerContinue(c *check.C) {
+func (suite *SupernodeErrorTestSuite) TestIsPeerContinue(c *check.C) {
 	err1 := New(11, "peer continue")
 	err2 := New(0, "test")
 	c.Assert(IsPeerContinue(*err1), check.Equals, true)
