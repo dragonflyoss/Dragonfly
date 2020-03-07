@@ -62,7 +62,7 @@ type Properties struct {
 	// All weights will be divided by the greatest common divisor in the end.
 	//
 	// E.g. ["192.168.33.21=1", "192.168.33.22=2"]
-	Supernodes []*NodeWight `yaml:"nodes,omitempty" json:"nodes,omitempty"`
+	Supernodes []*NodeWeight `yaml:"nodes,omitempty" json:"nodes,omitempty"`
 
 	// LocalLimit rate limit about a single download task, format: G(B)/g/M(B)/m/K(B)/k/B
 	// pure number will also be parsed as Byte.
