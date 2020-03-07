@@ -97,7 +97,18 @@ func Link(src string, linkName string) error {
 
 // SymbolicLink creates target as a symbolic link to src.
 func SymbolicLink(src string, target string) error {
-	// TODO Add verifications.
+	if !PathExist(src) {
+		return fmt.Errorf("failed to symlink %s to %s: src no such file or directory", target, src)
+	}
+	if PathExist(target) {
+		if IsDir(target) {
+			return fmt.Errorf("failed to symlink %s to %s: link name already exists and is a directory", target, src)
+		}
+		if err := DeleteFile(target); err != nil {
+			return fmt.Errorf("failed to symlink %s to %s when deleting target file: %v", target, src, err)
+		}
+
+	}
 	return os.Symlink(src, target)
 }
 
