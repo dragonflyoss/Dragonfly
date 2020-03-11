@@ -53,7 +53,7 @@ func TestPreheatInfo(t *testing.T) {
 	id := "1234567890"
 	startTime := strfmt.DateTime(time.Now())
 	finishTime := strfmt.DateTime(time.Now().Add(time.Duration(time.Minute)))
-	status := "SUCCESS"
+	status := types.PreheatStatusSUCCESS
 
 	expectedURL := fmt.Sprintf("/preheats/%s", id)
 
@@ -65,7 +65,7 @@ func TestPreheatInfo(t *testing.T) {
 			ID:         id,
 			StartTime:  startTime,
 			FinishTime: finishTime,
-			Status:     "SUCCESS",
+			Status:     types.PreheatStatusSUCCESS,
 		}
 		b, err := json.Marshal(info)
 		if err != nil {

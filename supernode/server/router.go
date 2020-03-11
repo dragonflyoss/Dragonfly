@@ -24,7 +24,6 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/version"
-
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -75,6 +74,7 @@ func initRoute(s *Server) *mux.Router {
 			r.Path(h.Path).Methods(h.Method).Handler(m.instrumentHandler(h.Path, filter(h.HandlerFunc)))
 		}
 	}
+	initPreheatHandlers(s, r)
 
 	if s.Config.Debug || s.Config.EnableProfiler {
 		r.PathPrefix("/debug/pprof/cmdline").HandlerFunc(pprof.Cmdline)

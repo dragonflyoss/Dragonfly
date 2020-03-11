@@ -6,9 +6,13 @@ package types
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"encoding/json"
+
 	strfmt "github.com/go-openapi/strfmt"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
+	"github.com/go-openapi/validate"
 )
 
 // PreheatCreateRequest Request option of creating a preheat task in supernode.
@@ -33,14 +37,87 @@ type PreheatCreateRequest struct {
 
 	// this must be image or file
 	//
-	Type string `json:"type,omitempty"`
+	// Required: true
+	// Enum: [image file]
+	Type *string `json:"type"`
 
 	// the image or file location
-	URL string `json:"url,omitempty"`
+	// Required: true
+	// Min Length: 3
+	URL *string `json:"url"`
 }
 
 // Validate validates this preheat create request
 func (m *PreheatCreateRequest) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateType(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateURL(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+var preheatCreateRequestTypeTypePropEnum []interface{}
+
+func init() {
+	var res []string
+	if err := json.Unmarshal([]byte(`["image","file"]`), &res); err != nil {
+		panic(err)
+	}
+	for _, v := range res {
+		preheatCreateRequestTypeTypePropEnum = append(preheatCreateRequestTypeTypePropEnum, v)
+	}
+}
+
+const (
+
+	// PreheatCreateRequestTypeImage captures enum value "image"
+	PreheatCreateRequestTypeImage string = "image"
+
+	// PreheatCreateRequestTypeFile captures enum value "file"
+	PreheatCreateRequestTypeFile string = "file"
+)
+
+// prop value enum
+func (m *PreheatCreateRequest) validateTypeEnum(path, location string, value string) error {
+	if err := validate.Enum(path, location, value, preheatCreateRequestTypeTypePropEnum); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *PreheatCreateRequest) validateType(formats strfmt.Registry) error {
+
+	if err := validate.Required("type", "body", m.Type); err != nil {
+		return err
+	}
+
+	// value enum
+	if err := m.validateTypeEnum("type", "body", *m.Type); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *PreheatCreateRequest) validateURL(formats strfmt.Registry) error {
+
+	if err := validate.Required("url", "body", m.URL); err != nil {
+		return err
+	}
+
+	if err := validate.MinLength("url", "body", string(*m.URL), 3); err != nil {
+		return err
+	}
+
 	return nil
 }
 

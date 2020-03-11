@@ -29,6 +29,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/gc"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/peer"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/pieceerror"
+	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/preheat"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/progress"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/scheduler"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/task"
@@ -51,6 +52,7 @@ type Server struct {
 	ProgressMgr   mgr.ProgressMgr
 	GCMgr         mgr.GCMgr
 	PieceErrorMgr mgr.PieceErrorMgr
+	PreheatMgr    mgr.PreheatManager
 
 	originClient httpclient.OriginHTTPClient
 }
@@ -114,6 +116,11 @@ func New(cfg *config.Config, logger *logrus.Logger, register prometheus.Register
 		return nil, err
 	}
 
+	preheatMgr, err := preheat.NewManager(cfg)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Server{
 		Config:        cfg,
 		PeerMgr:       peerMgr,
@@ -122,6 +129,7 @@ func New(cfg *config.Config, logger *logrus.Logger, register prometheus.Register
 		ProgressMgr:   progressMgr,
 		GCMgr:         gcMgr,
 		PieceErrorMgr: pieceErrorMgr,
+		PreheatMgr:    preheatMgr,
 		originClient:  originClient,
 	}, nil
 }
