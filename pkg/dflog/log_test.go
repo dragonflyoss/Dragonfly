@@ -58,6 +58,20 @@ func (ts *logTestSuite) TestLogFile() {
 	r.Equal(f.Name(), lumberjack.Filename)
 }
 
+func (ts *logTestSuite) TestMaxSizeMB() {
+	r := ts.Require()
+
+	f, err := ioutil.TempFile("", "")
+	r.Nil(err)
+	defer os.RemoveAll(f.Name())
+
+	l := logrus.New()
+	r.Nil(Init(l, WithLogFile(f.Name(), 10, 0), WithMaxSizeMB(20)))
+	lumberjack := getLumberjack(l)
+	r.NotNil(lumberjack)
+	r.Equal(20, lumberjack.MaxSize)
+}
+
 func (ts *logTestSuite) TestFormatter() {
 	r := ts.Require()
 
