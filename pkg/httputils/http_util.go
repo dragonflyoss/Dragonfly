@@ -165,7 +165,9 @@ func do(url string, headers map[string]string, timeout time.Duration, rsf reques
 	}
 
 	statusCode = resp.StatusCode()
-	body = resp.Body()
+	data := resp.Body()
+	body = make([]byte, len(data))
+	copy(body, data)
 	return
 }
 

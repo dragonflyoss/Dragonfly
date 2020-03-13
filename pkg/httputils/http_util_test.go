@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"sync"
 	"testing"
 	"time"
 
@@ -213,6 +214,22 @@ func (s *HTTPUtilTestSuite) TestGetRangeSE(c *check.C) {
 		fmt.Println(v.rangeHTTPHeader)
 		c.Check(result, check.DeepEquals, v.expected)
 	}
+}
+
+func (s *HTTPUtilTestSuite) TestConcurrencyPostJson(c *check.C) {
+	wg := &sync.WaitGroup{}
+	wg.Add(100)
+
+	for i := 0; i < 100; i++ {
+		go func(x, y int) {
+			defer wg.Done()
+			code, body, e := PostJSON("http://"+s.host, req(x, y), 1*time.Second)
+			time.Sleep(20 * time.Millisecond)
+			checkOk(c, code, body, e, x+y)
+		}(i, i)
+	}
+
+	wg.Wait()
 }
 
 // ----------------------------------------------------------------------------
