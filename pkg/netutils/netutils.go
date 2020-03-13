@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"regexp"
@@ -29,6 +30,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 	"github.com/dragonflyoss/Dragonfly/pkg/rate"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 
@@ -201,13 +203,20 @@ func ConvertHeaders(headers []string) map[string]string {
 }
 
 // IsValidURL returns whether the string url is a valid HTTP URL.
-func IsValidURL(url string) bool {
-	// shorter than the shortest case 'http://a.b'
-	if len(url) < 10 {
+func IsValidURL(urlStr string) bool {
+	u, err := url.Parse(urlStr)
+	if err != nil {
 		return false
 	}
-	reg := regexp.MustCompile(`(https?|HTTPS?)://([\w_]+:[\w_]+@)?([\w-]+\.)+[\w-]+(/[\w- ./?%&=]*)?`)
-	if result := reg.FindString(url); stringutils.IsEmptyStr(result) {
+	if len(u.Host) == 0 || len(u.Scheme) == 0 {
+		return false
+	}
+
+	// with custom schemas, url like "x://y/z" is valid
+	reg := regexp.MustCompile(`(` +
+		httputils.GetValidURLSchemas() +
+		`)://([\w_]+:[\w_]+@)?([\w-]+\.)*[\w-]+(/[\w- ./?%&=]*)?`)
+	if result := reg.FindString(urlStr); stringutils.IsEmptyStr(result) {
 		return false
 	}
 	return true

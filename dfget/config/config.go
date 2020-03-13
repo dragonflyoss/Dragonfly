@@ -268,7 +268,7 @@ func AssertConfig(cfg *Config) (err error) {
 	}
 
 	if !netutils.IsValidURL(cfg.URL) {
-		return errors.Wrapf(errortypes.ErrInvalidValue, "url: %v", err)
+		return errors.Wrapf(errortypes.ErrInvalidValue, "url: %v", cfg.URL)
 	}
 
 	if err := checkOutput(cfg); err != nil {

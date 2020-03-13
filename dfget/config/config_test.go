@@ -101,7 +101,8 @@ func (suite *ConfigSuite) TestAssertConfig(c *check.C) {
 		checkFunc func(err error) bool
 	}{
 		{clog: clog, checkFunc: errortypes.IsInvalidValue},
-		{clog: clog, url: "http://a", checkFunc: errortypes.IsInvalidValue},
+		{clog: clog, url: "htt://a", checkFunc: errortypes.IsInvalidValue},
+		{clog: clog, url: "htt://a.b.com", checkFunc: errortypes.IsInvalidValue},
 		{clog: clog, url: "http://a.b.com", output: "/tmp/output", checkFunc: errortypes.IsNilError},
 		{clog: clog, url: "http://a.b.com", output: "/root", checkFunc: errortypes.IsInvalidValue},
 	}
