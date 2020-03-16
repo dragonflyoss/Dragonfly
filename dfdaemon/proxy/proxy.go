@@ -367,7 +367,7 @@ func (proxy *Proxy) handleHTTPS(w http.ResponseWriter, r *http.Request) {
 		logrus.Errorf("dial failed for %s: %v", r.Host, err)
 		return
 	}
-	defer cConn.Close()
+	cConn.Close()
 
 	rp := &httputil.ReverseProxy{
 		Director: func(r *http.Request) {
