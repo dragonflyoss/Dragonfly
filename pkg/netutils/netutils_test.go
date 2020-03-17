@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 	"github.com/dragonflyoss/Dragonfly/pkg/rate"
 
 	"github.com/go-check/check"
@@ -127,11 +128,14 @@ func (suite *NetUtilSuite) TestFilterURLParam(c *check.C) {
 }
 
 func (suite *NetUtilSuite) TestIsValidURL(c *check.C) {
+	httputils.RegisterProtocol("test", nil)
+	httputils.RegisterProtocol("TEST", nil)
 	var cases = map[string]bool{
 		"":                      false,
-		"abcdefg":               false,
+		"abcdefg":               true,
 		"////a//":               false,
-		"a////a//":              false,
+		"a////a//":              true,
+		"a/b":                   true,
 		"a.com////a//":          true,
 		"a:b@a.com":             true,
 		"a:b@127.0.0.1":         true,
@@ -145,15 +149,19 @@ func (suite *NetUtilSuite) TestIsValidURL(c *check.C) {
 		"127.0.0.1:8080/我?x=1":  true,
 		"a.b":                   true,
 		"www.taobao.com":        true,
-		"http:/www.a.b.com":     false,
-		"https://github.com/dragonflyoss/Dragonfly/issues?" +
+		"github.com/dragonflyoss/Dragonfly/issues?" +
 			"q=is%3Aissue+is%3Aclosed": true,
+		// FIXME because x://y/z is valid, below urls is valid
+		//"http:/www.a.b.com":     false,
+		//"https://github.com/dragonflyoss/Dragonfly/issues?" +
+		//	"q=is%3Aissue+is%3Aclosed": false,
 	}
 
 	for k, v := range cases {
-		for _, scheme := range []string{"http", "https", "HTTP", "HTTPS"} {
+		for _, scheme := range []string{"http", "https", "HTTP", "HTTPS", "test", "TEST"} {
 			url := fmt.Sprintf("%s://%s", scheme, k)
 			result := IsValidURL(url)
+			c.Logf("%v %s", result, url)
 			c.Assert(result, check.Equals, v)
 		}
 	}
