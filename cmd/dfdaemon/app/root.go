@@ -108,6 +108,7 @@ func init() {
 	exitOnError(bindRootFlags(viper.GetViper()), "bind root command flags")
 
 	// add sub commands
+	rootCmd.AddCommand(NewGenCACommand())
 	rootCmd.AddCommand(cmd.NewGenDocCommand("dfdaemon"))
 	rootCmd.AddCommand(cmd.NewVersionCommand("dfdaemon"))
 	rootCmd.AddCommand(cmd.NewConfigCommand("dfdaemon", getDefaultConfig))
