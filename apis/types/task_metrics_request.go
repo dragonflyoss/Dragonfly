@@ -74,6 +74,10 @@ func (m *TaskMetricsRequest) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateFileLength(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -104,6 +108,19 @@ func (m *TaskMetricsRequest) validatePort(formats strfmt.Registry) error {
 	}
 
 	if err := validate.MaximumInt("port", "body", int64(m.Port), 65000, false); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *TaskMetricsRequest) validateFileLength(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.FileLength) { // not required
+		return nil
+	}
+
+	if err := validate.MinimumInt("fileLength", "body", int64(m.FileLength), 0, false); err != nil {
 		return err
 	}
 
