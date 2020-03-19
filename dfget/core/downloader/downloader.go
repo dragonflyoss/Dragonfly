@@ -80,6 +80,14 @@ func MoveFile(src string, dst string, expectMd5 string) error {
 			return fmt.Errorf("Md5NotMatch, real:%s expect:%s", realMd5, expectMd5)
 		}
 	}
+
+	if dst == config.PathDevNull {
+		err := fileutils.DeleteFile(src)
+		logrus.Infof("delete src:%s due to redirect to '/dev/null' result:%t cost:%.3f",
+			src, err == nil, time.Since(start).Seconds())
+		return err
+	}
+
 	err := fileutils.MoveFile(src, dst)
 	logrus.Infof("move src:%s to dst:%s result:%t cost:%.3f",
 		src, dst, err == nil, time.Since(start).Seconds())

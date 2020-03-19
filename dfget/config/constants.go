@@ -120,6 +120,8 @@ const (
 	DefaultDownloadTimeout = 5 * time.Minute
 
 	DefaultSupernodePort = 8002
+
+	PathDevNull = "/dev/null"
 )
 
 /* errors code */
