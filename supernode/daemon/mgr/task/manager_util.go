@@ -333,8 +333,6 @@ func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, tas
 		return true, finishInfo, nil
 	}
 
-	// Get peerName to represent peer in metrics.
-	peer, _ := tm.peerMgr.Get(context.Background(), dfgetTask.PeerID)
 	// get scheduler pieceResult
 	logrus.Debugf("start scheduler for taskID: %s clientID: %s", task.ID, clientID)
 	startTime := time.Now()
@@ -342,7 +340,14 @@ func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, tas
 	if err != nil {
 		return false, nil, err
 	}
-	tm.metrics.scheduleDurationMilliSeconds.WithLabelValues(peer.IP.String()).Observe(timeutils.SinceInMilliseconds(startTime))
+	timeCost := timeutils.SinceInMilliseconds(startTime)
+	// Get peerName to represent peer in metrics.
+	if peer, err := tm.peerMgr.Get(context.Background(), dfgetTask.PeerID); err == nil {
+		tm.metrics.scheduleDurationMilliSeconds.WithLabelValues(peer.IP.String()).Observe(timeCost)
+	} else {
+		logrus.Warnf("failed to get peer with peerId(%s) taskId(%s): %v",
+			dfgetTask.PeerID, task.ID, err)
+	}
 	logrus.Debugf("get scheduler result length(%d) with taskID(%s) and clientID(%s)", len(pieceResult), task.ID, clientID)
 
 	if len(pieceResult) == 0 {
