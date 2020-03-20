@@ -23,9 +23,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dragonflyoss/Dragonfly/supernode/cdn/localcdn"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
-	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/cdn"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/dfgettask"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/gc"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/peer"
@@ -34,7 +34,6 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/scheduler"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/task"
 	"github.com/dragonflyoss/Dragonfly/supernode/httpclient"
-	"github.com/dragonflyoss/Dragonfly/supernode/store"
 	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -64,15 +63,6 @@ func New(cfg *config.Config, logger *logrus.Logger, register prometheus.Register
 
 	dfgetLogger = logger
 
-	sm, err := store.NewManager(cfg)
-	if err != nil {
-		return nil, err
-	}
-	storeLocal, err := sm.Get(store.LocalStorageDriver)
-	if err != nil {
-		return nil, err
-	}
-
 	originClient := httpclient.NewOriginClient()
 	peerMgr, err := peer.NewManager(register)
 	if err != nil {
@@ -94,7 +84,7 @@ func New(cfg *config.Config, logger *logrus.Logger, register prometheus.Register
 		return nil, err
 	}
 
-	cdnMgr, err := cdn.NewManager(cfg, storeLocal, progressMgr, originClient, register)
+	cdnMgr, err := localcdn.NewManager(cfg, progressMgr, originClient, register)
 	if err != nil {
 		return nil, err
 	}

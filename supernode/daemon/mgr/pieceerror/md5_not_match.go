@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
+	"github.com/dragonflyoss/Dragonfly/supernode/cdn"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	"github.com/dragonflyoss/Dragonfly/supernode/util"
 
@@ -30,14 +31,14 @@ var _ Handler = &FileMd5NotMatchHandler{}
 
 type FileMd5NotMatchHandler struct {
 	gcManager  mgr.GCMgr
-	cdnManager mgr.CDNMgr
+	cdnManager cdn.Driver
 }
 
 func init() {
 	Register(types.PieceErrorRequestErrorTypeFILEMD5NOTMATCH, NewFileMd5NotMatchHandler)
 }
 
-func NewFileMd5NotMatchHandler(gcManager mgr.GCMgr, cdnManager mgr.CDNMgr) (Handler, error) {
+func NewFileMd5NotMatchHandler(gcManager mgr.GCMgr, cdnManager cdn.Driver) (Handler, error) {
 	return &FileMd5NotMatchHandler{
 		gcManager:  gcManager,
 		cdnManager: cdnManager,

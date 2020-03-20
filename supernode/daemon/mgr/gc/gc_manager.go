@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/pkg/metricsutils"
+	"github.com/dragonflyoss/Dragonfly/supernode/cdn"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 
@@ -62,13 +63,13 @@ type Manager struct {
 	peerMgr      mgr.PeerMgr
 	dfgetTaskMgr mgr.DfgetTaskMgr
 	progressMgr  mgr.ProgressMgr
-	cdnMgr       mgr.CDNMgr
+	cdnMgr       cdn.Driver
 	metrics      *metrics
 }
 
 // NewManager returns a new Manager.
 func NewManager(cfg *config.Config, taskMgr mgr.TaskMgr, peerMgr mgr.PeerMgr, dfgetTaskMgr mgr.DfgetTaskMgr,
-	progressMgr mgr.ProgressMgr, cdnMgr mgr.CDNMgr, register prometheus.Registerer) (*Manager, error) {
+	progressMgr mgr.ProgressMgr, cdnMgr cdn.Driver, register prometheus.Registerer) (*Manager, error) {
 	return &Manager{
 		cfg:          cfg,
 		taskMgr:      taskMgr,

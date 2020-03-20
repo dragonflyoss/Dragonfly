@@ -25,6 +25,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/pkg/metricsutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
+	"github.com/dragonflyoss/Dragonfly/supernode/cdn"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 	dutil "github.com/dragonflyoss/Dragonfly/supernode/daemon/util"
@@ -85,13 +86,13 @@ type Manager struct {
 	peerMgr      mgr.PeerMgr
 	dfgetTaskMgr mgr.DfgetTaskMgr
 	progressMgr  mgr.ProgressMgr
-	cdnMgr       mgr.CDNMgr
+	cdnMgr       cdn.Driver
 	schedulerMgr mgr.SchedulerMgr
 }
 
 // NewManager returns a new Manager Object.
 func NewManager(cfg *config.Config, peerMgr mgr.PeerMgr, dfgetTaskMgr mgr.DfgetTaskMgr,
-	progressMgr mgr.ProgressMgr, cdnMgr mgr.CDNMgr, schedulerMgr mgr.SchedulerMgr,
+	progressMgr mgr.ProgressMgr, cdnMgr cdn.Driver, schedulerMgr mgr.SchedulerMgr,
 	originClient httpclient.OriginHTTPClient, register prometheus.Registerer) (*Manager, error) {
 	return &Manager{
 		cfg:                     cfg,
@@ -182,8 +183,8 @@ func (tm *Manager) GetAccessTime(ctx context.Context) (*syncmap.SyncMap, error) 
 
 // List returns a list of tasks with filter.
 // TODO: implement it.
-func (tm *Manager) List(ctx context.Context, filter map[string]string) ([]*types.TaskInfo, error) {
-	return nil, nil
+func (tm *Manager) List(ctx context.Context, filter map[string]string) (*syncmap.SyncMap, error) {
+	return tm.taskStore.SyncMap, nil
 }
 
 // CheckTaskStatus checks the task status.

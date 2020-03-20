@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
+	"github.com/dragonflyoss/Dragonfly/supernode/cdn"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 
 	"github.com/sirupsen/logrus"
@@ -29,14 +30,14 @@ var _ Handler = &FileNotExistHandler{}
 
 type FileNotExistHandler struct {
 	gcManager  mgr.GCMgr
-	cdnManager mgr.CDNMgr
+	cdnManager cdn.Driver
 }
 
 func init() {
 	Register(types.PieceErrorRequestErrorTypeFILENOTEXIST, NewFileNotExistHandler)
 }
 
-func NewFileNotExistHandler(gcManager mgr.GCMgr, cdnManager mgr.CDNMgr) (Handler, error) {
+func NewFileNotExistHandler(gcManager mgr.GCMgr, cdnManager cdn.Driver) (Handler, error) {
 	return &FileNotExistHandler{
 		gcManager:  gcManager,
 		cdnManager: cdnManager,
