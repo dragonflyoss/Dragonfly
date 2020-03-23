@@ -234,6 +234,10 @@ func (s *HTTPUtilTestSuite) TestConcurrencyPostJson(c *check.C) {
 	wg.Wait()
 }
 
+func (s *HTTPUtilTestSuite) TestConstructRangeStr(c *check.C) {
+	c.Check(ConstructRangeStr("200-1000"), check.DeepEquals, "bytes=200-1000")
+}
+
 // ----------------------------------------------------------------------------
 // helper functions and structures
 
