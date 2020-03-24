@@ -25,6 +25,7 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
+	"github.com/dragonflyoss/Dragonfly/pkg/rangeutils"
 	"github.com/dragonflyoss/Dragonfly/version"
 )
 
@@ -56,8 +57,10 @@ func NewDownloadAPI() DownloadAPI {
 }
 
 func (d *downloadAPI) Download(ip string, port int, req *DownloadRequest, timeout time.Duration) (*http.Response, error) {
+	if req == nil {
+		return nil, fmt.Errorf("nil dwonload request")
+	}
 	headers := make(map[string]string)
-	headers[config.StrRange] = config.StrBytes + "=" + req.PieceRange
 	headers[config.StrPieceNum] = strconv.Itoa(req.PieceNum)
 	headers[config.StrPieceSize] = fmt.Sprint(req.PieceSize)
 	headers[config.StrUserAgent] = "dfget/" + version.DFGetVersion
@@ -67,12 +70,52 @@ func (d *downloadAPI) Download(ip string, port int, req *DownloadRequest, timeou
 		}
 	}
 
-	var url string
-	if strings.Contains(req.Path, "://") {
+	var (
+		url      string
+		rangeStr string
+	)
+	if isFromSource(req) {
+		rangeStr = getRealRange(req.PieceRange, headers[config.StrRange])
 		url = req.Path
 	} else {
+		rangeStr = req.PieceRange
 		url = fmt.Sprintf("http://%s:%d%s", ip, port, req.Path)
 	}
+	headers[config.StrRange] = httputils.ConstructRangeStr(rangeStr)
 
 	return httputils.HTTPGetTimeout(url, headers, timeout)
+}
+
+func isFromSource(req *DownloadRequest) bool {
+	return strings.Contains(req.Path, "://")
+}
+
+// getRealRange
+// pieceRange: "start-end"
+// rangeHeaderValue: "bytes=sourceStart-sourceEnd"
+// return: "realStart-realEnd"
+func getRealRange(pieceRange string, rangeHeaderValue string) string {
+	if rangeHeaderValue == "" {
+		return pieceRange
+	}
+	rangeEle := strings.Split(rangeHeaderValue, "=")
+	if len(rangeEle) != 2 {
+		return pieceRange
+	}
+
+	lower, upper, err := rangeutils.ParsePieceIndex(rangeEle[1])
+	if err != nil {
+		return pieceRange
+	}
+	start, end, err := rangeutils.ParsePieceIndex(pieceRange)
+	if err != nil {
+		return pieceRange
+	}
+
+	realStart := start + lower
+	realEnd := end + lower
+	if realEnd > upper {
+		realEnd = upper
+	}
+	return fmt.Sprintf("%d-%d", realStart, realEnd)
 }

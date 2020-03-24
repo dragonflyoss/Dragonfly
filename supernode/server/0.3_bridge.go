@@ -21,17 +21,17 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/dragonflyoss/Dragonfly/apis/types"
-	"github.com/dragonflyoss/Dragonfly/pkg/constants"
-	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
-	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
-	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
-	sutil "github.com/dragonflyoss/Dragonfly/supernode/util"
-
 	"github.com/go-openapi/strfmt"
 	"github.com/gorilla/schema"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+
+	"github.com/dragonflyoss/Dragonfly/apis/types"
+	"github.com/dragonflyoss/Dragonfly/pkg/constants"
+	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/rangeutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 )
 
 // RegisterResponseData is the data when registering supernode successfully.
@@ -200,7 +200,7 @@ func (s *Server) pullPieceTask(ctx context.Context, rw http.ResponseWriter, req 
 		}
 		datas = append(datas, &PullPieceTaskResponseContinueData{
 			Range:     v.PieceRange,
-			PieceNum:  sutil.CalculatePieceNum(v.PieceRange),
+			PieceNum:  rangeutils.CalculatePieceNum(v.PieceRange),
 			PieceSize: v.PieceSize,
 			PieceMd5:  v.PieceMD5,
 			Cid:       cid,
@@ -229,7 +229,7 @@ func (s *Server) reportPiece(ctx context.Context, rw http.ResponseWriter, req *h
 
 	// If piece is downloaded from supernode, add metrics.
 	if s.Config.IsSuperCID(dstCID) {
-		m.pieceDownloadedBytes.WithLabelValues().Add(float64(sutil.CalculatePieceSize(pieceRange)))
+		m.pieceDownloadedBytes.WithLabelValues().Add(float64(rangeutils.CalculatePieceSize(pieceRange)))
 	}
 
 	request := &types.PieceUpdateRequest{

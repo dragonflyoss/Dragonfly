@@ -26,6 +26,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/pkg/limitreader"
 	"github.com/dragonflyoss/Dragonfly/pkg/metricsutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/rangeutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/ratelimiter"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
@@ -216,7 +217,7 @@ func (cm *Manager) GetPieceMD5(ctx context.Context, taskID string, pieceNum int,
 
 	if source == PieceMd5SourceFile {
 		// get piece length
-		start, end, err := util.ParsePieceIndex(pieceRange)
+		start, end, err := rangeutils.ParsePieceIndex(pieceRange)
 		if err != nil {
 			return "", errors.Wrapf(err, "failed to parse piece range(%s)", pieceRange)
 		}
