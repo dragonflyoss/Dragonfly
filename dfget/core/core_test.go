@@ -27,6 +27,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	. "github.com/dragonflyoss/Dragonfly/dfget/core/helper"
@@ -137,6 +138,24 @@ func (s *CoreTestSuite) TestCheckConnectSupernode(c *check.C) {
 	ip = checkConnectSupernode([]string{"127.0.0.2"})
 	c.Assert(strings.Index(buf.String(), "Connect") > 0, check.Equals, true)
 	c.Assert(ip, check.Equals, "")
+}
+
+func (s *CoreTestSuite) TestCalculateTimeout(c *check.C) {
+	cfg := s.createConfig(&bytes.Buffer{})
+
+	timeout := calculateTimeout(nil)
+	c.Assert(timeout, check.Equals, config.DefaultDownloadTimeout)
+
+	timeout = calculateTimeout(cfg)
+	c.Assert(timeout, check.Equals, config.DefaultDownloadTimeout)
+
+	cfg.RV.FileLength = 1000
+	timeout = calculateTimeout(cfg)
+	c.Assert(timeout, check.Equals, 10*time.Second)
+
+	cfg.Timeout = time.Minute
+	timeout = calculateTimeout(cfg)
+	c.Assert(timeout, check.Equals, time.Minute)
 }
 
 // ----------------------------------------------------------------------------
