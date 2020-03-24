@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"encoding/json"
 
+	apiTypes "github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/constants"
 )
 
@@ -53,10 +54,15 @@ type Piece struct {
 	Content *bytes.Buffer `json:"-"`
 }
 
-// RawContent returns raw contents.
-func (p *Piece) RawContent() *bytes.Buffer {
+// RawContent returns raw contents,
+// If the piece has wrapper, and the piece content will remove the head and tail.
+func (p *Piece) RawContent(noWrapper bool) *bytes.Buffer {
 	contents := p.Content.Bytes()
 	length := len(contents)
+
+	if noWrapper {
+		return bytes.NewBuffer(contents[:])
+	}
 	if length >= 5 {
 		return bytes.NewBuffer(contents[4 : length-1])
 	}
@@ -71,7 +77,7 @@ func (p *Piece) String() string {
 }
 
 // NewPiece creates a Piece.
-func NewPiece(taskID, node, dstCid, pieceRange string, result, status int) *Piece {
+func NewPiece(taskID, node, dstCid, pieceRange string, result, status int, cdnSource apiTypes.CdnSource) *Piece {
 	return &Piece{
 		TaskID:    taskID,
 		SuperNode: node,
@@ -84,7 +90,7 @@ func NewPiece(taskID, node, dstCid, pieceRange string, result, status int) *Piec
 }
 
 // NewPieceSimple creates a Piece with default value.
-func NewPieceSimple(taskID string, node string, status int) *Piece {
+func NewPieceSimple(taskID string, node string, status int, cdnSource apiTypes.CdnSource) *Piece {
 	return &Piece{
 		TaskID:    taskID,
 		SuperNode: node,
@@ -96,7 +102,7 @@ func NewPieceSimple(taskID string, node string, status int) *Piece {
 
 // NewPieceContent creates a Piece with specified content.
 func NewPieceContent(taskID, node, dstCid, pieceRange string,
-	result, status int, contents *bytes.Buffer) *Piece {
+	result, status int, contents *bytes.Buffer, cdnSource apiTypes.CdnSource) *Piece {
 	if contents == nil {
 		contents = &bytes.Buffer{}
 	}

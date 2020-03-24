@@ -24,6 +24,7 @@ import (
 	"os"
 	"time"
 
+	apiTypes "github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/downloader"
@@ -88,17 +89,20 @@ type ClientWriter struct {
 	// api holds an instance of SupernodeAPI to interact with supernode.
 	api api.SupernodeAPI
 	cfg *config.Config
+
+	cdnSource apiTypes.CdnSource
 }
 
 // NewClientWriter creates and initialize a ClientWriter instance.
 func NewClientWriter(clientFilePath, serviceFilePath string,
-	clientQueue queue.Queue, api api.SupernodeAPI, cfg *config.Config) PieceWriter {
+	clientQueue queue.Queue, api api.SupernodeAPI, cfg *config.Config, cdnSource apiTypes.CdnSource) PieceWriter {
 	clientWriter := &ClientWriter{
 		clientQueue:     clientQueue,
 		clientFilePath:  clientFilePath,
 		serviceFilePath: serviceFilePath,
 		api:             api,
 		cfg:             cfg,
+		cdnSource:       cdnSource,
 	}
 	return clientWriter
 }
@@ -119,7 +123,7 @@ func (cw *ClientWriter) PreRun(ctx context.Context) (err error) {
 
 	cw.result = true
 	cw.targetQueue = queue.NewQueue(0)
-	cw.targetWriter, err = NewTargetWriter(cw.cfg.RV.TempTarget, cw.targetQueue, cw.cfg)
+	cw.targetWriter, err = NewTargetWriter(cw.cfg.RV.TempTarget, cw.targetQueue, cw.cfg, cw.cdnSource)
 	if err != nil {
 		return
 	}
@@ -213,21 +217,28 @@ func (cw *ClientWriter) write(piece *Piece) error {
 	}
 
 	cw.pieceIndex++
-	err := writePieceToFile(piece, cw.serviceFile)
+	err := writePieceToFile(piece, cw.serviceFile, cw.cdnSource)
 	if err == nil {
 		go sendSuccessPiece(cw.api, cw.cfg.RV.Cid, piece, time.Since(startTime))
 	}
 	return err
 }
 
-func writePieceToFile(piece *Piece, file *os.File) error {
-	start := int64(piece.PieceNum) * (int64(piece.PieceSize) - 5)
+func writePieceToFile(piece *Piece, file *os.File, cdnSource apiTypes.CdnSource) error {
+	var pieceHeader = 5
+	// the piece is not wrapped with source cdn type
+	noWrapper := (cdnSource == apiTypes.CdnSourceSource)
+	if noWrapper {
+		pieceHeader = 0
+	}
+
+	start := int64(piece.PieceNum) * (int64(piece.PieceSize) - int64(pieceHeader))
 	if _, err := file.Seek(start, 0); err != nil {
 		return err
 	}
 
 	buf := bufio.NewWriterSize(file, 4*1024*1024)
-	_, err := io.Copy(buf, piece.RawContent())
+	_, err := io.Copy(buf, piece.RawContent(noWrapper))
 	buf.Flush()
 	return err
 }

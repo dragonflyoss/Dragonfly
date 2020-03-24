@@ -8,6 +8,7 @@ package types
 import (
 	strfmt "github.com/go-openapi/strfmt"
 
+	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
 )
 
@@ -17,6 +18,9 @@ type TaskCreateResponse struct {
 
 	// ID of the created task.
 	ID string `json:"ID,omitempty"`
+
+	// cdn source
+	CdnSource CdnSource `json:"cdnSource,omitempty"`
 
 	// The length of the file dfget requests to download in bytes.
 	//
@@ -31,6 +35,31 @@ type TaskCreateResponse struct {
 
 // Validate validates this task create response
 func (m *TaskCreateResponse) Validate(formats strfmt.Registry) error {
+	var res []error
+
+	if err := m.validateCdnSource(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if len(res) > 0 {
+		return errors.CompositeValidationError(res...)
+	}
+	return nil
+}
+
+func (m *TaskCreateResponse) validateCdnSource(formats strfmt.Registry) error {
+
+	if swag.IsZero(m.CdnSource) { // not required
+		return nil
+	}
+
+	if err := m.CdnSource.Validate(formats); err != nil {
+		if ve, ok := err.(*errors.Validation); ok {
+			return ve.ValidateName("cdnSource")
+		}
+		return err
+	}
+
 	return nil
 }
 

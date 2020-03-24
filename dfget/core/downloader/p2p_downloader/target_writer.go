@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 
+	apiTypes "github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/queue"
@@ -45,14 +46,17 @@ type TargetWriter struct {
 
 	syncQueue queue.Queue
 	cfg       *config.Config
+
+	cdnSource apiTypes.CdnSource
 }
 
 // NewTargetWriter creates and initialize a TargetWriter instance.
-func NewTargetWriter(dst string, q queue.Queue, cfg *config.Config) (*TargetWriter, error) {
+func NewTargetWriter(dst string, q queue.Queue, cfg *config.Config, cdnSource apiTypes.CdnSource) (*TargetWriter, error) {
 	targetWriter := &TargetWriter{
 		dst:        dst,
 		pieceQueue: q,
 		cfg:        cfg,
+		cdnSource:  cdnSource,
 	}
 	if err := targetWriter.init(); err != nil {
 		return nil, err
@@ -95,7 +99,7 @@ func (tw *TargetWriter) Run(ctx context.Context) {
 		if !ok {
 			continue
 		}
-		if err := tw.write(piece); err != nil {
+		if err := tw.write(piece, tw.cdnSource); err != nil {
 			logrus.Errorf("write item:%s error:%v", piece, err)
 			tw.cfg.BackSourceReason = config.BackSourceReasonWriteError
 			tw.result = false
@@ -116,7 +120,7 @@ func (tw *TargetWriter) Wait() {
 	}
 }
 
-func (tw *TargetWriter) write(piece *Piece) error {
+func (tw *TargetWriter) write(piece *Piece, cdnSource apiTypes.CdnSource) error {
 	tw.pieceIndex++
-	return writePieceToFile(piece, tw.dstFile)
+	return writePieceToFile(piece, tw.dstFile, cdnSource)
 }

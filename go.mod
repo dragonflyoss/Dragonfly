@@ -20,7 +20,7 @@ require (
 	github.com/go-openapi/swag v0.0.0-20170606142751-f3f9494671f9
 	github.com/go-openapi/validate v0.0.0-20170705144413-8a82927c942c
 	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef
-	github.com/golang/mock v1.3.1
+	github.com/golang/mock v1.4.0
 	github.com/gorilla/context v0.0.0-20181012153548-51ce91d2eadd // indirect
 	github.com/gorilla/mux v1.5.0
 	github.com/gorilla/schema v1.1.0
@@ -41,6 +41,7 @@ require (
 	github.com/stretchr/testify v1.2.2
 	github.com/valyala/fasthttp v1.3.0
 	github.com/willf/bitset v0.0.0-20190228212526-18bd95f470f9
+	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550 // indirect
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
 	gopkg.in/gcfg.v1 v1.2.3
 	gopkg.in/mgo.v2 v2.0.0-20160818020120-3f83fa500528 // indirect

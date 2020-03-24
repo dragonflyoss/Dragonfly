@@ -41,8 +41,9 @@ func (s *ClientStreamWriterTestSuite) TearDownSuite(*check.C) {
 
 func (s *ClientStreamWriterTestSuite) TestWrite(c *check.C) {
 	var cases = []struct {
-		piece    *Piece
-		expected string
+		piece     *Piece
+		noWrapper bool
+		expected  string
 	}{
 		{
 			piece: &Piece{
@@ -50,7 +51,8 @@ func (s *ClientStreamWriterTestSuite) TestWrite(c *check.C) {
 				PieceSize: 6,
 				Content:   bytes.NewBufferString("000010"),
 			},
-			expected: "1",
+			noWrapper: false,
+			expected:  "1",
 		},
 		{
 			piece: &Piece{
@@ -58,7 +60,8 @@ func (s *ClientStreamWriterTestSuite) TestWrite(c *check.C) {
 				PieceSize: 6,
 				Content:   bytes.NewBufferString("000020"),
 			},
-			expected: "2",
+			noWrapper: false,
+			expected:  "2",
 		},
 		{
 			piece: &Piece{
@@ -66,7 +69,8 @@ func (s *ClientStreamWriterTestSuite) TestWrite(c *check.C) {
 				PieceSize: 6,
 				Content:   bytes.NewBufferString("000040"),
 			},
-			expected: "4",
+			noWrapper: false,
+			expected:  "4",
 		},
 		{
 			piece: &Piece{
@@ -74,7 +78,8 @@ func (s *ClientStreamWriterTestSuite) TestWrite(c *check.C) {
 				PieceSize: 6,
 				Content:   bytes.NewBufferString("000050"),
 			},
-			expected: "5",
+			noWrapper: false,
+			expected:  "5",
 		},
 		{
 			piece: &Piece{
@@ -82,13 +87,15 @@ func (s *ClientStreamWriterTestSuite) TestWrite(c *check.C) {
 				PieceSize: 6,
 				Content:   bytes.NewBufferString("000030"),
 			},
-			expected: "3",
+			noWrapper: false,
+			expected:  "3",
 		},
 	}
 
 	cases2 := make([]struct {
-		piece    *Piece
-		expected string
+		piece     *Piece
+		noWrapper bool
+		expected  string
 	}, len(cases))
 	copy(cases2, cases)
 
@@ -104,7 +111,7 @@ func (s *ClientStreamWriterTestSuite) TestWrite(c *check.C) {
 		return cases[i].piece.PieceNum < cases[j].piece.PieceNum
 	})
 	for _, v := range cases {
-		content := s.getString(csw, v.piece.RawContent().Len())
+		content := s.getString(csw, v.piece.RawContent(v.noWrapper).Len())
 		c.Check(content, check.Equals, v.expected)
 	}
 }

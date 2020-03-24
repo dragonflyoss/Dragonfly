@@ -30,6 +30,7 @@ import (
 	"sync"
 	"time"
 
+	apiTypes "github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
@@ -137,6 +138,7 @@ func (ps *peerServer) uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	taskFileName := mux.Vars(r)["commonFile"]
 	rangeStr := r.Header.Get(config.StrRange)
+	cdnSource := r.Header.Get(config.StrCDNSource)
 
 	logrus.Debugf("upload file:%s to %s, req:%v", taskFileName, r.RemoteAddr, jsonStr(r.Header))
 
@@ -157,7 +159,7 @@ func (ps *peerServer) uploadHandler(w http.ResponseWriter, r *http.Request) {
 	defer f.Close()
 
 	// Step3: amend range with piece meta data
-	if err = amendRange(size, true, up); err != nil {
+	if err = amendRange(size, cdnSource != string(apiTypes.CdnSourceSource), up); err != nil {
 		rangeErrorResponse(w, err)
 		logrus.Errorf("failed to amend range of file %s: %v", taskFileName, err)
 		return

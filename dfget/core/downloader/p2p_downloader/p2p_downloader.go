@@ -23,8 +23,10 @@ import (
 	"io"
 	"math/rand"
 	"strconv"
+	"strings"
 	"time"
 
+	apiTypes "github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/downloader"
@@ -36,6 +38,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/pkg/printer"
 	"github.com/dragonflyoss/Dragonfly/pkg/queue"
 	"github.com/dragonflyoss/Dragonfly/pkg/ratelimiter"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -68,6 +71,8 @@ type P2PDownloader struct {
 	targetFile string
 	// taskFileName is a string composed of `the last element of RealTarget path + "-" + sign`.
 	taskFileName string
+	// headers is the extra HTTP headers when downloading the task.
+	headers []string
 
 	pieceSizeHistory [2]int32
 	// queue maintains a queue of tasks that to be downloaded.
@@ -134,12 +139,15 @@ func (p2p *P2PDownloader) init() {
 	p2p.targetFile = p2p.cfg.RV.RealTarget
 	p2p.streamMode = p2p.cfg.RV.StreamMode
 	p2p.taskFileName = p2p.cfg.RV.TaskFileName
+	if p2p.RegisterResult.CDNSource == apiTypes.CdnSourceSource {
+		p2p.headers = p2p.cfg.Header
+	}
 
 	p2p.pieceSizeHistory[0], p2p.pieceSizeHistory[1] =
 		p2p.RegisterResult.PieceSize, p2p.RegisterResult.PieceSize
 
 	p2p.queue = queue.NewQueue(0)
-	p2p.queue.Put(NewPieceSimple(p2p.taskID, p2p.node, constants.TaskStatusStart))
+	p2p.queue.Put(NewPieceSimple(p2p.taskID, p2p.node, constants.TaskStatusStart, p2p.RegisterResult.CDNSource))
 
 	p2p.clientQueue = queue.NewQueue(p2p.cfg.ClientQueueSize)
 
@@ -157,7 +165,7 @@ func (p2p *P2PDownloader) Run(ctx context.Context) error {
 	if p2p.streamMode {
 		return fmt.Errorf("streamMode enabled, should be disable")
 	}
-	clientWriter := NewClientWriter(p2p.clientFilePath, p2p.serviceFilePath, p2p.clientQueue, p2p.API, p2p.cfg)
+	clientWriter := NewClientWriter(p2p.clientFilePath, p2p.serviceFilePath, p2p.clientQueue, p2p.API, p2p.cfg, p2p.RegisterResult.CDNSource)
 	return p2p.run(ctx, clientWriter)
 }
 
@@ -354,6 +362,9 @@ func (p2p *P2PDownloader) startTask(data *types.PullPieceTaskResponseContinueDat
 		clientQueue: p2p.clientQueue,
 		rateLimiter: p2p.rateLimiter,
 		downloadAPI: api.NewDownloadAPI(),
+		headers:     p2p.headers,
+		cdnDource:   p2p.RegisterResult.CDNSource,
+		fileLength:  p2p.RegisterResult.FileLength,
 	}
 	if err := powerClient.Run(); err != nil && powerClient.ClientError() != nil {
 		p2p.API.ReportClientError(p2p.node, powerClient.ClientError())
@@ -433,7 +444,8 @@ func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 				pieceTask.Cid,
 				pieceRange,
 				constants.ResultSemiSuc,
-				constants.TaskStatusRunning))
+				constants.TaskStatusRunning,
+				p2p.RegisterResult.CDNSource))
 			continue
 		}
 		if !ok {
@@ -490,4 +502,25 @@ func (p2p *P2PDownloader) refresh(item *Piece) {
 		p2p.node = item.SuperNode
 		p2p.taskID = item.TaskID
 	}
+}
+
+// wipeOutOfRange will update the end index of range when it's greater than the maxLength.
+func wipeOutOfRange(pieceRange string, maxLength int64) string {
+	if maxLength < 0 {
+		return pieceRange
+	}
+	indexes := strings.Split(pieceRange, config.RangeSeparator)
+	if len(indexes) != 2 {
+		return pieceRange
+	}
+
+	endIndex, err := strconv.Atoi(indexes[1])
+	if err != nil {
+		return pieceRange
+	}
+
+	if int64(endIndex) < maxLength {
+		return pieceRange
+	}
+	return fmt.Sprintf("%s%s%s", indexes[0], config.RangeSeparator, strconv.FormatInt(maxLength-1, 10))
 }

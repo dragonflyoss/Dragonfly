@@ -96,7 +96,7 @@ func CalculateBreakRange(startPieceNum, pieceContSize int, rangeLength int64) (s
 		return "", fmt.Errorf("start: %d is larger than end: %d", start, end)
 
 	}
-	return strconv.FormatInt(start, 10) + separator + strconv.FormatInt(end, 10), nil
+	return getRangeString(start, end), nil
 }
 
 // CalculatePieceRange calculates the start and end of piece
@@ -106,5 +106,9 @@ func CalculateBreakRange(startPieceNum, pieceContSize int, rangeLength int64) (s
 func CalculatePieceRange(pieceNum int, pieceSize int32) string {
 	startIndex := int64(pieceNum) * int64(pieceSize)
 	endIndex := startIndex + int64(pieceSize) - 1
-	return strconv.FormatInt(startIndex, 10) + separator + strconv.FormatInt(endIndex, 10)
+	return getRangeString(startIndex, endIndex)
+}
+
+func getRangeString(startIndex, endIndex int64) string {
+	return fmt.Sprintf("%s%s%s", strconv.FormatInt(startIndex, 10), separator, strconv.FormatInt(endIndex, 10))
 }

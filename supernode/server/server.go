@@ -25,7 +25,6 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
-	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/cdn"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/dfgettask"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/gc"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/peer"
@@ -94,7 +93,7 @@ func New(cfg *config.Config, logger *logrus.Logger, register prometheus.Register
 		return nil, err
 	}
 
-	cdnMgr, err := cdn.NewManager(cfg, storeLocal, progressMgr, originClient, register)
+	cdnMgr, err := mgr.GetCDNManager(cfg, storeLocal, progressMgr, originClient, register)
 	if err != nil {
 		return nil, err
 	}
@@ -123,8 +122,7 @@ func New(cfg *config.Config, logger *logrus.Logger, register prometheus.Register
 		ProgressMgr:   progressMgr,
 		GCMgr:         gcMgr,
 		PieceErrorMgr: pieceErrorMgr,
-
-		originClient: originClient,
+		originClient:  originClient,
 	}, nil
 }
 

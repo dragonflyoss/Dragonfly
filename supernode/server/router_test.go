@@ -30,6 +30,8 @@ import (
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
+	_ "github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/cdn"
+	_ "github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/sourcecdn"
 	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/go-check/check"
@@ -65,6 +67,7 @@ func (rs *RouterTestSuite) SetUpSuite(c *check.C) {
 			ListenPort: port,
 			Debug:      true,
 			HomeDir:    tmpDir,
+			CDNPattern: config.CDNPatternLocal,
 		},
 		Plugins:  nil,
 		Storages: nil,

@@ -39,6 +39,7 @@ type RegisterResponseData struct {
 	TaskID     string `json:"taskId"`
 	FileLength int64  `json:"fileLength"`
 	PieceSize  int32  `json:"pieceSize"`
+	CDNSource  string `json:"cdnSource"`
 }
 
 // PullPieceTaskResponseContinueData is the data when successfully pulling piece task
@@ -135,6 +136,7 @@ func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http
 			TaskID:     resp.ID,
 			FileLength: resp.FileLength,
 			PieceSize:  resp.PieceSize,
+			CDNSource:  string(resp.CdnSource),
 		},
 	})
 }

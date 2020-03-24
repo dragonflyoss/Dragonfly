@@ -18,9 +18,39 @@ package mgr
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
+	"github.com/dragonflyoss/Dragonfly/supernode/httpclient"
+	"github.com/dragonflyoss/Dragonfly/supernode/store"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
+
+type CDNBuilder func(cfg *config.Config, cacheStore *store.Store, progressManager ProgressMgr,
+	originClient httpclient.OriginHTTPClient, register prometheus.Registerer) (CDNMgr, error)
+
+var cdnBuilderMap = make(map[config.CDNPattern]CDNBuilder)
+
+func Register(name config.CDNPattern, builder CDNBuilder) {
+	cdnBuilderMap[name] = builder
+}
+
+func GetCDNManager(cfg *config.Config, cacheStore *store.Store, progressManager ProgressMgr,
+	originClient httpclient.OriginHTTPClient, register prometheus.Registerer) (CDNMgr, error) {
+	name := cfg.CDNPattern
+	if name == "" {
+		name = config.CDNPatternLocal
+	}
+
+	cdnBuilder, ok := cdnBuilderMap[name]
+	if !ok {
+		return nil, fmt.Errorf("unexpected cdn pattern(%s) which must be in [\"local\", \"source\"]", name)
+	}
+
+	return cdnBuilder(cfg, cacheStore, progressManager, originClient, register)
+}
 
 // CDNMgr as an interface defines all operations against CDN and
 // operates on the underlying files stored on the local disk, etc.
@@ -36,7 +66,7 @@ type CDNMgr interface {
 	TriggerCDN(ctx context.Context, taskInfo *types.TaskInfo) (*types.TaskInfo, error)
 
 	// GetHTTPPath returns the http download path of taskID.
-	GetHTTPPath(ctx context.Context, taskID string) (path string, err error)
+	GetHTTPPath(ctx context.Context, taskInfo *types.TaskInfo) (path string, err error)
 
 	// GetStatus gets the status of the file.
 	GetStatus(ctx context.Context, taskID string) (cdnStatus string, err error)

@@ -67,6 +67,10 @@ func newMetrics(register prometheus.Registerer) *metrics {
 	}
 }
 
+func init() {
+	mgr.Register(config.CDNPatternLocal, NewManager)
+}
+
 // Manager is an implementation of the interface of CDNMgr.
 type Manager struct {
 	cfg             *config.Config
@@ -86,6 +90,11 @@ type Manager struct {
 
 // NewManager returns a new Manager.
 func NewManager(cfg *config.Config, cacheStore *store.Store, progressManager mgr.ProgressMgr,
+	originClient httpclient.OriginHTTPClient, register prometheus.Registerer) (mgr.CDNMgr, error) {
+	return newManager(cfg, cacheStore, progressManager, originClient, register)
+}
+
+func newManager(cfg *config.Config, cacheStore *store.Store, progressManager mgr.ProgressMgr,
 	originClient httpclient.OriginHTTPClient, register prometheus.Registerer) (*Manager, error) {
 	rateLimiter := ratelimiter.NewRateLimiter(ratelimiter.TransRate(int64(cfg.MaxBandwidth-cfg.SystemReservedBandwidth)), 2)
 	metaDataManager := newFileMetaDataManager(cacheStore)
@@ -167,14 +176,14 @@ func (cm *Manager) TriggerCDN(ctx context.Context, task *types.TaskInfo) (*types
 
 // GetHTTPPath returns the http download path of taskID.
 // The returned path joined the DownloadRaw.Bucket and DownloadRaw.Key.
-func (cm *Manager) GetHTTPPath(ctx context.Context, taskID string) (string, error) {
-	raw := getDownloadRawFunc(taskID)
+func (cm *Manager) GetHTTPPath(ctx context.Context, taskInfo *types.TaskInfo) (string, error) {
+	raw := getDownloadRawFunc(taskInfo.ID)
 	return path.Join("/", raw.Bucket, raw.Key), nil
 }
 
 // GetStatus gets the status of the file.
 func (cm *Manager) GetStatus(ctx context.Context, taskID string) (cdnStatus string, err error) {
-	return "", nil
+	return types.TaskInfoCdnStatusSUCCESS, nil
 }
 
 // GetPieceMD5 gets the piece Md5 accorrding to the specified taskID and pieceNum.

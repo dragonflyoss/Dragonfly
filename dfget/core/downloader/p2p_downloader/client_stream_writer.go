@@ -22,6 +22,7 @@ import (
 	"io"
 	"time"
 
+	apiTypes "github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
@@ -62,6 +63,8 @@ type ClientStreamWriter struct {
 	// api holds an instance of SupernodeAPI to interact with supernode.
 	api api.SupernodeAPI
 	cfg *config.Config
+
+	cdnSource apiTypes.CdnSource
 }
 
 // NewClientStreamWriter creates and initialize a ClientStreamWriter instance.
@@ -155,7 +158,7 @@ func (csw *ClientStreamWriter) writePieceToPipe(p *Piece) error {
 			break
 		}
 
-		_, err := io.Copy(csw.pipeWriter, p.RawContent())
+		_, err := io.Copy(csw.pipeWriter, p.RawContent(csw.cdnSource == apiTypes.CdnSourceSource))
 		if err != nil {
 			return err
 		}

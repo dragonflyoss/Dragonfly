@@ -163,10 +163,15 @@ func (tm *Manager) Register(ctx context.Context, req *types.TaskCreateRequest) (
 		return nil, errors.Wrapf(errortypes.ErrSystemError, "failed to trigger cdn: %v", err)
 	}
 
+	cdnSource := types.CdnSourceSupernode
+	if tm.cfg.CDNPattern == config.CDNPatternSource {
+		cdnSource = types.CdnSourceSource
+	}
 	return &types.TaskCreateResponse{
 		ID:         task.ID,
 		FileLength: task.HTTPFileLength,
 		PieceSize:  task.PieceSize,
+		CdnSource:  cdnSource,
 	}, nil
 }
 

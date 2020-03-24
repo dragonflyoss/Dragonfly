@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
@@ -34,6 +35,7 @@ type DownloadRequest struct {
 	PieceRange string
 	PieceNum   int
 	PieceSize  int32
+	Headers    map[string]string
 }
 
 // DownloadAPI defines the download method between dfget and peer server.
@@ -59,7 +61,18 @@ func (d *downloadAPI) Download(ip string, port int, req *DownloadRequest, timeou
 	headers[config.StrPieceNum] = strconv.Itoa(req.PieceNum)
 	headers[config.StrPieceSize] = fmt.Sprint(req.PieceSize)
 	headers[config.StrUserAgent] = "dfget/" + version.DFGetVersion
+	if req.Headers != nil {
+		for k, v := range req.Headers {
+			headers[k] = v
+		}
+	}
 
-	url := fmt.Sprintf("http://%s:%d%s", ip, port, req.Path)
+	var url string
+	if strings.Contains(req.Path, "://") {
+		url = req.Path
+	} else {
+		url = fmt.Sprintf("http://%s:%d%s", ip, port, req.Path)
+	}
+
 	return httputils.HTTPGetTimeout(url, headers, timeout)
 }
