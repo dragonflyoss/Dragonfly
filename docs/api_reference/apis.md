@@ -735,6 +735,11 @@ Arch, Version, BuildDate, and GitCommit.
 <a name="definitions"></a>
 ## Definitions
 
+<a name="cdnsource"></a>
+### CdnSource
+*Type* : enum (supernode, source)
+
+
 <a name="dfgettask"></a>
 ### DfGetTask
 A download process initiated by dfget or other clients.
@@ -962,6 +967,7 @@ response get from task creation request.
 |Name|Description|Schema|
 |---|---|---|
 |**ID**  <br>*optional*|ID of the created task.|string|
+|**cdnSource**  <br>*optional*||[CdnSource](#cdnsource)|
 |**fileLength**  <br>*optional*|The length of the file dfget requests to download in bytes.|integer (int64)|
 |**pieceSize**  <br>*optional*|The size of pieces which is calculated as per the following strategy<br>1. If file's total size is less than 200MB, then the piece size is 4MB by default.<br>2. Otherwise, it equals to the smaller value between totalSize/100MB + 2 MB and 15MB.|integer (int32)|
 
