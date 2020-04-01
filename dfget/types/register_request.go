@@ -39,6 +39,9 @@ type RegisterRequest struct {
 	Dfdaemon    bool     `json:"dfdaemon,omitempty"`
 	Insecure    bool     `json:"insecure,omitempty"`
 	RootCAs     [][]byte `json:"rootCAs,omitempty"`
+	TaskID      string   `json:"taskId,omitempty"`
+	FileLength  int64    `json:"fileLength,omitempty"`
+	AsSeed      bool     `json:"asSeed,omitempty"`
 }
 
 func (r *RegisterRequest) String() string {

@@ -21,6 +21,10 @@ type TaskRegisterRequest struct {
 	// Format: ipv4
 	IP strfmt.IPv4 `json:"IP,omitempty"`
 
+	// This attribute represents the node as a seed node for the taskURL.
+	//
+	AsSeed bool `json:"asSeed,omitempty"`
+
 	// CID means the client ID. It maps to the specific dfget process.
 	// When user wishes to download an image/file, user would start a dfget process to do this.
 	// This dfget is treated a client and carries a client ID.
@@ -40,6 +44,12 @@ type TaskRegisterRequest struct {
 	// pulling request into raw requests into those dfget recognizes.
 	//
 	Dfdaemon bool `json:"dfdaemon,omitempty"`
+
+	// This attribute represents the length of resource, dfdaemon or dfget catches and calculates
+	// this parameter from the headers of request URL. If fileLength is vaild, the supernode need
+	// not get the length of resource by accessing the rawURL.
+	//
+	FileLength int64 `json:"fileLength,omitempty"`
 
 	// extra HTTP headers sent to the rawURL.
 	// This field is carried with the request to supernode.
@@ -96,6 +106,11 @@ type TaskRegisterRequest struct {
 
 	// The address of supernode that the client can connect to
 	SuperNodeIP string `json:"superNodeIp,omitempty"`
+
+	// Dfdaemon or dfget could specific the taskID which will represents the key of this resource
+	// in supernode.
+	//
+	TaskID string `json:"taskId,omitempty"`
 
 	// taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via
 	// --filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.

@@ -16,15 +16,20 @@
 
 package types
 
-// ReportPieceRequest is send to the supernode when dfget downloaded a piece
-// successfully.
-type ReportPieceRequest struct {
-	TaskID     string `request:"taskId"`
-	Cid        string `request:"cid"`
-	DstCid     string `request:"dstCid"`
-	PieceRange string `request:"pieceRange"`
-	// seed resp
-	AsSeed bool `json:"asSeed"`
-	// if as seed, SeedTaskID is the taskID of seed file.
-	SeedTaskID string `json:"seedTaskID"`
+import "github.com/dragonflyoss/Dragonfly/apis/types"
+
+// FetchP2PNetworkInfoRequest is send to supernode to fetch p2p network info
+type FetchP2PNetworkInfoRequest struct {
+	// the urls is to filter the peer node, the url should be match with taskURL in TaskInfo
+	Urls []string `json:"urls"`
+}
+
+// FetchP2PNetworkInfoResponse is send to supernode to fetch p2p network info
+type FetchP2PNetworkInfoResponse struct {
+	*BaseResponse
+	Data *FetchNetworkInfoDataResponse `json:"data,omitempty"`
+}
+
+type FetchNetworkInfoDataResponse struct {
+	Nodes []*types.Node `json:"nodes"`
 }

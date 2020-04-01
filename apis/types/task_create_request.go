@@ -37,6 +37,12 @@ type TaskCreateRequest struct {
 	//
 	Dfdaemon bool `json:"dfdaemon,omitempty"`
 
+	// This attribute represents the length of resource, dfdaemon or dfget catches and calculates
+	// this parameter from the headers of request URL. If fileLength is vaild, the supernode need
+	// not get the length of resource by accessing the rawURL.
+	//
+	FileLength int64 `json:"fileLength,omitempty"`
+
 	// filter is used to filter request queries in URL.
 	// For example, when a user wants to start to download a task which has a remote URL of
 	// a.b.com/fileA?user=xxx&auth=yyy, user can add a filter parameter ["user", "auth"]
@@ -85,6 +91,11 @@ type TaskCreateRequest struct {
 
 	// IP address of supernode which the peer connects to
 	SupernodeIP string `json:"supernodeIP,omitempty"`
+
+	// This attribute represents the digest of resource, dfdaemon or dfget catches this parameter
+	// from the headers of request URL. The digest will be considered as the taskID if not null.
+	//
+	TaskID string `json:"taskId,omitempty"`
 
 	// taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via
 	// --filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.
