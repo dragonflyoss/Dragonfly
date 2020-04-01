@@ -70,7 +70,7 @@ We will try to finish it before **December 30, 2019**.
 As a cloud native project, we should do more work to support deploy the `Dragonfly` on the kubernets platform. Including but not limited to the following list:
 
 * Deploy `supernode` using [Helm](https://github.com/helm/helm) in Kubernetes to simplify the complexity of scaling SuperNodes in Kubernetes.
-* Deploy `supernode` cluster using [Operator](https://coreos.com/operators/).
+* Deploy `supernode` cluster using Operator.
 * Deploy `dfget & dfdaemon` using DaemonSet in Kubernetes.
 
 Related issue: [#346](https://github.com/dragonflyoss/Dragonfly/issues/346)
