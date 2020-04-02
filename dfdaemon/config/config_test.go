@@ -20,11 +20,9 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"os"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
@@ -83,17 +81,6 @@ func (ts *configTestSuite) TestValidateDFRepo() {
 
 	c.DFRepo = "tmp"
 	r.Equal(constant.CodeExitPathNotAbs, getCode(c.Validate()))
-}
-
-func (ts *configTestSuite) TestValidateDFPath() {
-	c := defaultConfig()
-	r := ts.Require()
-
-	c.DFPath = "/"
-	r.Nil(c.Validate())
-
-	c.DFPath = fmt.Sprintf("/df-test-%d-%d", time.Now().UnixNano(), rand.Int())
-	r.Equal(constant.CodeExitDfgetNotFound, getCode(c.Validate()))
 }
 
 func (ts *configTestSuite) TestURLNew() {
