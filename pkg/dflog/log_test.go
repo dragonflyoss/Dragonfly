@@ -72,6 +72,16 @@ func (ts *logTestSuite) TestMaxSizeMB() {
 	r.Equal(20, lumberjack.MaxSize)
 }
 
+func (ts *logTestSuite) TestConsole() {
+	r := ts.Require()
+
+	l := logrus.New()
+	r.Nil(Init(l, WithConsole()))
+	for _, level := range logrus.AllLevels {
+		r.Equal(1, len(l.Hooks[level]))
+	}
+}
+
 func (ts *logTestSuite) TestFormatter() {
 	r := ts.Require()
 
