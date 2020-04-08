@@ -26,6 +26,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/pkg/digest"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/rangeutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/timeutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
@@ -290,7 +291,7 @@ func (tm *Manager) processTaskStart(ctx context.Context, srcCID string, task *ty
 // req.DstPID, req.PieceRange, req.PieceResult, req.DfgetTaskStatus
 func (tm *Manager) processTaskRunning(ctx context.Context, srcCID, srcPID string, task *types.TaskInfo, req *types.PiecePullRequest,
 	dfgetTask *types.DfGetTask) (bool, interface{}, error) {
-	pieceNum := util.CalculatePieceNum(req.PieceRange)
+	pieceNum := rangeutils.CalculatePieceNum(req.PieceRange)
 	if pieceNum == -1 {
 		return false, nil, errors.Wrapf(errortypes.ErrInvalidValue, "pieceRange: %s", req.PieceRange)
 	}
@@ -411,7 +412,7 @@ func (tm *Manager) pieceResultToPieceInfo(ctx context.Context, pr *mgr.PieceResu
 		PeerIP:     peer.IP.String(),
 		PeerPort:   peer.Port,
 		PieceMD5:   pieceMD5,
-		PieceRange: util.CalculatePieceRange(pr.PieceNum, pieceSize),
+		PieceRange: rangeutils.CalculatePieceRange(pr.PieceNum, pieceSize),
 		PieceSize:  pieceSize,
 	}, nil
 }

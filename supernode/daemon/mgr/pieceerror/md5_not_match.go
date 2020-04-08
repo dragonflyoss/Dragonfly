@@ -19,11 +19,11 @@ package pieceerror
 import (
 	"context"
 
-	"github.com/dragonflyoss/Dragonfly/apis/types"
-	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
-	"github.com/dragonflyoss/Dragonfly/supernode/util"
-
 	"github.com/sirupsen/logrus"
+
+	"github.com/dragonflyoss/Dragonfly/apis/types"
+	"github.com/dragonflyoss/Dragonfly/pkg/rangeutils"
+	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 )
 
 var _ Handler = &FileMd5NotMatchHandler{}
@@ -45,7 +45,7 @@ func NewFileMd5NotMatchHandler(gcManager mgr.GCMgr, cdnManager mgr.CDNMgr) (Hand
 }
 
 func (fnmh *FileMd5NotMatchHandler) Handle(ctx context.Context, pieceErrorRequest *types.PieceErrorRequest) error {
-	pieceNum := util.CalculatePieceNum(pieceErrorRequest.Range)
+	pieceNum := rangeutils.CalculatePieceNum(pieceErrorRequest.Range)
 
 	// get piece MD5 by reading the meta file
 	metaPieceMD5, err := fnmh.cdnManager.GetPieceMD5(ctx, pieceErrorRequest.TaskID, pieceNum, pieceErrorRequest.Range, "meta")

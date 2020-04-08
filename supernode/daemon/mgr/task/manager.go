@@ -23,6 +23,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/metricsutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/rangeutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
@@ -272,7 +273,7 @@ func (tm *Manager) UpdatePieceStatus(ctx context.Context, taskID, pieceRange str
 	logrus.Debugf("get update piece status request: %+v with taskID(%s) pieceRange(%s)", pieceUpdateRequest, taskID, pieceRange)
 
 	// calculate the pieceNum according to the pieceRange
-	pieceNum := util.CalculatePieceNum(pieceRange)
+	pieceNum := rangeutils.CalculatePieceNum(pieceRange)
 	if pieceNum == -1 {
 		return errors.Wrapf(errortypes.ErrInvalidValue,
 			"failed to parse pieceRange: %s to pieceNum for taskID: %s, clientID: %s",

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package util
+package rangeutils
 
 import (
 	"fmt"
@@ -23,7 +23,8 @@ import (
 )
 
 const (
-	separator = "-"
+	separator         = "-"
+	invalidPieceIndex = -1
 )
 
 // CalculatePieceSize calculates the size of piece
@@ -51,23 +52,24 @@ func CalculatePieceNum(rangeStr string) int {
 }
 
 // ParsePieceIndex parses the start and end index ​​according to range string.
+// rangeStr: "start-end"
 func ParsePieceIndex(rangeStr string) (start, end int64, err error) {
 	ranges := strings.Split(rangeStr, separator)
 	if len(ranges) != 2 {
-		return -1, -1, fmt.Errorf("range value(%s) is illegal which should be like 0-45535", rangeStr)
+		return invalidPieceIndex, invalidPieceIndex, fmt.Errorf("range value(%s) is illegal which should be like 0-45535", rangeStr)
 	}
 
 	startIndex, err := strconv.ParseInt(ranges[0], 10, 64)
 	if err != nil {
-		return -1, -1, fmt.Errorf("range(%s) start is not a number", rangeStr)
+		return invalidPieceIndex, invalidPieceIndex, fmt.Errorf("range(%s) start is not a number", rangeStr)
 	}
 	endIndex, err := strconv.ParseInt(ranges[1], 10, 64)
 	if err != nil {
-		return -1, -1, fmt.Errorf("range(%s) end is not a number", rangeStr)
+		return invalidPieceIndex, invalidPieceIndex, fmt.Errorf("range(%s) end is not a number", rangeStr)
 	}
 
 	if endIndex < startIndex {
-		return -1, -1, fmt.Errorf("range(%s) start is larger than end", rangeStr)
+		return invalidPieceIndex, invalidPieceIndex, fmt.Errorf("range(%s) start is larger than end", rangeStr)
 	}
 
 	return startIndex, endIndex, nil

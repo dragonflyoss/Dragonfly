@@ -20,12 +20,12 @@ import (
 	"context"
 	"net/http"
 
-	errorType "github.com/dragonflyoss/Dragonfly/pkg/errortypes"
-	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
-	"github.com/dragonflyoss/Dragonfly/supernode/util"
-
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+
+	errorType "github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
+	"github.com/dragonflyoss/Dragonfly/pkg/rangeutils"
 )
 
 // download downloads the file from the original address and
@@ -38,7 +38,7 @@ func (cm *Manager) download(ctx context.Context, taskID, url string, headers map
 	checkCode := []int{http.StatusOK, http.StatusPartialContent}
 
 	if startPieceNum > 0 {
-		breakRange, err := util.CalculateBreakRange(startPieceNum, int(pieceContSize), httpFileLength)
+		breakRange, err := rangeutils.CalculateBreakRange(startPieceNum, int(pieceContSize), httpFileLength)
 		if err != nil {
 			return nil, errors.Wrapf(errorType.ErrInvalidValue, "failed to calculate the breakRange: %v", err)
 		}
