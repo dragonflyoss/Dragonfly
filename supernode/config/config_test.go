@@ -84,3 +84,11 @@ func (s *SupernodeConfigTestSuite) TestConfig_Load(c *check.C) {
 	p := &PluginProperties{Name: "local", Enabled: true, Config: "baseDir: /tmp/supernode/repo\n"}
 	c.Assert(conf.Plugins[StoragePlugin][0], check.DeepEquals, p)
 }
+
+func (s *SupernodeConfigTestSuite) TestGetSuperCID(c *check.C) {
+	conf := Config{
+		BaseProperties: &BaseProperties{cIDPrefix: "CIDPrefix"},
+	}
+
+	c.Assert(conf.GetSuperCID("taskID"), check.DeepEquals, "CIDPrefixtaskID")
+}
