@@ -22,6 +22,10 @@ type TaskInfo struct {
 	// ID of the task.
 	ID string `json:"ID,omitempty"`
 
+	// This attribute represents the node as a seed node for the taskURL.
+	//
+	AsSeed bool `json:"asSeed,omitempty"`
+
 	// The status of the created task related to CDN functionality.
 	//
 	// Enum: [WAITING RUNNING FAILED SUCCESS SOURCE_ERROR]

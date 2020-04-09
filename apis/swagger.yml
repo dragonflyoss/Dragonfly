@@ -648,6 +648,47 @@ paths:
         500:
           $ref: "#/responses/500ErrorResponse"
 
+  /peer/heartbeat:
+    get:
+      summary: "report the heart beat to super node."
+      description: |
+        This endpoint is mainly for reporting the heart beat to supernode.
+        And supernode could know if peer is alive in strem mode.
+      parameters:
+        - name: "body"
+          in: "body"
+          description: "request body which contains peer info."
+          schema:
+            $ref: "#/definitions/HeartBeatRequest"
+      responses:
+        200:
+          description: "no error"
+          schema:
+            $ref: "#/definitions/ResultInfo"
+        500:
+          $ref: "#/responses/500ErrorResponse"
+
+  /peer/network:
+    get:
+      summary: "peer request the p2p network info from supernode."
+      description: |
+        In the new mode which dfdaemon will provide the seed file so that other peers
+        could download. This endpoint is mainly for fetching the p2p network info.
+      parameters:
+        - name: "body"
+          in: "body"
+          description: "request body which filter urls."
+          schema:
+            $ref: "#/definitions/NetworkInfoFetchRequest"
+      responses:
+        200:
+          description: "no error"
+          schema:
+            $ref: "#/definitions/NetworkInfoFetchResponse"
+        500:
+          $ref: "#/responses/500ErrorResponse"
+
+
 definitions:
   Error:
     type: "object"
@@ -793,6 +834,22 @@ definitions:
           this field to supernode and supernode can do some checking and filtering via
           black/white list mechanism to guarantee security, or some other purposes like debugging.
         minLength: 1
+      taskId:
+        type: "string"
+        description: |
+          Dfdaemon or dfget could specific the taskID which will represents the key of this resource
+          in supernode.
+      fileLength:
+        type: "integer"
+        description: |
+          This attribute represents the length of resource, dfdaemon or dfget catches and calculates
+          this parameter from the headers of request URL. If fileLength is vaild, the supernode need
+          not get the length of resource by accessing the rawURL.
+        format: "int64"
+      asSeed:
+        type: "boolean"
+        description: |
+          This attribute represents the node as a seed node for the taskURL.
 
   PeerCreateRequest:
     type: "object"
@@ -945,6 +1002,18 @@ definitions:
           downloads, if there is already a task a.b.com/fileA.
         items:
           type: "string"
+      taskId:
+        type: "string"
+        description: |
+          This attribute represents the digest of resource, dfdaemon or dfget catches this parameter
+          from the headers of request URL. The digest will be considered as the taskID if not null.
+      fileLength:
+        type: "integer"
+        description: |
+          This attribute represents the length of resource, dfdaemon or dfget catches and calculates
+          this parameter from the headers of request URL. If fileLength is vaild, the supernode need
+          not get the length of resource by accessing the rawURL.
+        format: "int64"
       peerID:
         type: "string"
         description: |
@@ -1055,6 +1124,10 @@ definitions:
           from source server as user's wish.
         additionalProperties:
           type: "string"
+      asSeed:
+        type: "boolean"
+        description: |
+          This attribute represents the node as a seed node for the taskURL.
 
   TaskUpdateRequest:
     type: "object"
@@ -1361,6 +1434,82 @@ definitions:
         type: "integer"
         format: "int64"
         description: "The length of the file dfget requests to download in bytes."
+
+  NetworkInfoFetchRequest:
+    type: "object"
+    description: "The request is to fetch p2p network info from supernode."
+    properties:
+      urls:
+        type: "array"
+        description: |
+          The urls is to filter the peer node, the url should be match with taskURL in TaskInfo.
+        items:
+          type: "string"
+
+  TaskFetchInfo:
+    type: "object"
+    description: "It shows the task info and pieces info."
+    properties:
+      task:
+        $ref: "#/definitions/TaskInfo"
+      pieces:
+        type: "array"
+        description: "The pieces which should belong to the peer node"
+        items:
+          $ref: "#/definitions/PieceInfo"
+
+  Node:
+    type: "object"
+    description: "The object shows the basic info of node and the task belongs to the node."
+    properties:
+      basic:
+        $ref: "#/definitions/PeerInfo"
+        description: "Basic node info"
+      extra:
+        type: "object"
+        additionalProperties:
+          type: "string"
+      load:
+        type: "integer"
+        description: "The load of node, which as the schedule weight in peer schedule."
+      tasks:
+        type: "array"
+        items:
+          $ref: "#/definitions/TaskFetchInfo"
+
+  NetworkInfoFetchResponse:
+    type: "object"
+    description: "The response is from supernode to peer which is requested to fetch p2p network info."
+    properties:
+      nodes:
+        type: "array"
+        items:
+          $ref: "#/definitions/Node"
+
+  HeartBeatRequest:
+    type: "object"
+    description: "The request is to report the heart beat to super node."
+    properties:
+      IP:
+        type: "string"
+        description: "IP address which peer client carries."
+        format: "ipv4"
+      port:
+        type: "integer"
+        description: |
+          when registering, dfget will setup one uploader process.
+          This one acts as a server for peer pulling tasks.
+          This port is which this server listens on.
+        format: "int32"
+        minimum: 15000
+        maximum: 65000
+      cID:
+        type: "string"
+        description: |
+          CID means the client ID. It maps to the specific dfget process.
+          When user wishes to download an image/file, user would start a dfget process to do this.
+          This dfget is treated a client and carries a client ID.
+          Thus, multiple dfget processes on the same peer have different CIDs.
 
   ErrorResponse:
     type: "object"
