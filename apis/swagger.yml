@@ -649,7 +649,7 @@ paths:
           $ref: "#/responses/500ErrorResponse"
 
   /peer/heartbeat:
-    get:
+    post:
       summary: "report the heart beat to super node."
       description: |
         This endpoint is mainly for reporting the heart beat to supernode.
@@ -657,7 +657,7 @@ paths:
       parameters:
         - name: "body"
           in: "body"
-          description: "request body which contains peer info."
+          description: "request body which contains base info of peer"
           schema:
             $ref: "#/definitions/HeartBeatRequest"
       responses:
@@ -669,7 +669,7 @@ paths:
           $ref: "#/responses/500ErrorResponse"
 
   /peer/network:
-    get:
+    post:
       summary: "peer request the p2p network info from supernode."
       description: |
         In the new mode which dfdaemon will provide the seed file so that other peers
@@ -1488,11 +1488,11 @@ definitions:
 
   HeartBeatRequest:
     type: "object"
-    description: "The request is to report the heart beat to super node."
+    description: "The request is to report peer to supernode to keep alive."
     properties:
       IP:
         type: "string"
-        description: "IP address which peer client carries."
+        description: "IP address which peer client carries"
         format: "ipv4"
       port:
         type: "integer"
