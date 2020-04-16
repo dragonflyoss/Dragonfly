@@ -13,11 +13,11 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// HeartBeatRequest The request is to report the heart beat to super node.
+// HeartBeatRequest The request is to report peer to supernode to keep alive.
 // swagger:model HeartBeatRequest
 type HeartBeatRequest struct {
 
-	// IP address which peer client carries.
+	// IP address which peer client carries
 	// Format: ipv4
 	IP strfmt.IPv4 `json:"IP,omitempty"`
 
