@@ -27,7 +27,7 @@ Golang|1.12.x
 
 ## Procedure - When Deploying with Docker
 
-### Get dflient image
+### Get dfclient image
 
 You can get it from [DockerHub](https://hub.docker.com/) directly.
 
