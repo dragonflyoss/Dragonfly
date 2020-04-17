@@ -23,8 +23,4 @@ type ReportPieceRequest struct {
 	Cid        string `request:"cid"`
 	DstCid     string `request:"dstCid"`
 	PieceRange string `request:"pieceRange"`
-	// seed resp
-	AsSeed bool `json:"asSeed"`
-	// if as seed, SeedTaskID is the taskID of seed file.
-	SeedTaskID string `json:"seedTaskID"`
 }

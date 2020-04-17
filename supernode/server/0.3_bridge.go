@@ -40,6 +40,12 @@ type RegisterResponseData struct {
 	FileLength int64  `json:"fileLength"`
 	PieceSize  int32  `json:"pieceSize"`
 	CDNSource  string `json:"cdnSource"`
+
+	// in seed pattern, if peer selected as seed, AsSeed sets true.
+	AsSeed bool `json:"asSeed"`
+
+	// in seed pattern, if as seed, SeedTaskID is the taskID of seed file.
+	SeedTaskID string `json:"seedTaskID"`
 }
 
 // PullPieceTaskResponseContinueData is the data when successfully pulling piece task
