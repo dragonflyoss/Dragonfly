@@ -549,6 +549,60 @@ json :
 ```
 
 
+<a name="peer-heartbeat-post"></a>
+### report the heart beat to super node.
+```
+POST /peer/heartbeat
+```
+
+
+#### Description
+This endpoint is mainly for reporting the heart beat to supernode.
+And supernode could know if peer is alive in strem mode.
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|
+|---|---|---|---|
+|**Body**|**body**  <br>*optional*|request body which contains base info of peer|[HeartBeatRequest](#heartbeatrequest)|
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|[ResultInfo](#resultinfo)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
+<a name="peer-network-post"></a>
+### peer request the p2p network info from supernode.
+```
+POST /peer/network
+```
+
+
+#### Description
+In the new mode which dfdaemon will provide the seed file so that other peers
+could download. This endpoint is mainly for fetching the p2p network info.
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|
+|---|---|---|---|
+|**Body**|**body**  <br>*optional*|request body which filter urls.|[NetworkInfoFetchRequest](#networkinfofetchrequest)|
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|[NetworkInfoFetchResponse](#networkinfofetchresponse)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
 <a name="peer-piece-suc-get"></a>
 ### report a piece has been success
 ```
@@ -792,6 +846,51 @@ It contains a code that identify which error occurred for client processing and 
 |**message**  <br>*optional*|detailed error message|string|
 
 
+<a name="heartbeatrequest"></a>
+### HeartBeatRequest
+The request is to report peer to supernode to keep alive.
+
+
+|Name|Description|Schema|
+|---|---|---|
+|**IP**  <br>*optional*|IP address which peer client carries|string (ipv4)|
+|**cID**  <br>*optional*|CID means the client ID. It maps to the specific dfget process.<br>When user wishes to download an image/file, user would start a dfget process to do this.<br>This dfget is treated a client and carries a client ID.<br>Thus, multiple dfget processes on the same peer have different CIDs.|string|
+|**port**  <br>*optional*|when registering, dfget will setup one uploader process.<br>This one acts as a server for peer pulling tasks.<br>This port is which this server listens on.  <br>**Minimum value** : `15000`  <br>**Maximum value** : `65000`|integer (int32)|
+
+
+<a name="networkinfofetchrequest"></a>
+### NetworkInfoFetchRequest
+The request is to fetch p2p network info from supernode.
+
+
+|Name|Description|Schema|
+|---|---|---|
+|**urls**  <br>*optional*|The urls is to filter the peer node, the url should be match with taskURL in TaskInfo.|< string > array|
+
+
+<a name="networkinfofetchresponse"></a>
+### NetworkInfoFetchResponse
+The response is from supernode to peer which is requested to fetch p2p network info.
+
+
+|Name|Schema|
+|---|---|
+|**nodes**  <br>*optional*|< [Node](#node) > array|
+
+
+<a name="node"></a>
+### Node
+The object shows the basic info of node and the task belongs to the node.
+
+
+|Name|Description|Schema|
+|---|---|---|
+|**basic**  <br>*optional*|Basic node info|[PeerInfo](#peerinfo)|
+|**extra**  <br>*optional*||< string, string > map|
+|**load**  <br>*optional*|The load of node, which as the schedule weight in peer schedule.|integer|
+|**tasks**  <br>*optional*||< [TaskFetchInfo](#taskfetchinfo) > array|
+
+
 <a name="peercreaterequest"></a>
 ### PeerCreateRequest
 PeerCreateRequest is used to create a peer instance in supernode.
@@ -948,6 +1047,7 @@ The returned information from supernode.
 |**cID**  <br>*optional*|CID means the client ID. It maps to the specific dfget process.<br>When user wishes to download an image/file, user would start a dfget process to do this.<br>This dfget is treated a client and carries a client ID.<br>Thus, multiple dfget processes on the same peer have different CIDs.|string|
 |**callSystem**  <br>*optional*|This attribute represents where the dfget requests come from. Dfget will pass<br>this field to supernode and supernode can do some checking and filtering via<br>black/white list mechanism to guarantee security, or some other purposes like debugging.  <br>**Minimum length** : `1`|string|
 |**dfdaemon**  <br>*optional*|tells whether it is a call from dfdaemon. dfdaemon is a long running<br>process which works for container engines. It translates the image<br>pulling request into raw requests into those dfget recognizes.|boolean|
+|**fileLength**  <br>*optional*|This attribute represents the length of resource, dfdaemon or dfget catches and calculates<br>this parameter from the headers of request URL. If fileLength is vaild, the supernode need<br>not get the length of resource by accessing the rawURL.|integer (int64)|
 |**filter**  <br>*optional*|filter is used to filter request queries in URL.<br>For example, when a user wants to start to download a task which has a remote URL of<br>a.b.com/fileA?user=xxx&auth=yyy, user can add a filter parameter ["user", "auth"]<br>to filter the url to a.b.com/fileA. Then this parameter can potentially avoid repeatable<br>downloads, if there is already a task a.b.com/fileA.|< string > array|
 |**headers**  <br>*optional*|extra HTTP headers sent to the rawURL.<br>This field is carried with the request to supernode.<br>Supernode will extract these HTTP headers, and set them in HTTP downloading requests<br>from source server as user's wish.|< string, string > map|
 |**identifier**  <br>*optional*|special attribute of remote source file. This field is used with taskURL to generate new taskID to<br>identify different downloading task of remote source file. For example, if user A and user B uses<br>the same taskURL and taskID to download file, A and B will share the same peer network to distribute files.<br>If user A additionally adds an identifier with taskURL, while user B still carries only taskURL, then A's<br>generated taskID is different from B, and the result is that two users use different peer networks.|string|
@@ -956,6 +1056,7 @@ The returned information from supernode.
 |**peerID**  <br>*optional*|PeerID is used to uniquely identifies a peer which will be used to create a dfgetTask.<br>The value must be the value in the response after registering a peer.|string|
 |**rawURL**  <br>*optional*|The is the resource's URL which user uses dfget to download. The location of URL can be anywhere, LAN or WAN.<br>For image distribution, this is image layer's URL in image registry.<br>The resource url is provided by command line parameter.|string|
 |**supernodeIP**  <br>*optional*|IP address of supernode which the peer connects to|string|
+|**taskId**  <br>*optional*|This attribute represents the digest of resource, dfdaemon or dfget catches this parameter<br>from the headers of request URL. The digest will be considered as the taskID if not null.|string|
 |**taskURL**  <br>*optional*|taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via<br>--filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.|string|
 
 
@@ -972,6 +1073,17 @@ response get from task creation request.
 |**pieceSize**  <br>*optional*|The size of pieces which is calculated as per the following strategy<br>1. If file's total size is less than 200MB, then the piece size is 4MB by default.<br>2. Otherwise, it equals to the smaller value between totalSize/100MB + 2 MB and 15MB.|integer (int32)|
 
 
+<a name="taskfetchinfo"></a>
+### TaskFetchInfo
+It shows the task info and pieces info.
+
+
+|Name|Description|Schema|
+|---|---|---|
+|**pieces**  <br>*optional*|The pieces which should belong to the peer node|< [PieceInfo](#pieceinfo) > array|
+|**task**  <br>*optional*||[TaskInfo](#taskinfo)|
+
+
 <a name="taskinfo"></a>
 ### TaskInfo
 detailed information about task in supernode.
@@ -980,6 +1092,7 @@ detailed information about task in supernode.
 |Name|Description|Schema|
 |---|---|---|
 |**ID**  <br>*optional*|ID of the task.|string|
+|**asSeed**  <br>*optional*|This attribute represents the node as a seed node for the taskURL.|boolean|
 |**cdnStatus**  <br>*optional*|The status of the created task related to CDN functionality.|enum (WAITING, RUNNING, FAILED, SUCCESS, SOURCE_ERROR)|
 |**fileLength**  <br>*optional*|The length of the file dfget requests to download in bytes<br>which including the header and the trailer of each piece.|integer (int64)|
 |**headers**  <br>*optional*|extra HTTP headers sent to the rawURL.<br>This field is carried with the request to supernode.<br>Supernode will extract these HTTP headers, and set them in HTTP downloading requests<br>from source server as user's wish.|< string, string > map|
@@ -1015,9 +1128,11 @@ detailed information about task in supernode.
 |Name|Description|Schema|
 |---|---|---|
 |**IP**  <br>*optional*|IP address which peer client carries|string (ipv4)|
+|**asSeed**  <br>*optional*|This attribute represents the node as a seed node for the taskURL.|boolean|
 |**cID**  <br>*optional*|CID means the client ID. It maps to the specific dfget process.<br>When user wishes to download an image/file, user would start a dfget process to do this.<br>This dfget is treated a client and carries a client ID.<br>Thus, multiple dfget processes on the same peer have different CIDs.|string|
 |**callSystem**  <br>*optional*|This attribute represents where the dfget requests come from. Dfget will pass<br>this field to supernode and supernode can do some checking and filtering via<br>black/white list mechanism to guarantee security, or some other purposes like debugging.  <br>**Minimum length** : `1`|string|
 |**dfdaemon**  <br>*optional*|tells whether it is a call from dfdaemon. dfdaemon is a long running<br>process which works for container engines. It translates the image<br>pulling request into raw requests into those dfget recognizes.|boolean|
+|**fileLength**  <br>*optional*|This attribute represents the length of resource, dfdaemon or dfget catches and calculates<br>this parameter from the headers of request URL. If fileLength is vaild, the supernode need<br>not get the length of resource by accessing the rawURL.|integer (int64)|
 |**headers**  <br>*optional*|extra HTTP headers sent to the rawURL.<br>This field is carried with the request to supernode.<br>Supernode will extract these HTTP headers, and set them in HTTP downloading requests<br>from source server as user's wish.|< string > array|
 |**hostName**  <br>*optional*|host name of peer client node.  <br>**Minimum length** : `1`|string|
 |**identifier**  <br>*optional*|special attribute of remote source file. This field is used with taskURL to generate new taskID to<br>identify different downloading task of remote source file. For example, if user A and user B uses<br>the same taskURL and taskID to download file, A and B will share the same peer network to distribute files.<br>If user A additionally adds an identifier with taskURL, while user B still carries only taskURL, then A's<br>generated taskID is different from B, and the result is that two users use different peer networks.|string|
@@ -1028,6 +1143,7 @@ detailed information about task in supernode.
 |**rawURL**  <br>*optional*|The is the resource's URL which user uses dfget to download. The location of URL can be anywhere, LAN or WAN.<br>For image distribution, this is image layer's URL in image registry.<br>The resource url is provided by command line parameter.|string|
 |**rootCAs**  <br>*optional*|The root ca cert from client used to download the remote source file.|< string (byte) > array|
 |**superNodeIp**  <br>*optional*|The address of supernode that the client can connect to|string|
+|**taskId**  <br>*optional*|Dfdaemon or dfget could specific the taskID which will represents the key of this resource<br>in supernode.|string|
 |**taskURL**  <br>*optional*|taskURL is generated from rawURL. rawURL may contains some queries or parameter, dfget will filter some queries via<br>--filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.|string|
 |**version**  <br>*optional*|version number of dfget binary.|string|
 
