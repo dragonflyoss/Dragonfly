@@ -1,0 +1,176 @@
+/*
+ * Copyright The Dragonfly Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package locator
+
+import (
+	"math/rand"
+	"strings"
+	"testing"
+
+	"github.com/go-check/check"
+
+	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/pkg/algorithm"
+)
+
+func Test(t *testing.T) {
+	check.TestingT(t)
+}
+
+type StaticLocatorTestSuite struct {
+}
+
+func init() {
+	check.Suite(&StaticLocatorTestSuite{})
+}
+
+func (s *StaticLocatorTestSuite) Test_NewStaticLocator(c *check.C) {
+	rand.Seed(0)
+	l := NewStaticLocator(nil)
+	c.Assert(l, check.NotNil)
+	c.Assert(l.idx, check.Equals, int32(0))
+	c.Assert(l.Group, check.IsNil)
+
+	l = NewStaticLocator([]*config.NodeWeight{})
+	c.Assert(l, check.NotNil)
+	c.Assert(l.idx, check.Equals, int32(0))
+	c.Assert(l.Group, check.IsNil)
+
+	l = NewStaticLocator([]*config.NodeWeight{
+		{Node: "a:80", Weight: 1},
+		{Node: "a:81", Weight: 2},
+	})
+	c.Assert(l, check.NotNil)
+	c.Assert(l.Group, check.DeepEquals, &SupernodeGroup{
+		Name: staticLocatorGroupName,
+		Nodes: shuffleNodes([]*Supernode{
+			create("a", 80, 1),
+			create("a", 81, 2),
+			create("a", 81, 2),
+		}),
+		Infos: nil,
+	})
+}
+
+func (s *StaticLocatorTestSuite) Test_NewStaticLocatorFromString(c *check.C) {
+	cases := []struct {
+		nodes       string
+		err         bool
+		expectedLen int
+	}{
+		{":80=1", true, 0},
+		{"a:80=1", false, 1},
+		{"a:80=1,a:81=2", false, 3},
+	}
+
+	for _, v := range cases {
+		l, err := NewStaticLocatorFromStr(strings.Split(v.nodes, ","))
+		if v.err {
+			c.Assert(err, check.NotNil)
+			c.Assert(l, check.IsNil)
+		} else {
+			c.Assert(err, check.IsNil)
+			c.Assert(l, check.NotNil)
+			c.Assert(len(l.Group.Nodes), check.Equals, v.expectedLen)
+		}
+	}
+}
+
+func (s *StaticLocatorTestSuite) Test_Get(c *check.C) {
+	cases := []struct {
+		nodes    string
+		expected *Supernode
+	}{
+		{"a:80=1", create("a", 80, 1)},
+	}
+	for _, v := range cases {
+		l, _ := NewStaticLocatorFromStr(strings.Split(v.nodes, ","))
+		sn := l.Get()
+		if v.expected == nil {
+			c.Assert(sn, check.IsNil)
+		} else {
+			c.Assert(sn, check.NotNil)
+			c.Assert(sn, check.DeepEquals, v.expected)
+		}
+	}
+}
+
+func (s *StaticLocatorTestSuite) Test_Next(c *check.C) {
+	rand.Seed(0)
+	idx := []int{0, 1, 2}
+	algorithm.Shuffle(len(idx), func(i int, j int) {
+		idx[i], idx[j] = idx[j], idx[i]
+	})
+	cases := []struct {
+		nodes       string
+		cnt         int
+		expectedIdx int
+	}{
+		{"a:80=1", 0, 0},
+		{"a:80=1", 1, -1},
+		{"a:80=1,a:81=2", 2, idx[2]},
+	}
+	for _, v := range cases {
+		l, _ := NewStaticLocatorFromStr(strings.Split(v.nodes, ","))
+		sn := l.Get()
+		for i := 0; i < v.cnt; i++ {
+			sn = l.Next()
+		}
+		if v.expectedIdx < 0 {
+			c.Assert(sn, check.IsNil)
+		} else {
+			c.Assert(sn, check.NotNil)
+			c.Assert(sn, check.DeepEquals, l.Group.Nodes[v.expectedIdx])
+		}
+	}
+}
+
+func (s *StaticLocatorTestSuite) Test_GetGroup(c *check.C) {
+	l, _ := NewStaticLocatorFromStr([]string{"a:80=1"})
+	group := l.GetGroup(staticLocatorGroupName)
+	c.Assert(group, check.NotNil)
+	c.Assert(group.Nodes[0], check.DeepEquals, create("a", 80, 1))
+
+	group = l.GetGroup("test")
+	c.Assert(group, check.IsNil)
+}
+
+func (s *StaticLocatorTestSuite) Test_All(c *check.C) {
+	l, _ := NewStaticLocatorFromStr([]string{"a:80=1"})
+	groups := l.All()
+	c.Assert(groups, check.NotNil)
+	c.Assert(len(groups), check.Equals, 1)
+}
+
+func (s *StaticLocatorTestSuite) Test_Refresh(c *check.C) {
+	l, _ := NewStaticLocatorFromStr([]string{"a:80=1"})
+	_ = l.Next()
+	c.Assert(l.load(), check.Equals, 1)
+
+	l.Refresh()
+	c.Assert(l.load(), check.Equals, 0)
+}
+
+func create(ip string, port, weight int) *Supernode {
+	return &Supernode{
+		Schema:    config.DefaultSupernodeSchema,
+		IP:        ip,
+		Port:      port,
+		Weight:    weight,
+		GroupName: staticLocatorGroupName,
+	}
+}
