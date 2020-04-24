@@ -118,7 +118,7 @@ type Properties struct {
 
 // Validate validates the config
 func (p *Properties) Validate() error {
-	if p.Port <= 2000 || p.Port > 65535 {
+	if p.Port > 65535 {
 		return dferr.Newf(
 			constant.CodeExitPortInvalid,
 			"invalid port %d", p.Port,
