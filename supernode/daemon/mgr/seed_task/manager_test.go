@@ -45,34 +45,26 @@ func (s *SeedTaskMgrTestSuite) SetUpSuite(c *check.C) {
 	s.seedTaskMgr, _ = NewManager(&config.Config{BaseProperties: baseConfig})
 }
 
-func (mgr *SeedTaskMgrTestSuite) TestInvalidTask (c *check.C) {
+func (mgr *SeedTaskMgrTestSuite) TestInvalidTask(c *check.C) {
 	c.Check(mgr.seedTaskMgr.IsSeedTask(context.Background(), &http.Request{}), check.Equals, false)
 }
 
-func (mgr *SeedTaskMgrTestSuite) TestRegistryTask (c *check.C) {
-	resp, err := mgr.seedTaskMgr.Register(context.Background(), &types.TaskRegisterRequest {
-		CID:         "c01",
-		IP:          "192.168.1.1",
-		Port:        16543,
-		SuperNodeIP: "10.10.10.10",
-		TaskURL:     "http://abc-2.com",
-		AsSeed:      true,
-	})
-	c.Check(err, check.IsNil)
-	c.Check(resp.AsSeed, check.Equals, true)
+func (mgr *SeedTaskMgrTestSuite) TestRegistryTask(c *check.C) {
+	for _, url := range []string{"http://abc-2.com", "http://abc-2-1.com",
+		"http://abc-2-2.com", "http://abc-2-3.com", "http://abc-2-4.com"} {
+		resp, err := mgr.seedTaskMgr.Register(context.Background(), &types.TaskRegisterRequest{
+			CID:         "c01",
+			IP:          "192.168.1.1",
+			Port:        16543,
+			SuperNodeIP: "10.10.10.10",
+			TaskURL:     url,
+			AsSeed:      true,
+		})
+		c.Check(err, check.IsNil)
+		c.Check(resp.AsSeed, check.Equals, true)
+	}
 
-	resp, err = mgr.seedTaskMgr.Register(context.Background(), &types.TaskRegisterRequest {
-		CID:         "c01",
-		IP:          "192.168.1.1",
-		Port:        16543,
-		SuperNodeIP: "10.10.10.10",
-		TaskURL:     "http://abc-2-1.com",
-		AsSeed:      true,
-	})
-	c.Check(err, check.IsNil)
-	c.Check(resp.AsSeed, check.Equals, true)
-
-	resp, err = mgr.seedTaskMgr.Register(context.Background(), &types.TaskRegisterRequest {
+	resp, err := mgr.seedTaskMgr.Register(context.Background(), &types.TaskRegisterRequest{
 		CID:         "c03",
 		IP:          "192.168.1.1",
 		Port:        16545,
@@ -81,7 +73,7 @@ func (mgr *SeedTaskMgrTestSuite) TestRegistryTask (c *check.C) {
 		AsSeed:      true,
 	})
 
-	resp, err = mgr.seedTaskMgr.Register(context.Background(), &types.TaskRegisterRequest {
+	resp, err = mgr.seedTaskMgr.Register(context.Background(), &types.TaskRegisterRequest{
 		CID:         "c02",
 		IP:          "192.168.1.1",
 		Port:        16544,
@@ -95,7 +87,7 @@ func (mgr *SeedTaskMgrTestSuite) TestRegistryTask (c *check.C) {
 	tasksInfo, err := mgr.seedTaskMgr.GetTasksInfo(context.Background(), digest.Sha256("http://abc-2.com"))
 	c.Check(err, check.IsNil)
 
-	expectPeers := []string { "c02", "c03" }
+	expectPeers := []string{"c02", "c03"}
 	var peers []string
 	for _, item := range tasksInfo {
 		peers = append(peers, item.P2pInfo.peerId)
@@ -114,14 +106,13 @@ func (mgr *SeedTaskMgrTestSuite) TestRegistryTask (c *check.C) {
 
 func (mgr *SeedTaskMgrTestSuite) TestDownPeers(c *check.C) {
 	request := &types.TaskRegisterRequest{
-		CID: 		 "c01",
+		CID:         "c01",
 		IP:          "192.168.1.1",
 		HostName:    "node01",
 		Path:        "abc",
 		Port:        16543,
 		RawURL:      "http://abc.com",
 		SuperNodeIP: "10.10.10.10",
-		TaskID:      "task04-01",
 		TaskURL:     "http://abc.com",
 	}
 
@@ -139,14 +130,13 @@ func (mgr *SeedTaskMgrTestSuite) TestDownPeers(c *check.C) {
 
 func (mgr *SeedTaskMgrTestSuite) TestHeartBeat(c *check.C) {
 	request := &types.TaskRegisterRequest{
-		CID:		 "c01",
+		CID:         "c01",
 		IP:          "192.168.1.1",
 		HostName:    "node01",
 		Path:        "abc",
 		Port:        16543,
 		RawURL:      "http://abc.com",
 		SuperNodeIP: "10.10.10.10",
-		TaskID:      "task04-01",
 		TaskURL:     "http://abc.com",
 	}
 	_, err := mgr.seedTaskMgr.Register(context.Background(), request)
@@ -155,8 +145,9 @@ func (mgr *SeedTaskMgrTestSuite) TestHeartBeat(c *check.C) {
 	p2pInfo, _ := mgr.seedTaskMgr.getP2pInfo(context.Background(), "c01")
 	p2pInfo.hbTime = 0
 
-	err = mgr.seedTaskMgr.ReportPeerHealth(context.Background(), "c01")
+	resp, err := mgr.seedTaskMgr.ReportPeerHealth(context.Background(), "c01")
 	c.Check(err, check.IsNil)
 	c.Check(p2pInfo.hbTime > 0, check.Equals, true)
+	c.Check(resp.SeedTaskIds, check.DeepEquals, []string{digest.Sha256(request.TaskURL)})
 	mgr.seedTaskMgr.DeRegisterPeer(context.Background(), "c01")
 }

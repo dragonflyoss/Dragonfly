@@ -23,9 +23,9 @@ type seedScheduler interface {
 	Schedule(nowTasks []*SeedTaskInfo, newTask *SeedTaskInfo) bool
 }
 
-type defaultScheduler struct { }
+type defaultScheduler struct{}
 
-func (scheduler *defaultScheduler) Schedule (nowTasks []*SeedTaskInfo, newTask *SeedTaskInfo) bool {
+func (scheduler *defaultScheduler) Schedule(nowTasks []*SeedTaskInfo, newTask *SeedTaskInfo) bool {
 	busyPeer := newTask.P2pInfo
 	newTaskInfo := newTask.TaskInfo
 	pos := -1
@@ -46,7 +46,7 @@ func (scheduler *defaultScheduler) Schedule (nowTasks []*SeedTaskInfo, newTask *
 			logrus.Warnf("peer %s registry same taskid %s twice", p2pInfo.peerId, newTaskInfo.ID)
 			return false
 		}
-		if p2pInfo.Load() < newTask.P2pInfo.Load() + 3 {
+		if p2pInfo.Load() < newTask.P2pInfo.Load()+3 {
 			idx += 1
 			continue
 		}
@@ -66,8 +66,6 @@ func (scheduler *defaultScheduler) Schedule (nowTasks []*SeedTaskInfo, newTask *
 			newTask.P2pInfo.peerId,
 			busyPeer.peerId)
 		busyPeer.deleteTask(newTaskInfo.ID)
-		// tell busy peer to evict task of blob file next heartbeat period
-		busyPeer.rmTaskIds.add(newTaskInfo.ID)
 	}
 
 	return pos >= 0

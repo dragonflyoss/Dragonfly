@@ -111,10 +111,10 @@ func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http
 		return EncodeResponse(rw, http.StatusOK, &types.ResultInfo{
 			Code: constants.Success,
 			Data: &RegisterResponseData{
-				TaskID: resp.TaskID,
+				TaskID:     resp.TaskID,
 				FileLength: request.FileLength,
-				PieceSize: int32(request.FileLength),
-				AsSeed: resp.AsSeed,
+				PieceSize:  int32(request.FileLength),
+				AsSeed:     resp.AsSeed,
 				SeedTaskID: resp.TaskID,
 			},
 		})
@@ -405,22 +405,21 @@ func (s *Server) fetchP2PNetworkInfo(ctx context.Context, rw http.ResponseWriter
 
 	return EncodeResponse(rw, http.StatusOK, types.ResultInfo{
 		Code: constants.Success,
-		Data: &types.NetworkInfoFetchResponse {
+		Data: &types.NetworkInfoFetchResponse{
 			Nodes: nodesArray,
 		},
 	})
 }
 
-func (s *Server) reportPeerHealth (ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+func (s *Server) reportPeerHealth(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
 	hbRequest := &types.HeartBeatRequest{}
 	reader := req.Body
 	if err := json.NewDecoder(reader).Decode(hbRequest); err != nil {
 		return errors.Wrap(errortypes.ErrInvalidValue, err.Error())
 	}
-	if err := s.seedTaskMgr.ReportPeerHealth(ctx, hbRequest.CID); err != nil {
+	resp, err := s.seedTaskMgr.ReportPeerHealth(ctx, hbRequest.CID)
+	if err != nil {
 		return err
 	}
-	return EncodeResponse(rw, http.StatusOK, types.ResultInfo{
-		Code: constants.Success,
-	})
+	return EncodeResponse(rw, http.StatusOK, resp)
 }
