@@ -17,8 +17,13 @@
 package algorithm
 
 // GCDSlice returns the greatest common divisor of a slice.
+// It returns 1 when s is empty because that any number divided by 1 is still
+// itself.
 func GCDSlice(s []int) int {
 	length := len(s)
+	if length == 0 {
+		return 1
+	}
 	if length == 1 {
 		return s[0]
 	}
