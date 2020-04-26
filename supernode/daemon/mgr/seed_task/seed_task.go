@@ -23,11 +23,10 @@ import (
 )
 
 type P2pInfo struct {
-	peerId    string
-	PeerInfo  *types.PeerInfo
-	hbTime    int64
-	taskIds   *idSet // for tmp rt task
-	rmTaskIds *idSet
+	peerId   string
+	PeerInfo *types.PeerInfo
+	hbTime   int64
+	taskIds  *idSet // seed tasks
 }
 
 func (p2p *P2pInfo) Load() int { return p2p.taskIds.size() }

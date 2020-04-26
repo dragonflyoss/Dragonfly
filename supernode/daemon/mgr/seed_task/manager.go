@@ -40,6 +40,7 @@ type Manager struct {
 	taskStore    *dutil.Store /* taskid --> peerid set */
 	p2pInfoStore *dutil.Store
 	ipPortMap    *safeMap
+	timestamp    time.Duration
 }
 
 func NewManager(cfg *config.Config) (*Manager, error) {
@@ -97,7 +98,6 @@ func (mgr *Manager) getOrCreateP2pInfo(ctx context.Context, peerId string, peerR
 						peerId: peerId,
 						PeerInfo: newPeerInfo,
 						taskIds: newIdSet(),
-						rmTaskIds: newIdSet(),
 						hbTime: time.Now().Unix()})
 		peerInfo, _ = item.(*P2pInfo)
 	}
@@ -128,11 +128,7 @@ func ipPortToStr(ip strfmt.IPv4, port int32) string {
 
 func (mgr *Manager) Register(ctx context.Context, request *types.TaskRegisterRequest) (*TaskRegistryResponce, error) {
 	logrus.Debugf("registry rt task %v", request)
-	taskID := digest.Sha256(request.TaskURL)
-
-	if request.TaskID == "" {
-		request.TaskID = taskID
-	}
+	request.TaskID = digest.Sha256(request.TaskURL)
 	resp := &TaskRegistryResponce{ TaskID: request.TaskID }
 
 	peerCreateReq := &types.PeerCreateRequest{
@@ -232,14 +228,17 @@ func (mgr *Manager) IsSeedTask(ctx context.Context, request *http.Request) bool 
 				request.Header.Get("X-report-resource") != ""
 }
 
-func (mgr *Manager) ReportPeerHealth (ctx context.Context, peerId string) error {
+func (mgr *Manager) ReportPeerHealth (ctx context.Context, peerId string) (*types.HeartBeatResponse, error) {
 	p2p, err := mgr.getP2pInfo(ctx, peerId)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	p2p.update()
 
-	return nil
+	return &types.HeartBeatResponse{
+		SeedTaskIds: p2p.taskIds.list(),
+		Version:     mgr.timestamp.String(),
+	}, nil
 }
 
 func (mgr *Manager) ScanDownPeers (ctx context.Context) []string {
