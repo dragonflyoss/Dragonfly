@@ -129,6 +129,9 @@ func (mgr *SeedTaskMgrTestSuite) TestDownPeers(c *check.C) {
 }
 
 func (mgr *SeedTaskMgrTestSuite) TestHeartBeat(c *check.C) {
+	resp, err := mgr.seedTaskMgr.ReportPeerHealth(context.Background(), "c01")
+	c.Check(err, check.IsNil)
+	c.Check(resp.NeedRegister, check.Equals, true)
 	request := &types.TaskRegisterRequest{
 		CID:         "c01",
 		IP:          "192.168.1.1",
@@ -139,14 +142,15 @@ func (mgr *SeedTaskMgrTestSuite) TestHeartBeat(c *check.C) {
 		SuperNodeIP: "10.10.10.10",
 		TaskURL:     "http://abc.com",
 	}
-	_, err := mgr.seedTaskMgr.Register(context.Background(), request)
+	_, err = mgr.seedTaskMgr.Register(context.Background(), request)
 	c.Check(err, check.IsNil)
 
 	p2pInfo, _ := mgr.seedTaskMgr.getP2pInfo(context.Background(), "c01")
 	p2pInfo.hbTime = 0
 
-	resp, err := mgr.seedTaskMgr.ReportPeerHealth(context.Background(), "c01")
+	resp, err = mgr.seedTaskMgr.ReportPeerHealth(context.Background(), "c01")
 	c.Check(err, check.IsNil)
+	c.Check(resp.NeedRegister, check.Equals, false)
 	c.Check(p2pInfo.hbTime > 0, check.Equals, true)
 	c.Check(resp.SeedTaskIds, check.DeepEquals, []string{digest.Sha256(request.TaskURL)})
 	mgr.seedTaskMgr.DeRegisterPeer(context.Background(), "c01")
