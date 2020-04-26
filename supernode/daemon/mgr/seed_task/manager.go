@@ -36,19 +36,20 @@ type TaskRegistryResponce struct {
 }
 
 type Manager struct {
-	cfg 		 *config.Config
+	cfg          *config.Config
 	taskStore    *dutil.Store /* taskid --> peerid set */
 	p2pInfoStore *dutil.Store
 	ipPortMap    *safeMap
-	timestamp    time.Duration
+	timeStamp    time.Time
 }
 
 func NewManager(cfg *config.Config) (*Manager, error) {
 	return &Manager{
-		cfg:		  cfg,
-		taskStore: dutil.NewStore(),
+		cfg:          cfg,
+		taskStore:    dutil.NewStore(),
 		p2pInfoStore: dutil.NewStore(),
 		ipPortMap:    newSafeMap(),
+		timeStamp:    time.Now(),
 	}, nil
 }
 
@@ -229,15 +230,15 @@ func (mgr *Manager) IsSeedTask(ctx context.Context, request *http.Request) bool 
 }
 
 func (mgr *Manager) ReportPeerHealth (ctx context.Context, peerId string) (*types.HeartBeatResponse, error) {
-	p2p, err := mgr.getP2pInfo(ctx, peerId)
+	p2pInfo, err := mgr.getP2pInfo(ctx, peerId)
 	if err != nil {
-		return nil, err
+		return &types.HeartBeatResponse{ NeedRegister:true, Version:mgr.timeStamp.String() }, nil
 	}
-	p2p.update()
+	p2pInfo.update()
 
 	return &types.HeartBeatResponse{
-		SeedTaskIds: p2p.taskIds.list(),
-		Version:     mgr.timestamp.String(),
+		SeedTaskIds: p2pInfo.taskIds.list(),
+		Version:     mgr.timeStamp.String(),
 	}, nil
 }
 
