@@ -100,7 +100,7 @@ func (s *ClientStreamWriterTestSuite) TestWrite(c *check.C) {
 	copy(cases2, cases)
 
 	cfg := &config.Config{}
-	csw := NewClientStreamWriter(nil, nil, cfg)
+	csw := NewClientStreamWriter(nil, nil, nil, cfg)
 	go func() {
 		for _, v := range cases2 {
 			err := csw.writePieceToPipe(v.piece)

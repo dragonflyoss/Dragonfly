@@ -38,6 +38,11 @@ type ClientStreamWriter struct {
 	// The downloader will put the piece into this queue after it downloaded a piece successfully.
 	// And clientWriter will poll values from this queue constantly and write to disk.
 	clientQueue queue.Queue
+
+	// notifyQueue sends a notification when all operation about a piece have
+	// been completed successfully.
+	notifyQueue queue.Queue
+
 	// finish indicates whether the task written is completed.
 	finish chan struct{}
 
@@ -68,11 +73,12 @@ type ClientStreamWriter struct {
 }
 
 // NewClientStreamWriter creates and initialize a ClientStreamWriter instance.
-func NewClientStreamWriter(clientQueue queue.Queue, api api.SupernodeAPI, cfg *config.Config) *ClientStreamWriter {
+func NewClientStreamWriter(clientQueue, notifyQueue queue.Queue, api api.SupernodeAPI, cfg *config.Config) *ClientStreamWriter {
 	pr, pw := io.Pipe()
 	limitReader := limitreader.NewLimitReader(pr, int64(cfg.LocalLimit), cfg.Md5 != "")
 	clientWriter := &ClientStreamWriter{
 		clientQueue: clientQueue,
+		notifyQueue: notifyQueue,
 		pipeReader:  pr,
 		pipeWriter:  pw,
 		limitReader: limitReader,
@@ -139,7 +145,7 @@ func (csw *ClientStreamWriter) write(piece *Piece) error {
 
 	err := csw.writePieceToPipe(piece)
 	if err == nil {
-		go sendSuccessPiece(csw.api, csw.cfg.RV.Cid, piece, time.Since(startTime))
+		go sendSuccessPiece(csw.api, csw.cfg.RV.Cid, piece, time.Since(startTime), csw.notifyQueue)
 	}
 	return err
 }

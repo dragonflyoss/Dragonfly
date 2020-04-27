@@ -84,6 +84,9 @@ type P2PDownloader struct {
 	// And clientWriter will poll values from this queue constantly and write to disk.
 	clientQueue queue.Queue
 
+	// notifyQueue maintains a queue for notifying p2p downloader to pull next download tasks.
+	notifyQueue queue.Queue
+
 	// clientFilePath is the full path of the temp file.
 	clientFilePath string
 	// serviceFilePath is the full path of the temp service file which
@@ -150,6 +153,7 @@ func (p2p *P2PDownloader) init() {
 	p2p.queue.Put(NewPieceSimple(p2p.taskID, p2p.node, constants.TaskStatusStart, p2p.RegisterResult.CDNSource))
 
 	p2p.clientQueue = queue.NewQueue(p2p.cfg.ClientQueueSize)
+	p2p.notifyQueue = queue.NewQueue(p2p.cfg.ClientQueueSize)
 
 	p2p.clientFilePath = helper.GetTaskFile(p2p.taskFileName, p2p.cfg.RV.DataDir)
 	p2p.serviceFilePath = helper.GetServiceFile(p2p.taskFileName, p2p.cfg.RV.DataDir)
@@ -165,7 +169,9 @@ func (p2p *P2PDownloader) Run(ctx context.Context) error {
 	if p2p.streamMode {
 		return fmt.Errorf("streamMode enabled, should be disable")
 	}
-	clientWriter := NewClientWriter(p2p.clientFilePath, p2p.serviceFilePath, p2p.clientQueue, p2p.API, p2p.cfg, p2p.RegisterResult.CDNSource)
+	clientWriter := NewClientWriter(p2p.clientFilePath, p2p.serviceFilePath,
+		p2p.clientQueue, p2p.notifyQueue,
+		p2p.API, p2p.cfg, p2p.RegisterResult.CDNSource)
 	return p2p.run(ctx, clientWriter)
 }
 
@@ -174,7 +180,7 @@ func (p2p *P2PDownloader) RunStream(ctx context.Context) (io.Reader, error) {
 	if !p2p.streamMode {
 		return nil, fmt.Errorf("streamMode disable, should be enabled")
 	}
-	clientStreamWriter := NewClientStreamWriter(p2p.clientQueue, p2p.API, p2p.cfg)
+	clientStreamWriter := NewClientStreamWriter(p2p.clientQueue, p2p.notifyQueue, p2p.API, p2p.cfg)
 	go func() {
 		err := p2p.run(ctx, clientStreamWriter)
 		if err != nil {
@@ -280,14 +286,10 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 			break
 		}
 
-		sleepTime := time.Duration(rand.Intn(p2p.maxTimeout-p2p.minTimeout)+p2p.minTimeout) * time.Millisecond
-		logrus.Infof("pull piece task(%+v) result:%s and sleep %.3fs", item, res, sleepTime.Seconds())
-		time.Sleep(sleepTime)
-
-		// gradually increase the sleep time, up to [800-1600]
-		if p2p.minTimeout < 800 {
-			p2p.minTimeout *= 2
-			p2p.maxTimeout *= 2
+		actual, expected := p2p.sleepInterval()
+		if expected > actual || logrus.IsLevelEnabled(logrus.DebugLevel) {
+			logrus.Infof("pull piece task(%+v) result:%s and sleep actual:%.3fs expected:%.3fs",
+				item, res, actual.Seconds(), expected.Seconds())
 		}
 	}
 
@@ -312,6 +314,23 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 	item.TaskID = registerRes.TaskID
 	printer.Println("migrated to node:" + item.SuperNode)
 	return p2p.pullPieceTask(item)
+}
+
+// sleepInterval sleep for a while to wait for next pulling piece task until
+// receiving a notification which indicating that all the previous works have
+// been completed.
+func (p2p *P2PDownloader) sleepInterval() (actual, expected time.Duration) {
+	expected = time.Duration(rand.Intn(p2p.maxTimeout-p2p.minTimeout)+p2p.minTimeout) * time.Millisecond
+	start := time.Now()
+	p2p.notifyQueue.PollTimeout(expected)
+	actual = time.Now().Sub(start)
+
+	// gradually increase the sleep time, up to [800-1600]
+	if p2p.minTimeout < 800 {
+		p2p.minTimeout *= 2
+		p2p.maxTimeout *= 2
+	}
+	return actual, expected
 }
 
 // getPullRate gets download rate limit dynamically.
