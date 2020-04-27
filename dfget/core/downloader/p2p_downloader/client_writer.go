@@ -58,6 +58,11 @@ type ClientWriter struct {
 	// The downloader will put the piece into this queue after it downloaded a piece successfully.
 	// And clientWriter will poll values from this queue constantly and write to disk.
 	clientQueue queue.Queue
+
+	// notifyQueue sends a notification when all operation about a piece have
+	// been completed successfully.
+	notifyQueue queue.Queue
+
 	// finish indicates whether the task written is completed.
 	finish chan struct{}
 
@@ -95,9 +100,11 @@ type ClientWriter struct {
 
 // NewClientWriter creates and initialize a ClientWriter instance.
 func NewClientWriter(clientFilePath, serviceFilePath string,
-	clientQueue queue.Queue, api api.SupernodeAPI, cfg *config.Config, cdnSource apiTypes.CdnSource) PieceWriter {
+	clientQueue, notifyQueue queue.Queue,
+	api api.SupernodeAPI, cfg *config.Config, cdnSource apiTypes.CdnSource) PieceWriter {
 	clientWriter := &ClientWriter{
 		clientQueue:     clientQueue,
+		notifyQueue:     notifyQueue,
 		clientFilePath:  clientFilePath,
 		serviceFilePath: serviceFilePath,
 		api:             api,
@@ -219,7 +226,7 @@ func (cw *ClientWriter) write(piece *Piece) error {
 	cw.pieceIndex++
 	err := writePieceToFile(piece, cw.serviceFile, cw.cdnSource)
 	if err == nil {
-		go sendSuccessPiece(cw.api, cw.cfg.RV.Cid, piece, time.Since(startTime))
+		go sendSuccessPiece(cw.api, cw.cfg.RV.Cid, piece, time.Since(startTime), cw.notifyQueue)
 	}
 	return err
 }
@@ -247,7 +254,7 @@ func startSyncWriter(q queue.Queue) queue.Queue {
 	return nil
 }
 
-func sendSuccessPiece(api api.SupernodeAPI, cid string, piece *Piece, cost time.Duration) {
+func sendSuccessPiece(api api.SupernodeAPI, cid string, piece *Piece, cost time.Duration, notifyQueue queue.Queue) {
 	reportPieceRequest := &types.ReportPieceRequest{
 		TaskID:     piece.TaskID,
 		Cid:        cid,
@@ -265,6 +272,9 @@ func sendSuccessPiece(api api.SupernodeAPI, cid string, piece *Piece, cost time.
 
 		_, err := api.ReportPiece(piece.SuperNode, reportPieceRequest)
 		if err == nil {
+			if notifyQueue != nil {
+				notifyQueue.Put("success")
+			}
 			if retry > 0 {
 				logrus.Warnf("success to report piece with request(%+v) after retrying (%d) times", reportPieceRequest, retry)
 			}
