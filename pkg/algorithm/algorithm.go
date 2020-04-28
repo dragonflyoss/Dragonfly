@@ -27,8 +27,14 @@ func GCDSlice(s []int) int {
 	if length == 1 {
 		return s[0]
 	}
-
-	return GCD(s[length-1], GCDSlice(s[:length-1]))
+	commonDivisor := s[0]
+	for i := 1; i < length; i++ {
+		if commonDivisor == 1 {
+			return commonDivisor
+		}
+		commonDivisor = GCD(commonDivisor, s[i])
+	}
+	return commonDivisor
 }
 
 // GCD returns the greatest common divisor of x and y.
