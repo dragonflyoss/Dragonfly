@@ -261,7 +261,7 @@ type BaseProperties struct {
 
 	// max number of seed node of one object
 	// default: 64
-	MaxSeedPerObject  int `yaml:"maxSeedPerObject"`
+	MaxSeedPerObject int `yaml:"maxSeedPerObject"`
 
 	// CleanRatio is the ratio to clean the disk and it is based on 10.
 	// It means the value of CleanRatio should be [1-10].

@@ -18,13 +18,14 @@ package gc
 
 import (
 	"context"
+
 	"github.com/sirupsen/logrus"
 )
 
 func (gcm *Manager) gcSeedTaskPeers(ctx context.Context) {
-	peerIds := gcm.seedTaskMgr.ScanDownPeers(ctx)
-	logrus.Infof("gc peers %v", peerIds)
-	for _, peerId := range peerIds {
-		gcm.seedTaskMgr.DeRegisterPeer(ctx, peerId)
+	peerIDs := gcm.seedTaskMgr.ScanDownPeers(ctx)
+	logrus.Infof("gc peers %v", peerIDs)
+	for _, peerID := range peerIDs {
+		gcm.seedTaskMgr.DeRegisterPeer(ctx, peerID)
 	}
 }

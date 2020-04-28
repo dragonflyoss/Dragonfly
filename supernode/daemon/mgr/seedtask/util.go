@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package seed_task
+package seedtask
 
 import (
 	"sync"
@@ -66,7 +66,7 @@ func (s *idSet) listWithLimit(maxNumber int) []string {
 		}
 		id, _ := k.(string)
 		result = append(result, id)
-		i += 1
+		i++
 	}
 	s.lock.RLock()
 	defer s.lock.RUnlock()
@@ -78,7 +78,7 @@ func (s *idSet) list() []string {
 	return s.listWithLimit(0)
 }
 
-func newIdSet() *idSet {
+func newIDSet() *idSet {
 	return &idSet{
 		set:  make(map[string]bool),
 		lock: new(sync.RWMutex),
