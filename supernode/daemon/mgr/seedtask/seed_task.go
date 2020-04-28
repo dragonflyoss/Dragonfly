@@ -14,60 +14,63 @@
  * limitations under the License.
  */
 
-package seed_task
+package seedtask
 
 import (
 	"sync"
-	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"time"
+
+	"github.com/dragonflyoss/Dragonfly/apis/types"
 )
 
 type P2pInfo struct {
-	peerId   string
+	peerID   string
 	PeerInfo *types.PeerInfo
 	hbTime   int64
-	taskIds  *idSet // seed tasks
+	taskIDs  *idSet // seed tasks
 }
 
-func (p2p *P2pInfo) Load() int { return p2p.taskIds.size() }
+func (p2p *P2pInfo) Load() int { return p2p.taskIDs.size() }
 
-func (p2p *P2pInfo) addTask(id string) { p2p.taskIds.add(id) }
+func (p2p *P2pInfo) addTask(id string) { p2p.taskIDs.add(id) }
 
-func (p2p *P2pInfo) deleteTask(id string) { p2p.taskIds.delete(id) }
+func (p2p *P2pInfo) deleteTask(id string) { p2p.taskIDs.delete(id) }
 
-func (p2p *P2pInfo) hasTask(id string) bool { return p2p.taskIds.has(id) }
+func (p2p *P2pInfo) hasTask(id string) bool { return p2p.taskIDs.has(id) }
 
 func (p2p *P2pInfo) update() { p2p.hbTime = time.Now().Unix() }
 
 // a tuple of TaskInfo and P2pInfo
-type SeedTaskInfo struct {
+type SeedInfo struct {
 	RequestPath string
 	TaskInfo    *types.TaskInfo
 	P2pInfo     *P2pInfo
 }
 
 // point to a real-time task
-type SeedTaskMap struct {
-	taskId     string
-	lock       *sync.RWMutex
+type SeedMap struct {
+	/* seed task id */
+	taskID string
+	lock   *sync.RWMutex
+	/* latest access time */
 	accessTime int64
-	tasks      []*SeedTaskInfo
-	availTasks int
-	scheduler  seedScheduler
+	/* store all task-peer info */
+	tasks []*SeedInfo
+	/* seed schedule method */
+	scheduler seedScheduler
 }
 
-func newSeedTaskMap(taskId string, maxTaskPeers int) *SeedTaskMap {
-	return &SeedTaskMap{
-		taskId:     taskId,
-		tasks:      make([]*SeedTaskInfo, maxTaskPeers),
+func newSeedTaskMap(taskID string, maxTaskPeers int) *SeedMap {
+	return &SeedMap{
+		taskID:     taskID,
+		tasks:      make([]*SeedInfo, maxTaskPeers),
 		lock:       new(sync.RWMutex),
-		availTasks: 0,
 		accessTime: -1,
 		scheduler:  &defaultScheduler{},
 	}
 }
 
-func (taskMap *SeedTaskMap) tryAddNewTask(p2pInfo *P2pInfo, taskRequest *types.TaskCreateRequest) bool {
+func (taskMap *SeedMap) tryAddNewTask(p2pInfo *P2pInfo, taskRequest *types.TaskCreateRequest) bool {
 	taskMap.lock.Lock()
 	defer taskMap.lock.Unlock()
 
@@ -88,18 +91,18 @@ func (taskMap *SeedTaskMap) tryAddNewTask(p2pInfo *P2pInfo, taskRequest *types.T
 	}
 	return taskMap.scheduler.Schedule(
 		taskMap.tasks,
-		&SeedTaskInfo{
+		&SeedInfo{
 			RequestPath: taskRequest.Path,
 			TaskInfo:    newTaskInfo,
 			P2pInfo:     p2pInfo,
 		})
 }
 
-func (taskMap *SeedTaskMap) listTasks() []*SeedTaskInfo {
+func (taskMap *SeedMap) listTasks() []*SeedInfo {
 	taskMap.lock.RLock()
 	defer taskMap.lock.RUnlock()
 
-	result := make([]*SeedTaskInfo, 0)
+	result := make([]*SeedInfo, 0)
 	for _, v := range taskMap.tasks {
 		if v == nil {
 			continue
@@ -110,14 +113,14 @@ func (taskMap *SeedTaskMap) listTasks() []*SeedTaskInfo {
 	return result
 }
 
-func (taskMap *SeedTaskMap) update() {
+func (taskMap *SeedMap) update() {
 	unixNow := time.Now().Unix()
 	if unixNow > taskMap.accessTime {
 		taskMap.accessTime = unixNow
 	}
 }
 
-func (taskMap *SeedTaskMap) remove(id string) bool {
+func (taskMap *SeedMap) remove(id string) bool {
 	taskMap.lock.Lock()
 	defer taskMap.lock.Unlock()
 
@@ -125,20 +128,19 @@ func (taskMap *SeedTaskMap) remove(id string) bool {
 	left := len(taskMap.tasks)
 	for i < len(taskMap.tasks) {
 		if taskMap.tasks[i] == nil {
-			left -= 1
-		} else if taskMap.tasks[i].P2pInfo.peerId == id {
-			taskMap.tasks[i].P2pInfo.deleteTask(taskMap.taskId)
+			left--
+		} else if taskMap.tasks[i].P2pInfo.peerID == id {
+			taskMap.tasks[i].P2pInfo.deleteTask(taskMap.taskID)
 			taskMap.tasks[i] = nil
-			left -= 1
-			taskMap.availTasks -= 1
+			left--
 		}
-		i += 1
+		i++
 	}
 
 	return left == 0
 }
 
-func (taskMap *SeedTaskMap) removeAllPeers() {
+func (taskMap *SeedMap) removeAllPeers() {
 	taskMap.lock.Lock()
 	defer taskMap.lock.Unlock()
 
@@ -149,5 +151,4 @@ func (taskMap *SeedTaskMap) removeAllPeers() {
 		taskMap.tasks[idx] = nil
 		task.P2pInfo.deleteTask(task.TaskInfo.ID)
 	}
-	taskMap.availTasks = 0
 }

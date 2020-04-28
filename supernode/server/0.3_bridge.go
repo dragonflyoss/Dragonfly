@@ -18,9 +18,9 @@ package server
 
 import (
 	"context"
-	"strconv"
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/go-openapi/strfmt"
 	"github.com/gorilla/schema"
@@ -29,11 +29,11 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/constants"
+	"github.com/dragonflyoss/Dragonfly/pkg/digest"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/rangeutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
-	"github.com/dragonflyoss/Dragonfly/pkg/digest"
 )
 
 // RegisterResponseData is the data when registering supernode successfully.
@@ -279,7 +279,7 @@ func (s *Server) reportServiceDown(ctx context.Context, rw http.ResponseWriter, 
 	taskID := params.Get("taskId")
 	cID := params.Get("cid")
 
-	if req.Header.Get("X-report-resource") != "" {
+	if s.seedTaskMgr.IsSeedTask(ctx, req) {
 		err := s.seedTaskMgr.DeRegisterTask(ctx, cID, taskID)
 		if err != nil {
 			return err
@@ -373,8 +373,8 @@ func (s *Server) fetchP2PNetworkInfo(ctx context.Context, rw http.ResponseWriter
 	}
 	nodes := make(map[string]*types.Node)
 	for _, url := range request.Urls[start:end] {
-		taskId := digest.Sha256(url)
-		tasksInfo, err := s.seedTaskMgr.GetTasksInfo(ctx, taskId)
+		taskID := digest.Sha256(url)
+		tasksInfo, err := s.seedTaskMgr.GetTasksInfo(ctx, taskID)
 		if err != nil {
 			continue
 		}

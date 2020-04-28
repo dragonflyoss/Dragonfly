@@ -37,9 +37,9 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
 	"github.com/dragonflyoss/Dragonfly/version"
 
+	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/seedtask"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
-	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/seed_task"
 )
 
 var dfgetLogger *logrus.Logger
@@ -108,7 +108,7 @@ func New(cfg *config.Config, logger *logrus.Logger, register prometheus.Register
 		return nil, err
 	}
 
-	seedTaskMgr, err := seed_task.NewManager(cfg)
+	seedTaskMgr, err := seedtask.NewManager(cfg)
 	if err != nil {
 		return nil, err
 	}

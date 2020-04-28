@@ -18,26 +18,26 @@ package mgr
 
 import (
 	"context"
-	"github.com/dragonflyoss/Dragonfly/apis/types"
-	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/seed_task"
 	"net/http"
+
+	"github.com/dragonflyoss/Dragonfly/apis/types"
+	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/seedtask"
 )
 
 type SeedTaskMgr interface {
+	Register(ctx context.Context, request *types.TaskRegisterRequest) (*seedtask.TaskRegistryResponce, error)
 
-	Register(ctx context.Context, request *types.TaskRegisterRequest) (*seed_task.TaskRegistryResponce, error)
+	GetTasksInfo(ctx context.Context, taskID string) ([]*seedtask.SeedInfo, error)
 
-	GetTasksInfo(ctx context.Context, taskId string) ([]*seed_task.SeedTaskInfo, error)
+	DeRegisterTask(ctx context.Context, peerID, taskID string) error
 
-	DeRegisterTask(ctx context.Context, peerId, taskId string) error
+	DeRegisterPeer(ctx context.Context, peerID string) error
 
-	DeRegisterPeer(ctx context.Context, peerId string) error
+	EvictTask(ctx context.Context, taskID string) error
 
-	EvictTask(ctx context.Context, taskId string) error
+	HasTasks(ctx context.Context, taskID string) bool
 
-	HasTasks(ctx context.Context, taskId string) bool
-
-	ReportPeerHealth(ctx context.Context, peerId string) (*types.HeartBeatResponse, error)
+	ReportPeerHealth(ctx context.Context, peerID string) (*types.HeartBeatResponse, error)
 
 	ScanDownPeers(ctx context.Context) []string
 

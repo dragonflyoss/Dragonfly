@@ -14,47 +14,48 @@
  * limitations under the License.
  */
 
-package seed_task
+package seedtask
 
 import "github.com/sirupsen/logrus"
 
 type seedScheduler interface {
 	// try to schedule a new seed
-	Schedule(nowTasks []*SeedTaskInfo, newTask *SeedTaskInfo) bool
+	Schedule(nowTasks []*SeedInfo, newTask *SeedInfo) bool
 }
 
 type defaultScheduler struct{}
 
-func (scheduler *defaultScheduler) Schedule(nowTasks []*SeedTaskInfo, newTask *SeedTaskInfo) bool {
+func (scheduler *defaultScheduler) Schedule(nowTasks []*SeedInfo, newTask *SeedInfo) bool {
 	busyPeer := newTask.P2pInfo
 	newTaskInfo := newTask.TaskInfo
 	pos := -1
 	idx := 0
 	for idx < len(nowTasks) {
 		if nowTasks[idx] == nil {
+			/* number of seed < MaxSeedPerObj */
 			if busyPeer != nil {
 				busyPeer = nil
 				pos = idx
 			}
-			idx += 1
+			idx++
 			continue
 		}
 		p2pInfo := nowTasks[idx].P2pInfo
-		if p2pInfo != nil && p2pInfo.peerId == newTask.P2pInfo.peerId {
+		if p2pInfo != nil && p2pInfo.peerID == newTask.P2pInfo.peerID {
 			// Hardly run here
 			// This peer already have this task
-			logrus.Warnf("peer %s registry same taskid %s twice", p2pInfo.peerId, newTaskInfo.ID)
+			logrus.Warnf("peer %s registry same taskid %s twice", p2pInfo.peerID, newTaskInfo.ID)
 			return false
 		}
 		if p2pInfo.Load() < newTask.P2pInfo.Load()+3 {
-			idx += 1
+			idx++
 			continue
 		}
 		if busyPeer != nil && p2pInfo.Load() > busyPeer.Load() {
 			busyPeer = p2pInfo
 			pos = idx
 		}
-		idx += 1
+		idx++
 	}
 	if pos >= 0 {
 		nowTasks[pos] = newTask
@@ -63,8 +64,8 @@ func (scheduler *defaultScheduler) Schedule(nowTasks []*SeedTaskInfo, newTask *S
 	if busyPeer != nil && busyPeer != newTask.P2pInfo {
 		logrus.Infof("seed %s: peer %s up, peer %s down",
 			newTask.TaskInfo.TaskURL,
-			newTask.P2pInfo.peerId,
-			busyPeer.peerId)
+			newTask.P2pInfo.peerID,
+			busyPeer.peerID)
 		busyPeer.deleteTask(newTaskInfo.ID)
 	}
 
