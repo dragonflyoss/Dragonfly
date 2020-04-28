@@ -152,7 +152,7 @@ func ParseNodesSlice(value []string) ([]*NodeWeight, error) {
 	for _, v := range nodeWeightSlice {
 		result = append(result, &NodeWeight{
 			Node:   v.Node,
-			Weight: (v.Weight / gcdNumber),
+			Weight: v.Weight / gcdNumber,
 		})
 	}
 

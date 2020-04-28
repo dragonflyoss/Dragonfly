@@ -53,6 +53,8 @@ func (suit *AlgorithmSuite) TestGCDSlice() {
 		slice  []int
 		result int
 	}{
+		{nil, 1},
+		{[]int{2}, 2},
 		{[]int{2, 2, 4}, 2},
 		{[]int{5, 10, 25}, 5},
 		{[]int{1, 3, 5}, 1},
