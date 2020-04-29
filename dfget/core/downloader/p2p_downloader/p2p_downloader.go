@@ -363,7 +363,7 @@ func (p2p *P2PDownloader) startTask(data *types.PullPieceTaskResponseContinueDat
 		rateLimiter: p2p.rateLimiter,
 		downloadAPI: api.NewDownloadAPI(),
 		headers:     p2p.headers,
-		cdnDource:   p2p.RegisterResult.CDNSource,
+		cdnSource:   p2p.RegisterResult.CDNSource,
 		fileLength:  p2p.RegisterResult.FileLength,
 	}
 	if err := powerClient.Run(); err != nil && powerClient.ClientError() != nil {
