@@ -78,7 +78,7 @@ type PowerClient struct {
 
 	clientError *types.ClientErrorRequest
 
-	cdnDource  apiTypes.CdnSource
+	cdnSource  apiTypes.CdnSource
 	fileLength int64
 }
 
@@ -174,7 +174,7 @@ func (pc *PowerClient) downloadPiece() (content *bytes.Buffer, e error) {
 func (pc *PowerClient) createDownloadRequest() *api.DownloadRequest {
 	pieceRange := pc.pieceTask.Range
 	headers := netutils.ConvertHeaders(pc.headers)
-	if pc.cdnDource == apiTypes.CdnSourceSource {
+	if pc.cdnSource == apiTypes.CdnSourceSource {
 		if pc.fileLength > 0 {
 			pieceRange = wipeOutOfRange(pc.pieceTask.Range, pc.fileLength)
 		}
@@ -195,7 +195,7 @@ func (pc *PowerClient) createDownloadRequest() *api.DownloadRequest {
 
 func (pc *PowerClient) successPiece(content *bytes.Buffer) *Piece {
 	piece := NewPieceContent(pc.taskID, pc.node, pc.pieceTask.Cid, pc.pieceTask.Range,
-		constants.ResultSemiSuc, constants.TaskStatusRunning, content, pc.cdnDource)
+		constants.ResultSemiSuc, constants.TaskStatusRunning, content, pc.cdnSource)
 	piece.PieceSize = pc.pieceTask.PieceSize
 	piece.PieceNum = pc.pieceTask.PieceNum
 	return piece
@@ -203,7 +203,7 @@ func (pc *PowerClient) successPiece(content *bytes.Buffer) *Piece {
 
 func (pc *PowerClient) failPiece() *Piece {
 	return NewPiece(pc.taskID, pc.node, pc.pieceTask.Cid, pc.pieceTask.Range,
-		constants.ResultFail, constants.TaskStatusRunning, pc.cdnDource)
+		constants.ResultFail, constants.TaskStatusRunning, pc.cdnSource)
 }
 
 func (pc *PowerClient) initFileNotExistError() {
