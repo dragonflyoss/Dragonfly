@@ -207,6 +207,7 @@ func (proxy *Proxy) mirrorRegistry(w http.ResponseWriter, r *http.Request) {
 	reverseProxy := httputil.NewSingleHostReverseProxy(proxy.registry.Remote.URL)
 	t, err := transport.New(
 		transport.WithDownloader(proxy.downloadFactory()),
+		transport.WithStreamDownloader(proxy.streamDownloadFactory()),
 		transport.WithTLS(proxy.registry.TLSConfig()),
 		transport.WithCondition(proxy.shouldUseDfgetForMirror),
 	)
@@ -268,6 +269,7 @@ func (proxy *Proxy) handleHTTP(w http.ResponseWriter, req *http.Request) {
 
 func (proxy *Proxy) roundTripper(tlsConfig *tls.Config) http.RoundTripper {
 	rt, _ := transport.New(
+		transport.WithDownloader(proxy.downloadFactory()),
 		transport.WithStreamDownloader(proxy.streamDownloadFactory()),
 		transport.WithTLS(tlsConfig),
 		transport.WithCondition(proxy.shouldUseDfget),
