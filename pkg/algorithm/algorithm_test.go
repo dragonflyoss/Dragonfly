@@ -17,6 +17,7 @@
 package algorithm
 
 import (
+	"math/rand"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -64,5 +65,28 @@ func (suit *AlgorithmSuite) TestGCDSlice() {
 	for _, v := range cases {
 		result := GCDSlice(v.slice)
 		suit.Equal(v.result, result)
+	}
+}
+
+func (suit *AlgorithmSuite) TestContainsString() {
+	suit.Equal(ContainsString(nil, "x"), false)
+	suit.Equal(ContainsString([]string{"x", "y"}, "x"), true)
+	suit.Equal(ContainsString([]string{"x", "y"}, "xx"), false)
+}
+
+func (suit *AlgorithmSuite) TestShuffle() {
+	// Check that Shuffle allows n=0 and n=1, but that swap is never called for them.
+	rand.Seed(1)
+	for n := 0; n <= 1; n++ {
+		Shuffle(n, func(i, j int) {
+			suit.Failf("swap called", "n=%d i=%d j=%d", n, i, j)
+		})
+	}
+
+	// Check that Shuffle calls swap n-1 times when n >= 2.
+	for n := 2; n <= 100; n++ {
+		isRun := 0
+		Shuffle(n, func(i, j int) { isRun++ })
+		suit.Equal(isRun, n-1)
 	}
 }
