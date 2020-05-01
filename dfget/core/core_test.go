@@ -33,7 +33,7 @@ import (
 	. "github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/algorithm"
 
 	"github.com/go-check/check"
 	"github.com/valyala/fasthttp"
@@ -114,8 +114,8 @@ func (s *CoreTestSuite) TestAdjustSupernodeList(c *check.C) {
 	for _, v := range cases {
 		nodes := adjustSupernodeList(v)
 		for _, n := range v {
-			c.Assert(util.ContainsString(nodes[:len(v)], n), check.Equals, true)
-			c.Assert(util.ContainsString(nodes[len(v):], n), check.Equals, true)
+			c.Assert(algorithm.ContainsString(nodes[:len(v)], n), check.Equals, true)
+			c.Assert(algorithm.ContainsString(nodes[len(v):], n), check.Equals, true)
 		}
 	}
 }

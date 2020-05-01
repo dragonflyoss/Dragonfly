@@ -34,7 +34,7 @@ import (
 	p2pDown "github.com/dragonflyoss/Dragonfly/dfget/core/downloader/p2p_downloader"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
-	"github.com/dragonflyoss/Dragonfly/dfget/util"
+	"github.com/dragonflyoss/Dragonfly/pkg/algorithm"
 	"github.com/dragonflyoss/Dragonfly/pkg/constants"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
@@ -282,7 +282,7 @@ func adjustSupernodeList(nodes []string) []string {
 	case 1:
 		return append(nodes, nodes[0])
 	default:
-		util.Shuffle(nodesLen, func(i, j int) {
+		algorithm.Shuffle(nodesLen, func(i, j int) {
 			nodes[i], nodes[j] = nodes[j], nodes[i]
 		})
 		return append(nodes, nodes...)
