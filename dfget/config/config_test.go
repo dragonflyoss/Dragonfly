@@ -104,7 +104,9 @@ func (suite *ConfigSuite) TestAssertConfig(c *check.C) {
 		{clog: clog, url: "htt://a", checkFunc: errortypes.IsInvalidValue},
 		{clog: clog, url: "htt://a.b.com", checkFunc: errortypes.IsInvalidValue},
 		{clog: clog, url: "http://a.b.com", output: "/tmp/output", checkFunc: errortypes.IsNilError},
+		{clog: clog, url: "http://a.b.com", output: "./root", checkFunc: errortypes.IsNilError},
 		{clog: clog, url: "http://a.b.com", output: "/root", checkFunc: errortypes.IsInvalidValue},
+		{clog: clog, url: "http://a.b.com", output: "/", checkFunc: errortypes.IsInvalidValue},
 	}
 
 	var f = func() (err error) {
@@ -139,6 +141,7 @@ func (suite *ConfigSuite) TestCheckOutput(c *check.C) {
 		{"", "zj.test", j("zj.test")},
 		{"", "/tmp", ""},
 		{"", "/tmp/a/b/c/d/e/zj.test", "/tmp/a/b/c/d/e/zj.test"},
+		{"", "/", ""},
 	}
 
 	if cfg.User != "root" {
