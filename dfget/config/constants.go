@@ -120,7 +120,8 @@ const (
 	ServerAliveTime        = 5 * time.Minute
 	DefaultDownloadTimeout = 5 * time.Minute
 
-	DefaultSupernodePort = 8002
+	DefaultSupernodeSchema = "http"
+	DefaultSupernodePort   = 8002
 )
 
 /* errors code */
