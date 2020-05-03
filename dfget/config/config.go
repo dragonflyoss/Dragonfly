@@ -304,7 +304,7 @@ func checkOutput(cfg *Config) error {
 	for dir := cfg.Output; !stringutils.IsEmptyStr(dir); dir = filepath.Dir(dir) {
 		if err := syscall.Access(dir, syscall.O_RDWR); err == nil {
 			break
-		} else if os.IsPermission(err) {
+		} else if os.IsPermission(err) || dir == "/" {
 			return fmt.Errorf("user[%s] path[%s] %v", cfg.User, cfg.Output, err)
 		}
 	}
