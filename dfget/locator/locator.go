@@ -16,6 +16,10 @@
 
 package locator
 
+import (
+	"fmt"
+)
+
 // SupernodeLocator defines the way how to get available supernodes.
 // Developers can implement their own locator more flexibly , not just get the
 // supernode list from configuration or CLI.
@@ -73,6 +77,10 @@ type Supernode struct {
 	Weight    int
 	GroupName string
 	Metrics   *SupernodeMetrics
+}
+
+func (s *Supernode) String() string {
+	return fmt.Sprintf("%s:%d", s.IP, s.Port)
 }
 
 // SupernodeMetrics holds metrics used for the locator to choose supernode.

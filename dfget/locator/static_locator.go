@@ -17,14 +17,13 @@
 package locator
 
 import (
+	"fmt"
 	"sync/atomic"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/pkg/algorithm"
 	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
 )
-
-const staticLocatorGroupName = "config"
 
 var _ SupernodeLocator = &StaticLocator{}
 
@@ -39,7 +38,7 @@ type StaticLocator struct {
 
 // NewStaticLocator constructs StaticLocator which uses the nodes passed from
 // configuration or CLI.
-func NewStaticLocator(nodes []*config.NodeWeight) *StaticLocator {
+func NewStaticLocator(groupName string, nodes []*config.NodeWeight) *StaticLocator {
 	locator := &StaticLocator{
 		idx: -1,
 	}
@@ -47,7 +46,7 @@ func NewStaticLocator(nodes []*config.NodeWeight) *StaticLocator {
 		return locator
 	}
 	group := &SupernodeGroup{
-		Name: staticLocatorGroupName,
+		Name: groupName,
 	}
 	for _, node := range nodes {
 		ip, port := netutils.GetIPAndPortFromNode(node.Node, config.DefaultSupernodePort)
@@ -59,7 +58,7 @@ func NewStaticLocator(nodes []*config.NodeWeight) *StaticLocator {
 			IP:        ip,
 			Port:      port,
 			Weight:    node.Weight,
-			GroupName: staticLocatorGroupName,
+			GroupName: groupName,
 		}
 		for i := 0; i < supernode.Weight; i++ {
 			group.Nodes = append(group.Nodes, supernode)
@@ -72,12 +71,12 @@ func NewStaticLocator(nodes []*config.NodeWeight) *StaticLocator {
 
 // NewStaticLocatorFromStr constructs StaticLocator from string list.
 // The format of nodes is: ip:port=weight
-func NewStaticLocatorFromStr(nodes []string) (*StaticLocator, error) {
+func NewStaticLocatorFromStr(groupName string, nodes []string) (*StaticLocator, error) {
 	nodeWeight, err := config.ParseNodesSlice(nodes)
 	if err != nil {
 		return nil, err
 	}
-	return NewStaticLocator(nodeWeight), nil
+	return NewStaticLocator(groupName, nodeWeight), nil
 }
 
 // ----------------------------------------------------------------------------
@@ -126,6 +125,20 @@ func (s *StaticLocator) Report(node string, metrics *SupernodeMetrics) {
 func (s *StaticLocator) Refresh() bool {
 	atomic.StoreInt32(&s.idx, -1)
 	return true
+}
+
+func (s *StaticLocator) String() string {
+	idx := s.load()
+	if s.Group == nil || idx >= len(s.Group.Nodes) {
+		return "empty"
+	}
+
+	nodes := make([]string, len(s.Group.Nodes)-idx-1)
+	for i := idx + 1; i < len(s.Group.Nodes); i++ {
+		n := s.Group.GetNode(i)
+		nodes[i-idx-1] = fmt.Sprintf("%s:%d=%d", n.IP, n.Port, n.Weight)
+	}
+	return s.Group.Name + ":" + fmt.Sprintf("%v", nodes)
 }
 
 // ----------------------------------------------------------------------------

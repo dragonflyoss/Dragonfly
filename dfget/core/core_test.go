@@ -33,6 +33,7 @@ import (
 	. "github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
+	"github.com/dragonflyoss/Dragonfly/dfget/locator"
 	"github.com/dragonflyoss/Dragonfly/pkg/algorithm"
 
 	"github.com/go-check/check"
@@ -68,7 +69,7 @@ func (s *CoreTestSuite) TestPrepare(c *check.C) {
 	cfg := s.createConfig(buf)
 	cfg.Output = filepath.Join(s.workHome, "test.output")
 
-	err := prepare(cfg)
+	err := prepare(cfg, nil)
 	fmt.Printf("%s\nerror:%v", buf.String(), err)
 }
 
@@ -76,10 +77,12 @@ func (s *CoreTestSuite) TestRegisterToSupernode(c *check.C) {
 	cfg := s.createConfig(&bytes.Buffer{})
 	m := new(MockSupernodeAPI)
 	m.RegisterFunc = CreateRegisterFunc()
-	register := regist.NewSupernodeRegister(cfg, m)
+	nodeStr := "127.0.0.1:8002"
+	snLocator, _ := locator.NewStaticLocatorFromStr("test", []string{nodeStr})
+	register := regist.NewSupernodeRegister(cfg, m, snLocator)
 
 	var f = func(bc int, errIsNil bool, data *regist.RegisterResult) {
-		res, e := registerToSuperNode(cfg, register)
+		res, e := registerToSuperNode(cfg, register, snLocator)
 		c.Assert(res == nil, check.Equals, data == nil)
 		c.Assert(e == nil, check.Equals, errIsNil)
 		c.Assert(cfg.BackSourceReason, check.Equals, bc)
@@ -88,6 +91,8 @@ func (s *CoreTestSuite) TestRegisterToSupernode(c *check.C) {
 		}
 	}
 
+	tmpGroup := snLocator.Group
+	snLocator.Group = nil
 	f(config.BackSourceReasonNodeEmpty, true, nil)
 
 	cfg.Pattern = config.PatternSource
@@ -95,11 +100,12 @@ func (s *CoreTestSuite) TestRegisterToSupernode(c *check.C) {
 
 	uploader.SetupPeerServerExecutor(nil)
 	cfg.Pattern = config.PatternP2P
-	cfg.Nodes = []string{"x"}
+	snLocator.Group = tmpGroup
+	snLocator.Refresh()
 	cfg.URL = "http://x.com"
 	f(config.BackSourceReasonRegisterFail, true, nil)
 
-	cfg.Nodes = []string{"x"}
+	snLocator.Refresh()
 	cfg.URL = "http://taobao.com"
 	cfg.BackSourceReason = config.BackSourceReasonNone
 }
@@ -131,11 +137,13 @@ func (s *CoreTestSuite) TestCheckConnectSupernode(c *check.C) {
 	s.createConfig(buf)
 
 	nodes := []string{host}
-	ip := checkConnectSupernode(nodes)
+	l, _ := locator.NewStaticLocatorFromStr("test", nodes)
+	ip := checkConnectSupernode(l)
 	c.Assert(ip, check.Equals, "127.0.0.1")
 
 	buf.Reset()
-	ip = checkConnectSupernode([]string{"127.0.0.2"})
+	l, _ = locator.NewStaticLocatorFromStr("test", []string{"127.0.0.2"})
+	ip = checkConnectSupernode(l)
 	c.Assert(strings.Index(buf.String(), "Connect") > 0, check.Equals, true)
 	c.Assert(ip, check.Equals, "")
 }
