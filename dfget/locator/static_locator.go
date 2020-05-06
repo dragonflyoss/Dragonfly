@@ -17,20 +17,16 @@
 package locator
 
 import (
-	"math/rand"
 	"sync/atomic"
-	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
 	"github.com/dragonflyoss/Dragonfly/pkg/algorithm"
 	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
 )
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
 const staticLocatorGroupName = "config"
+
+var _ SupernodeLocator = &StaticLocator{}
 
 // StaticLocator uses the nodes passed from configuration or CLI.
 type StaticLocator struct {
@@ -44,7 +40,9 @@ type StaticLocator struct {
 // NewStaticLocator constructs StaticLocator which uses the nodes passed from
 // configuration or CLI.
 func NewStaticLocator(nodes []*config.NodeWeight) *StaticLocator {
-	locator := &StaticLocator{}
+	locator := &StaticLocator{
+		idx: -1,
+	}
 	if len(nodes) == 0 {
 		return locator
 	}
@@ -113,13 +111,20 @@ func (s *StaticLocator) All() []*SupernodeGroup {
 	return []*SupernodeGroup{s.Group}
 }
 
+func (s *StaticLocator) Size() int {
+	if s.Group == nil {
+		return 0
+	}
+	return len(s.Group.Nodes)
+}
+
 func (s *StaticLocator) Report(node string, metrics *SupernodeMetrics) {
 	// unnecessary to implement this method
 	return
 }
 
 func (s *StaticLocator) Refresh() bool {
-	atomic.StoreInt32(&s.idx, 0)
+	atomic.StoreInt32(&s.idx, -1)
 	return true
 }
 

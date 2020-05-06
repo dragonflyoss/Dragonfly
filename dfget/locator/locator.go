@@ -21,6 +21,7 @@ package locator
 // supernode list from configuration or CLI.
 type SupernodeLocator interface {
 	// Get returns the current selected supernode, it should be idempotent.
+	// It should return nil before first calling the Next method.
 	Get() *Supernode
 
 	// Next chooses the next available supernode for retrying or other
@@ -32,6 +33,9 @@ type SupernodeLocator interface {
 
 	// All returns all the supernodes.
 	All() []*SupernodeGroup
+
+	// Size returns the number of all supernodes.
+	Size() int
 
 	// Report records the metrics of the current supernode in order to choose a
 	// more appropriate supernode for the next time if necessary.

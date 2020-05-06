@@ -24,7 +24,6 @@ import (
 	"github.com/go-check/check"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
-	"github.com/dragonflyoss/Dragonfly/pkg/algorithm"
 )
 
 func Test(t *testing.T) {
@@ -42,12 +41,12 @@ func (s *StaticLocatorTestSuite) Test_NewStaticLocator(c *check.C) {
 	rand.Seed(0)
 	l := NewStaticLocator(nil)
 	c.Assert(l, check.NotNil)
-	c.Assert(l.idx, check.Equals, int32(0))
+	c.Assert(l.idx, check.Equals, int32(-1))
 	c.Assert(l.Group, check.IsNil)
 
 	l = NewStaticLocator([]*config.NodeWeight{})
 	c.Assert(l, check.NotNil)
-	c.Assert(l.idx, check.Equals, int32(0))
+	c.Assert(l.idx, check.Equals, int32(-1))
 	c.Assert(l.Group, check.IsNil)
 
 	l = NewStaticLocator([]*config.NodeWeight{
@@ -86,6 +85,7 @@ func (s *StaticLocatorTestSuite) Test_NewStaticLocatorFromString(c *check.C) {
 			c.Assert(err, check.IsNil)
 			c.Assert(l, check.NotNil)
 			c.Assert(len(l.Group.Nodes), check.Equals, v.expectedLen)
+			c.Assert(l.Size(), check.Equals, v.expectedLen)
 		}
 	}
 }
@@ -100,6 +100,9 @@ func (s *StaticLocatorTestSuite) Test_Get(c *check.C) {
 	for _, v := range cases {
 		l, _ := NewStaticLocatorFromStr(strings.Split(v.nodes, ","))
 		sn := l.Get()
+		c.Assert(sn, check.IsNil)
+		l.Next()
+		sn = l.Get()
 		if v.expected == nil {
 			c.Assert(sn, check.IsNil)
 		} else {
@@ -110,23 +113,23 @@ func (s *StaticLocatorTestSuite) Test_Get(c *check.C) {
 }
 
 func (s *StaticLocatorTestSuite) Test_Next(c *check.C) {
-	rand.Seed(0)
-	idx := []int{0, 1, 2}
-	algorithm.Shuffle(len(idx), func(i int, j int) {
-		idx[i], idx[j] = idx[j], idx[i]
-	})
 	cases := []struct {
 		nodes       string
 		cnt         int
 		expectedIdx int
 	}{
-		{"a:80=1", 0, 0},
-		{"a:80=1", 1, -1},
-		{"a:80=1,a:81=2", 2, idx[2]},
+		{"a:80=1", 0, -1},
+		{"a:80=1", 1, 0},
+		{"a:80=1,a:81=2", 2, 1},
+		// the weight of a:81 is 2, it will be chosen twice
+		{"a:80=1,a:81=2", 3, 2},
+		// return nil because 4 is greater than the length
+		{"a:80=1,a:81=2", 4, -1},
 	}
+
+	var sn *Supernode
 	for _, v := range cases {
 		l, _ := NewStaticLocatorFromStr(strings.Split(v.nodes, ","))
-		sn := l.Get()
 		for i := 0; i < v.cnt; i++ {
 			sn = l.Next()
 		}
@@ -159,10 +162,10 @@ func (s *StaticLocatorTestSuite) Test_All(c *check.C) {
 func (s *StaticLocatorTestSuite) Test_Refresh(c *check.C) {
 	l, _ := NewStaticLocatorFromStr([]string{"a:80=1"})
 	_ = l.Next()
-	c.Assert(l.load(), check.Equals, 1)
+	c.Assert(l.load(), check.Equals, 0)
 
 	l.Refresh()
-	c.Assert(l.load(), check.Equals, 0)
+	c.Assert(l.load(), check.Equals, -1)
 }
 
 func create(ip string, port, weight int) *Supernode {

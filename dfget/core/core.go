@@ -47,10 +47,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
 // Start function creates a new task and starts it to download file.
 func Start(cfg *config.Config) *errortypes.DfError {
 	var (

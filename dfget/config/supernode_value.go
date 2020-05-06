@@ -51,7 +51,7 @@ func NewSupernodesValue(p *[]*NodeWeight, val []*NodeWeight) *SupernodesValue {
 func GetDefaultSupernodesValue() []*NodeWeight {
 	var result = make([]*NodeWeight, 0)
 	result = append(result, &NodeWeight{
-		Node:   fmt.Sprintf("%s:%d", DefaultNode, DefaultSupernodePort),
+		Node:   fmt.Sprintf("%s:%d", DefaultSupernodeIP, DefaultSupernodePort),
 		Weight: DefaultSupernodeWeight,
 	})
 	return result

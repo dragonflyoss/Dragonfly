@@ -49,7 +49,6 @@ const (
 const (
 	DefaultYamlConfigFile  = "/etc/dragonfly/dfget.yml"
 	DefaultIniConfigFile   = "/etc/dragonfly.conf"
-	DefaultNode            = "127.0.0.1"
 	DefaultLocalLimit      = 20 * rate.MB
 	DefaultMinRate         = 64 * rate.KB
 	DefaultClientQueueSize = 6
@@ -121,6 +120,7 @@ const (
 	DefaultDownloadTimeout = 5 * time.Minute
 
 	DefaultSupernodeSchema = "http"
+	DefaultSupernodeIP     = "127.0.0.1"
 	DefaultSupernodePort   = 8002
 )
 
