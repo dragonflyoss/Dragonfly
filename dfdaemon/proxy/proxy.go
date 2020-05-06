@@ -403,7 +403,8 @@ func (proxy *Proxy) handleHTTPS(w http.ResponseWriter, r *http.Request) {
 	// We have to wait until the connection is closed
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	if err := http.Serve(&singleUseListener{&customCloseConn{sConn, wg.Done}}, rp); err != nil {
+	// NOTE: http.Serve always returns a non-nil error
+	if err := http.Serve(&singleUseListener{&customCloseConn{sConn, wg.Done}}, rp); err != errServerClosed && err != http.ErrServerClosed {
 		logrus.Errorf("failed to accept incoming HTTP connections: %v", err)
 	}
 	wg.Wait()
@@ -455,9 +456,13 @@ type singleUseListener struct {
 	c net.Conn
 }
 
+// errServerClosed is returned by the singleUseListener's Accept method
+// when it receives the subsequent calls after the first Accept call
+var errServerClosed = errors.New("singleUseListener: Server closed")
+
 func (l *singleUseListener) Accept() (net.Conn, error) {
 	if l.c == nil {
-		return nil, errors.New("closed")
+		return nil, errServerClosed
 	}
 	c := l.c
 	l.c = nil
