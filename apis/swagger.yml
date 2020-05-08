@@ -580,6 +580,10 @@ paths:
           description: "bad parameter"
           schema:
             $ref: '#/definitions/Error'
+        409:
+          description: "preheat task already exists"
+          schema:
+            $ref: '#/definitions/Error'
         500:
           $ref: "#/responses/500ErrorResponse"
 
@@ -621,6 +625,28 @@ paths:
           description: "no error"
           schema:
             $ref: "#/definitions/PreheatInfo"
+        404:
+          description: "no such preheat task"
+          schema:
+            $ref: "#/responses/404ErrorResponse"
+        500:
+          $ref: "#/responses/500ErrorResponse"
+
+    delete:
+      summary: "Delete a preheat task"
+      description: |
+        delete a preheat task
+      produces:
+        - "application/json"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: "ID of preheat task"
+          type: string
+      responses:
+        200:
+          description: "no error"
         404:
           description: "no such preheat task"
           schema:
@@ -1225,7 +1251,7 @@ definitions:
       taskId:
         type: "string"
         description: |
-            the taskID of the piece.
+          the taskID of the piece.
       srcCid:
         type: "string"
         description: |
@@ -1270,7 +1296,7 @@ definitions:
         description: |
           ID of preheat task.
       status:
-        type: "string"
+        $ref: "#/definitions/PreheatStatus"
         description: |
           The status of preheat task.
             WAITING -----> RUNNING -----> SUCCESS
@@ -1278,7 +1304,6 @@ definitions:
           The initial status of a created preheat task is WAITING.
           It's finished when a preheat task's status is FAILED or SUCCESS.
           A finished preheat task's information can be queried within 24 hours.
-        enum: ["WAITING", "RUNNING", "FAILED", "SUCCESS"]
       startTime:
         type: "string"
         format: "date-time"
@@ -1288,17 +1313,33 @@ definitions:
         format: "date-time"
         description: "the preheat task finish time"
 
+  PreheatStatus:
+    type: string
+    description: |
+      The status of preheat task.
+        WAITING -----> RUNNING -----> SUCCESS
+                                 |--> FAILED
+      The initial status of a created preheat task is WAITING.
+      It's finished when a preheat task's status is FAILED or SUCCESS.
+      A finished preheat task's information can be queried within 24 hours.
+    enum: ["WAITING", "RUNNING", "FAILED", "SUCCESS"]
+
   PreheatCreateRequest:
     type: "object"
     description: |
       Request option of creating a preheat task in supernode.
+    required:
+      - type
+      - url
     properties:
       type:
         type: "string"
+        enum: ["image", "file"]
         description: |
           this must be image or file
       url:
         type: "string"
+        minLength: 3
         description: "the image or file location"
       filter:
         type: "string"
@@ -1356,7 +1397,7 @@ definitions:
       status:
         type: "string"
         description: |
-            The status of Dfget download process.
+          The status of Dfget download process.
         enum: ["WAITING", "RUNNING", "FAILED", "SUCCESS"]
       peerID:
         type: "string"
