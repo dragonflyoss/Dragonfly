@@ -314,3 +314,11 @@ func (s *Server) reportPieceError(ctx context.Context, rw http.ResponseWriter, r
 	rw.WriteHeader(http.StatusOK)
 	return nil
 }
+
+func (s *Server) fetchP2PNetworkInfo(ctx context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
+	return EncodeResponse(rw, http.StatusOK, &types.NetworkInfoFetchResponse{})
+}
+
+func (s *Server) reportPeerHealth(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+	return EncodeResponse(rw, http.StatusOK, &types.HeartBeatResponse{})
+}
