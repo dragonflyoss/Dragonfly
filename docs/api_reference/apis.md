@@ -213,6 +213,7 @@ request to setup a peer-to-peer network immediately.
 |---|---|---|
 |**200**|no error|[PreheatCreateResponse](#preheatcreateresponse)|
 |**400**|bad parameter|[Error](#error)|
+|**409**|preheat task already exists|[Error](#error)|
 |**500**|An unexpected server error occurred.|[Error](#error)|
 
 
@@ -261,6 +262,38 @@ get detailed information of a preheat task in supernode.
 |HTTP Code|Description|Schema|
 |---|---|---|
 |**200**|no error|[PreheatInfo](#preheatinfo)|
+|**404**|no such preheat task|[4ErrorResponse](#4errorresponse)|
+|**500**|An unexpected server error occurred.|[Error](#error)|
+
+
+#### Produces
+
+* `application/json`
+
+
+<a name="api-v1-preheats-id-delete"></a>
+### Delete a preheat task
+```
+DELETE /api/v1/preheats/{id}
+```
+
+
+#### Description
+delete a preheat task
+
+
+#### Parameters
+
+|Type|Name|Description|Schema|
+|---|---|---|---|
+|**Path**|**id**  <br>*required*|ID of preheat task|string|
+
+
+#### Responses
+
+|HTTP Code|Description|Schema|
+|---|---|---|
+|**200**|no error|No Content|
 |**404**|no such preheat task|[4ErrorResponse](#4errorresponse)|
 |**500**|An unexpected server error occurred.|[Error](#error)|
 
@@ -572,7 +605,7 @@ And supernode could know if peer is alive in strem mode.
 
 |HTTP Code|Description|Schema|
 |---|---|---|
-|**200**|no error|[ResultInfo](#resultinfo)|
+|**200**|no error|[HeartBeatResponse](#heartbeatresponse)|
 |**500**|An unexpected server error occurred.|[Error](#error)|
 
 
@@ -858,6 +891,16 @@ The request is to report peer to supernode to keep alive.
 |**port**  <br>*optional*|when registering, dfget will setup one uploader process.<br>This one acts as a server for peer pulling tasks.<br>This port is which this server listens on.  <br>**Minimum value** : `15000`  <br>**Maximum value** : `65000`|integer (int32)|
 
 
+<a name="heartbeatresponse"></a>
+### HeartBeatResponse
+
+|Name|Description|Schema|
+|---|---|---|
+|**needRegister**  <br>*optional*|If peer do not register in supernode, set needRegister to be true, else set to be false.|boolean|
+|**seedTaskIDs**  <br>*optional*|The array of seed taskID which now are selected as seed for the peer. If peer have other seed file which<br>is not included in the array, these seed file should be weed out.|< string > array|
+|**version**  <br>*optional*|The version of supernode. If supernode restarts, version should be different, so dfdaemon could know<br>the restart of supernode.|string|
+
+
 <a name="networkinfofetchrequest"></a>
 ### NetworkInfoFetchRequest
 The request is to fetch p2p network info from supernode.
@@ -999,8 +1042,8 @@ Request option of creating a preheat task in supernode.
 |**filter**  <br>*optional*|URL may contains some changeful query parameters such as authentication parameters. Dragonfly will<br>filter these parameter via 'filter'. The usage of it is that different URL may generate the same<br>download taskID.|string|
 |**headers**  <br>*optional*|If there is any authentication step of the remote server, the headers should contains authenticated information.<br>Dragonfly will sent request taking the headers to remote server.|< string, string > map|
 |**identifier**  <br>*optional*|This field is used for generating new downloading taskID to identify different downloading task of remote URL.|string|
-|**type**  <br>*optional*|this must be image or file|string|
-|**url**  <br>*optional*|the image or file location|string|
+|**type**  <br>*required*|this must be image or file|enum (image, file)|
+|**url**  <br>*required*|the image or file location  <br>**Minimum length** : `3`|string|
 
 
 <a name="preheatcreateresponse"></a>
@@ -1024,7 +1067,19 @@ task because that an image may have more than one layer.
 |**ID**  <br>*optional*|ID of preheat task.|string|
 |**finishTime**  <br>*optional*|the preheat task finish time|string (date-time)|
 |**startTime**  <br>*optional*|the preheat task start time|string (date-time)|
-|**status**  <br>*optional*|The status of preheat task.<br>  WAITING -----> RUNNING -----> SUCCESS<br>                           \|--> FAILED<br>The initial status of a created preheat task is WAITING.<br>It's finished when a preheat task's status is FAILED or SUCCESS.<br>A finished preheat task's information can be queried within 24 hours.|enum (WAITING, RUNNING, FAILED, SUCCESS)|
+|**status**  <br>*optional*|The status of preheat task.<br>  WAITING -----> RUNNING -----> SUCCESS<br>                           \|--> FAILED<br>The initial status of a created preheat task is WAITING.<br>It's finished when a preheat task's status is FAILED or SUCCESS.<br>A finished preheat task's information can be queried within 24 hours.|[PreheatStatus](#preheatstatus)|
+
+
+<a name="preheatstatus"></a>
+### PreheatStatus
+The status of preheat task.
+  WAITING -----> RUNNING -----> SUCCESS
+                           |--> FAILED
+The initial status of a created preheat task is WAITING.
+It's finished when a preheat task's status is FAILED or SUCCESS.
+A finished preheat task's information can be queried within 24 hours.
+
+*Type* : enum (WAITING, RUNNING, FAILED, SUCCESS)
 
 
 <a name="resultinfo"></a>
