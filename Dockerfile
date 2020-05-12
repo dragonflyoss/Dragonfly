@@ -7,6 +7,7 @@ COPY . /go/src/github.com/dragonflyoss/Dragonfly
 
 # make build dfdaemon and dfget.
 # write the resulting executable to the dir /opt/dragonfly/df-client.
+ARG GOPROXY
 RUN make build-client && make install-client
 
 FROM alpine:3.8

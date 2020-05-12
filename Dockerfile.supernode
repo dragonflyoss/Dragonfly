@@ -7,6 +7,7 @@ COPY . /go/src/github.com/dragonflyoss/Dragonfly
 
 # go build supernode.
 # write the resulting executable to the dir /opt/dragonfly/df-supernode.
+ARG GOPROXY
 RUN make build-supernode && make install-supernode
 
 FROM dragonflyoss/nginx:apline
