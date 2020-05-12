@@ -9,11 +9,11 @@ curDir=$(cd "$(dirname "$0")" && pwd)
 cd "${curDir}/../" || return
 
 docker-build::build-dfclient(){
-    docker build -t dfclient:"${DF_VERSION}" -f Dockerfile .
+    docker build --build-arg GOPROXY="${GOPROXY}" -t dfclient:"${DF_VERSION}" -f Dockerfile .
 }
 
 docker-build::build-supernode(){
-    docker build -t supernode:"${DF_VERSION}" -f Dockerfile.supernode .
+    docker build --build-arg GOPROXY="${GOPROXY}" -t supernode:"${DF_VERSION}" -f Dockerfile.supernode .
 }
 
 main() {
