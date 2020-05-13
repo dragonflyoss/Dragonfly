@@ -91,8 +91,9 @@ type Properties struct {
 
 // NewProperties creates a new properties with default values.
 func NewProperties() *Properties {
+	// don't set Supernodes as default value, the SupernodeLocator will
+	// do this in a better way.
 	return &Properties{
-		Supernodes:      GetDefaultSupernodesValue(),
 		LocalLimit:      DefaultLocalLimit,
 		MinRate:         DefaultMinRate,
 		ClientQueueSize: DefaultClientQueueSize,

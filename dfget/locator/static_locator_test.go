@@ -37,25 +37,27 @@ func init() {
 	check.Suite(&StaticLocatorTestSuite{})
 }
 
+var testGroupName = "test-group"
+
 func (s *StaticLocatorTestSuite) Test_NewStaticLocator(c *check.C) {
 	rand.Seed(0)
-	l := NewStaticLocator(nil)
+	l := NewStaticLocator(testGroupName, nil)
 	c.Assert(l, check.NotNil)
 	c.Assert(l.idx, check.Equals, int32(-1))
 	c.Assert(l.Group, check.IsNil)
 
-	l = NewStaticLocator([]*config.NodeWeight{})
+	l = NewStaticLocator(testGroupName, []*config.NodeWeight{})
 	c.Assert(l, check.NotNil)
 	c.Assert(l.idx, check.Equals, int32(-1))
 	c.Assert(l.Group, check.IsNil)
 
-	l = NewStaticLocator([]*config.NodeWeight{
+	l = NewStaticLocator(testGroupName, []*config.NodeWeight{
 		{Node: "a:80", Weight: 1},
 		{Node: "a:81", Weight: 2},
 	})
 	c.Assert(l, check.NotNil)
 	c.Assert(l.Group, check.DeepEquals, &SupernodeGroup{
-		Name: staticLocatorGroupName,
+		Name: testGroupName,
 		Nodes: shuffleNodes([]*Supernode{
 			create("a", 80, 1),
 			create("a", 81, 2),
@@ -77,7 +79,7 @@ func (s *StaticLocatorTestSuite) Test_NewStaticLocatorFromString(c *check.C) {
 	}
 
 	for _, v := range cases {
-		l, err := NewStaticLocatorFromStr(strings.Split(v.nodes, ","))
+		l, err := NewStaticLocatorFromStr(testGroupName, strings.Split(v.nodes, ","))
 		if v.err {
 			c.Assert(err, check.NotNil)
 			c.Assert(l, check.IsNil)
@@ -98,7 +100,7 @@ func (s *StaticLocatorTestSuite) Test_Get(c *check.C) {
 		{"a:80=1", create("a", 80, 1)},
 	}
 	for _, v := range cases {
-		l, _ := NewStaticLocatorFromStr(strings.Split(v.nodes, ","))
+		l := createLocator(strings.Split(v.nodes, ",")...)
 		sn := l.Get()
 		c.Assert(sn, check.IsNil)
 		l.Next()
@@ -129,7 +131,7 @@ func (s *StaticLocatorTestSuite) Test_Next(c *check.C) {
 
 	var sn *Supernode
 	for _, v := range cases {
-		l, _ := NewStaticLocatorFromStr(strings.Split(v.nodes, ","))
+		l := createLocator(strings.Split(v.nodes, ",")...)
 		for i := 0; i < v.cnt; i++ {
 			sn = l.Next()
 		}
@@ -143,8 +145,8 @@ func (s *StaticLocatorTestSuite) Test_Next(c *check.C) {
 }
 
 func (s *StaticLocatorTestSuite) Test_GetGroup(c *check.C) {
-	l, _ := NewStaticLocatorFromStr([]string{"a:80=1"})
-	group := l.GetGroup(staticLocatorGroupName)
+	l := createLocator("a:80=1")
+	group := l.GetGroup(testGroupName)
 	c.Assert(group, check.NotNil)
 	c.Assert(group.Nodes[0], check.DeepEquals, create("a", 80, 1))
 
@@ -153,14 +155,14 @@ func (s *StaticLocatorTestSuite) Test_GetGroup(c *check.C) {
 }
 
 func (s *StaticLocatorTestSuite) Test_All(c *check.C) {
-	l, _ := NewStaticLocatorFromStr([]string{"a:80=1"})
+	l := createLocator("a:80=1")
 	groups := l.All()
 	c.Assert(groups, check.NotNil)
 	c.Assert(len(groups), check.Equals, 1)
 }
 
 func (s *StaticLocatorTestSuite) Test_Refresh(c *check.C) {
-	l, _ := NewStaticLocatorFromStr([]string{"a:80=1"})
+	l := createLocator("a:80=1")
 	_ = l.Next()
 	c.Assert(l.load(), check.Equals, 0)
 
@@ -174,6 +176,10 @@ func create(ip string, port, weight int) *Supernode {
 		IP:        ip,
 		Port:      port,
 		Weight:    weight,
-		GroupName: staticLocatorGroupName,
+		GroupName: testGroupName,
 	}
+}
+func createLocator(nodes ...string) *StaticLocator {
+	l, _ := NewStaticLocatorFromStr(testGroupName, nodes)
+	return l
 }

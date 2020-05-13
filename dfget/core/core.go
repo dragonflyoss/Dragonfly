@@ -34,6 +34,7 @@ import (
 	p2pDown "github.com/dragonflyoss/Dragonfly/dfget/core/downloader/p2p_downloader"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/regist"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/uploader"
+	"github.com/dragonflyoss/Dragonfly/dfget/locator"
 	"github.com/dragonflyoss/Dragonfly/pkg/algorithm"
 	"github.com/dragonflyoss/Dragonfly/pkg/constants"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
@@ -50,24 +51,25 @@ import (
 // Start function creates a new task and starts it to download file.
 func Start(cfg *config.Config) *errortypes.DfError {
 	var (
-		supernodeAPI = api.NewSupernodeAPI()
-		register     = regist.NewSupernodeRegister(cfg, supernodeAPI)
-		err          error
-		result       *regist.RegisterResult
+		supernodeAPI     = api.NewSupernodeAPI()
+		supernodeLocator = locator.CreateLocator(cfg)
+		register         = regist.NewSupernodeRegister(cfg, supernodeAPI, supernodeLocator)
+		err              error
+		result           *regist.RegisterResult
 	)
 
 	printer.Println(fmt.Sprintf("--%s--  %s",
 		cfg.StartTime.Format(config.DefaultTimestampFormat), cfg.URL))
 
-	if err = prepare(cfg); err != nil {
+	if err = prepare(cfg, supernodeLocator); err != nil {
 		return errortypes.New(config.CodePrepareError, err.Error())
 	}
 
-	if result, err = registerToSuperNode(cfg, register); err != nil {
+	if result, err = registerToSuperNode(cfg, register, supernodeLocator); err != nil {
 		return errortypes.New(config.CodeRegisterError, err.Error())
 	}
 
-	if err = downloadFile(cfg, supernodeAPI, register, result); err != nil {
+	if err = downloadFile(cfg, supernodeAPI, supernodeLocator, register, result); err != nil {
 		return errortypes.New(config.CodeDownloadError, err.Error())
 	}
 
@@ -75,7 +77,7 @@ func Start(cfg *config.Config) *errortypes.DfError {
 }
 
 // prepare the RV-related information and create the corresponding files.
-func prepare(cfg *config.Config) (err error) {
+func prepare(cfg *config.Config, locator locator.SupernodeLocator) (err error) {
 	printer.Printf("dfget version:%s", version.DFGetVersion)
 	printer.Printf("workspace:%s", cfg.WorkHome)
 	printer.Printf("sign:%s", cfg.Sign)
@@ -104,9 +106,8 @@ func prepare(cfg *config.Config) (err error) {
 	}
 	rv.DataDir = cfg.RV.SystemDataDir
 
-	cfg.Nodes = adjustSupernodeList(cfg.Nodes)
 	if stringutils.IsEmptyStr(rv.LocalIP) {
-		rv.LocalIP = checkConnectSupernode(cfg.Nodes)
+		rv.LocalIP = checkConnectSupernode(locator)
 	}
 	rv.Cid = getCid(rv.LocalIP, cfg.Sign)
 	rv.TaskFileName = getTaskFileName(rv.RealTarget, cfg.Sign)
@@ -124,7 +125,7 @@ func launchPeerServer(cfg *config.Config) error {
 	return err
 }
 
-func registerToSuperNode(cfg *config.Config, register regist.SupernodeRegister) (
+func registerToSuperNode(cfg *config.Config, register regist.SupernodeRegister, supernodeLocator locator.SupernodeLocator) (
 	*regist.RegisterResult, error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -137,7 +138,7 @@ func registerToSuperNode(cfg *config.Config, register regist.SupernodeRegister) 
 		panic("user specified")
 	}
 
-	if len(cfg.Nodes) == 0 {
+	if supernodeLocator == nil || supernodeLocator.Size() == 0 {
 		cfg.BackSourceReason = config.BackSourceReasonNodeEmpty
 		panic("supernode empty")
 	}
@@ -162,7 +163,7 @@ func registerToSuperNode(cfg *config.Config, register regist.SupernodeRegister) 
 	return result, nil
 }
 
-func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
+func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI, locator locator.SupernodeLocator,
 	register regist.SupernodeRegister, result *regist.RegisterResult) error {
 	timeout := calculateTimeout(cfg)
 
@@ -180,7 +181,7 @@ func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 	downloadTime := time.Since(cfg.StartTime).Seconds()
 	// upload metrics to supernode only if pattern is p2p or cdn and result is not nil
 	if cfg.Pattern != config.PatternSource && result != nil {
-		reportMetrics(cfg, supernodeAPI, downloadTime, result.TaskID, success)
+		reportMetrics(cfg, supernodeAPI, locator, downloadTime, result.TaskID, success)
 	}
 
 	if success {
@@ -285,21 +286,26 @@ func adjustSupernodeList(nodes []string) []string {
 	}
 }
 
-func checkConnectSupernode(nodes []string) (localIP string) {
+func checkConnectSupernode(locator locator.SupernodeLocator) (localIP string) {
 	var (
 		e error
 	)
-	for _, n := range nodes {
-		ip, port := netutils.GetIPAndPortFromNode(n, config.DefaultSupernodePort)
-		if localIP, e = httputils.CheckConnect(ip, port, 1000); e == nil {
-			return localIP
+	if locator == nil {
+		return ""
+	}
+	for _, group := range locator.All() {
+		for _, n := range group.Nodes {
+			if localIP, e = httputils.CheckConnect(n.IP, n.Port, 1000); e == nil {
+				return localIP
+			}
+			logrus.Errorf("Connect to node:%s error: %v", n, e)
 		}
-		logrus.Errorf("Connect to node:%s error: %v", n, e)
 	}
 	return ""
 }
 
-func reportMetrics(cfg *config.Config, supernodeAPI api.SupernodeAPI, downloadTime float64, taskID string, success bool) {
+func reportMetrics(cfg *config.Config, supernodeAPI api.SupernodeAPI, locator locator.SupernodeLocator,
+	downloadTime float64, taskID string, success bool) {
 	req := &types.TaskMetricsRequest{
 		BacksourceReason: strconv.Itoa(cfg.BackSourceReason),
 		IP:               cfg.RV.LocalIP,
@@ -311,10 +317,16 @@ func reportMetrics(cfg *config.Config, supernodeAPI api.SupernodeAPI, downloadTi
 		Success:          success,
 		TaskID:           taskID,
 	}
-	for _, node := range cfg.Nodes {
-		resp, err := supernodeAPI.ReportMetrics(node, req)
+	node := locator.Get()
+	if node == nil {
+		return
+	}
+	nodeStr := node.String()
+	// retry twice
+	for i := 0; i < 2; i++ {
+		resp, err := supernodeAPI.ReportMetrics(nodeStr, req)
 		if err != nil {
-			logrus.Errorf("failed to report metrics to supernode %s: %v", node, err)
+			logrus.Errorf("failed to report metrics to supernode %s: %v", nodeStr, err)
 		}
 		if resp != nil && resp.IsSuccess() {
 			return
