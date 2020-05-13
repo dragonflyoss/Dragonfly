@@ -92,3 +92,32 @@ func (s *SupernodeConfigTestSuite) TestGetSuperCID(c *check.C) {
 
 	c.Assert(conf.GetSuperCID("taskID"), check.DeepEquals, "CIDPrefixtaskID")
 }
+
+func (s *SupernodeConfigTestSuite) TestIsSuperCID(c *check.C) {
+	conf := Config{
+		BaseProperties: &BaseProperties{cIDPrefix: "CIDPrefix"},
+	}
+
+	c.Assert(conf.IsSuperCID("CIDPrefixTest"), check.DeepEquals, true)
+	c.Assert(conf.IsSuperCID("Test"), check.DeepEquals, false)
+}
+
+func (s *SupernodeConfigTestSuite) TestGetSuperPID(c *check.C) {
+	conf := Config{
+		BaseProperties: &BaseProperties{superNodePID: "superNodePID"},
+	}
+
+	c.Assert(conf.GetSuperPID(), check.DeepEquals, "superNodePID")
+
+	conf.SetSuperPID("Test")
+	c.Assert(conf.GetSuperPID(), check.DeepEquals, "Test")
+}
+
+func (s *SupernodeConfigTestSuite) TestIsSuperPID(c *check.C) {
+	conf := Config{
+		BaseProperties: &BaseProperties{superNodePID: "superNodePID"},
+	}
+
+	c.Assert(conf.IsSuperPID("superNodePID"), check.DeepEquals, true)
+	c.Assert(conf.IsSuperPID("Test"), check.DeepEquals, false)
+}
