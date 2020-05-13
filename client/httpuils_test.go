@@ -23,31 +23,41 @@ import (
 
 func TestParseHost(t *testing.T) {
 	tests := []struct {
-		name   string
-		host   string
-		expect error
+		name     string
+		host     string
+		expected error
 	}{
 		{
-			name:   "http host",
-			host:   "http://github.com",
-			expect: nil,
+			name:     "tcp host",
+			host:     "tcp://github.com",
+			expected: nil,
 		},
 		{
-			name:   "https host",
-			host:   "https://github.com",
-			expect: nil,
+			name:     "unix host",
+			host:     "unix://github.com",
+			expected: nil,
 		},
 		{
-			name:   "not support url scheme",
-			host:   "wss://github.com",
-			expect: errors.New("not support url scheme wss"),
+			name:     "http host",
+			host:     "http://github.com",
+			expected: nil,
+		},
+		{
+			name:     "https host",
+			host:     "https://github.com",
+			expected: nil,
+		},
+		{
+			name:     "not support url scheme",
+			host:     "wss://github.com",
+			expected: errors.New("not support url scheme wss"),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			_, _, _, err := ParseHost(tt.host)
-			if (nil == err) != (nil == tt.expect) {
-				t.Errorf("expect: %v, got: %v\n", tt.expect, err)
+			if (nil == err) != (nil == tt.expected) {
+				t.Errorf("expected: %v, got: %v\n", tt.expected, err)
 			}
 		})
 	}

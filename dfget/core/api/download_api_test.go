@@ -36,6 +36,7 @@ func (s *DownloadAPITestSuite) TestGetRealRange(c *check.C) {
 		rangeValue string
 		expected   string
 	}{
+		{"", "0-1", ""},
 		{"0-1", "", "0-1"},
 		{"0-1", "1-100", "1-2"},
 		{"0-100", "1-100", "1-100"},
