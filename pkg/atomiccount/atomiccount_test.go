@@ -39,6 +39,9 @@ func (suite *AtomicCountUtilSuite) TestAdd(c *check.C) {
 
 	result := acount.Get()
 	c.Check(result, check.Equals, (int32)(12))
+
+	var nilAcount *AtomicInt
+	c.Check(nilAcount.Add(5), check.Equals, (int32)(0))
 }
 
 func (suite *AtomicCountUtilSuite) TestSet(c *check.C) {
@@ -49,4 +52,7 @@ func (suite *AtomicCountUtilSuite) TestSet(c *check.C) {
 	_ = acount.Set(1)
 	result := acount.Get()
 	c.Check(result, check.Equals, (int32)(1))
+
+	var nilAcount *AtomicInt
+	c.Check(nilAcount.Get(), check.Equals, (int32)(0))
 }
