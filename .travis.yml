@@ -2,6 +2,8 @@
 services:
   - docker
 sudo: false
+git:
+  depth: false
 language: go
 go:
   - 1.12.x
