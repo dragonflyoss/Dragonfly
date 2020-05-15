@@ -57,6 +57,22 @@ func NewBitMap(sizeOf64Bits uint32, allSetBit bool) (*BitMap, error) {
 	}, nil
 }
 
+// NewBitMapWithNumBits generates a BitMap.
+func NewBitMapWithNumBits(numberBits uint32, allSetBit bool) (*BitMap, error) {
+	sizeOf64Bits := uint32(numberBits / 64)
+	if (numberBits % 64) > 0 {
+		sizeOf64Bits++
+	}
+
+	bm, err := NewBitMap(sizeOf64Bits, allSetBit)
+	if err != nil {
+		return nil, err
+	}
+
+	bm.maxBitIndex = numberBits - 1
+	return bm, nil
+}
+
 // RestoreBitMap generate the BitMap by input bytes.
 func RestoreBitMap(data []byte) (*BitMap, error) {
 	if uint64(len(data)) > (sizeOf64BitsLimit << 3) {
