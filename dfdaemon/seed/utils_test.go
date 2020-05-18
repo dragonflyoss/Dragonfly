@@ -22,13 +22,17 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
+	"github.com/dragonflyoss/Dragonfly/pkg/ratelimiter"
 
 	"github.com/go-check/check"
+	"github.com/pborman/uuid"
 )
 
 func Test(t *testing.T) {
@@ -201,4 +205,40 @@ func (suite *SeedTestSuite) checkFileWithSeed(c *check.C, path string, fileLengt
 		suite.checkDataWithFileServer(c, path, start, end-start+1, obtainedData)
 		start = end + 1
 	}
+}
+
+func (suite *SeedTestSuite) checkSeedFile(c *check.C, path string, fileLength int64, seedName string, order uint32, perDownloadSize int64, wg *sync.WaitGroup) {
+	defer func() {
+		if wg != nil {
+			wg.Done()
+		}
+	}()
+
+	metaDir := filepath.Join(suite.cacheDir, seedName)
+	blockOrder := uint32(order)
+
+	sOpt := BaseOpt{
+		BaseDir: metaDir,
+		Info: BaseInfo{
+			URL:        fmt.Sprintf("http://%s/%s", suite.host, path),
+			TaskID:     uuid.New(),
+			FullLength: fileLength,
+			BlockOrder: blockOrder,
+		},
+	}
+
+	sd, err := NewSeed(sOpt, RateOpt{DownloadRateLimiter: ratelimiter.NewRateLimiter(0, 0)}, false)
+	c.Assert(err, check.IsNil)
+
+	finishCh, err := sd.Prefetch(perDownloadSize)
+	c.Assert(err, check.IsNil)
+
+	<-finishCh
+	rs, err := sd.GetPrefetchResult()
+	c.Assert(err, check.IsNil)
+	c.Assert(rs.Success, check.Equals, true)
+	c.Assert(rs.Err, check.IsNil)
+
+	c.Assert(sd.GetFullSize(), check.Equals, fileLength)
+	suite.checkFileWithSeed(c, path, fileLength, sd)
 }
