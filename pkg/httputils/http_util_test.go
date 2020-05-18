@@ -17,12 +17,15 @@
 package httputils
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -102,6 +105,20 @@ func (s *HTTPUtilTestSuite) TestHTTPStatusOk(c *check.C) {
 	for i := fasthttp.StatusContinue; i <= fasthttp.StatusNetworkAuthenticationRequired; i++ {
 		c.Assert(HTTPStatusOk(i), check.Equals, i == fasthttp.StatusOK)
 	}
+}
+
+func (s *HTTPUtilTestSuite) TestHttpGet(c *check.C) {
+	res, e := HTTPGetTimeout("http://"+s.host, nil, 0)
+	c.Assert(e, check.IsNil)
+	code := res.StatusCode
+	body, _ := ioutil.ReadAll(res.Body)
+	res.Body.Close()
+
+	checkOk(c, code, body, e, 0)
+
+	_, e = HTTPGetTimeout("http://"+s.host, nil, 20*time.Millisecond)
+	c.Assert(e, check.NotNil)
+	c.Assert(strings.Contains(e.Error(), context.DeadlineExceeded.Error()), check.Equals, true)
 }
 
 func (s *HTTPUtilTestSuite) TestParseQuery(c *check.C) {

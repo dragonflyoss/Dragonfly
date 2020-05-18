@@ -18,6 +18,7 @@ package httputils
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
@@ -52,6 +53,11 @@ const (
 	DefaultTimeout = 500 * time.Millisecond
 )
 
+var (
+	defaultBuiltInTransport  *http.Transport
+	defaultBuiltInHTTPClient *http.Client
+)
+
 // DefaultHTTPClient is the default implementation of SimpleHTTPClient.
 var DefaultHTTPClient SimpleHTTPClient = &defaultHTTPClient{}
 
@@ -84,6 +90,25 @@ func init() {
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
 	}
+
+	defaultBuiltInTransport = &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+
+	defaultBuiltInHTTPClient = &http.Client{
+		Transport: defaultBuiltInTransport,
+	}
+
+	RegisterProtocolOnTransport(defaultBuiltInTransport)
 }
 
 // ----------------------------------------------------------------------------
@@ -264,30 +289,35 @@ func HTTPWithHeaders(method, url string, headers map[string]string, timeout time
 		req.Header.Add(k, v)
 	}
 
-	// copy from http.DefaultTransport
-	transport := &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-			DualStack: true,
-		}).DialContext,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
+	if timeout > 0 {
+		timeoutCtx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		req = req.WithContext(timeoutCtx)
 	}
-	RegisterProtocolOnTransport(transport)
+
+	var c = defaultBuiltInHTTPClient
 
 	if tlsConfig != nil {
-		transport.TLSClientConfig = tlsConfig
-	}
+		// copy from http.DefaultTransport
+		transport := &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+				DualStack: true,
+			}).DialContext,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+		}
 
-	c := &http.Client{
-		Transport: transport,
-	}
-	if timeout > 0 {
-		c.Timeout = timeout
+		RegisterProtocolOnTransport(transport)
+		transport.TLSClientConfig = tlsConfig
+
+		c = &http.Client{
+			Transport: transport,
+		}
 	}
 
 	return c.Do(req)
