@@ -673,7 +673,7 @@ func (sd *seed) prefetch(ctx context.Context, perDownloadSize int64) error {
 
 	var err error
 	var try int
-	var maxTry int = 10
+	var maxTry = 10
 
 	for {
 		if try > maxTry {
