@@ -96,6 +96,11 @@ func (s *StaticLocator) Next() *Supernode {
 	return s.Group.GetNode(s.inc())
 }
 
+func (s *StaticLocator) Select(key interface{}) *Supernode {
+	// unnecessary to implement this method
+	return nil
+}
+
 func (s *StaticLocator) GetGroup(name string) *SupernodeGroup {
 	if s.Group == nil || s.Group.Name != name {
 		return nil

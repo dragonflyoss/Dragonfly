@@ -32,6 +32,10 @@ type SupernodeLocator interface {
 	// purpose. The current supernode should be set as this result.
 	Next() *Supernode
 
+	// Select chooses a supernode based on the giving key.
+	// It should not affect the result of method 'Get()'.
+	Select(key interface{}) *Supernode
+
 	// GetGroup returns the group with the giving name.
 	GetGroup(name string) *SupernodeGroup
 
