@@ -18,6 +18,8 @@ package seed
 
 import (
 	"time"
+
+	"github.com/dragonflyoss/Dragonfly/pkg/ratelimiter"
 )
 
 // BaseInfo describes the base info of seed.
@@ -53,4 +55,15 @@ type PreFetchResult struct {
 	Err     error
 	// if canceled, caller need not to do other.
 	Canceled bool
+}
+
+type BaseOpt struct {
+	BaseDir string
+	Info    BaseInfo
+
+	downPreFunc func(sd Seed)
+}
+
+type RateOpt struct {
+	DownloadRateLimiter *ratelimiter.RateLimiter
 }
