@@ -155,8 +155,8 @@ func (suite *SeedTestSuite) TestSeedSyncReadPerformance(c *check.C) {
 
 	wg := &sync.WaitGroup{}
 
-	// try to download in 10 goroutine
-	for i := 0; i < 10; i++ {
+	// try to download in 5 goroutine
+	for i := 0; i < 5; i++ {
 		rangeSize = 99 * 1023
 		wg.Add(1)
 		go func() {
