@@ -22,7 +22,14 @@ import (
 	"io"
 
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/downloader"
 )
+
+func init() {
+	downloader.Register("p2p", func(patternConfig config.PatternConfig, c config.Properties) downloader.Stream {
+		return NewClient(c.DFGetConfig())
+	})
+}
 
 type Client struct {
 }

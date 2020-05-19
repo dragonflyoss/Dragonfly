@@ -31,7 +31,6 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/downloader"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/downloader/dfget"
-	"github.com/dragonflyoss/Dragonfly/dfdaemon/downloader/p2p"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/transport"
 	"github.com/golang/groupcache/lru"
 	"github.com/pkg/errors"
@@ -145,9 +144,7 @@ func NewFromConfig(c config.Properties) (*Proxy, error) {
 		WithDownloaderFactory(func() downloader.Interface {
 			return dfget.NewGetter(c.DFGetConfig())
 		}),
-		WithStreamDownloaderFactory(func() downloader.Stream {
-			return p2p.NewClient(c.DFGetConfig())
-		}),
+		WithStreamDownloaderFactory(downloader.NewStreamFactory(c.Pattern, c.PatternConf, c)),
 		WithStreamMode(c.StreamMode),
 	}
 
@@ -201,6 +198,7 @@ type Proxy struct {
 	downloadFactory       downloader.Factory
 	streamDownloadFactory downloader.StreamFactory
 	streamMode            bool
+	protocolConf          []config.ProtocolConfig
 }
 
 func (proxy *Proxy) mirrorRegistry(w http.ResponseWriter, r *http.Request) {

@@ -203,6 +203,10 @@ func getConfigFromViper(cmd *cobra.Command, v *viper.Viper) (*config.Properties,
 		cfg.DFRepo = filepath.Join(cfg.WorkHome, "dfdaemon/data/")
 	}
 
+	if cfg.Pattern == "" {
+		cfg.Pattern = "p2p"
+	}
+
 	return &cfg, cfg.Validate()
 }
 
