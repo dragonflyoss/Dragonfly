@@ -18,10 +18,12 @@ package httputils
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -50,6 +52,14 @@ const (
 
 	// DefaultTimeout is the default timeout to check connect.
 	DefaultTimeout = 500 * time.Millisecond
+)
+
+var (
+	// DefaultBuiltInTransport is the transport for HTTPWithHeaders.
+	DefaultBuiltInTransport *http.Transport
+
+	// DefaultBuiltInHTTPClient is the http client for HTTPWithHeaders.
+	DefaultBuiltInHTTPClient *http.Client
 )
 
 // DefaultHTTPClient is the default implementation of SimpleHTTPClient.
@@ -84,6 +94,25 @@ func init() {
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
 	}
+
+	DefaultBuiltInTransport = &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+
+	DefaultBuiltInHTTPClient = &http.Client{
+		Transport: DefaultBuiltInTransport,
+	}
+
+	RegisterProtocolOnTransport(DefaultBuiltInTransport)
 }
 
 // ----------------------------------------------------------------------------
@@ -255,6 +284,10 @@ func HTTPGetWithTLS(url string, headers map[string]string, timeout time.Duration
 
 // HTTPWithHeaders sends an HTTP request with headers and specified method.
 func HTTPWithHeaders(method, url string, headers map[string]string, timeout time.Duration, tlsConfig *tls.Config) (*http.Response, error) {
+	var (
+		cancel func()
+	)
+
 	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
 		return nil, err
@@ -264,33 +297,49 @@ func HTTPWithHeaders(method, url string, headers map[string]string, timeout time
 		req.Header.Add(k, v)
 	}
 
-	// copy from http.DefaultTransport
-	transport := &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-			DualStack: true,
-		}).DialContext,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
+	if timeout > 0 {
+		timeoutCtx, cancelFunc := context.WithTimeout(context.Background(), timeout)
+		req = req.WithContext(timeoutCtx)
+		cancel = cancelFunc
 	}
-	RegisterProtocolOnTransport(transport)
+
+	var c = DefaultBuiltInHTTPClient
 
 	if tlsConfig != nil {
+		// copy from http.DefaultTransport
+		transport := &http.Transport{
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+				DualStack: true,
+			}).DialContext,
+			MaxIdleConns:          100,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+		}
+
+		RegisterProtocolOnTransport(transport)
 		transport.TLSClientConfig = tlsConfig
+
+		c = &http.Client{
+			Transport: transport,
+		}
 	}
 
-	c := &http.Client{
-		Transport: transport,
-	}
-	if timeout > 0 {
-		c.Timeout = timeout
+	res, err := c.Do(req)
+	if err != nil {
+		return nil, err
 	}
 
-	return c.Do(req)
+	if cancel == nil {
+		return res, nil
+	}
+
+	// do cancel() when close the body.
+	res.Body = newWithFuncReadCloser(res.Body, cancel)
+	return res, nil
 }
 
 // HTTPStatusOk reports whether the http response code is 200.
@@ -501,4 +550,23 @@ func RegisterProtocolOnTransport(tr *http.Transport) {
 
 func GetValidURLSchemas() string {
 	return validURLSchemas
+}
+
+func newWithFuncReadCloser(rc io.ReadCloser, f func()) io.ReadCloser {
+	return &withFuncReadCloser{
+		f:          f,
+		ReadCloser: rc,
+	}
+}
+
+type withFuncReadCloser struct {
+	f func()
+	io.ReadCloser
+}
+
+func (wrc *withFuncReadCloser) Close() error {
+	if wrc.f != nil {
+		wrc.f()
+	}
+	return wrc.ReadCloser.Close()
 }
