@@ -20,33 +20,13 @@ import (
 	"context"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/corev2/basic"
-
-	strfmt "github.com/go-openapi/strfmt"
 )
-
-// PeerInfo represents the target address which is provided the download data.
-type PeerInfo struct {
-	IP   strfmt.IPv4
-	Port int32
-	Path string
-	// ID represents the client ID of peer.
-	ID string
-}
-
-// SchedulerResult defines the result of schedule of range data.
-type SchedulePieceDataResult struct {
-	Off  int64
-	Size int64
-
-	// PeerInfos represents the schedule peers which to get the range data.
-	PeerInfos []*PeerInfo
-}
 
 // SchedulerResult defines the schedule result of request range.
 // For some implementation, developer could do more than one schedule for the same request range.
 type SchedulerResult interface {
 	// Result get the schedule result for range data which may not include all data of request range.
-	Result() []*SchedulePieceDataResult
+	Result() []*basic.SchedulePieceDataResult
 
 	// State gets the temporary states of this schedule which binds to range request.
 	State() ScheduleState
