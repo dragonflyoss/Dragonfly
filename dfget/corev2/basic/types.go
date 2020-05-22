@@ -20,11 +20,19 @@ import (
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 )
 
+// SchedulePeerInfo defines how to get resource from peer info.
+type SchedulePeerInfo struct {
+	// basic peer info
+	*types.PeerInfo
+	// Path represents the path to get resource from the peer.
+	Path string
+}
+
 // SchedulerResult defines the result of schedule of range data.
 type SchedulePieceDataResult struct {
 	Off  int64
 	Size int64
 
 	// PeerInfos represents the schedule peers which to get the range data.
-	PeerInfos []*types.PeerInfo
+	PeerInfos []*SchedulePeerInfo
 }
