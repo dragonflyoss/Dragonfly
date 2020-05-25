@@ -18,7 +18,10 @@ package protocol
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"io"
+	"sync"
 )
 
 // Metadata defines how to operate the metadata.
@@ -71,4 +74,52 @@ type ClientRegister interface {
 
 	// GetClientBuilder gets the ClientBuilder by protocol.
 	GetClientBuilder(protocol string) (ClientBuilder, error)
+}
+
+var (
+	ErrNotImplementation   = errors.New("not implementation")
+	ErrProtocolNotRegister = errors.New("protocol not register")
+	register               = &defaultClientRegister{
+		registerMap: make(map[string]ClientBuilder),
+	}
+)
+
+// RegisterProtocol registers pair <protocol, ClientBuilder> to defaultClientRegister.
+func RegisterProtocol(protocol string, builder ClientBuilder) {
+	register.RegisterProtocol(protocol, builder)
+}
+
+// GetClientBuilder get ClientBuilder by protocol in defaultClientRegister.
+func GetClientBuilder(protocol string) (ClientBuilder, error) {
+	return register.GetClientBuilder(protocol)
+}
+
+// defaultClientRegister is an implementation of ClientRegister.
+type defaultClientRegister struct {
+	sync.RWMutex
+	registerMap map[string]ClientBuilder
+}
+
+func (cliRegister *defaultClientRegister) RegisterProtocol(protocol string, builder ClientBuilder) {
+	cliRegister.Lock()
+	defer cliRegister.Unlock()
+
+	_, ok := cliRegister.registerMap[protocol]
+	if ok {
+		panic(fmt.Sprintf("protocol %s has been register", protocol))
+	}
+
+	cliRegister.registerMap[protocol] = builder
+}
+
+func (cliRegister *defaultClientRegister) GetClientBuilder(protocol string) (ClientBuilder, error) {
+	cliRegister.RLock()
+	defer cliRegister.RUnlock()
+
+	builder, ok := cliRegister.registerMap[protocol]
+	if !ok {
+		return nil, ErrProtocolNotRegister
+	}
+
+	return builder, nil
 }
