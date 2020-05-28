@@ -17,15 +17,24 @@
 package clientwriter
 
 import (
+	"context"
+	"io"
+
+	"github.com/dragonflyoss/Dragonfly/dfget/corev2/basic"
 	"github.com/dragonflyoss/Dragonfly/pkg/protocol"
 )
 
-// ClientStream defines how to organize distribution data for range request.
+// ClientWriter defines how to organize distribution data for range request.
 // An instance binds to a range request.
 // It may receive a lot of distribution data.
-// Developer could add a io.WriteCloser in constructor of instance, and the ClientWriter will
+// Developer could call Run() to start the loop in which ClientWriter will
 // write request data to io.Writer.
 type ClientWriter interface {
 	// WriteData writes the distribution data from other peers, it may be called more times.
 	PutData(data protocol.DistributionData) error
+
+	// Run starts the loop and ClientWriter will write request data to wc.
+	// Run should only be called once.
+	// caller gets the result by Notify.
+	Run(ctx context.Context, wc io.WriteCloser) (basic.Notify, error)
 }

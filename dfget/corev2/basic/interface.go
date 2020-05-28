@@ -32,3 +32,19 @@ type RangeRequest interface {
 	// Extra gets the extra info.
 	Extra() interface{}
 }
+
+// NotifyResult defines the result of notify.
+type NotifyResult interface {
+	Success() bool
+	Error() error
+	Data() interface{}
+}
+
+// Notify defines how to notify asynchronous call if finished and get the result.
+type Notify interface {
+	// Done returns a channel that's closed when work done.
+	Done() <-chan struct{}
+
+	// Result returns the NotifyResult and only valid after Done channel is closed.
+	Result() NotifyResult
+}
