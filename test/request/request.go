@@ -89,7 +89,7 @@ func DecodeBody(obj interface{}, body io.ReadCloser) error {
 	return json.NewDecoder(body).Decode(obj)
 }
 
-// Delete sends request to the default pouchd server with custom request options.
+// Delete sends request to the default supernode server with custom request options.
 func Delete(endpoint string, opts ...Option) (*http.Response, error) {
 	apiClient, err := newAPIClient(environment.DragonflyAddress, environment.TLSConfig)
 	if err != nil {
@@ -104,7 +104,7 @@ func Delete(endpoint string, opts ...Option) (*http.Response, error) {
 	return apiClient.HTTPCli.Do(req)
 }
 
-// Debug sends request to the default pouchd server to get the debug info.
+// Debug sends request to the default supernode server to get the debug info.
 //
 // NOTE: without any version information.
 func Debug(endpoint string) (*http.Response, error) {
@@ -121,7 +121,7 @@ func Debug(endpoint string) (*http.Response, error) {
 	return apiClient.HTTPCli.Do(req)
 }
 
-// Get sends request to the default pouchd server with custom request options.
+// Get sends request to the default server with custom request options.
 func Get(endpoint string, opts ...Option) (*http.Response, error) {
 	apiClient, err := newAPIClient(environment.DragonflyAddress, environment.TLSConfig)
 	if err != nil {
@@ -136,7 +136,7 @@ func Get(endpoint string, opts ...Option) (*http.Response, error) {
 	return apiClient.HTTPCli.Do(req)
 }
 
-// Post sends post request to pouchd.
+// Post sends post request to supernode.
 func Post(endpoint string, opts ...Option) (*http.Response, error) {
 	apiClient, err := newAPIClient(environment.DragonflyAddress, environment.TLSConfig)
 	if err != nil {
@@ -157,8 +157,6 @@ func Post(endpoint string, opts ...Option) (*http.Response, error) {
 }
 
 // newAPIClient returns a new HTTP client with TLS.
-//
-// FIXME: Could we make some functions exported in alibaba/pouch/client?
 func newAPIClient(host string, tls client.TLSConfig) (*client.APIClient, error) {
 	commonAPIClient, err := client.NewAPIClient(host, tls)
 	if err != nil {

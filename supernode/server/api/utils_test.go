@@ -29,7 +29,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
-	"github.com/dragonflyoss/Dragonfly/pkg/util"
 )
 
 func TestUtil(t *testing.T) {
@@ -89,7 +88,7 @@ func (s *TestUtilSuite) TestEncodeResponse() {
 		err string
 	}{
 		{200, "", ""},
-		{200, nil, ""},
+		{200, (*testStruct)(nil), ""},
 		{200, 0, ""},
 		{200, newT(1), ""},
 		{400, newT(1), ""},
@@ -98,12 +97,12 @@ func (s *TestUtilSuite) TestEncodeResponse() {
 	for i, c := range cases {
 		msg := fmt.Sprintf("case %d: %v", i, c)
 		w := httptest.NewRecorder()
-		e := EncodeResponse(w, c.code, c.data)
+		e := SendResponse(w, c.code, c.data)
 		if c.err == "" {
 			s.Nil(e, msg)
 			s.Equal(c.code, w.Code, msg)
-			if util.IsNil(c.data) {
-				s.Equal("", strings.TrimSpace(w.Body.String()), msg)
+			if c.data == "" {
+				s.Equal("\"\"", strings.TrimSpace(w.Body.String()), msg)
 			} else {
 				s.Equal(fmt.Sprintf("%v", c.data), strings.TrimSpace(w.Body.String()), msg)
 			}
@@ -146,7 +145,7 @@ func (s *TestUtilSuite) TestWrapHandler() {
 		case "POST":
 			return errortypes.NewHTTPError(400, "test")
 		}
-		_ = EncodeResponse(rw, 200, "test")
+		_ = SendResponse(rw, 200, "test")
 		return nil
 	}
 	cases := []struct {
@@ -201,7 +200,7 @@ func (t *testStruct) validate(registry strfmt.Registry) error {
 
 func (t *testStruct) String() string {
 	if t == nil {
-		return ""
+		return "null"
 	}
 	return fmt.Sprintf("{\"A\":%d}", t.A)
 }

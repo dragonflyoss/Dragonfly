@@ -82,7 +82,7 @@ func (rs *RouterTestSuite) SetUpSuite(c *check.C) {
 		GoVersion: runtime.Version(),
 	}
 
-	rs.router = initRoute(s)
+	rs.router = createRouter(s)
 	rs.listener, err = net.Listen("tcp", rs.addr)
 	c.Check(err, check.IsNil)
 	go http.Serve(rs.listener, rs.router)

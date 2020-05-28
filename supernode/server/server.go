@@ -136,7 +136,7 @@ func New(cfg *config.Config, logger *logrus.Logger, register prometheus.Register
 
 // Start runs supernode server.
 func (s *Server) Start() error {
-	router := initRoute(s)
+	router := createRouter(s)
 
 	address := fmt.Sprintf("0.0.0.0:%d", s.Config.ListenPort)
 
