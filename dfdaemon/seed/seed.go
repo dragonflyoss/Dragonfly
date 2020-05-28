@@ -49,13 +49,45 @@ var (
 	errContextDone = fmt.Errorf("context done")
 )
 
+// PreFetchResultAcquirer defines how to acquire the result of prefetch.
+type PreFetchResultAcquirer interface {
+	Result() (PreFetchResult, error)
+}
+
+type preFetchResultAcquirer struct {
+	sync.RWMutex
+	result   PreFetchResult
+	finished bool
+}
+
+func (pa *preFetchResultAcquirer) Result() (PreFetchResult, error) {
+	pa.RLock()
+	defer pa.RUnlock()
+
+	if !pa.finished {
+		return PreFetchResult{}, fmt.Errorf("prefetch not finished")
+	}
+
+	return pa.result, nil
+}
+
+func (pa *preFetchResultAcquirer) SetResult(result PreFetchResult) error {
+	pa.Lock()
+	defer pa.Unlock()
+
+	if pa.finished {
+		return fmt.Errorf("result has been set")
+	}
+
+	pa.result = result
+	pa.finished = true
+	return nil
+}
+
 // Seed describes the seed file which represents the resource file defined by taskUrl.
 type Seed interface {
-	// Prefetch will start to download seed file to local cache.
-	Prefetch(perDownloadSize int64) (<-chan struct{}, error)
-
-	// GetPrefetchResult should be called after notify by prefetch chan.
-	GetPrefetchResult() (PreFetchResult, error)
+	// Prefetch will start to download seed file to local cache, and get result by PreFetchResultAcquirer.
+	Prefetch(perDownloadSize int64) (<-chan struct{}, PreFetchResultAcquirer, error)
 
 	// Delete will delete the local cache and release the resource.
 	Delete() error
@@ -125,7 +157,7 @@ type seed struct {
 	blockWaitChMap map[uint32]chan struct{}
 
 	// prefetch result
-	prefetchRs PreFetchResult
+	prefetchAq *preFetchResultAcquirer
 	prefetchCh chan struct{}
 
 	// internal context
@@ -163,6 +195,7 @@ func NewSeed(base BaseOpt, rate RateOpt, openMemoryCache bool) (Seed, error) {
 		down:       newLocalDownloader(base.Info.URL, base.Info.Header, rate.DownloadRateLimiter, openMemoryCache),
 		//UploadRate: sm.UploadRate,
 		prefetchCh:      make(chan struct{}),
+		prefetchAq:      &preFetchResultAcquirer{},
 		blockWaitChMap:  make(map[uint32]chan struct{}),
 		OpenMemoryCache: openMemoryCache,
 		doneCtx:         ctx,
@@ -257,42 +290,54 @@ func (sd *seed) Stop() {
 }
 
 // Prefetch will prefetch data to buffer, and its download rate will be limited.
-func (sd *seed) Prefetch(perDownloadSize int64) (<-chan struct{}, error) {
+func (sd *seed) Prefetch(perDownloadSize int64) (<-chan struct{}, PreFetchResultAcquirer, error) {
 	sd.Lock()
 	defer sd.Unlock()
 
 	if sd.Status != InitialStatus {
-		return sd.prefetchCh, nil
+		return sd.prefetchCh, sd.prefetchAq, nil
 	}
 
 	sd.Status = FetchingStatus
 
 	err := sd.storeMetaData()
 	if err != nil {
-		return nil, err
+		return nil, sd.prefetchAq, err
 	}
 
 	go func() {
 		err := sd.prefetch(sd.doneCtx, perDownloadSize)
 
+		select {
+		case <-sd.doneCtx.Done():
+			return
+		default:
+		}
+
 		sd.Lock()
 		defer sd.Unlock()
 
 		if err != nil {
-			sd.prefetchRs = PreFetchResult{
+			sd.prefetchAq.SetResult(PreFetchResult{
 				Success: false,
 				Err:     err,
-			}
+			})
 			sd.Status = InitialStatus
 		} else {
-			sd.prefetchRs = PreFetchResult{
+			sd.prefetchAq.SetResult(PreFetchResult{
 				Success: true,
 				Err:     nil,
-			}
+			})
 			sd.Status = FinishedStatus
 		}
 
 		close(sd.prefetchCh)
+		if sd.Status != FinishedStatus {
+			sd.prefetchAq = nil
+			// renew
+			sd.prefetchAq = &preFetchResultAcquirer{}
+			sd.prefetchCh = make(chan struct{})
+		}
 
 		err = sd.storeMetaData()
 		if err != nil {
@@ -300,28 +345,24 @@ func (sd *seed) Prefetch(perDownloadSize int64) (<-chan struct{}, error) {
 		}
 	}()
 
-	return sd.prefetchCh, nil
-}
-
-func (sd *seed) GetPrefetchResult() (PreFetchResult, error) {
-	sd.RLock()
-	defer sd.RUnlock()
-
-	if sd.Status == FetchingStatus {
-		return PreFetchResult{}, fmt.Errorf("prefetch not finished")
-	}
-
-	return sd.prefetchRs, nil
+	return sd.prefetchCh, sd.prefetchAq, nil
 }
 
 func (sd *seed) Delete() error {
 	sd.Lock()
 	defer sd.Unlock()
 
-	sd.Status = DeadStatus
 	if sd.cancel != nil {
 		sd.cancel()
 	}
+
+	if sd.Status != FinishedStatus {
+		if sd.prefetchCh != nil {
+			close(sd.prefetchCh)
+		}
+	}
+
+	sd.Status = DeadStatus
 
 	sd.clearResource()
 

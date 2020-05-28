@@ -230,11 +230,11 @@ func (suite *SeedTestSuite) checkSeedFile(c *check.C, path string, fileLength in
 	sd, err := NewSeed(sOpt, RateOpt{DownloadRateLimiter: ratelimiter.NewRateLimiter(0, 0)}, false)
 	c.Assert(err, check.IsNil)
 
-	finishCh, err := sd.Prefetch(perDownloadSize)
+	finishCh, resultAcquirer, err := sd.Prefetch(perDownloadSize)
 	c.Assert(err, check.IsNil)
 
 	<-finishCh
-	rs, err := sd.GetPrefetchResult()
+	rs, err := resultAcquirer.Result()
 	c.Assert(err, check.IsNil)
 	c.Assert(rs.Success, check.Equals, true)
 	c.Assert(rs.Err, check.IsNil)
