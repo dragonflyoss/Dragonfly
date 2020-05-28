@@ -168,6 +168,7 @@ type seed struct {
 	downPreFunc func(sd Seed)
 }
 
+// TODO: consider management of memory and disk quota.
 func NewSeed(base BaseOpt, rate RateOpt, openMemoryCache bool) (Seed, error) {
 	if base.Info.FullLength == 0 {
 		return nil, fmt.Errorf("full size should be set")
@@ -369,6 +370,9 @@ func (sd *seed) Delete() error {
 	return nil
 }
 
+// TODO: It's better to return immediately, the caller can read the data when seed downloading.
+//  Otherwise, the larger the size, the higher the delay.
+//  In order to achieve the goal, a lot of reconstruct work is needed. It will be done in the near future.
 func (sd *seed) Download(off int64, size int64) (io.ReadCloser, error) {
 	off, size, err := sd.checkReadStreamParam(off, size)
 	if err != nil {
