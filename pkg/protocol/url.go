@@ -64,7 +64,10 @@ type Client interface {
 // ClientBuilder defines how to create an instance of Client.
 type ClientBuilder interface {
 	// NewProtocolClient creates an instance of Client.
-	NewProtocolClient(clientOpt interface{}) (Client, error)
+	// Here have a suggestion that every implementation should have
+	// opts with WithMapInterface(map[string]interface),
+	// which may be easier for configuration with config file.
+	NewProtocolClient(opts ...func(client Client) error) (Client, error)
 }
 
 // ClientRegister defines how to register pair <protocol, ClientBuilder>.
@@ -122,4 +125,41 @@ func (cliRegister *defaultClientRegister) GetClientBuilder(protocol string) (Cli
 	}
 
 	return builder, nil
+}
+
+// In order to be easier for configuration with config file, we provide Register for functional options
+// in which argument is map[string]interface. On the other handle, we can easy to get functional options with map interface.
+// By the way, developer could create protocol client easily by protocol name and no need to care about instance of
+// protocol client.
+var (
+	newOptMapMutex sync.RWMutex
+	newOptMap      = map[string]MapInterfaceOptFunc{}
+)
+
+type MapInterfaceOptFunc func(map[string]interface{}) func(Client) error
+
+// RegisterMapInterfaceOptFunc registers MapInterfaceOptFunc by protocol name.
+func RegisterMapInterfaceOptFunc(protocol string, withMapInterfaceOpt MapInterfaceOptFunc) {
+	newOptMapMutex.Lock()
+	defer newOptMapMutex.Unlock()
+
+	_, ok := newOptMap[protocol]
+	if ok {
+		panic(fmt.Sprintf("protocol %s has been register", protocol))
+	}
+
+	newOptMap[protocol] = withMapInterfaceOpt
+}
+
+// GetRegisteredMapInterfaceOptFunc get MapInterfaceOptFunc by protocol name.
+func GetRegisteredMapInterfaceOptFunc(protocol string) (MapInterfaceOptFunc, error) {
+	newOptMapMutex.Lock()
+	defer newOptMapMutex.Unlock()
+
+	opt, ok := newOptMap[protocol]
+	if !ok {
+		return nil, ErrProtocolNotRegister
+	}
+
+	return opt, nil
 }

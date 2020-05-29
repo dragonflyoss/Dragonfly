@@ -49,12 +49,10 @@ const (
 func init() {
 	protocol.RegisterProtocol(ProtocolHTTPName, &ClientBuilder{})
 	protocol.RegisterProtocol(ProtocolHTTPSName, &ClientBuilder{supportHTTPS: true})
-}
 
-const (
-	HTTPTransport = "http.transport"
-	TLSConfig     = "tls.config"
-)
+	protocol.RegisterMapInterfaceOptFunc(ProtocolHTTPName, WithMapInterface)
+	protocol.RegisterMapInterfaceOptFunc(ProtocolHTTPSName, WithMapInterface)
+}
 
 func newDefaultTransport() *http.Transport {
 	// copy from http.DefaultTransport
@@ -70,48 +68,6 @@ func newDefaultTransport() *http.Transport {
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
 	}
-}
-
-// ClientOpt is the argument of NewProtocolClient.
-// ClientOpt supports some opt by key, such as "http.transport", "tls.config".
-// if not set, default opt will be used.
-type ClientOpt struct {
-	opt map[string]interface{}
-}
-
-func NewClientOpt() *ClientOpt {
-	return &ClientOpt{
-		opt: make(map[string]interface{}),
-	}
-}
-
-func (opt *ClientOpt) Set(key string, value interface{}) error {
-	switch key {
-	case HTTPTransport:
-		if _, ok := value.(*http.Transport); !ok {
-			return errortypes.ErrConvertFailed
-		}
-		break
-	case TLSConfig:
-		if _, ok := value.(*tls.Config); !ok {
-			return errortypes.ErrConvertFailed
-		}
-		break
-	default:
-		return fmt.Errorf("not support")
-	}
-
-	opt.opt[key] = value
-	return nil
-}
-
-func (opt *ClientOpt) Get(key string) interface{} {
-	v, ok := opt.opt[key]
-	if !ok {
-		return nil
-	}
-
-	return v
 }
 
 var _ protocol.Client = &Client{}
@@ -146,46 +102,105 @@ type ClientBuilder struct {
 	supportHTTPS bool
 }
 
-func (cb *ClientBuilder) NewProtocolClient(clientOpt interface{}) (protocol.Client, error) {
-	var (
-		transport = DefaultTransport
-		tlsConfig *tls.Config
-	)
+// WithTransport allows to set transport for http protocol of  protocol.Client.
+func WithTransport(transport *http.Transport) func(protocol.Client) {
+	return func(client protocol.Client) {
+		cli := client.(*Client)
+		cli.transport = transport
+	}
+}
 
-	if clientOpt != nil {
-		opt, ok := clientOpt.(*ClientOpt)
+// WithTLS allows to set tls config for http protocol of  protocol.Client.
+func WithTLS(config *tls.Config) func(protocol.Client) error {
+	return func(client protocol.Client) error {
+		cli := client.(*Client)
+		if cli.transport == DefaultTransport {
+			cli.transport = newDefaultTransport()
+		}
+
+		tran, ok := cli.transport.(*http.Transport)
 		if !ok {
-			return nil, errortypes.ErrConvertFailed
+			return fmt.Errorf("transport could not be converted to http.Transport")
 		}
 
-		tran := opt.Get(HTTPTransport)
-		if tran != nil {
-			transport = tran.(*http.Transport)
+		tran.TLSClientConfig = config
+		return nil
+	}
+}
+
+// WithMapInterface allows to set some options by map interface.
+// Supported:
+// key: "tls.config", value: *tls.Config
+// key: "http.transport" value: *http.Transport
+func WithMapInterface(opt map[string]interface{}) func(client protocol.Client) error {
+	return func(client protocol.Client) error {
+		var (
+			transport *http.Transport
+			config    *tls.Config
+			ok        bool
+		)
+
+		cli := client.(*Client)
+		for k, v := range opt {
+			switch k {
+			case "tls.config":
+				config, ok = v.(*tls.Config)
+				if !ok {
+					return errortypes.ErrConvertFailed
+				}
+			case "http.transport":
+				transport, ok = v.(*http.Transport)
+				if !ok {
+					return errortypes.ErrConvertFailed
+				}
+			default:
+			}
 		}
 
-		config := opt.Get(TLSConfig)
-		if config != nil {
-			tlsConfig = config.(*tls.Config)
+		if transport == nil {
+			transport = DefaultTransport
 		}
 
-		// set tls config to transport
 		if config != nil {
 			if transport == DefaultTransport {
 				transport = newDefaultTransport()
 			}
 
-			transport.TLSClientConfig = tlsConfig
+			transport.TLSClientConfig = config
 		}
+
+		cli.transport = transport
+		cli.client = &http.Client{
+			Transport: transport,
+		}
+
+		return nil
+	}
+}
+
+func (cb *ClientBuilder) NewProtocolClient(opts ...func(client protocol.Client) error) (protocol.Client, error) {
+	cli := &Client{
+		transport: DefaultTransport,
+	}
+
+	for _, opt := range opts {
+		if err := opt(cli); err != nil {
+			return nil, err
+		}
+	}
+
+	cli.client = &http.Client{
+		Transport: cli.transport,
 	}
 
 	if cb.supportHTTPS {
-		if transport.TLSClientConfig == nil || transport.DialTLS == nil {
-			return nil, fmt.Errorf("in https mode, tls should be set")
+		tran, ok := cli.transport.(*http.Transport)
+		if ok {
+			if tran.TLSClientConfig == nil && tran.DialTLS == nil {
+				return nil, fmt.Errorf("in https mode, tls should be set")
+			}
 		}
 	}
 
-	return &Client{
-		client:    &http.Client{Transport: transport},
-		transport: transport,
-	}, nil
+	return cli, nil
 }
