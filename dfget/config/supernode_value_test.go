@@ -30,6 +30,11 @@ type SupernodeValueSuite struct {
 	suite.Suite
 }
 
+func (suit *SupernodeValueSuite) TestGetDefaultSupernodesValue() {
+	var expectedNodes = []*NodeWeight{{"127.0.0.1:8002", 1}}
+	suit.Equal(expectedNodes, GetDefaultSupernodesValue())
+}
+
 func (suit *SupernodeValueSuite) TestHandleNodes() {
 	var cases = []struct {
 		nodeWithWeightList []string
