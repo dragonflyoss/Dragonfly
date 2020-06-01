@@ -18,14 +18,8 @@ package types
 
 import "github.com/dragonflyoss/Dragonfly/apis/types"
 
-// FetchP2PNetworkInfoRequest is send to supernode to fetch p2p network info
-type FetchP2PNetworkInfoRequest struct {
-	// the urls is to filter the peer node, the url should be match with taskURL in TaskInfo
-	Urls []string `json:"urls"`
-}
-
-// FetchP2PNetworkInfoResponse is send to supernode to fetch p2p network info
-type FetchP2PNetworkInfoResponse struct {
+// HeartBeatResponse is the response of heart beat.
+type HeartBeatResponse struct {
 	*BaseResponse
-	Data *types.NetworkInfoFetchResponse `json:"data,omitempty"`
+	Data *types.HeartBeatResponse `json:"data,omitempty"`
 }
