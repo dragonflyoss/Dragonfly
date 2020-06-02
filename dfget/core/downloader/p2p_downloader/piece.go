@@ -22,6 +22,7 @@ import (
 
 	apiTypes "github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/constants"
+	"github.com/dragonflyoss/Dragonfly/pkg/pool"
 )
 
 // Piece contains all information of a piece.
@@ -51,7 +52,13 @@ type Piece struct {
 	PieceNum int `json:"pieceNum"`
 
 	// Content uses a buffer to temporarily store the piece content.
-	Content *bytes.Buffer `json:"-"`
+	Content *pool.Buffer `json:"-"`
+
+	// length the length of the content.
+	length int64
+
+	// autoReset automatically reset content after reading.
+	autoReset bool
 }
 
 // RawContent returns raw contents,
@@ -59,6 +66,11 @@ type Piece struct {
 func (p *Piece) RawContent(noWrapper bool) *bytes.Buffer {
 	contents := p.Content.Bytes()
 	length := len(contents)
+	defer func() {
+		if p.autoReset {
+			p.ResetContent()
+		}
+	}()
 
 	if noWrapper {
 		return bytes.NewBuffer(contents[:])
@@ -69,11 +81,31 @@ func (p *Piece) RawContent(noWrapper bool) *bytes.Buffer {
 	return nil
 }
 
+// ContentLength returns the content length.
+func (p *Piece) ContentLength() int64 {
+	if p.length <= 0 && p.Content != nil {
+		p.length = int64(p.Content.Len())
+	}
+	return p.length
+}
+
 func (p *Piece) String() string {
 	if b, e := json.Marshal(p); e == nil {
 		return string(b)
 	}
 	return ""
+}
+
+// ResetContent reset contents and returns it back to buffer pool.
+func (p *Piece) ResetContent() {
+	if p.Content == nil {
+		return
+	}
+	if p.length == 0 {
+		p.length = int64(p.Content.Len())
+	}
+	pool.ReleaseBuffer(p.Content)
+	p.Content = nil
 }
 
 // NewPiece creates a Piece.
@@ -85,7 +117,8 @@ func NewPiece(taskID, node, dstCid, pieceRange string, result, status int, cdnSo
 		Range:     pieceRange,
 		Result:    result,
 		Status:    status,
-		Content:   &bytes.Buffer{},
+		Content:   nil,
+		autoReset: true,
 	}
 }
 
@@ -96,16 +129,14 @@ func NewPieceSimple(taskID string, node string, status int, cdnSource apiTypes.C
 		SuperNode: node,
 		Status:    status,
 		Result:    constants.ResultInvalid,
-		Content:   &bytes.Buffer{},
+		Content:   nil,
+		autoReset: true,
 	}
 }
 
 // NewPieceContent creates a Piece with specified content.
 func NewPieceContent(taskID, node, dstCid, pieceRange string,
-	result, status int, contents *bytes.Buffer, cdnSource apiTypes.CdnSource) *Piece {
-	if contents == nil {
-		contents = &bytes.Buffer{}
-	}
+	result, status int, contents *pool.Buffer, cdnSource apiTypes.CdnSource) *Piece {
 	return &Piece{
 		TaskID:    taskID,
 		SuperNode: node,
@@ -114,5 +145,7 @@ func NewPieceContent(taskID, node, dstCid, pieceRange string,
 		Result:    result,
 		Status:    status,
 		Content:   contents,
+		length:    int64(contents.Len()),
+		autoReset: true,
 	}
 }

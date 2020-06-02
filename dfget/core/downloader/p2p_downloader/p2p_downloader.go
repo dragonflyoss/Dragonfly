@@ -17,7 +17,6 @@
 package downloader
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -212,7 +211,7 @@ func (p2p *P2PDownloader) run(ctx context.Context, pieceWriter PieceWriter) erro
 		logrus.Infof("downloading piece:%v", lastItem)
 
 		curItem := *lastItem
-		curItem.Content = &bytes.Buffer{}
+		curItem.Content = nil
 		lastItem = nil
 
 		response, err := p2p.pullPieceTask(&curItem)
@@ -412,7 +411,7 @@ func (p2p *P2PDownloader) getItem(latestItem *Piece) (bool, *Piece) {
 			}
 			if !v && (item.Result == constants.ResultSemiSuc ||
 				item.Result == constants.ResultSuc) {
-				p2p.total += int64(item.Content.Len())
+				p2p.total += item.ContentLength()
 				p2p.pieceSet[item.Range] = true
 			} else if !v {
 				delete(p2p.pieceSet, item.Range)

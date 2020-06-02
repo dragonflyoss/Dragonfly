@@ -17,7 +17,6 @@
 package downloader
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -25,6 +24,7 @@ import (
 
 	apiTypes "github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/pool"
 
 	"github.com/go-check/check"
 )
@@ -63,7 +63,7 @@ func (s *ClientWriterTestSuite) TestWrite(c *check.C) {
 			piece: &Piece{
 				PieceNum:  0,
 				PieceSize: 6,
-				Content:   bytes.NewBufferString("000010"),
+				Content:   pool.NewBufferString("000010"),
 			},
 			cdnSource: apiTypes.CdnSourceSupernode,
 			expected:  "1",
@@ -72,7 +72,7 @@ func (s *ClientWriterTestSuite) TestWrite(c *check.C) {
 			piece: &Piece{
 				PieceNum:  1,
 				PieceSize: 6,
-				Content:   bytes.NewBufferString("000020"),
+				Content:   pool.NewBufferString("000020"),
 			},
 			cdnSource: apiTypes.CdnSourceSupernode,
 			expected:  "2",
@@ -81,7 +81,7 @@ func (s *ClientWriterTestSuite) TestWrite(c *check.C) {
 			piece: &Piece{
 				PieceNum:  1,
 				PieceSize: 6,
-				Content:   bytes.NewBufferString("000030"),
+				Content:   pool.NewBufferString("000030"),
 			},
 			cdnSource: apiTypes.CdnSourceSource,
 			expected:  "000030",

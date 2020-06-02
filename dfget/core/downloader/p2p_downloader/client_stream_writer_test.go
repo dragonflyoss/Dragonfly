@@ -17,11 +17,11 @@
 package downloader
 
 import (
-	"bytes"
 	"io"
 	"sort"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/pkg/pool"
 
 	"github.com/go-check/check"
 )
@@ -49,7 +49,7 @@ func (s *ClientStreamWriterTestSuite) TestWrite(c *check.C) {
 			piece: &Piece{
 				PieceNum:  0,
 				PieceSize: 6,
-				Content:   bytes.NewBufferString("000010"),
+				Content:   pool.NewBufferString("000010"),
 			},
 			noWrapper: false,
 			expected:  "1",
@@ -58,7 +58,7 @@ func (s *ClientStreamWriterTestSuite) TestWrite(c *check.C) {
 			piece: &Piece{
 				PieceNum:  1,
 				PieceSize: 6,
-				Content:   bytes.NewBufferString("000020"),
+				Content:   pool.NewBufferString("000020"),
 			},
 			noWrapper: false,
 			expected:  "2",
@@ -67,7 +67,7 @@ func (s *ClientStreamWriterTestSuite) TestWrite(c *check.C) {
 			piece: &Piece{
 				PieceNum:  3,
 				PieceSize: 6,
-				Content:   bytes.NewBufferString("000040"),
+				Content:   pool.NewBufferString("000040"),
 			},
 			noWrapper: false,
 			expected:  "4",
@@ -76,7 +76,7 @@ func (s *ClientStreamWriterTestSuite) TestWrite(c *check.C) {
 			piece: &Piece{
 				PieceNum:  4,
 				PieceSize: 6,
-				Content:   bytes.NewBufferString("000050"),
+				Content:   pool.NewBufferString("000050"),
 			},
 			noWrapper: false,
 			expected:  "5",
@@ -85,7 +85,7 @@ func (s *ClientStreamWriterTestSuite) TestWrite(c *check.C) {
 			piece: &Piece{
 				PieceNum:  2,
 				PieceSize: 6,
-				Content:   bytes.NewBufferString("000030"),
+				Content:   pool.NewBufferString("000030"),
 			},
 			noWrapper: false,
 			expected:  "3",

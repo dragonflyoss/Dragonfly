@@ -136,7 +136,8 @@ func (s *PowerClientTestSuite) TestDownloadPiece(c *check.C) {
 		return resp, nil
 	}
 	content, err = s.powerClient.downloadPiece()
-	c.Check(content, check.DeepEquals, bytes.NewBufferString("hello"))
+	c.Check(content, check.NotNil)
+	c.Check(content.String(), check.Equals, "hello")
 	c.Check(err, check.IsNil)
 }
 
