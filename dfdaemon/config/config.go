@@ -116,8 +116,9 @@ type Properties struct {
 	StreamMode bool            `yaml:"streamMode" json:"streamMode"`
 
 	ProtocolConf []ProtocolConfig `yaml:"protocolConf" json:"protocolConf"`
-	Pattern      string           `yaml:"pattern" json:"pattern"`
-	PatternConf  PatternConfig    `yaml:"patternConf" json:"patternConf"`
+	// Mode is the default pattern.
+	Mode        string          `yaml:"mode" json:"mode"`
+	PatternConf []PatternConfig `yaml:"patternConf" json:"patternConf"`
 }
 
 // Validate validates the config
@@ -426,5 +427,6 @@ type ProtocolConfig struct {
 }
 
 type PatternConfig struct {
-	Opts map[string]string `yaml:"opts" json:"opts"`
+	Pattern string            `yaml:"pattern" json:"pattern"`
+	Opts    map[string]string `yaml:"opts" json:"opts"`
 }
