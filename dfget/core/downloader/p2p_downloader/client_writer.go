@@ -17,7 +17,6 @@
 package downloader
 
 import (
-	"bufio"
 	"context"
 	"io"
 	"math/rand"
@@ -31,6 +30,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/fileutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/pool"
 	"github.com/dragonflyoss/Dragonfly/pkg/queue"
 
 	"github.com/sirupsen/logrus"
@@ -244,9 +244,10 @@ func writePieceToFile(piece *Piece, file *os.File, cdnSource apiTypes.CdnSource)
 		return err
 	}
 
-	buf := bufio.NewWriterSize(file, 4*1024*1024)
-	_, err := io.Copy(buf, piece.RawContent(noWrapper))
-	buf.Flush()
+	writer := pool.AcquireWriter(file)
+	_, err := io.Copy(writer, piece.RawContent(noWrapper))
+	pool.ReleaseWriter(writer)
+	writer = nil
 	return err
 }
 
