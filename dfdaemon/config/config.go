@@ -116,8 +116,9 @@ type Properties struct {
 	StreamMode bool            `yaml:"streamMode" json:"streamMode"`
 
 	ProtocolConf []ProtocolConfig `yaml:"protocolConf" json:"protocolConf"`
-	Pattern      string           `yaml:"pattern" json:"pattern"`
-	PatternConf  PatternConfig    `yaml:"patternConf" json:"patternConf"`
+	// DefaultDownloadMode is the default pattern.
+	DefaultDownloadMode string           `yaml:"defaultDownloadMode" json:"defaultDownloadMode"`
+	DownloadConf        []DownloadConfig `yaml:"downloadConf" json:"downloadConf"`
 }
 
 // Validate validates the config
@@ -422,9 +423,10 @@ func (r *Proxy) Match(url string) bool {
 type ProtocolConfig struct {
 	Name string `yaml:"name" json:"name"`
 	// Opts defines the opts for protocol, such as tls config.
-	Opts map[string]string `yaml:"opts" json:"opts"`
+	Opts map[string]interface{} `yaml:"opts" json:"opts"`
 }
 
-type PatternConfig struct {
-	Opts map[string]string `yaml:"opts" json:"opts"`
+type DownloadConfig struct {
+	Name string                 `yaml:"name" json:"name"`
+	Opts map[string]interface{} `yaml:"opts" json:"opts"`
 }

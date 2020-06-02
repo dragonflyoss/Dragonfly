@@ -26,7 +26,7 @@ import (
 )
 
 func init() {
-	downloader.Register("p2p", func(patternConfig config.PatternConfig, c config.Properties) downloader.Stream {
+	downloader.Register("p2p", func(patternConfig config.DownloadConfig, c config.Properties) downloader.Stream {
 		return NewClient(c.DFGetConfig())
 	})
 }

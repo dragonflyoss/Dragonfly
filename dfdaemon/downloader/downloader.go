@@ -41,7 +41,7 @@ type Stream interface {
 type Factory func() Interface
 type StreamFactory func() Stream
 
-type StreamFactoryBuilder func(patternConfig config.PatternConfig, c config.Properties) Stream
+type StreamFactoryBuilder func(patternConfig config.DownloadConfig, c config.Properties) Stream
 
 var (
 	registerFactory = map[string]StreamFactoryBuilder{}
@@ -51,7 +51,7 @@ func Register(pattern string, builder StreamFactoryBuilder) {
 	registerFactory[pattern] = builder
 }
 
-func NewStreamFactory(pattern string, patternConfig config.PatternConfig, c config.Properties) StreamFactory {
+func NewStreamFactory(pattern string, patternConfig config.DownloadConfig, c config.Properties) StreamFactory {
 	builder, ok := registerFactory[pattern]
 	if !ok {
 		panic(fmt.Sprintf("pattern %s not registered", pattern))
