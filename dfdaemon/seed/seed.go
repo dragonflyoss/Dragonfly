@@ -252,8 +252,8 @@ func RestoreSeed(seedDir string, rate RateOpt, downPreFunc func(sd Seed)) (s See
 	}
 
 	// init downloader and cachebuffer
-	sd.down = newLocalDownloader(sd.URL, sd.Header, rate.DownloadRateLimiter, sd.OpenMemoryCache)
-	cache, err := newFileCacheBuffer(sd.ContentPath, sd.FullSize, false, sd.OpenMemoryCache, sd.BlockOrder)
+	sd.down = newLocalDownloader(sd.URL, sd.Header, rate.DownloadRateLimiter, false)
+	cache, err := newFileCacheBuffer(sd.ContentPath, sd.FullSize, false, false, sd.BlockOrder)
 	if err != nil {
 		return nil, false, err
 	}
@@ -330,6 +330,7 @@ func (sd *seed) Prefetch(perDownloadSize int64) (<-chan struct{}, PreFetchResult
 				Err:     nil,
 			})
 			sd.Status = FinishedStatus
+			sd.cache.Close()
 		}
 
 		close(sd.prefetchCh)

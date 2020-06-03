@@ -32,7 +32,7 @@ type cQElementData struct {
 
 // LRUQueue is implementation of LRU.
 type LRUQueue struct {
-	lock     sync.Mutex
+	lock     sync.RWMutex
 	capacity int
 
 	itemMap map[string]*list.Element
@@ -127,6 +127,29 @@ func (q *LRUQueue) GetItemByKey(key string) (interface{}, error) {
 	}
 
 	return nil, errortypes.ErrDataNotFound
+}
+
+// Poll will poll out the tail item.
+func (q *LRUQueue) Poll() (key string, data interface{}) {
+	q.lock.Lock()
+	defer q.lock.Unlock()
+
+	// remove the earliest item
+	i := q.removeFromTail()
+	if i != nil {
+		delete(q.itemMap, i.Value.(*cQElementData).key)
+		key = i.Value.(*cQElementData).key
+		data = i.Value.(*cQElementData).data
+	}
+
+	return
+}
+
+func (q *LRUQueue) Len() int {
+	q.lock.RLock()
+	defer q.lock.RUnlock()
+
+	return len(q.itemMap)
 }
 
 // Delete deletes the item by key, return the deleted item if item exists.

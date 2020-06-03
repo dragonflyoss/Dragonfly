@@ -242,3 +242,23 @@ func (suite *SeedTestSuite) checkSeedFile(c *check.C, path string, fileLength in
 	c.Assert(sd.GetFullSize(), check.Equals, fileLength)
 	suite.checkFileWithSeed(c, path, fileLength, sd)
 }
+
+func (suite *SeedTestSuite) checkSeedFileBySeedManager(c *check.C, path string, fileLength int64, seedName string, perDownloadSize int64, sd Seed, sm Manager, wg *sync.WaitGroup) {
+	defer func() {
+		if wg != nil {
+			wg.Done()
+		}
+	}()
+
+	finishCh, err := sm.Prefetch(seedName, perDownloadSize)
+	c.Assert(err, check.IsNil)
+
+	<-finishCh
+	rs, err := sm.GetPrefetchResult(seedName)
+	c.Assert(err, check.IsNil)
+	c.Assert(rs.Success, check.Equals, true)
+	c.Assert(rs.Err, check.IsNil)
+
+	c.Assert(sd.GetFullSize(), check.Equals, fileLength)
+	suite.checkFileWithSeed(c, path, fileLength, sd)
+}
