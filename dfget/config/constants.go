@@ -73,7 +73,8 @@ const (
 	StrTotalLimit   = "totalLimit"
 	StrCDNSource    = "cdnSource"
 
-	StrBytes = "bytes"
+	StrBytes   = "bytes"
+	StrPattern = "pattern"
 )
 
 /* piece meta */

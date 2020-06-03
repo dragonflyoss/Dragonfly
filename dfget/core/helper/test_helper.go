@@ -184,6 +184,22 @@ func (m *MockSupernodeAPI) ReportMetrics(ip string, req *api_types.TaskMetricsRe
 	return nil, nil
 }
 
+func (m *MockSupernodeAPI) HeartBeat(node string, req *api_types.HeartBeatRequest) (resp *types.HeartBeatResponse, err error) {
+	return nil, nil
+}
+func (m *MockSupernodeAPI) FetchP2PNetworkInfo(node string, start int, limit int, req *api_types.NetworkInfoFetchRequest) (resp *api_types.NetworkInfoFetchResponse, e error) {
+	return nil, nil
+}
+func (m *MockSupernodeAPI) ReportResource(node string, req *types.RegisterRequest) (resp *types.RegisterResponse, err error) {
+	return nil, nil
+}
+func (m *MockSupernodeAPI) ApplyForSeedNode(node string, req *types.RegisterRequest) (resp *types.RegisterResponse, err error) {
+	return nil, nil
+}
+func (m *MockSupernodeAPI) ReportResourceDeleted(node string, taskID string, cid string) (resp *types.BaseResponse, err error) {
+	return nil, nil
+}
+
 // CreateRegisterFunc creates a mock register function.
 func CreateRegisterFunc() RegisterFuncType {
 	var newResponse = func(code int, msg string) *types.RegisterResponse {
