@@ -18,6 +18,7 @@ package algorithm
 
 import (
 	"math/rand"
+	"sort"
 	"time"
 )
 
@@ -99,4 +100,25 @@ func GCD(x, y int) int {
 		y = z
 	}
 	return x
+}
+
+// DedupStringArr removes duplicate string in array.
+func DedupStringArr(input []string) []string {
+	if len(input) == 0 {
+		return []string{}
+	}
+
+	out := make([]string, len(input))
+	copy(out, input)
+	sort.Strings(out)
+
+	idx := 0
+	for i := 1; i < len(input); i++ {
+		if out[idx] != out[i] {
+			idx++
+			out[idx] = out[i]
+		}
+	}
+
+	return out[:idx+1]
 }
