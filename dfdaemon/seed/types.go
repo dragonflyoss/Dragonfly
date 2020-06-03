@@ -67,3 +67,22 @@ type BaseOpt struct {
 type RateOpt struct {
 	DownloadRateLimiter *ratelimiter.RateLimiter
 }
+
+type NewSeedManagerOpt struct {
+	StoreDir           string
+	ConcurrentLimit    int
+	TotalLimit         int
+	DownloadBlockOrder uint32
+	OpenMemoryCache    bool
+
+	// if download rate < 0, means no rate limit; else default limit
+	DownloadRate int64
+	UploadRate   int64
+
+	// water level which is used to expire the seed
+	// if HighLevel is reached, start to prepare the expire
+	HighLevel uint
+
+	// expire will be stopped util water level is smaller than LowLevel.
+	LowLevel uint
+}
