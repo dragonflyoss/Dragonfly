@@ -279,6 +279,7 @@ func (proxy *Proxy) roundTripper(tlsConfig *tls.Config, req *http.Request) http.
 		transport.WithStreamDownloader(proxy.matcher.Match(req)),
 		transport.WithTLS(tlsConfig),
 		transport.WithCondition(proxy.shouldUseDfget),
+		transport.WithStreamMode(proxy.streamMode),
 	)
 	return rt
 }
