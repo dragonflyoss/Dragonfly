@@ -23,7 +23,7 @@ import (
 
 var (
 	mutex     sync.RWMutex
-	uploadMap map[string]Uploader
+	uploadMap = map[string]Uploader{}
 )
 
 func RegisterUploader(pattern string, up Uploader) {
