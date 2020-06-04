@@ -19,6 +19,7 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -75,7 +76,7 @@ func (d *downloadAPI) Download(ip string, port int, req *DownloadRequest, timeou
 		url = req.Path
 	} else {
 		rangeStr = req.Range
-		url = fmt.Sprintf("http://%s:%d%s", ip, port, req.Path)
+		url = fmt.Sprintf("http://%s:%d%s", ip, port, filepath.Join(config.PeerHTTPPathPrefix, req.Path))
 	}
 	headers[config.StrRange] = httputils.ConstructRangeStr(rangeStr)
 
