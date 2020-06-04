@@ -39,7 +39,7 @@ type PatternMatcher struct {
 	pv             config.Properties
 }
 
-func NewPatternMatcher(pv config.Properties, matchFunc func(*http.Request) string) *PatternMatcher {
+func NewPatternMatcher(pv config.Properties, commonCfg config.DFGetCommonConfig, matchFunc func(*http.Request) string) *PatternMatcher {
 	matcher := &PatternMatcher{
 		pv:             pv,
 		defaultPattern: pv.Mode,
@@ -48,7 +48,7 @@ func NewPatternMatcher(pv config.Properties, matchFunc func(*http.Request) strin
 	patternMap := make(map[string]*patternBuildWrapper)
 	for _, conf := range pv.PatternConf {
 		pattern := conf.Pattern
-		streamFactory := downloader.NewStreamFactory(pattern, conf, pv)
+		streamFactory := downloader.NewStreamFactory(pattern, conf, commonCfg, pv)
 		patternMap[pattern] = &patternBuildWrapper{
 			streamFactory: streamFactory,
 		}

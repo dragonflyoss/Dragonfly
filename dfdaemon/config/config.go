@@ -20,6 +20,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"fmt"
+	"github.com/pborman/uuid"
 	"net/url"
 	"path/filepath"
 	"regexp"
@@ -185,6 +187,36 @@ type DFGetConfig struct {
 	HostsConfig []*HijackHost `yaml:"hosts" json:"hosts"`
 	PeerPort    int           `yaml:"peerPort"`
 	LocalIP     string        `yaml:"localIP"`
+}
+
+// DFGetCommonConfig configures how dfdaemon calls dfget in all pattern.
+type DFGetCommonConfig struct {
+	Cid        string   `json:"cid"`
+	IP         string   `json:"ip"`
+	HostName   string   `json:"hostName"`
+	Port       int      `json:"port"`
+	Version    string   `json:"version,omitempty"`
+	Md5        string   `json:"md5,omitempty"`
+	Identifier string   `json:"identifier,omitempty"`
+	CallSystem string   `json:"callSystem,omitempty"`
+	Dfdaemon   bool     `json:"dfdaemon,omitempty"`
+	Insecure   bool     `json:"insecure,omitempty"`
+	RootCAs    [][]byte `json:"rootCAs,omitempty"`
+	WorkHome   string   `json:"workHome,omitempty"`
+}
+
+// DFGetConfig returns config for dfget downloader.
+func (p *Properties) DFGetCommonConfig() DFGetCommonConfig {
+	uid := uuid.New()
+
+	commonConfig := DFGetCommonConfig{
+		IP:       p.HostIP,
+		Cid:      fmt.Sprintf("%s-%d-%s", p.HostIP, p.PeerPort, uid),
+		Port:     p.PeerPort,
+		WorkHome: p.WorkHome,
+	}
+
+	return commonConfig
 }
 
 // RegistryMirror configures the mirror of the official docker registry
@@ -423,10 +455,10 @@ func (r *Proxy) Match(url string) bool {
 type ProtocolConfig struct {
 	Name string `yaml:"name" json:"name"`
 	// Opts defines the opts for protocol, such as tls config.
-	Opts map[string]string `yaml:"opts" json:"opts"`
+	Opts map[string]interface{} `yaml:"opts" json:"opts"`
 }
 
 type PatternConfig struct {
-	Pattern string            `yaml:"pattern" json:"pattern"`
-	Opts    map[string]string `yaml:"opts" json:"opts"`
+	Pattern string                 `yaml:"pattern" json:"pattern"`
+	Opts    map[string]interface{} `yaml:"opts" json:"opts"`
 }

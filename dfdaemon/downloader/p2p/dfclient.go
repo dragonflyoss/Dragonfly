@@ -26,7 +26,7 @@ import (
 )
 
 func init() {
-	downloader.Register("p2p", func(patternConfig config.PatternConfig, c config.Properties) downloader.Stream {
+	downloader.Register("p2p", func(patternConfig config.PatternConfig, commCfg config.DFGetCommonConfig, c config.Properties) downloader.Stream {
 		return NewClient(c.DFGetConfig())
 	})
 }
@@ -38,7 +38,7 @@ func (c *Client) DownloadContext(ctx context.Context, url string, header map[str
 	return "", errors.New("Not Implementation")
 }
 
-func (c *Client) DownloadStreamContext(ctx context.Context, url string, header map[string][]string, name string) (io.Reader, error) {
+func (c *Client) DownloadStreamContext(ctx context.Context, url string, header map[string][]string, name string) (io.ReadCloser, error) {
 	return nil, errors.New("Not Implementation")
 }
 

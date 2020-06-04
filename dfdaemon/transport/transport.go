@@ -19,7 +19,6 @@ package transport
 import (
 	"context"
 	"crypto/tls"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -193,7 +192,7 @@ func (roundTripper *DFRoundTripper) downloadByStream(ctx context.Context, url st
 
 	resp := &http.Response{
 		StatusCode: 200,
-		Body:       ioutil.NopCloser(reader),
+		Body:       reader,
 	}
 	return resp, nil
 }
