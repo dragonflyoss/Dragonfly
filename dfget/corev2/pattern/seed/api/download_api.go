@@ -61,6 +61,8 @@ func (d *downloadAPI) Download(ip string, port int, req *DownloadRequest, timeou
 	headers := make(map[string]string)
 	headers[config.StrUserAgent] = "dfget/" + version.DFGetVersion
 	headers[config.StrPattern] = "seed"
+	headers[config.StrPieceNum] = fmt.Sprintf("%d", 0)
+	headers[config.StrPieceSize] = fmt.Sprintf("%d", 1)
 	if req.Headers != nil {
 		for k, v := range req.Headers {
 			headers[k] = v
