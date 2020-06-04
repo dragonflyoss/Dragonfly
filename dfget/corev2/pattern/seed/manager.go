@@ -144,6 +144,34 @@ func newManager(pCfg config.PatternConfig, commonCfg config.DFGetCommonConfig, c
 		cancel:        cancel,
 	}
 
+	if cfg.HighLevel <= 0 {
+		cfg.HighLevel = 90
+	}
+
+	if cfg.LowLevel <= 0 {
+		cfg.LowLevel = 80
+	}
+
+	if cfg.DefaultBlockOrder <= 0 {
+		cfg.DefaultBlockOrder = defaultBlockOrder
+	}
+
+	if cfg.PerDownloadBlocks <= 0 {
+		cfg.PerDownloadBlocks = 4
+	}
+
+	if cfg.PerDownloadBlocks >= 1000 {
+		cfg.PerDownloadBlocks = 1000
+	}
+
+	if cfg.TotalLimit <= 0 {
+		cfg.TotalLimit = 50
+	}
+
+	if cfg.ConcurrentLimit <= 0 {
+		cfg.ConcurrentLimit = 4
+	}
+
 	m.sm = NewSupernodeManager(ctx, cfg, config.SuperNodes, m.supernodeAPI)
 	m.seedManager = seed.NewSeedManager(seed.NewSeedManagerOpt{
 		StoreDir:           filepath.Join(cfg.WorkHome, "localSeed"),
