@@ -16,7 +16,30 @@
 
 package uploader
 
-import "io"
+import (
+	"io"
+	"sync"
+)
+
+var (
+	mutex     sync.RWMutex
+	uploadMap map[string]Uploader
+)
+
+func RegisterUploader(pattern string, up Uploader) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	uploadMap[pattern] = up
+}
+
+func GetUploader(pattern string) (Uploader, bool) {
+	mutex.RLock()
+	defer mutex.RUnlock()
+
+	up, ok := uploadMap[pattern]
+	return up, ok
+}
 
 // Uploader defines how to upload range by path.
 type Uploader interface {

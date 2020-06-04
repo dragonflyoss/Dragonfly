@@ -21,6 +21,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"github.com/dragonflyoss/Dragonfly/dfget/corev2/uploader"
 	"io"
 	"net"
 	"net/http"
@@ -139,14 +140,31 @@ func (ps *peerServer) uploadHandler(w http.ResponseWriter, r *http.Request) {
 	taskFileName := mux.Vars(r)["commonFile"]
 	rangeStr := r.Header.Get(config.StrRange)
 	cdnSource := r.Header.Get(config.StrCDNSource)
+	pattern := r.Header.Get(config.StrPattern)
 
-	logrus.Debugf("upload file:%s to %s, req:%v", taskFileName, r.RemoteAddr, jsonStr(r.Header))
+	logrus.Debugf("upload file:%s to %s, pattern: %s, req:%v", taskFileName, r.RemoteAddr, pattern, jsonStr(r.Header))
 
 	// Step1: parse param
 	if up, err = parseParams(rangeStr, r.Header.Get(config.StrPieceNum),
 		r.Header.Get(config.StrPieceSize)); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		logrus.Warnf("invalid param file:%s req:%v, %v", taskFileName, r.Header, err)
+		return
+	}
+
+	if pattern != "" {
+		upper, ok := uploader.GetUploader(pattern)
+		if !ok {
+			err = fmt.Errorf("pattern %s not register uploader", pattern)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			logrus.Warnf("failed to upload in case of not found pattern: %v", err)
+			return
+		}
+
+		err = ps.uploadByPattern(w, taskFileName, up, upper)
+		if err != nil {
+			logrus.Errorf("failed to send range(%s) of file(%s): %v", rangeStr, taskFileName, err)
+		}
 		return
 	}
 
@@ -397,6 +415,32 @@ func (ps *peerServer) uploadPiece(f *os.File, w http.ResponseWriter, up *uploadP
 		_, e = io.CopyBuffer(w, lr, buf)
 	} else {
 		_, e = io.CopyBuffer(w, r, buf)
+	}
+
+	return
+}
+
+// uploadByPattern sends data to the remote peer.
+func (ps *peerServer) uploadByPattern(w http.ResponseWriter, path string, up *uploadParam, upper uploader.Uploader) (e error) {
+	rc, err := upper.UploadRange(path, up.start, up.length, nil)
+	if err != nil {
+		sendHeader(w, http.StatusBadRequest)
+		fmt.Fprint(w, err.Error())
+		return err
+	}
+
+	w.Header().Set(config.StrContentLength, strconv.FormatInt(up.length, 10))
+	sendHeader(w, http.StatusPartialContent)
+
+	buf := make([]byte, 256*1024)
+
+	defer rc.Close()
+
+	if ps.rateLimiter != nil {
+		lr := limitreader.NewLimitReaderWithLimiter(ps.rateLimiter, rc, false)
+		_, e = io.CopyBuffer(w, lr, buf)
+	} else {
+		_, e = io.CopyBuffer(w, rc, buf)
 	}
 
 	return
