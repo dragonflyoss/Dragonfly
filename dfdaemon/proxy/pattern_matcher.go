@@ -42,7 +42,7 @@ type PatternMatcher struct {
 func NewPatternMatcher(pv config.Properties, commonCfg config.DFGetCommonConfig, matchFunc func(*http.Request) string) *PatternMatcher {
 	matcher := &PatternMatcher{
 		pv:             pv,
-		defaultPattern: pv.Mode,
+		defaultPattern: pv.DefaultPattern,
 	}
 
 	patternMap := make(map[string]*patternBuildWrapper)
