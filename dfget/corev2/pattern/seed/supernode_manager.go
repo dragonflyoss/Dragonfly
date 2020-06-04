@@ -139,6 +139,7 @@ func NewSupernodeManager(ctx context.Context, cfg *Config, nodes []string, super
 	}
 
 	m := &supernodeManager{
+		supernodeMap:     ma,
 		locator:          lc,
 		locatorEvQueue:   locatorEvQueue,
 		syncP2PNetworkCh: make(chan activeFetchSt, 20),
@@ -146,6 +147,7 @@ func NewSupernodeManager(ctx context.Context, cfg *Config, nodes []string, super
 		cfg:              cfg,
 		innerEvQueue:     innerEvQueue,
 		supernodeAPI:     supernodeAPI,
+		superEvQueue:     queue.NewQueue(0),
 	}
 	go m.heartbeatLoop(ctx)
 	go m.fetchP2PNetworkInfoLoop(ctx)
