@@ -27,6 +27,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfdaemon"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
+	_ "github.com/dragonflyoss/Dragonfly/dfget/corev2/pattern/seed"
 	"github.com/dragonflyoss/Dragonfly/pkg/cmd"
 	dferr "github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
