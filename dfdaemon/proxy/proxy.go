@@ -152,7 +152,7 @@ func NewFromConfig(c config.Properties) (*Proxy, error) {
 			return dfget.NewGetter(c.DFGetConfig())
 		}),
 		WithStreamMode(c.StreamMode),
-		WithPatternMatcher(NewPatternMatcher(c, nil)),
+		WithPatternMatcher(NewPatternMatcher(c, c.DFGetCommonConfig(), nil)),
 	}
 
 	logrus.Infof("registry mirror: %s", c.RegistryMirror.Remote)
