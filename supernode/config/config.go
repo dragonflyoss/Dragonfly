@@ -112,8 +112,10 @@ func NewBaseProperties() *BaseProperties {
 		FullGCThreshold:         DefaultFullGCThreshold,
 		IntervalThreshold:       DefaultIntervalThreshold,
 		TaskExpireTime:          DefaultTaskExpireTime,
+		PeerExpireTime:          DefaultPeerExpireTime,
 		PeerGCDelay:             DefaultPeerGCDelay,
 		CleanRatio:              DefaultCleanRatio,
+		MaxSeedPerObject:        DefaultMaxSeedPerObj,
 	}
 }
 
@@ -229,6 +231,10 @@ type BaseProperties struct {
 	// default: 3min
 	TaskExpireTime time.Duration `yaml:"taskExpireTime"`
 
+	// Don't receive heartbeat from a peer within the PeerExpireTime
+	// default: 120s
+	PeerExpireTime int64 `yaml:"peerExpireTime"`
+
 	// PeerGCDelay is the delay time to execute the GC after the peer has reported the offline.
 	// default: 3min
 	PeerGCDelay time.Duration `yaml:"peerGCDelay"`
@@ -252,6 +258,10 @@ type BaseProperties struct {
 	// IntervalThreshold is the threshold of the interval at which the task file is accessed.
 	// default: 2h
 	IntervalThreshold time.Duration `yaml:"IntervalThreshold"`
+
+	// max number of seed node of one object
+	// default: 64
+	MaxSeedPerObject int `yaml:"maxSeedPerObject"`
 
 	// CleanRatio is the ratio to clean the disk and it is based on 10.
 	// It means the value of CleanRatio should be [1-10].
