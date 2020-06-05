@@ -26,6 +26,7 @@ import (
 	errorType "github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 	"github.com/dragonflyoss/Dragonfly/pkg/rangeutils"
+	"github.com/dragonflyoss/Dragonfly/supernode/httpclient"
 )
 
 // download downloads the file from the original address and
@@ -43,18 +44,27 @@ func (cm *Manager) download(ctx context.Context, taskID, url string, headers map
 			return nil, errors.Wrapf(errorType.ErrInvalidValue, "failed to calculate the breakRange: %v", err)
 		}
 
-		if headers == nil {
-			headers = make(map[string]string)
-		}
 		// check if Range in header? if Range already in Header, use this range directly
-		if _, ok := headers["Range"]; !ok {
-			headers["Range"] = httputils.ConstructRangeStr(breakRange)
+		if !hasRange(headers) {
+			headers = httpclient.CopyHeader(
+				map[string]string{"Range": httputils.ConstructRangeStr(breakRange)},
+				headers)
+
 		}
 		checkCode = []int{http.StatusPartialContent}
 	}
 
-	logrus.Infof("start to download for taskId(%s) with fileUrl: %s header: %v checkCode: %d", taskID, url, headers, checkCode)
+	logrus.Infof("start to download for taskId(%s) with fileUrl: %s"+
+		" header: %v checkCode: %d", taskID, url, headers, checkCode)
 	return cm.originClient.Download(url, headers, checkStatusCode(checkCode))
+}
+
+func hasRange(headers map[string]string) bool {
+	if headers == nil {
+		return false
+	}
+	_, ok := headers["Range"]
+	return ok
 }
 
 func checkStatusCode(statusCode []int) func(int) bool {
