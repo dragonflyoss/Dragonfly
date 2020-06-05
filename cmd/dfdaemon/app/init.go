@@ -90,6 +90,7 @@ func initDfdaemon(cfg *config.Properties) error {
 
 	if cfg.HostIP == "127.0.0.1" || cfg.HostIP == "" {
 		cfg.HostIP = getHostIP()
+		cfg.LocalIP = cfg.HostIP
 	}
 
 	if err := os.MkdirAll(cfg.DFRepo, 0755); err != nil {
