@@ -49,6 +49,8 @@ func NewPatternMatcher(pv config.Properties, commonCfg config.DFGetCommonConfig,
 	for _, conf := range pv.PatternConf {
 		pattern := conf.Pattern
 		streamFactory := downloader.NewStreamFactory(pattern, conf, commonCfg, pv)
+		// init first
+		streamFactory()
 		patternMap[pattern] = &patternBuildWrapper{
 			streamFactory: streamFactory,
 		}
