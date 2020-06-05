@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/dragonflyoss/Dragonfly/pkg/algorithm"
 	"io"
 	"math"
 	"net/http"
@@ -172,6 +173,7 @@ func newManager(pCfg config.PatternConfig, commonCfg config.DFGetCommonConfig, c
 		cfg.ConcurrentLimit = 4
 	}
 
+	config.SuperNodes = algorithm.DedupStringArr(config.SuperNodes)
 	m.sm = NewSupernodeManager(ctx, cfg, config.SuperNodes, m.supernodeAPI)
 	m.seedManager = seed.NewSeedManager(seed.NewSeedManagerOpt{
 		StoreDir:           filepath.Join(cfg.WorkHome, "localSeed"),
