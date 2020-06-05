@@ -132,18 +132,16 @@ func (client *OriginClient) GetContentLength(url string, headers map[string]stri
 
 // IsSupportRange checks if the source url support partial requests.
 func (client *OriginClient) IsSupportRange(url string, headers map[string]string) (bool, error) {
-	// set headers
-	if headers == nil {
-		headers = make(map[string]string)
-	}
-	headers["Range"] = "bytes=0-0"
+	// set headers: headers is a reference to map, should not change it
+	copied := CopyHeader(nil, headers)
+	copied["Range"] = "bytes=0-0"
 
 	// send request
-	resp, err := client.HTTPWithHeaders(http.MethodGet, url, headers, 4*time.Second)
+	resp, err := client.HTTPWithHeaders(http.MethodGet, url, copied, 4*time.Second)
 	if err != nil {
 		return false, err
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 
 	if resp.StatusCode == http.StatusPartialContent {
 		return true, nil
@@ -157,20 +155,18 @@ func (client *OriginClient) IsExpired(url string, headers map[string]string, las
 		return true, nil
 	}
 
-	// set headers
-	if headers == nil {
-		headers = make(map[string]string)
-	}
+	// set headers: headers is a reference to map, should not change it
+	copied := CopyHeader(nil, headers)
 	if lastModified > 0 {
 		lastModifiedStr, _ := netutils.ConvertTimeIntToString(lastModified)
-		headers["If-Modified-Since"] = lastModifiedStr
+		copied["If-Modified-Since"] = lastModifiedStr
 	}
 	if !stringutils.IsEmptyStr(eTag) {
-		headers["If-None-Match"] = eTag
+		copied["If-None-Match"] = eTag
 	}
 
 	// send request
-	resp, err := client.HTTPWithHeaders(http.MethodGet, url, headers, 4*time.Second)
+	resp, err := client.HTTPWithHeaders(http.MethodGet, url, copied, 4*time.Second)
 	if err != nil {
 		return false, err
 	}
@@ -221,4 +217,15 @@ func (client *OriginClient) HTTPWithHeaders(method, url string, headers map[stri
 		return nil, errors.Wrapf(errortypes.ErrInvalidValue, "http client type check error: %T", httpClientObject)
 	}
 	return httpClient.Do(req)
+}
+
+// CopyHeader copies the src to dst and return a non-nil dst map.
+func CopyHeader(dst, src map[string]string) map[string]string {
+	if dst == nil {
+		dst = make(map[string]string)
+	}
+	for k, v := range src {
+		dst[k] = v
+	}
+	return dst
 }
