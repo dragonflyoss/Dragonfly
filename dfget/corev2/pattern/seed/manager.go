@@ -178,7 +178,7 @@ func newManager(pCfg config.PatternConfig, commonCfg config.DFGetCommonConfig, c
 		ConcurrentLimit:    cfg.ConcurrentLimit,
 		TotalLimit:         cfg.TotalLimit,
 		DownloadBlockOrder: uint32(cfg.DefaultBlockOrder),
-		OpenMemoryCache:    true,
+		OpenMemoryCache:    !cfg.DisableOpenMemoryCache,
 		DownloadRate:       int64(cfg.DownRate),
 		UploadRate:         int64(cfg.UploadRate),
 		HighLevel:          uint(cfg.HighLevel),
@@ -186,6 +186,7 @@ func newManager(pCfg config.PatternConfig, commonCfg config.DFGetCommonConfig, c
 	})
 
 	uploader2.RegisterUploader("seed", newUploader(m.seedManager))
+	m.reportLocalSeedsToSuperNode()
 
 	//todo: init Manager by input config.
 	return m

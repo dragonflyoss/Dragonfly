@@ -44,4 +44,6 @@ type Config struct {
 
 	TotalLimit      int
 	ConcurrentLimit int
+
+	DisableOpenMemoryCache bool
 }
