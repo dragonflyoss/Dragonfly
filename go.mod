@@ -3,6 +3,7 @@ module github.com/dragonflyoss/Dragonfly
 go 1.12
 
 require (
+	github.com/HuKeping/rbtree v0.0.0-20200208030951-29f0b79e84ed
 	github.com/PuerkitoBio/purell v0.0.0-20170829232023-f619812e3caf // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20170903095215-73945b6115bf // indirect

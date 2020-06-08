@@ -19,9 +19,9 @@ package hashcircler
 import (
 	"fmt"
 	"hash/fnv"
-	"sort"
 	"sync"
 
+	"github.com/HuKeping/rbtree"
 	"github.com/pkg/errors"
 )
 
@@ -48,8 +48,8 @@ type consistentHashCircler struct {
 	hashFunc func(string) uint64
 
 	keysMap           map[uint64]string
-	sortedSet         []uint64
 	replicationPerKey int
+	rb                *rbtree.Rbtree
 }
 
 // NewConsistentHashCircler constructs an instance of HashCircler from keys. And this is thread safety.
@@ -66,8 +66,8 @@ func NewConsistentHashCircler(keys []string, hashFunc func(string) uint64) (Hash
 	hc := &consistentHashCircler{
 		hashFunc:          hashFunc,
 		keysMap:           make(map[uint64]string),
-		sortedSet:         []uint64{},
 		replicationPerKey: 16,
+		rb:                rbtree.New(),
 	}
 
 	for _, k := range keys {
@@ -87,16 +87,8 @@ func (h *consistentHashCircler) Add(key string) {
 			continue
 		}
 		h.keysMap[m] = key
-		h.sortedSet = append(h.sortedSet, m)
+		h.addToRbTree(m, key)
 	}
-
-	// sort hashes ascendingly
-	sort.Slice(h.sortedSet, func(i int, j int) bool {
-		if h.sortedSet[i] < h.sortedSet[j] {
-			return true
-		}
-		return false
-	})
 
 	return
 }
@@ -109,10 +101,9 @@ func (h *consistentHashCircler) Hash(input string) (key string, err error) {
 		return "", ErrKeyNotPresent
 	}
 
-	hashN := h.hashFunc(input)
-	index := h.search(hashN)
+	index := h.hashFunc(input)
 
-	return h.keysMap[h.sortedSet[index]], nil
+	return h.searchFromRbTree(index), nil
 }
 
 func (h *consistentHashCircler) Delete(key string) {
@@ -122,46 +113,64 @@ func (h *consistentHashCircler) Delete(key string) {
 	for i := 0; i < h.replicationPerKey; i++ {
 		m := h.hashFunc(fmt.Sprintf("%s-%d", key, i))
 		delete(h.keysMap, m)
-		h.delSlice(m)
+		h.deleteFromRbTree(m)
 	}
 
 	return
-}
-
-func (h *consistentHashCircler) search(key uint64) int {
-	idx := sort.Search(len(h.sortedSet), func(i int) bool {
-		return h.sortedSet[i] >= key
-	})
-
-	if idx >= len(h.sortedSet) {
-		idx = 0
-	}
-	return idx
-}
-
-func (h *consistentHashCircler) delSlice(val uint64) {
-	idx := -1
-	l := 0
-	r := len(h.sortedSet) - 1
-	for l <= r {
-		m := (l + r) / 2
-		if h.sortedSet[m] == val {
-			idx = m
-			break
-		} else if h.sortedSet[m] < val {
-			l = m + 1
-		} else if h.sortedSet[m] > val {
-			r = m - 1
-		}
-	}
-
-	if idx != -1 {
-		h.sortedSet = append(h.sortedSet[:idx], h.sortedSet[idx+1:]...)
-	}
 }
 
 func fnvHashFunc(input string) uint64 {
 	h := fnv.New64a()
 	h.Write([]byte(input))
 	return h.Sum64()
+}
+
+func (h *consistentHashCircler) addToRbTree(index uint64, key string) {
+	i := &item{
+		index: index,
+		key:   key,
+	}
+
+	h.rb.Insert(i)
+}
+
+func (h *consistentHashCircler) deleteFromRbTree(index uint64) {
+	i := &item{
+		index: index,
+	}
+
+	h.rb.Delete(i)
+}
+
+func (h *consistentHashCircler) searchFromRbTree(index uint64) string {
+	comp := &item{
+		index: index,
+	}
+
+	target := ""
+
+	// find the key which index of item greater or equal than input index.
+	h.rb.Ascend(comp, func(i rbtree.Item) bool {
+		o := i.(*item)
+		target = o.key
+		return false
+	})
+
+	// if not found the target, return the max item.
+	if target == "" {
+		i := h.rb.Max()
+		target = i.(*item).key
+	}
+
+	return target
+}
+
+type item struct {
+	index uint64
+	key   string
+}
+
+func (i *item) Less(than rbtree.Item) bool {
+	other := than.(*item)
+	return i.index < other.index
 }
