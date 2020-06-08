@@ -114,7 +114,6 @@ func (s *FileUtilTestSuite) TestDeleteFiles(c *check.C) {
 	f1 := filepath.Join(s.tmpDir, "TestDeleteFile001")
 	f2 := filepath.Join(s.tmpDir, "TestDeleteFile002")
 	os.Create(f1)
-	//os.Create(f2)
 	DeleteFiles(f1, f2)
 	c.Assert(PathExist(f1) || PathExist(f2), check.Equals, false)
 }
@@ -321,4 +320,34 @@ func (s *FileUtilTestSuite) TestIsRegularFile(c *check.C) {
 	os.OpenFile(pathStr, 0, 0666)
 	c.Assert(IsRegularFile(pathStr), check.Equals, false)
 	os.Remove(pathStr)
+}
+
+func (s *FileUtilTestSuite) TestIsEmptyDir(c *check.C) {
+	pathStr := filepath.Join(s.tmpDir, "TestIsEmptyDir")
+
+	// not exist
+	empty, err := IsEmptyDir(pathStr)
+	c.Assert(empty, check.Equals, false)
+	c.Assert(err, check.NotNil)
+
+	// not a directory
+	_, _ = os.Create(pathStr)
+	empty, err = IsEmptyDir(pathStr)
+	c.Assert(empty, check.Equals, false)
+	c.Assert(err, check.NotNil)
+	_ = os.Remove(pathStr)
+
+	// empty
+	_ = os.Mkdir(pathStr, 0755)
+	empty, err = IsEmptyDir(pathStr)
+	c.Assert(empty, check.Equals, true)
+	c.Assert(err, check.IsNil)
+
+	// not empty
+	childPath := filepath.Join(pathStr, "child")
+	_ = os.Mkdir(childPath, 0755)
+	empty, err = IsEmptyDir(pathStr)
+	c.Assert(empty, check.Equals, false)
+	c.Assert(err, check.IsNil)
+	_ = os.Remove(pathStr)
 }
