@@ -19,17 +19,13 @@ package seed
 import (
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/corev2/basic"
-	"github.com/dragonflyoss/Dragonfly/dfget/types"
-
-	//"github.com/dragonflyoss/Dragonfly/dfget/corev2/pattern/seed/api"
-
 	"github.com/dragonflyoss/Dragonfly/dfget/corev2/pattern/seed/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/types"
 )
 
 type RegisterHandler struct {
-	supernode string
-	req       *types.RegisterRequest
-	//mReq          *config.RegisterRequest
+	supernode    string
+	req          *types.RegisterRequest
 	supernodeAPI api.SupernodeAPI
 }
 
