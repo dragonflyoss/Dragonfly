@@ -121,14 +121,34 @@ type ClientErrorFuncType func(ip string, req *types.ClientErrorRequest) (*types.
 // ClientErrorFuncType function type of SupernodeAPI#ReportMetricsType
 type ReportMetricsFuncType func(node string, req *api_types.TaskMetricsRequest) (*types.BaseResponse, error)
 
+// HeartBeatFuncType function type of SupernodeAPI#HeartBeatType
+type HeartBeatFuncType func(node string, req *api_types.HeartBeatRequest) (*types.HeartBeatResponse, error)
+
+// FetchP2PNetworkInfoFuncType function type of SupernodeAPI#FetchP2PNetworkInfoType
+type FetchP2PNetworkInfoFuncType func(node string, start int, limit int, req *api_types.NetworkInfoFetchRequest) (resp *api_types.NetworkInfoFetchResponse, e error)
+
+// ReportResourceFuncType function type of SupernodeAPI#ReportResourceType
+type ReportResourceFuncType func(node string, req *types.RegisterRequest) (resp *types.RegisterResponse, err error)
+
+// ApplyForSeedNodeFuncType function type of SupernodeAPI#ApplyForSeedNodeType
+type ApplyForSeedNodeFuncType func(node string, req *types.RegisterRequest) (resp *types.RegisterResponse, err error)
+
+// ReportResourceDeletedFuncType function type of SupernodeAPI#ReportResourceDeletedType
+type ReportResourceDeletedFuncType func(node string, taskID string, cid string) (resp *types.BaseResponse, err error)
+
 // MockSupernodeAPI mocks the SupernodeAPI.
 type MockSupernodeAPI struct {
-	RegisterFunc      RegisterFuncType
-	PullFunc          PullFuncType
-	ReportFunc        ReportFuncType
-	ServiceDownFunc   ServiceDownFuncType
-	ClientErrorFunc   ClientErrorFuncType
-	ReportMetricsFunc ReportMetricsFuncType
+	RegisterFunc              RegisterFuncType
+	PullFunc                  PullFuncType
+	ReportFunc                ReportFuncType
+	ServiceDownFunc           ServiceDownFuncType
+	ClientErrorFunc           ClientErrorFuncType
+	ReportMetricsFunc         ReportMetricsFuncType
+	HeartBeatFunc             HeartBeatFuncType
+	FetchP2PNetworkInfoFunc   FetchP2PNetworkInfoFuncType
+	ReportResourceFunc        ReportResourceFuncType
+	ApplyForSeedNodeFunc      ApplyForSeedNodeFuncType
+	ReportResourceDeletedFunc ReportResourceDeletedFuncType
 }
 
 var _ api.SupernodeAPI = &MockSupernodeAPI{}
@@ -185,18 +205,33 @@ func (m *MockSupernodeAPI) ReportMetrics(ip string, req *api_types.TaskMetricsRe
 }
 
 func (m *MockSupernodeAPI) HeartBeat(node string, req *api_types.HeartBeatRequest) (resp *types.HeartBeatResponse, err error) {
+	if m.HeartBeatFunc != nil {
+		return m.HeartBeatFunc(node, req)
+	}
 	return nil, nil
 }
 func (m *MockSupernodeAPI) FetchP2PNetworkInfo(node string, start int, limit int, req *api_types.NetworkInfoFetchRequest) (resp *api_types.NetworkInfoFetchResponse, e error) {
+	if m.FetchP2PNetworkInfoFunc != nil {
+		return m.FetchP2PNetworkInfoFunc(node, start, limit, req)
+	}
 	return nil, nil
 }
 func (m *MockSupernodeAPI) ReportResource(node string, req *types.RegisterRequest) (resp *types.RegisterResponse, err error) {
+	if m.ReportResourceFunc != nil {
+		return m.ReportResourceFunc(node, req)
+	}
 	return nil, nil
 }
 func (m *MockSupernodeAPI) ApplyForSeedNode(node string, req *types.RegisterRequest) (resp *types.RegisterResponse, err error) {
+	if m.ApplyForSeedNodeFunc != nil {
+		return m.ApplyForSeedNodeFunc(node, req)
+	}
 	return nil, nil
 }
 func (m *MockSupernodeAPI) ReportResourceDeleted(node string, taskID string, cid string) (resp *types.BaseResponse, err error) {
+	if m.ReportResourceDeletedFunc != nil {
+		return m.ReportResourceDeletedFunc(node, taskID, cid)
+	}
 	return nil, nil
 }
 
