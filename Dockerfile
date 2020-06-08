@@ -20,6 +20,7 @@ COPY --from=builder /opt/dragonfly/df-client /opt/dragonfly/df-client
 EXPOSE 65001
 
 # use the https://index.docker.io as default registry.
-CMD [ "--registry", "https://index.docker.io" ]
+# more cli config see https://github.com/dragonflyoss/Dragonfly/blob/master/docs/cli_reference/dfdaemon.md
+# CMD [ "--registry", "https://index.docker.io" ]
 
 ENTRYPOINT [ "/opt/dragonfly/df-client/dfdaemon" ]

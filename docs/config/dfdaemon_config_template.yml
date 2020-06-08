@@ -61,7 +61,8 @@ ratelimit: 20M
 localrepo: /home/admin/.small-dragonfly/dfdaemon/data/
 
 # dfget path, which is the relative file path for the dfdaemon
-dfpath: ./dfget
+# default /opt/dragonfly/df-client/dfget
+dfpath: /opt/dragonfly/df-client/dfget
 
 # https options
 # port: 12001
