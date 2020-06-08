@@ -16,35 +16,16 @@
 
 package seed
 
-import (
-	"time"
-)
+import "github.com/go-check/check"
 
-type requestState struct {
-	// the request url
-	url string
-	// the time when the url firstly requested
-	firstTime time.Time
-	// the recent time when the url requested
-	recentTime time.Time
-}
+func (suite *seedSuite) TestRequestState(c *check.C) {
+	rs := newRequestState("url1")
+	c.Assert(rs.url, check.Equals, "url1")
 
-func newRequestState(url string) *requestState {
-	return &requestState{
-		url:        url,
-		firstTime:  time.Now(),
-		recentTime: time.Now(),
-	}
-}
+	rs1 := rs.copy()
+	c.Assert(rs1, check.DeepEquals, rs)
 
-func (rs *requestState) copy() *requestState {
-	return &requestState{
-		url:        rs.url,
-		firstTime:  rs.firstTime,
-		recentTime: rs.recentTime,
-	}
-}
-
-func (rs *requestState) updateRecentTime() {
-	rs.recentTime = time.Now()
+	rs.updateRecentTime()
+	c.Assert(rs1, check.Not(check.DeepEquals), rs)
+	c.Assert(rs.firstTime.Before(rs.recentTime), check.Equals, true)
 }

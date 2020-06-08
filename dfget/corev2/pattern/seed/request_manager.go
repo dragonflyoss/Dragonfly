@@ -23,7 +23,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// requestManager manage the recent the requests, it provides the
+// requestManager manages the recent the requests.
 type requestManager struct {
 	q *queue.LRUQueue
 }

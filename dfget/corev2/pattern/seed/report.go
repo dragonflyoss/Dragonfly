@@ -19,17 +19,13 @@ package seed
 import (
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/corev2/basic"
-	"github.com/dragonflyoss/Dragonfly/dfget/types"
-
-	//"github.com/dragonflyoss/Dragonfly/dfget/corev2/pattern/seed/api"
-
 	"github.com/dragonflyoss/Dragonfly/dfget/corev2/pattern/seed/config"
 	"github.com/dragonflyoss/Dragonfly/dfget/locator"
+	"github.com/dragonflyoss/Dragonfly/dfget/types"
 )
 
 type Reporter struct {
-	req *types.RegisterRequest
-	//mReq          *config.ReportRequest
+	req          *types.RegisterRequest
 	supernodeAPI api.SupernodeAPI
 }
 

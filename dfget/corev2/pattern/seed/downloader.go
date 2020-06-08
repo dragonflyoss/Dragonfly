@@ -49,7 +49,7 @@ func (dn *downloader) Download(ctx context.Context, off, size int64) (io.ReadClo
 	}
 
 	res, err := dn.downloaderAPI.Download(dn.peer.IP.String(), int(dn.peer.Port), req, dn.timeout)
-	logrus.Debugf("download from %s:%d, path %s, err: %v", dn.peer.IP.String(), dn.peer.Port, err)
+	logrus.Debugf("download from %s:%d, path %s, err: %v", dn.peer.IP.String(), dn.peer.Port, dn.peer.Path, err)
 
 	if err != nil {
 		return nil, err
