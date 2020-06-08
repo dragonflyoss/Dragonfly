@@ -20,6 +20,8 @@ import (
 	"context"
 	"path"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/store"
@@ -69,6 +71,13 @@ func getMd5DataRaw(taskID string) *store.Raw {
 	}
 }
 
+func getParentRaw(taskID string) *store.Raw {
+	return &store.Raw{
+		Bucket: config.DownloadHome,
+		Key:    getParentKey(taskID),
+	}
+}
+
 func getHomeRaw() *store.Raw {
 	return &store.Raw{
 		Bucket: config.DownloadHome,
@@ -89,6 +98,12 @@ func deleteTaskFiles(ctx context.Context, cacheStore *store.Store, taskID string
 	if err := cacheStore.Remove(ctx, getDownloadRaw(taskID)); err != nil &&
 		!store.IsKeyNotFound(err) {
 		return err
+	}
+
+	// try to clean the parent bucket
+	if err := cacheStore.Remove(ctx, getParentRaw(taskID)); err != nil &&
+		!store.IsKeyNotFound(err) {
+		logrus.Warnf("taskID:%s failed remove parent bucket:%v", taskID, err)
 	}
 
 	return nil
