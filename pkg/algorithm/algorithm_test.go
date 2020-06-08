@@ -18,6 +18,7 @@ package algorithm
 
 import (
 	"math/rand"
+	"sort"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -88,5 +89,40 @@ func (suit *AlgorithmSuite) TestShuffle() {
 		isRun := 0
 		Shuffle(n, func(i, j int) { isRun++ })
 		suit.Equal(isRun, n-1)
+	}
+}
+
+func (suit *AlgorithmSuite) TestDedup() {
+	cases := []struct {
+		input  []string
+		expect []string
+	}{
+		{
+			input:  []string{},
+			expect: []string{},
+		},
+		{
+			input: []string{
+				"abc", "bbc", "abc",
+			},
+			expect: []string{
+				"abc", "bbc",
+			},
+		},
+		{
+			input: []string{
+				"abc", "bbc", "abc", "bbc", "ddc", "abc",
+			},
+			expect: []string{
+				"abc", "bbc", "ddc",
+			},
+		},
+	}
+
+	for _, t := range cases {
+		out := DedupStringArr(t.input)
+		sort.Strings(out)
+		sort.Strings(t.expect)
+		suit.Equal(t.expect, out)
 	}
 }

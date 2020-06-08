@@ -1,6 +1,8 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
+github.com/HuKeping/rbtree v0.0.0-20200208030951-29f0b79e84ed h1:YKqpA6qf8Bh73vj8Rv9SBB5OU558f2c1A889nCVUSLE=
+github.com/HuKeping/rbtree v0.0.0-20200208030951-29f0b79e84ed/go.mod h1:bODsl3NElqKlgf1UkBLj67fYmY5DsqkKrrYm/kMT/6Y=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
 github.com/PuerkitoBio/purell v0.0.0-20170829232023-f619812e3caf h1:ePmEKucT6HqNzbxw/yeyfoHplmyGDQUW76ppv4igW7Q=
 github.com/PuerkitoBio/purell v0.0.0-20170829232023-f619812e3caf/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
