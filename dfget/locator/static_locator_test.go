@@ -170,6 +170,45 @@ func (s *StaticLocatorTestSuite) Test_Refresh(c *check.C) {
 	c.Assert(l.load(), check.Equals, -1)
 }
 
+func (s *StaticLocatorTestSuite) Test_String(c *check.C) {
+	cases := []struct {
+		locator    *StaticLocator
+		isGroupNil bool
+		increments int
+		expected   string
+	}{
+		{
+			locator:    createLocator("a:80=1"),
+			isGroupNil: true,
+			increments: 0,
+			expected:   "empty",
+		},
+		{
+			locator:    createLocator("a:80=1"),
+			isGroupNil: false,
+			increments: 2,
+			expected:   "empty",
+		},
+		{
+			locator:    createLocator("a:80=1"),
+			isGroupNil: false,
+			increments: 0,
+			expected:   "test-group:[a:80=1]",
+		},
+	}
+
+	for _, v := range cases {
+		if v.isGroupNil {
+			v.locator.Group = nil
+		}
+		for i := 0; i < v.increments; i++ {
+			v.locator.inc()
+		}
+
+		c.Assert(v.locator.String(), check.Equals, v.expected)
+	}
+}
+
 func create(ip string, port, weight int) *Supernode {
 	return &Supernode{
 		Schema:    config.DefaultSupernodeSchema,
