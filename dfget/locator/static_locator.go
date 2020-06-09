@@ -82,6 +82,8 @@ func NewStaticLocatorFromStr(groupName string, nodes []string) (*StaticLocator, 
 // ----------------------------------------------------------------------------
 // implement api methods
 
+// Get returns the current selected supernode, it should be idempotent.
+// It should return nil before first calling the Next method.
 func (s *StaticLocator) Get() *Supernode {
 	if s.Group == nil {
 		return nil
@@ -89,6 +91,8 @@ func (s *StaticLocator) Get() *Supernode {
 	return s.Group.GetNode(s.load())
 }
 
+// Next chooses the next available supernode for retrying or other
+// purpose. The current supernode should be set as this result.
 func (s *StaticLocator) Next() *Supernode {
 	if s.Group == nil || s.load() >= len(s.Group.Nodes) {
 		return nil
@@ -96,11 +100,14 @@ func (s *StaticLocator) Next() *Supernode {
 	return s.Group.GetNode(s.inc())
 }
 
+// Select chooses a supernode based on the giving key.
+// It should not affect the result of method 'Get()'.
 func (s *StaticLocator) Select(key interface{}) *Supernode {
 	// unnecessary to implement this method
 	return nil
 }
 
+// GetGroup returns the group with the giving name.
 func (s *StaticLocator) GetGroup(name string) *SupernodeGroup {
 	if s.Group == nil || s.Group.Name != name {
 		return nil
@@ -108,6 +115,7 @@ func (s *StaticLocator) GetGroup(name string) *SupernodeGroup {
 	return s.Group
 }
 
+// All returns all the supernodes.
 func (s *StaticLocator) All() []*SupernodeGroup {
 	if s.Group == nil {
 		return nil
@@ -115,6 +123,7 @@ func (s *StaticLocator) All() []*SupernodeGroup {
 	return []*SupernodeGroup{s.Group}
 }
 
+// Size returns the number of all supernodes.
 func (s *StaticLocator) Size() int {
 	if s.Group == nil {
 		return 0
@@ -122,11 +131,14 @@ func (s *StaticLocator) Size() int {
 	return len(s.Group.Nodes)
 }
 
+// Report records the metrics of the current supernode in order to choose a
+// more appropriate supernode for the next time if necessary.
 func (s *StaticLocator) Report(node string, metrics *SupernodeMetrics) {
 	// unnecessary to implement this method
 	return
 }
 
+// Refresh refreshes all the supernodes.
 func (s *StaticLocator) Refresh() bool {
 	atomic.StoreInt32(&s.idx, -1)
 	return true
