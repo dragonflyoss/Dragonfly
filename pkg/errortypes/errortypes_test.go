@@ -90,3 +90,19 @@ func (suite *ErrorTestSuite) TestIsRangeNotSatisfiable(c *check.C) {
 	c.Assert(IsRangeNotSatisfiable(*err1), check.Equals, true)
 	c.Assert(IsRangeNotSatisfiable(*err2), check.Equals, false)
 }
+
+func (suite *ErrorTestSuite) TestNewHTTPError(c *check.C) {
+	err := NewHTTPError(1, "test")
+	c.Assert(err.Code, check.Equals, 1)
+	c.Assert(err.Msg, check.Equals, "test")
+}
+
+func (suite *ErrorTestSuite) TestHTTPError(c *check.C) {
+	err := NewHTTPError(1, "test")
+	c.Assert(err.Error(), check.Equals, "{\"Code\":1,\"Msg\":\"test\"}")
+}
+
+func (suite *ErrorTestSuite) TestHTTPCode(c *check.C) {
+	err := NewHTTPError(1, "test")
+	c.Assert(err.HTTPCode(), check.Equals, 1)
+}
