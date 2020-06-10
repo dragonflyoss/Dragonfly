@@ -189,6 +189,7 @@ func newManager(pCfg config.PatternConfig, commonCfg config.DFGetCommonConfig, c
 
 	uploader2.RegisterUploader("seed", newUploader(m.seedManager))
 	m.reportLocalSeedsToSuperNode()
+	go m.handleSuperNodeEventLoop(ctx)
 
 	//todo: init Manager by input config.
 	return m
@@ -577,4 +578,27 @@ func (m *Manager) reportLocalSeedsToSuperNode() {
 
 		m.reportLocalSeedToSuperNode(keys[i], sds[i], targetNode)
 	}
+}
+
+// handleSuperNodeEventLoop handles the events of supernode, the events includes connected/disconnected/reconnected.
+func (m *Manager) handleSuperNodeEventLoop(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			break
+		}
+
+		ev, ok := m.sm.GetSupernodeEvent(time.Second * 2)
+		if !ok {
+			continue
+		}
+
+		m.handleSuperNodeEvent(ev)
+	}
+}
+
+func (m *Manager) handleSuperNodeEvent(ev *supernodeEvent) {
+	// todo: handle the event of connected/disconnected/reconnected.
 }
