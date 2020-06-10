@@ -174,7 +174,7 @@ func newManager(pCfg config.PatternConfig, commonCfg config.DFGetCommonConfig, c
 	}
 
 	config.SuperNodes = algorithm.DedupStringArr(config.SuperNodes)
-	m.sm = NewSupernodeManager(ctx, cfg, config.SuperNodes, m.supernodeAPI)
+	m.sm = NewSupernodeManager(ctx, cfg, config.SuperNodes, m.supernodeAPI, intervalOpt{})
 	m.seedManager = seed.NewSeedManager(seed.NewSeedManagerOpt{
 		StoreDir:           filepath.Join(cfg.WorkHome, "localSeed"),
 		ConcurrentLimit:    cfg.ConcurrentLimit,
