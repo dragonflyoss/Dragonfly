@@ -421,5 +421,8 @@ func (s *Server) reportPeerHealth(ctx context.Context, rw http.ResponseWriter, r
 	if err != nil {
 		return err
 	}
-	return EncodeResponse(rw, http.StatusOK, resp)
+	return EncodeResponse(rw, http.StatusOK, types.ResultInfo{
+		Code: constants.Success,
+		Data: resp,
+	})
 }
