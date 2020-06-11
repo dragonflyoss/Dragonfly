@@ -18,6 +18,7 @@ package dfgettask
 
 import (
 	"context"
+	"reflect"
 	"testing"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
@@ -186,6 +187,204 @@ func (s *DfgetTaskMgrTestSuite) TestDfgetTaskUpdate(c *check.C) {
 		dt, err := manager.Get(context.Background(), tc.dfgetTask.CID, tc.dfgetTask.TaskID)
 		c.Check(err, check.IsNil)
 		c.Check(dt, check.DeepEquals, tc.Expect)
+	}
+}
+
+func (s *DfgetTaskMgrTestSuite) TestDfgetTaskGetCIDByPeerIDAndTaskID(c *check.C) {
+	manager, _ := NewManager(s.cfg, prometheus.NewRegistry())
+	// peer1
+	manager.Add(context.Background(), &types.DfGetTask{
+		CID:        "foo",
+		CallSystem: "foo",
+		Dfdaemon:   false,
+		Path:       "/peer/file/taskFileName",
+		PieceSize:  4 * 1024 * 1024,
+		TaskID:     "test1",
+		PeerID:     "peer1",
+	})
+	// peer2
+	manager.Add(context.Background(), &types.DfGetTask{
+		CID:        "bar",
+		CallSystem: "bar",
+		Dfdaemon:   true,
+		Path:       "/peer/file/taskFileName",
+		PieceSize:  4 * 1024 * 1024,
+		TaskID:     "test2",
+		PeerID:     "peer2",
+	})
+
+	cases := []struct {
+		peerID        string
+		taskID        string
+		expected      string
+		expectedError bool
+	}{
+		{
+			peerID:        "",
+			taskID:        "",
+			expectedError: true,
+		},
+		{
+			peerID:        "peer1",
+			taskID:        "",
+			expectedError: true,
+		},
+		{
+			peerID:        "",
+			taskID:        "test1",
+			expectedError: true,
+		},
+		{
+			peerID:        "peer1",
+			taskID:        "test2",
+			expectedError: true,
+		},
+		{
+			peerID:        "peer2",
+			taskID:        "test1",
+			expectedError: true,
+		},
+		{
+			peerID:   "peer1",
+			taskID:   "test1",
+			expected: "foo",
+		},
+	}
+
+	for _, tc := range cases {
+		got, err := manager.GetCIDByPeerIDAndTaskID(context.Background(), tc.peerID, tc.taskID)
+		c.Check(err != nil, check.Equals, tc.expectedError)
+		c.Check(got, check.Equals, tc.expected)
+	}
+}
+
+func (s *DfgetTaskMgrTestSuite) TestDfgetTaskGetCIDsByTaskID(c *check.C) {
+	manager, _ := NewManager(s.cfg, prometheus.NewRegistry())
+	// peer1
+	manager.Add(context.Background(), &types.DfGetTask{
+		CID:        "foo",
+		CallSystem: "foo",
+		Dfdaemon:   false,
+		Path:       "/peer/file/taskFileName",
+		PieceSize:  4 * 1024 * 1024,
+		TaskID:     "test1",
+		PeerID:     "peer1",
+	})
+	// peer2
+	manager.Add(context.Background(), &types.DfGetTask{
+		CID:        "foo",
+		CallSystem: "foo",
+		Dfdaemon:   true,
+		Path:       "/peer/file/taskFileName",
+		PieceSize:  4 * 1024 * 1024,
+		TaskID:     "test1",
+		PeerID:     "peer2",
+	})
+	manager.Add(context.Background(), &types.DfGetTask{
+		CID:        "bar",
+		CallSystem: "bar",
+		Dfdaemon:   true,
+		Path:       "/peer/file/taskFileName",
+		PieceSize:  4 * 1024 * 1024,
+		TaskID:     "test2",
+		PeerID:     "peer2",
+	})
+
+	cases := []struct {
+		taskID        string
+		expected      []string
+		expectedError bool
+	}{
+		{
+			taskID:   "",
+			expected: nil,
+		},
+		{
+			taskID:   "test1",
+			expected: []string{"foo", "foo"},
+		},
+		{
+			taskID:   "test2",
+			expected: []string{"bar"},
+		},
+	}
+
+	for _, tc := range cases {
+		got, err := manager.GetCIDsByTaskID(context.Background(), tc.taskID)
+		c.Check(err != nil, check.Equals, tc.expectedError)
+		c.Check(reflect.DeepEqual(got, tc.expected), check.Equals, true)
+	}
+}
+
+func (s *DfgetTaskMgrTestSuite) TestDfgetTaskGetCIDAndTaskIDsByPeerID(c *check.C) {
+	manager, _ := NewManager(s.cfg, prometheus.NewRegistry())
+	// peer1
+	manager.Add(context.Background(), &types.DfGetTask{
+		CID:        "foo",
+		CallSystem: "foo",
+		Dfdaemon:   false,
+		Path:       "/peer/file/taskFileName",
+		PieceSize:  4 * 1024 * 1024,
+		TaskID:     "test1",
+		PeerID:     "peer1",
+	})
+	manager.Add(context.Background(), &types.DfGetTask{
+		CID:        "foo",
+		CallSystem: "foo",
+		Dfdaemon:   false,
+		Path:       "/peer/file/taskFileName",
+		PieceSize:  4 * 1024 * 1024,
+		TaskID:     "test2",
+		PeerID:     "peer1",
+	})
+	// peer2
+	manager.Add(context.Background(), &types.DfGetTask{
+		CID:        "foo",
+		CallSystem: "foo",
+		Dfdaemon:   true,
+		Path:       "/peer/file/taskFileName",
+		PieceSize:  4 * 1024 * 1024,
+		TaskID:     "test1",
+		PeerID:     "peer2",
+	})
+	manager.Add(context.Background(), &types.DfGetTask{
+		CID:        "bar",
+		CallSystem: "bar",
+		Dfdaemon:   true,
+		Path:       "/peer/file/taskFileName",
+		PieceSize:  4 * 1024 * 1024,
+		TaskID:     "test2",
+		PeerID:     "peer2",
+	})
+
+	cases := []struct {
+		peerID        string
+		expected      map[string]string
+		expectedError bool
+	}{
+		{
+			peerID:   "",
+			expected: map[string]string{},
+		},
+		{
+			peerID: "peer1",
+			expected: map[string]string{
+				"foo": "test2",
+			},
+		},
+		{
+			peerID: "peer2",
+			expected: map[string]string{
+				"foo": "test1",
+				"bar": "test2",
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		got, err := manager.GetCIDAndTaskIDsByPeerID(context.Background(), tc.peerID)
+		c.Check(err != nil, check.Equals, tc.expectedError)
+		c.Check(reflect.DeepEqual(got, tc.expected), check.Equals, true)
 	}
 }
 
