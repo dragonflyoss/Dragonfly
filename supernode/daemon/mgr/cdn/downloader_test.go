@@ -105,7 +105,9 @@ func (s *CDNDownloadTestSuite) TestDownload(c *check.C) {
 	}
 
 	for _, v := range cases {
+		headers := cloneMap(v.headers)
 		resp, err := cm.download(context.TODO(), "", ts.URL, v.headers, v.startPieceNum, v.httpFileLength, v.pieceContSize)
+		c.Check(headers, check.DeepEquals, v.headers)
 		c.Check(v.errCheck(err), check.Equals, true)
 
 		c.Check(resp.StatusCode, check.Equals, v.exceptedStatusCode)
@@ -159,4 +161,18 @@ func Test_checkStatusCode(t *testing.T) {
 			}
 		})
 	}
+}
+
+// ----------------------------------------------------------------------------
+// helper
+
+func cloneMap(src map[string]string) map[string]string {
+	if src == nil {
+		return nil
+	}
+	target := make(map[string]string)
+	for k, v := range src {
+		target[k] = v
+	}
+	return target
 }

@@ -98,3 +98,16 @@ func (s *OriginHTTPClientTestSuite) TestRegisterTLSConfig(c *check.C) {
 	c.Assert(resp, check.NotNil)
 	c.Assert(resp.ContentLength, check.Equals, int64(-1))
 }
+
+func (s *OriginHTTPClientTestSuite) TestCopyHeader(c *check.C) {
+	dst := CopyHeader(nil, nil)
+	c.Check(dst, check.NotNil)
+	c.Check(len(dst), check.Equals, 0)
+
+	src := map[string]string{"test": "1"}
+	dst = CopyHeader(nil, src)
+	c.Check(dst, check.DeepEquals, src)
+
+	dst["test"] = "2"
+	c.Check(src["test"], check.Equals, "1")
+}
