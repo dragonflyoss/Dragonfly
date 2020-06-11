@@ -50,8 +50,6 @@ const (
 
 	defaultGcInterval = 2 * time.Minute
 
-	defaultTimeLayout = time.RFC3339Nano
-
 	// 128KB
 	defaultBlockOrder = 17
 )
