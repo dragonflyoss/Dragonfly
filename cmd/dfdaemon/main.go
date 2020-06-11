@@ -18,6 +18,7 @@ package main
 
 import (
 	"github.com/dragonflyoss/Dragonfly/cmd/dfdaemon/app"
+	_ "github.com/dragonflyoss/Dragonfly/dfget/corev2/pattern/seed"
 )
 
 func main() {
