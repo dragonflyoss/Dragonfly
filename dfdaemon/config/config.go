@@ -21,7 +21,6 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"github.com/pborman/uuid"
 	"net/url"
 	"path/filepath"
 	"regexp"
@@ -31,6 +30,7 @@ import (
 	dferr "github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/rate"
 
+	"github.com/pborman/uuid"
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 )
