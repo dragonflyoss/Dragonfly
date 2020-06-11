@@ -260,8 +260,9 @@ func (ls *localStorage) Stat(ctx context.Context, raw *Raw) (*StorageInfo, error
 }
 
 // Remove deletes a file or dir.
+// It will force delete the file or dir when the raw.Trunc is true.
 func (ls *localStorage) Remove(ctx context.Context, raw *Raw) error {
-	path, _, err := ls.statPath(raw.Bucket, raw.Key)
+	path, info, err := ls.statPath(raw.Bucket, raw.Key)
 	if err != nil {
 		return err
 	}
@@ -269,7 +270,14 @@ func (ls *localStorage) Remove(ctx context.Context, raw *Raw) error {
 	lock(path, -1, false)
 	defer unLock(path, -1, false)
 
-	return os.RemoveAll(path)
+	if raw.Trunc || !info.IsDir() {
+		return os.RemoveAll(path)
+	}
+	empty, err := fileutils.IsEmptyDir(path)
+	if empty {
+		return os.RemoveAll(path)
+	}
+	return err
 }
 
 // GetAvailSpace returns the available disk space in B.

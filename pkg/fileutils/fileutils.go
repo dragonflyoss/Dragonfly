@@ -256,3 +256,17 @@ func GetFreeSpace(path string) (Fsize, error) {
 
 	return Fsize(fs.Bavail * uint64(fs.Bsize)), nil
 }
+
+// IsEmptyDir check whether the directory is empty.
+func IsEmptyDir(path string) (bool, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	if _, err = f.Readdirnames(1); err == io.EOF {
+		return true, nil
+	}
+	return false, err
+}
