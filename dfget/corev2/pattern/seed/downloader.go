@@ -19,13 +19,14 @@ package seed
 import (
 	"context"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"io"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/corev2/basic"
 	down "github.com/dragonflyoss/Dragonfly/dfget/corev2/downloader"
 	"github.com/dragonflyoss/Dragonfly/dfget/corev2/pattern/seed/api"
+
+	"github.com/sirupsen/logrus"
 )
 
 type downloader struct {

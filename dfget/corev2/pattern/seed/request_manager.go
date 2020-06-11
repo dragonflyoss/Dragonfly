@@ -40,7 +40,7 @@ func (rm *requestManager) addRequest(url string) error {
 		return err
 	}
 
-	var rs *requestState = nil
+	var rs *requestState
 	if err == errortypes.ErrDataNotFound {
 		rs = newRequestState(url)
 	} else {

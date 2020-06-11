@@ -36,7 +36,6 @@ type Config struct {
 	// DefaultBlockOrder represents the default block order of seed file. it should be in range [10-31].
 	DefaultBlockOrder int
 
-	//
 	PerDownloadBlocks int
 
 	DownRate   rate.Rate

@@ -75,10 +75,6 @@ func (rr rangeRequest) Extra() interface{} {
 }
 
 const (
-	defaultUploadRate = 100 * 1024 * 1024
-
-	defaultDownloadRate = 100 * 1024 * 1024
-
 	// 512KB
 	defaultBlockOrder = 19
 
@@ -174,7 +170,7 @@ func newManager(pCfg config.PatternConfig, commonCfg config.DFGetCommonConfig, c
 	}
 
 	config.SuperNodes = algorithm.DedupStringArr(config.SuperNodes)
-	m.sm = NewSupernodeManager(ctx, cfg, config.SuperNodes, m.supernodeAPI, intervalOpt{})
+	m.sm = newSupernodeManager(ctx, cfg, config.SuperNodes, m.supernodeAPI, intervalOpt{})
 	m.seedManager = seed.NewSeedManager(seed.NewSeedManagerOpt{
 		StoreDir:           filepath.Join(cfg.WorkHome, "localSeed"),
 		ConcurrentLimit:    cfg.ConcurrentLimit,
@@ -534,7 +530,7 @@ func (m *Manager) reportLocalSeedToSuperNode(path string, sd seed.Seed, targetSu
 
 	resp, err := m.supernodeAPI.ReportResource(targetSuperNode, req)
 	if err != nil || resp.Code != constants.Success {
-		logrus.Errorf("failed to report resouce to supernode, resp: %v, err: %v", resp, err)
+		logrus.Errorf("failed to report resource to supernode, resp: %v, err: %v", resp, err)
 	}
 }
 

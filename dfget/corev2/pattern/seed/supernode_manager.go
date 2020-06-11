@@ -125,7 +125,7 @@ type supernodeManager struct {
 	fetchNetworkInterval time.Duration
 }
 
-func NewSupernodeManager(ctx context.Context, cfg *Config, nodes []string, supernodeAPI api.SupernodeAPI, opt intervalOpt) *supernodeManager {
+func newSupernodeManager(ctx context.Context, cfg *Config, nodes []string, supernodeAPI api.SupernodeAPI, opt intervalOpt) *supernodeManager {
 	locatorEvQueue := queue.NewQueue(0)
 	lc, err := locator.NewHashCirclerLocator("default", nodes, locatorEvQueue)
 	if err != nil {

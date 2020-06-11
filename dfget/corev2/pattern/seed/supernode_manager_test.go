@@ -426,7 +426,7 @@ func (suite *seedSuite) TestSupernodeManager(c *check.C) {
 		DFGetCommonConfig: nodes[0],
 	}
 	// new supernodeManager
-	manager := NewSupernodeManager(context.Background(), localCfg, supernodes, sAPI,
+	manager := newSupernodeManager(context.Background(), localCfg, supernodes, sAPI,
 		intervalOpt{heartBeatInterval: 3 * time.Second, fetchNetworkInterval: 3 * time.Second})
 
 	matchUrls := []string{tasks[0].TaskURL, tasks[1].TaskURL, tasks[2].TaskURL, "url1", "url2", "url3", "url4", "url5", "url6", "url7", "url8"}
