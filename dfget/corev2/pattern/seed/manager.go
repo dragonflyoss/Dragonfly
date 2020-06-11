@@ -244,8 +244,8 @@ func (m *Manager) runStream(ctx context.Context, rr basic.RangeRequest, peers []
 
 	for _, peer := range peers {
 		rc, err = m.tryToDownload(ctx, peer, rr)
-		if err != nil {
-			continue
+		if err == nil {
+			break
 		}
 	}
 
