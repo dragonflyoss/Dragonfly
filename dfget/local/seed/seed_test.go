@@ -281,7 +281,7 @@ func (suite *SeedTestSuite) TestSeedRestore(c *check.C) {
 	sd.Stop()
 
 	// restore seed
-	sd, remove, err := RestoreSeed(metaDir, RateOpt{DownloadRateLimiter: ratelimiter.NewRateLimiter(0, 0)}, nil)
+	sd, remove, err := RestoreSeed(metaDir, RateOpt{DownloadRateLimiter: ratelimiter.NewRateLimiter(0, 0)}, nil, nil)
 	c.Assert(err, check.IsNil)
 	c.Assert(remove, check.Equals, true)
 	err = sd.Delete()
@@ -365,7 +365,7 @@ func (suite *SeedTestSuite) TestSeedRestore(c *check.C) {
 	sd.Stop()
 
 	// restore again, and try to read all from local file.
-	sd, remove, err = RestoreSeed(metaDir, RateOpt{DownloadRateLimiter: ratelimiter.NewRateLimiter(0, 0)}, nil)
+	sd, remove, err = RestoreSeed(metaDir, RateOpt{DownloadRateLimiter: ratelimiter.NewRateLimiter(0, 0)}, nil, nil)
 	c.Assert(err, check.IsNil)
 	c.Assert(remove, check.Equals, false)
 
@@ -405,4 +405,83 @@ func (suite *SeedTestSuite) TestSeedRestore(c *check.C) {
 	}
 
 	sd.Delete()
+}
+
+func (suite *SeedTestSuite) TestSeedSyncReadWithFactory(c *check.C) {
+	var (
+		start, end, rangeSize int64
+	)
+
+	urlF := fmt.Sprintf("http://%s/fileF", suite.host)
+	metaDir := filepath.Join(suite.cacheDir, "TestSeedSyncRead")
+	// 64 KB
+	blockOrder := uint32(16)
+
+	sOpt := BaseOpt{
+		BaseDir: metaDir,
+		Info: BaseInfo{
+			URL:        urlF,
+			TaskID:     uuid.New(),
+			FullLength: 10 * 1024 * 1024,
+			BlockOrder: blockOrder,
+		},
+		Factory: &mockDownloaderFactory{},
+	}
+
+	now := time.Now()
+
+	sd, err := NewSeed(sOpt, RateOpt{DownloadRateLimiter: ratelimiter.NewRateLimiter(0, 0)}, false)
+	c.Assert(err, check.IsNil)
+
+	notifyCh, resultAcquirer, err := sd.Prefetch(64 * 1024)
+	c.Assert(err, check.IsNil)
+
+	// try to download
+	start = 0
+	end = 0
+	rangeSize = 99 * 1023
+	fileLength := int64(10 * 1024 * 1024)
+
+	for {
+		end = start + rangeSize - 1
+		if end >= fileLength {
+			end = fileLength - 1
+		}
+
+		if start > end {
+			break
+		}
+
+		startTime := time.Now()
+		rc, err := sd.Download(start, end-start+1)
+		logrus.Infof("in TestSeedSyncRead, Download 100KB costs time: %f second", time.Now().Sub(startTime).Seconds())
+		c.Assert(err, check.IsNil)
+		obtainedData, err := ioutil.ReadAll(rc)
+		rc.Close()
+		c.Assert(err, check.IsNil)
+
+		startTime = time.Now()
+		_, err = suite.readFromFileServer("fileF", start, end-start+1)
+		c.Assert(err, check.IsNil)
+		logrus.Infof("in TestSeedSyncRead, Download from source 100KB costs time: %f second", time.Now().Sub(startTime).Seconds())
+
+		suite.checkDataWithFileServer(c, "fileF", start, end-start+1, obtainedData)
+		start = end + 1
+	}
+
+	<-notifyCh
+	logrus.Infof("in TestSeedSyncRead, costs time: %f second", time.Now().Sub(now).Seconds())
+
+	rs, err := resultAcquirer.Result()
+	c.Assert(err, check.IsNil)
+	c.Assert(rs.Success, check.Equals, true)
+	c.Assert(rs.Err, check.IsNil)
+
+	suite.checkFileWithSeed(c, "fileF", fileLength, sd)
+}
+
+type mockDownloaderFactory struct{}
+
+func (f *mockDownloaderFactory) Create(opt DownloaderFactoryCreateOpt) Downloader {
+	return newLocalDownloader(opt.URL, opt.Header, opt.RateLimiter, opt.OpenMemoryCache)
 }

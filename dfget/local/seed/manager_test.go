@@ -238,6 +238,7 @@ func (suite *SeedTestSuite) TestSeedRestoreInManager(c *check.C) {
 		UploadRate:         -1,
 		HighLevel:          90,
 		LowLevel:           85,
+		Factory:            &mockDownloaderFactory{},
 	}
 
 	sm, err := newSeedManager(smOpt)
