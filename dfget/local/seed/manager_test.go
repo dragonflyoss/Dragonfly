@@ -286,7 +286,7 @@ func (suite *SeedTestSuite) TestSeedRestoreInManager(c *check.C) {
 	c.Assert(err, check.IsNil)
 
 	_, seedArr, err = sm.List()
-	c.Assert(err, check.NotNil)
+	c.Assert(err, check.IsNil)
 	c.Assert(len(seedArr), check.Equals, 2)
 
 	_, err = sm.Get(taskIDArr[0])
