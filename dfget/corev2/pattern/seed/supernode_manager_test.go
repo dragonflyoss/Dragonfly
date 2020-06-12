@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/go-check/check"
 	"sync"
 	"time"
 
@@ -30,7 +31,6 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/corev2/basic"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
 
-	"github.com/go-check/check"
 	"github.com/go-openapi/strfmt"
 	"github.com/sirupsen/logrus"
 )
