@@ -63,12 +63,13 @@ type Manager struct {
 	dfgetTaskMgr mgr.DfgetTaskMgr
 	progressMgr  mgr.ProgressMgr
 	cdnMgr       mgr.CDNMgr
+	seedTaskMgr  mgr.SeedTaskMgr
 	metrics      *metrics
 }
 
 // NewManager returns a new Manager.
 func NewManager(cfg *config.Config, taskMgr mgr.TaskMgr, peerMgr mgr.PeerMgr, dfgetTaskMgr mgr.DfgetTaskMgr,
-	progressMgr mgr.ProgressMgr, cdnMgr mgr.CDNMgr, register prometheus.Registerer) (*Manager, error) {
+	progressMgr mgr.ProgressMgr, cdnMgr mgr.CDNMgr, seedTaskMgr mgr.SeedTaskMgr, register prometheus.Registerer) (*Manager, error) {
 	return &Manager{
 		cfg:          cfg,
 		taskMgr:      taskMgr,
@@ -76,6 +77,7 @@ func NewManager(cfg *config.Config, taskMgr mgr.TaskMgr, peerMgr mgr.PeerMgr, df
 		dfgetTaskMgr: dfgetTaskMgr,
 		progressMgr:  progressMgr,
 		cdnMgr:       cdnMgr,
+		seedTaskMgr:  seedTaskMgr,
 		metrics:      newMetrics(register),
 	}, nil
 }
@@ -117,6 +119,18 @@ func (gcm *Manager) StartGC(ctx context.Context) {
 		ticker := time.NewTicker(gcm.cfg.GCDiskInterval)
 		for range ticker.C {
 			gcm.gcDisk(ctx)
+		}
+	}()
+
+	// start a goroutine to gc the real time tasks
+	go func() {
+		// delay to execute GC after gcm.initialDelay
+		time.Sleep(gcm.cfg.GCInitialDelay)
+
+		// execute the GC by fixed delay
+		ticker := time.NewTicker(gcm.cfg.GCMetaInterval)
+		for range ticker.C {
+			gcm.gcSeedTaskPeers(ctx)
 		}
 	}()
 }

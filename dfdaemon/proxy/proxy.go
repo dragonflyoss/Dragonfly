@@ -31,7 +31,6 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/downloader"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/downloader/dfget"
-	"github.com/dragonflyoss/Dragonfly/dfdaemon/downloader/p2p"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/transport"
 	"github.com/golang/groupcache/lru"
 	"github.com/pkg/errors"
@@ -122,6 +121,13 @@ func WithStreamDownloaderFactory(f downloader.StreamFactory) Option {
 	}
 }
 
+func WithPatternMatcher(matcher *PatternMatcher) Option {
+	return func(p *Proxy) error {
+		p.matcher = matcher
+		return nil
+	}
+}
+
 // New returns a new transparent proxy with the given rules
 func New(opts ...Option) (*Proxy, error) {
 	proxy := &Proxy{
@@ -145,10 +151,8 @@ func NewFromConfig(c config.Properties) (*Proxy, error) {
 		WithDownloaderFactory(func() downloader.Interface {
 			return dfget.NewGetter(c.DFGetConfig())
 		}),
-		WithStreamDownloaderFactory(func() downloader.Stream {
-			return p2p.NewClient(c.DFGetConfig())
-		}),
 		WithStreamMode(c.StreamMode),
+		WithPatternMatcher(NewPatternMatcher(c, c.DFGetCommonConfig(), nil)),
 	}
 
 	logrus.Infof("registry mirror: %s", c.RegistryMirror.Remote)
@@ -201,13 +205,15 @@ type Proxy struct {
 	downloadFactory       downloader.Factory
 	streamDownloadFactory downloader.StreamFactory
 	streamMode            bool
+	protocolConf          []config.ProtocolConfig
+	matcher               *PatternMatcher
 }
 
 func (proxy *Proxy) mirrorRegistry(w http.ResponseWriter, r *http.Request) {
 	reverseProxy := httputil.NewSingleHostReverseProxy(proxy.registry.Remote.URL)
 	t, err := transport.New(
 		transport.WithDownloader(proxy.downloadFactory()),
-		transport.WithStreamDownloader(proxy.streamDownloadFactory()),
+		transport.WithStreamDownloader(proxy.matcher.Match(r)),
 		transport.WithTLS(proxy.registry.TLSConfig()),
 		transport.WithCondition(proxy.shouldUseDfgetForMirror),
 	)
@@ -254,7 +260,7 @@ func (proxy *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (proxy *Proxy) handleHTTP(w http.ResponseWriter, req *http.Request) {
-	resp, err := proxy.roundTripper(nil).RoundTrip(req)
+	resp, err := proxy.roundTripper(nil, req).RoundTrip(req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
@@ -267,12 +273,13 @@ func (proxy *Proxy) handleHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (proxy *Proxy) roundTripper(tlsConfig *tls.Config) http.RoundTripper {
+func (proxy *Proxy) roundTripper(tlsConfig *tls.Config, req *http.Request) http.RoundTripper {
 	rt, _ := transport.New(
 		transport.WithDownloader(proxy.downloadFactory()),
-		transport.WithStreamDownloader(proxy.streamDownloadFactory()),
+		transport.WithStreamDownloader(proxy.matcher.Match(req)),
 		transport.WithTLS(tlsConfig),
 		transport.WithCondition(proxy.shouldUseDfget),
+		transport.WithStreamMode(proxy.streamMode),
 	)
 	return rt
 }
@@ -397,7 +404,7 @@ func (proxy *Proxy) handleHTTPS(w http.ResponseWriter, r *http.Request) {
 			r.URL.Host = r.Host
 			r.URL.Scheme = "https"
 		},
-		Transport: proxy.roundTripper(cConfig),
+		Transport: proxy.roundTripper(cConfig, r),
 	}
 
 	// We have to wait until the connection is closed

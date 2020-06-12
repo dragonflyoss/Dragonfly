@@ -18,7 +18,10 @@ package downloader
 
 import (
 	"context"
+	"fmt"
 	"io"
+
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 )
 
 // Interface specifies on how an plugin can download a file.
@@ -31,9 +34,30 @@ type Interface interface {
 type Stream interface {
 	// DownloadContext downloads the resource as specified in url, and it accepts
 	// a context parameter so that it can handle timeouts correctly.
-	DownloadStreamContext(ctx context.Context, url string, header map[string][]string, name string) (io.Reader, error)
+	DownloadStreamContext(ctx context.Context, url string, header map[string][]string, name string) (io.ReadCloser, error)
 }
 
 // Factory is a function that returns a new downloader.
 type Factory func() Interface
 type StreamFactory func() Stream
+
+type StreamFactoryBuilder func(patternConfig config.PatternConfig, commonCfg config.DFGetCommonConfig, c config.Properties) Stream
+
+var (
+	registerFactory = map[string]StreamFactoryBuilder{}
+)
+
+func Register(pattern string, builder StreamFactoryBuilder) {
+	registerFactory[pattern] = builder
+}
+
+func NewStreamFactory(pattern string, patternConfig config.PatternConfig, commonCfg config.DFGetCommonConfig, c config.Properties) StreamFactory {
+	builder, ok := registerFactory[pattern]
+	if !ok {
+		panic(fmt.Sprintf("pattern %s not registered", pattern))
+	}
+
+	return func() Stream {
+		return builder(patternConfig, commonCfg, c)
+	}
+}

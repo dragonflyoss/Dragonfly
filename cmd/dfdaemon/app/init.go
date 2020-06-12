@@ -24,6 +24,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
@@ -85,6 +86,11 @@ func initDfdaemon(cfg *config.Properties) error {
 
 	if cfg.Verbose {
 		logrus.Infoln("use verbose logging")
+	}
+
+	if cfg.HostIP == "127.0.0.1" || cfg.HostIP == "" {
+		cfg.HostIP = getHostIP()
+		cfg.LocalIP = cfg.HostIP
 	}
 
 	if err := os.MkdirAll(cfg.DFRepo, 0755); err != nil {
@@ -173,4 +179,15 @@ func cleanLocalRepo(dfpath string) {
 			return nil
 		})
 	}
+}
+
+func getHostIP() string {
+	cmd := exec.Command("hostname", "-i")
+	b, err := cmd.CombinedOutput()
+	if err != nil {
+		panic(err)
+	}
+
+	ip := strings.TrimSpace(string(b))
+	return ip
 }

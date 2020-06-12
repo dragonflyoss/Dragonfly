@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-package main
+package seed
 
-import (
-	"github.com/dragonflyoss/Dragonfly/cmd/dfdaemon/app"
-	_ "github.com/dragonflyoss/Dragonfly/dfget/corev2/pattern/seed"
-)
+import "github.com/go-check/check"
 
-func main() {
-	app.Execute()
+func (suite *seedSuite) TestRequestState(c *check.C) {
+	rs := newRequestState("url1")
+	c.Assert(rs.url, check.Equals, "url1")
+
+	rs1 := rs.copy()
+	c.Assert(rs1, check.DeepEquals, rs)
+
+	rs.updateRecentTime()
+	c.Assert(rs1, check.Not(check.DeepEquals), rs)
+	c.Assert(rs.firstTime.Before(rs.recentTime), check.Equals, true)
 }

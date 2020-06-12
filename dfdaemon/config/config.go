@@ -20,6 +20,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"path/filepath"
 	"regexp"
@@ -29,6 +30,7 @@ import (
 	dferr "github.com/dragonflyoss/Dragonfly/pkg/errortypes"
 	"github.com/dragonflyoss/Dragonfly/pkg/rate"
 
+	"github.com/pborman/uuid"
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 )
@@ -114,6 +116,11 @@ type Properties struct {
 	LocalIP    string          `yaml:"localIP" json:"localIP"`
 	PeerPort   int             `yaml:"peerPort" json:"peerPort"`
 	StreamMode bool            `yaml:"streamMode" json:"streamMode"`
+
+	ProtocolConf []ProtocolConfig `yaml:"protocolConf" json:"protocolConf"`
+	// DefaultPattern is the default pattern.
+	DefaultPattern string          `yaml:"defaultPattern" json:"defaultPattern"`
+	PatternConf    []PatternConfig `yaml:"patternConf" json:"patternConf"`
 }
 
 // Validate validates the config
@@ -180,6 +187,36 @@ type DFGetConfig struct {
 	HostsConfig []*HijackHost `yaml:"hosts" json:"hosts"`
 	PeerPort    int           `yaml:"peerPort"`
 	LocalIP     string        `yaml:"localIP"`
+}
+
+// DFGetCommonConfig configures how dfdaemon calls dfget in all pattern.
+type DFGetCommonConfig struct {
+	Cid        string   `json:"cid"`
+	IP         string   `json:"ip"`
+	HostName   string   `json:"hostName"`
+	Port       int      `json:"port"`
+	Version    string   `json:"version,omitempty"`
+	Md5        string   `json:"md5,omitempty"`
+	Identifier string   `json:"identifier,omitempty"`
+	CallSystem string   `json:"callSystem,omitempty"`
+	Dfdaemon   bool     `json:"dfdaemon,omitempty"`
+	Insecure   bool     `json:"insecure,omitempty"`
+	RootCAs    [][]byte `json:"rootCAs,omitempty"`
+	WorkHome   string   `json:"workHome,omitempty"`
+}
+
+// DFGetConfig returns config for dfget downloader.
+func (p *Properties) DFGetCommonConfig() DFGetCommonConfig {
+	uid := uuid.New()
+
+	commonConfig := DFGetCommonConfig{
+		IP:       p.HostIP,
+		Cid:      fmt.Sprintf("%s-%d-%s", p.HostIP, p.PeerPort, uid),
+		Port:     p.PeerPort,
+		WorkHome: p.WorkHome,
+	}
+
+	return commonConfig
 }
 
 // RegistryMirror configures the mirror of the official docker registry
@@ -412,4 +449,16 @@ func NewProxy(regx string, useHTTPS bool, direct bool, redirect string) (*Proxy,
 // Match checks if the given url matches the rule.
 func (r *Proxy) Match(url string) bool {
 	return r.Regx != nil && r.Regx.MatchString(url)
+}
+
+// ProtocolConfig is the config of url protocol.
+type ProtocolConfig struct {
+	Name string `yaml:"name" json:"name"`
+	// Opts defines the opts for protocol, such as tls config.
+	Opts map[string]interface{} `yaml:"opts" json:"opts"`
+}
+
+type PatternConfig struct {
+	Pattern string                 `yaml:"pattern" json:"pattern"`
+	Opts    map[string]interface{} `yaml:"opts" json:"opts"`
 }

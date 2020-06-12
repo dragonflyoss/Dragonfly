@@ -14,13 +14,29 @@
  * limitations under the License.
  */
 
-package main
+package seed
 
 import (
-	"github.com/dragonflyoss/Dragonfly/cmd/dfdaemon/app"
-	_ "github.com/dragonflyoss/Dragonfly/dfget/corev2/pattern/seed"
+	"io"
+
+	"github.com/dragonflyoss/Dragonfly/dfget/local/seed"
 )
 
-func main() {
-	app.Execute()
+type uploader struct {
+	seedManager seed.Manager
+}
+
+func newUploader(seedManager seed.Manager) *uploader {
+	return &uploader{
+		seedManager: seedManager,
+	}
+}
+
+func (up *uploader) UploadRange(path string, off, size int64, opt interface{}) (io.ReadCloser, error) {
+	sd, err := up.seedManager.Get(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return sd.Download(off, size)
 }

@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-package main
+package gc
 
 import (
-	"github.com/dragonflyoss/Dragonfly/cmd/dfdaemon/app"
-	_ "github.com/dragonflyoss/Dragonfly/dfget/corev2/pattern/seed"
+	"context"
+
+	"github.com/sirupsen/logrus"
 )
 
-func main() {
-	app.Execute()
+func (gcm *Manager) gcSeedTaskPeers(ctx context.Context) {
+	peerIDs := gcm.seedTaskMgr.ScanDownPeers(ctx)
+	logrus.Infof("gc peers %v", peerIDs)
+	for _, peerID := range peerIDs {
+		gcm.seedTaskMgr.DeRegisterPeer(ctx, peerID)
+	}
 }

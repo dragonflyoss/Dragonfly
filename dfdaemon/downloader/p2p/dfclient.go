@@ -22,7 +22,14 @@ import (
 	"io"
 
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
+	"github.com/dragonflyoss/Dragonfly/dfdaemon/downloader"
 )
+
+func init() {
+	downloader.Register("p2p", func(patternConfig config.PatternConfig, commCfg config.DFGetCommonConfig, c config.Properties) downloader.Stream {
+		return NewClient(c.DFGetConfig())
+	})
+}
 
 type Client struct {
 }
@@ -31,7 +38,7 @@ func (c *Client) DownloadContext(ctx context.Context, url string, header map[str
 	return "", errors.New("Not Implementation")
 }
 
-func (c *Client) DownloadStreamContext(ctx context.Context, url string, header map[string][]string, name string) (io.Reader, error) {
+func (c *Client) DownloadStreamContext(ctx context.Context, url string, header map[string][]string, name string) (io.ReadCloser, error) {
 	return nil, errors.New("Not Implementation")
 }
 

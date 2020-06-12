@@ -178,6 +178,13 @@ func setupFlags(cmd *cobra.Command) {
 	flagSet.Int("down-limit", defaultBaseProperties.PeerDownLimit,
 		"download limit for supernode to serve download tasks")
 
+	flagSet.Int64("peer-expire-time", defaultBaseProperties.PeerExpireTime,
+		"peer expire time is the time that a rt task peer node is treated expired "+
+			"if the peer doesn't send heartbeat or registry tasks anymore")
+
+	flagSet.Int("max-seed-per-object", defaultBaseProperties.MaxSeedPerObject,
+		"max number of seed nodes per one object ")
+
 	flagSet.String("advertise-ip", "",
 		"the supernode ip is the ip we advertise to other peers in the p2p-network")
 
@@ -276,6 +283,14 @@ func bindRootFlags(v *viper.Viper) error {
 		{
 			key:  "base.peerGCDelay",
 			flag: "peer-gc-delay",
+		},
+		{
+			key:  "base.maxSeedPerObject",
+			flag: "max-seed-per-object",
+		},
+		{
+			key:  "peerExpireTime",
+			flag: "peer-expire-time",
 		},
 	}
 
