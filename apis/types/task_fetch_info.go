@@ -6,8 +6,6 @@ package types
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"strconv"
-
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
@@ -18,8 +16,16 @@ import (
 // swagger:model TaskFetchInfo
 type TaskFetchInfo struct {
 
-	// The pieces which should belong to the peer node
-	Pieces []*PieceInfo `json:"pieces"`
+	// This attribute represents the node whether to be downloaded by other seed. This attribute
+	// is valid when asSeed is set.
+	//
+	AllowSeedDownload bool `json:"allowSeedDownload,omitempty"`
+
+	// path is used in one peer A for uploading functionality. When peer B hopes
+	// to get piece C from peer A, B must provide a URL for piece C.
+	// Then when creating a task in supernode, peer A must provide this URL in request.
+	//
+	Path string `json:"path,omitempty"`
 
 	// task
 	Task *TaskInfo `json:"task,omitempty"`
@@ -29,10 +35,6 @@ type TaskFetchInfo struct {
 func (m *TaskFetchInfo) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validatePieces(formats); err != nil {
-		res = append(res, err)
-	}
-
 	if err := m.validateTask(formats); err != nil {
 		res = append(res, err)
 	}
@@ -40,31 +42,6 @@ func (m *TaskFetchInfo) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *TaskFetchInfo) validatePieces(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.Pieces) { // not required
-		return nil
-	}
-
-	for i := 0; i < len(m.Pieces); i++ {
-		if swag.IsZero(m.Pieces[i]) { // not required
-			continue
-		}
-
-		if m.Pieces[i] != nil {
-			if err := m.Pieces[i].Validate(formats); err != nil {
-				if ve, ok := err.(*errors.Validation); ok {
-					return ve.ValidateName("pieces" + "." + strconv.Itoa(i))
-				}
-				return err
-			}
-		}
-
-	}
-
 	return nil
 }
 
