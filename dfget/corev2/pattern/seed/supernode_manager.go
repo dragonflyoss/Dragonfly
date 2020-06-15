@@ -366,7 +366,8 @@ func (sm *supernodeManager) syncP2PNetworkInfoFromSuperNode(supernode string, sw
 					AsSeed:     task.Task.AsSeed,
 					FileLength: task.Task.FileLength,
 				},
-				Path: task.Pieces[0].Path,
+				Path:              task.Path,
+				AllowSeedDownload: task.AllowSeedDownload,
 			}
 		}
 

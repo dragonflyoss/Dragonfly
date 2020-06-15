@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/go-check/check"
 	"sync"
 	"time"
 
@@ -31,6 +30,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/corev2/basic"
 	"github.com/dragonflyoss/Dragonfly/dfget/types"
 
+	"github.com/go-check/check"
 	"github.com/go-openapi/strfmt"
 	"github.com/sirupsen/logrus"
 )
@@ -252,11 +252,7 @@ func (sp *mockSupernode) getTasks(filterURLs []string) *api_types.NetworkInfoFet
 		for _, b := range bd {
 			infos = append(infos, &api_types.TaskFetchInfo{
 				Task: b.task,
-				Pieces: []*api_types.PieceInfo{
-					{
-						Path: b.taskPath,
-					},
-				},
+				Path: b.taskPath,
 			})
 		}
 
