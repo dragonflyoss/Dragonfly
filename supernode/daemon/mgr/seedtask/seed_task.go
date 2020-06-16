@@ -42,9 +42,10 @@ func (p2p *P2pInfo) update() { p2p.hbTime = time.Now().Unix() }
 
 // a tuple of TaskInfo and P2pInfo
 type SeedInfo struct {
-	RequestPath string
-	TaskInfo    *types.TaskInfo
-	P2pInfo     *P2pInfo
+	AllowSeedDownload bool
+	RequestPath       string
+	TaskInfo          *types.TaskInfo
+	P2pInfo           *P2pInfo
 }
 
 // point to a real-time task
@@ -92,9 +93,10 @@ func (taskMap *SeedMap) tryAddNewTask(p2pInfo *P2pInfo, taskRequest *types.TaskC
 	return taskMap.scheduler.Schedule(
 		taskMap.tasks,
 		&SeedInfo{
-			RequestPath: taskRequest.Path,
-			TaskInfo:    newTaskInfo,
-			P2pInfo:     p2pInfo,
+			RequestPath:       taskRequest.Path,
+			TaskInfo:          newTaskInfo,
+			P2pInfo:           p2pInfo,
+			AllowSeedDownload: false,
 		})
 }
 
