@@ -212,9 +212,10 @@ func (suite *seedSuite) TestPeerDownloader(c *check.C) {
 
 	ps.registerFile("fileA", 500*1024, "abcde01234")
 	ps.registerFile("fileB", 10*1024*1024, "11111abcde")
+	ps.registerFile("fileC", 1024*1024, "12345abcde")
 
-	files := []string{"fileA", "fileB"}
-	fileLens := []int64{10 * 1024 * 1024, 40 * 1024 * 1024}
+	files := []string{"fileA", "fileB", "fileC"}
+	fileLens := []int64{500 * 1024, 10 * 1024 * 1024, 1024 * 1024}
 
 	port := ps.port
 	host := "0.0.0.0"
@@ -256,6 +257,12 @@ func (suite *seedSuite) TestPeerDownloader(c *check.C) {
 			FileLength: fileLens[1],
 			AsSeed:     true,
 		},
+		{
+			ID:         "task3",
+			TaskURL:    "http://task3",
+			FileLength: fileLens[2],
+			AsSeed:     true,
+		},
 	}
 
 	sp := mss.getSupernode(supernodes[0])
@@ -263,11 +270,14 @@ func (suite *seedSuite) TestPeerDownloader(c *check.C) {
 	sp.addNode(nodes[0].Cid, nodes[0].IP, nodes[0].Port)
 	sp.addNode(nodes[1].Cid, nodes[1].IP, nodes[1].Port)
 
-	sp.addTask(tasks[0], nodes[0].Cid, files[0])
-	sp.addTask(tasks[0], nodes[1].Cid, files[0])
+	sp.addTask(tasks[0], nodes[0].Cid, files[0], true)
+	sp.addTask(tasks[0], nodes[1].Cid, files[0], true)
 
-	sp.addTask(tasks[1], nodes[0].Cid, files[1])
-	sp.addTask(tasks[1], nodes[1].Cid, files[1])
+	sp.addTask(tasks[1], nodes[0].Cid, files[1], true)
+	sp.addTask(tasks[1], nodes[1].Cid, files[1], true)
+
+	sp.addTask(tasks[2], nodes[0].Cid, files[2], false)
+	sp.addTask(tasks[2], nodes[1].Cid, files[2], false)
 
 	localCfg := &Config{
 		DFGetCommonConfig: nodes[0],
@@ -281,6 +291,7 @@ func (suite *seedSuite) TestPeerDownloader(c *check.C) {
 
 	manager.AddRequest(tasks[0].TaskURL)
 	manager.AddRequest(tasks[1].TaskURL)
+	manager.AddRequest(tasks[2].TaskURL)
 	manager.ActiveFetchP2PNetwork(activeFetchSt{url: tasks[0].TaskURL, waitCh: waitCh})
 	timeout := false
 
@@ -332,4 +343,12 @@ func (suite *seedSuite) TestPeerDownloader(c *check.C) {
 	for i := 0; i < 100; i++ {
 		suite.checkLocalDownloadDataFromFileServer(c, d2, fsHost, files[1], int64(i*100*1024), 100*1024)
 	}
+
+	// download tasks[2], expected failed
+	opt3 := seed.DownloaderFactoryCreateOpt{
+		URL:         tasks[2].TaskURL,
+		RateLimiter: ratelimiter.NewRateLimiter(0, 0),
+	}
+	d3 := df.Create(opt3)
+	c.Assert(d3, check.IsNil)
 }

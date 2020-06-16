@@ -88,19 +88,31 @@ func newScheduleManager(localPeer *types.PeerInfo) *scheduleManager {
 }
 
 func (sm *scheduleManager) Schedule(ctx context.Context, rr basic.RangeRequest, state datascheduler.ScheduleState) (datascheduler.SchedulerResult, error) {
+	var (
+		filters map[string]map[string]bool
+	)
+
 	sm.mutex.Lock()
 	defer sm.mutex.Unlock()
 
 	url := rr.URL()
+	ex := rr.Extra()
+	if ex != nil {
+		extra, ok := ex.(*rangeRequestExtra)
+		if ok && extra != nil {
+			filters = extra.filters
+		}
+	}
+
 	result := []*basic.SchedulePeerInfo{}
 
 	// get local seed
-	localRs := sm.scheduleLocalPeer(url)
+	localRs := sm.scheduleLocalPeer(url, filters)
 	if len(localRs) > 0 {
 		result = append(result, localRs...)
 	}
 
-	remoteRs := sm.scheduleRemotePeer(ctx, url)
+	remoteRs := sm.scheduleRemotePeer(ctx, url, filters)
 	if len(remoteRs) > 0 {
 		result = append(result, remoteRs...)
 	}
@@ -114,7 +126,7 @@ func (sm *scheduleManager) Schedule(ctx context.Context, rr basic.RangeRequest, 
 	}, nil
 }
 
-func (sm *scheduleManager) scheduleRemotePeer(ctx context.Context, url string) []*basic.SchedulePeerInfo {
+func (sm *scheduleManager) scheduleRemotePeer(ctx context.Context, url string, filters map[string]map[string]bool) []*basic.SchedulePeerInfo {
 	var (
 		state *taskState
 		err   error
@@ -125,7 +137,7 @@ func (sm *scheduleManager) scheduleRemotePeer(ctx context.Context, url string) [
 		return nil
 	}
 
-	pns := state.getPeersByLoad(defaultMaxPeers)
+	pns := state.getPeersByLoad(defaultMaxPeers, filters)
 	if len(pns) == 0 {
 		return nil
 	}
@@ -144,7 +156,7 @@ func (sm *scheduleManager) scheduleRemotePeer(ctx context.Context, url string) [
 				Port: node.Basic.Port,
 				IP:   node.Basic.IP,
 			},
-			Path: pn.path,
+			Path: pn.info.Path,
 		}
 	}
 
@@ -204,14 +216,14 @@ func (sm *scheduleManager) syncSeedContainerPerNode(node *config.Node, seedConta
 			}
 		}
 
-		err = ts.add(node.Basic.ID, task.Path, task.Task)
+		err = ts.add(node.Basic.ID, task)
 		if err != nil {
 			logrus.Errorf("syncSeedContainerPerNode error: %v", err)
 		}
 	}
 }
 
-func (sm *scheduleManager) scheduleLocalPeer(url string) []*basic.SchedulePeerInfo {
+func (sm *scheduleManager) scheduleLocalPeer(url string, filters map[string]map[string]bool) []*basic.SchedulePeerInfo {
 	var (
 		lts *localTaskState
 		err error

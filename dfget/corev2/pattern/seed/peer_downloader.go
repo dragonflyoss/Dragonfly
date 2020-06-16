@@ -51,7 +51,18 @@ func newDownloaderFactory(sm *supernodeManager, localPeer *types.PeerInfo, downA
 }
 
 func (df *downloaderFactory) Create(opt seed.DownloaderFactoryCreateOpt) seed.Downloader {
-	peers := df.sm.Schedule(context.Background(), &rangeRequest{url: opt.URL})
+	rr := &rangeRequest{
+		url: opt.URL,
+		extra: &rangeRequestExtra{
+			filters: map[string]map[string]bool{
+				"taskFetchInfo": {
+					"allowSeedDownload=true": true,
+				},
+			},
+		},
+	}
+
+	peers := df.sm.Schedule(context.Background(), rr)
 	if len(peers) == 0 {
 		return nil
 	}
