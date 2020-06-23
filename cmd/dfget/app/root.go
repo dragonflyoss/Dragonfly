@@ -163,6 +163,10 @@ func initProperties() ([]*propertiesResult, error) {
 		cfg.ClientQueueSize = properties.ClientQueueSize
 	}
 
+	if stringutils.IsEmptyStr(cfg.Area) {
+		cfg.Area = properties.Area
+	}
+
 	currentUser, err := user.Current()
 	if err != nil {
 		printer.Println(fmt.Sprintf("get user error: %s", err))
@@ -262,6 +266,10 @@ func initFlags() {
 		"be verbose")
 	flagSet.StringVar(&cfg.WorkHome, "home", cfg.WorkHome,
 		"the work home directory of dfget")
+
+	// area awareness
+	flagSet.StringVarP(&cfg.Area, "area", "a", "",
+		"the area of this peer")
 
 	// pass to peer server which as a uploader server
 	flagSet.StringVar(&cfg.RV.LocalIP, "ip", "",

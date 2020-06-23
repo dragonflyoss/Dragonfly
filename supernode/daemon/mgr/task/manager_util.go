@@ -214,6 +214,7 @@ func (tm *Manager) addDfgetTask(ctx context.Context, req *types.TaskCreateReques
 		TaskID:      task.ID,
 		PeerID:      req.PeerID,
 		SupernodeIP: req.SupernodeIP,
+		Area:        req.Area,
 	}
 
 	if err := tm.dfgetTaskMgr.Add(ctx, dfgetTask); err != nil {
@@ -350,7 +351,7 @@ func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, tas
 	// get scheduler pieceResult
 	logrus.Debugf("start scheduler for taskID: %s clientID: %s", task.ID, clientID)
 	startTime := time.Now()
-	pieceResult, err := tm.schedulerMgr.Schedule(ctx, task.ID, clientID, dfgetTask.PeerID)
+	pieceResult, err := tm.schedulerMgr.Schedule(ctx, task.ID, dfgetTask.Area, clientID, dfgetTask.PeerID)
 	if err != nil {
 		return false, nil, err
 	}

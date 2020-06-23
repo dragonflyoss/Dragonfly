@@ -68,6 +68,9 @@ type DfGetTask struct {
 
 	// task Id
 	TaskID string `json:"taskId,omitempty"`
+
+	// area is the area of this peer
+	Area string `json:"area,omitempty"`
 }
 
 // Validate validates this df get task

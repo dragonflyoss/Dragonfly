@@ -41,8 +41,8 @@ func init() {
 type SchedulerMgrTestSuite struct {
 	mockCtl         *gomock.Controller
 	mockProgressMgr *mock.MockProgressMgr
-
-	manager *Manager
+	mockPeerMgr     *mock.MockPeerMgr
+	manager         *Manager
 }
 
 func (s *SchedulerMgrTestSuite) SetUpSuite(c *check.C) {
@@ -50,9 +50,11 @@ func (s *SchedulerMgrTestSuite) SetUpSuite(c *check.C) {
 	s.mockProgressMgr = mock.NewMockProgressMgr(s.mockCtl)
 	s.mockProgressMgr.EXPECT().GetPeerIDsByPieceNum(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"peerID"}, nil).AnyTimes()
 
+	s.mockPeerMgr = mock.NewMockPeerMgr(s.mockCtl)
+
 	cfg := config.NewConfig()
 	cfg.SetSuperPID("fooPid")
-	s.manager, _ = NewManager(cfg, s.mockProgressMgr)
+	s.manager, _ = NewManager(cfg, s.mockPeerMgr, s.mockProgressMgr)
 }
 
 func (s *SchedulerMgrTestSuite) TearDownSuite(c *check.C) {

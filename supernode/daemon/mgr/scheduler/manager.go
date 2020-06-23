@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/stringutils"
 	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
 	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
@@ -40,19 +41,21 @@ var _ mgr.SchedulerMgr = &Manager{}
 // Manager is an implement of the interface of SchedulerMgr.
 type Manager struct {
 	cfg         *config.Config
+	peerMgr     mgr.PeerMgr
 	progressMgr mgr.ProgressMgr
 }
 
 // NewManager returns a new Manager.
-func NewManager(cfg *config.Config, progressMgr mgr.ProgressMgr) (*Manager, error) {
+func NewManager(cfg *config.Config, peerMgr mgr.PeerMgr, progressMgr mgr.ProgressMgr) (*Manager, error) {
 	return &Manager{
 		cfg:         cfg,
+		peerMgr:     peerMgr,
 		progressMgr: progressMgr,
 	}, nil
 }
 
 // Schedule gets scheduler result with specified taskID, clientID and peerID through some rules.
-func (sm *Manager) Schedule(ctx context.Context, taskID, clientID, peerID string) ([]*mgr.PieceResult, error) {
+func (sm *Manager) Schedule(ctx context.Context, taskID, area, clientID, peerID string) ([]*mgr.PieceResult, error) {
 	// get available pieces
 	pieceAvailable, err := sm.progressMgr.GetPieceProgressByCID(ctx, taskID, clientID, "available")
 	if err != nil {
@@ -81,7 +84,7 @@ func (sm *Manager) Schedule(ctx context.Context, taskID, clientID, peerID string
 	}
 	logrus.Debugf("scheduler get pieces %v with prioritize for taskID(%s) clientID(%s)", pieceNums, taskID, clientID)
 
-	return sm.getPieceResults(ctx, taskID, clientID, peerID, pieceNums, runningCount)
+	return sm.getPieceResults(ctx, taskID, area, clientID, peerID, pieceNums, runningCount)
 }
 
 func (sm *Manager) sort(ctx context.Context, pieceNums, runningPieces []int, taskID string) ([]int, error) {
@@ -140,7 +143,7 @@ func (sm *Manager) sortExecutor(ctx context.Context, pieceNums []int, centerNum 
 	})
 }
 
-func (sm *Manager) getPieceResults(ctx context.Context, taskID, clientID, srcPID string, pieceNums []int, runningCount int) ([]*mgr.PieceResult, error) {
+func (sm *Manager) getPieceResults(ctx context.Context, taskID, area, clientID, srcPID string, pieceNums []int, runningCount int) ([]*mgr.PieceResult, error) {
 	// validate ClientErrorCount
 	var useSupernode bool
 	srcPeerState, err := sm.progressMgr.GetPeerStateByPeerID(ctx, srcPID)
@@ -165,7 +168,7 @@ func (sm *Manager) getPieceResults(ctx context.Context, taskID, clientID, srcPID
 			if err != nil {
 				return nil, errors.Wrapf(errortypes.ErrUnknownError, "failed to get peerIDs for pieceNum: %d of taskID: %s", pieceNums[i], taskID)
 			}
-			dstPID = sm.tryGetPID(ctx, taskID, pieceNums[i], srcPID, peerIDs)
+			dstPID = sm.tryGetPID(ctx, taskID, area, pieceNums[i], srcPID, peerIDs)
 		}
 
 		if dstPID == "" {
@@ -205,7 +208,7 @@ func (sm *Manager) getPieceResults(ctx context.Context, taskID, clientID, srcPID
 }
 
 // tryGetPID returns an available dstPID from ps.pieceContainer.
-func (sm *Manager) tryGetPID(ctx context.Context, taskID string, pieceNum int, srcPID string, peerIDs []string) (dstPID string) {
+func (sm *Manager) tryGetPID(ctx context.Context, taskID, area string, pieceNum int, srcPID string, peerIDs []string) (dstPID string) {
 	defer func() {
 		if dstPID == "" {
 			dstPID = sm.cfg.GetSuperPID()
@@ -213,6 +216,13 @@ func (sm *Manager) tryGetPID(ctx context.Context, taskID string, pieceNum int, s
 	}()
 
 	for i := 0; i < len(peerIDs); i++ {
+
+		needSkip := sm.filterPeerByArea(ctx, area, peerIDs[i])
+		if needSkip {
+			continue
+		}
+		logrus.Infof("AREA tryGetPID peerIDs[i](%s) not skip by area", peerIDs[i])
+
 		// if failed to get peerState, and then it should not be needed.
 		peerState, err := sm.progressMgr.GetPeerStateByPeerID(ctx, peerIDs[i])
 		if err != nil {
@@ -256,6 +266,32 @@ func (sm *Manager) tryGetPID(ctx context.Context, taskID string, pieceNum int, s
 		}
 	}
 	return
+}
+
+func (sm *Manager) filterPeerByArea(ctx context.Context, area, dstPID string) bool {
+
+	// if src peer not specify area parameter, all the other peers can serve it
+	if stringutils.IsEmptyStr(area) {
+		return false
+	}
+
+	//supernode serves all the peers who has registerd to it
+	if sm.cfg.IsSuperPID(dstPID) {
+		return false
+	}
+
+	peerInfo, err := sm.peerMgr.Get(ctx, dstPID)
+	if err != nil {
+		//if can not find the dst peer info, skip this dstPeer
+		//we can not get ip and  port later
+		return true
+	}
+	//skip the peer with different areas
+	if area != peerInfo.Area {
+		return true
+	}
+	//dstPID is in the same area of srcPID
+	return false
 }
 
 func (sm *Manager) deletePeerIDByPieceNum(ctx context.Context, taskID string, pieceNum int, peerID string) {
