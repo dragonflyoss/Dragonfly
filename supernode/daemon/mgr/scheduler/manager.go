@@ -221,7 +221,6 @@ func (sm *Manager) tryGetPID(ctx context.Context, taskID, area string, pieceNum 
 		if needSkip {
 			continue
 		}
-		logrus.Infof("AREA tryGetPID peerIDs[i](%s) not skip by area", peerIDs[i])
 
 		// if failed to get peerState, and then it should not be needed.
 		peerState, err := sm.progressMgr.GetPeerStateByPeerID(ctx, peerIDs[i])
@@ -268,6 +267,7 @@ func (sm *Manager) tryGetPID(ctx context.Context, taskID, area string, pieceNum 
 	return
 }
 
+// filterPeerByArea return true if the dst Peer needs to be skiped
 func (sm *Manager) filterPeerByArea(ctx context.Context, area, dstPID string) bool {
 
 	// if src peer not specify area parameter, all the other peers can serve it
@@ -275,7 +275,7 @@ func (sm *Manager) filterPeerByArea(ctx context.Context, area, dstPID string) bo
 		return false
 	}
 
-	//supernode serves all the peers who has registerd to it
+	//supernode serves all the peers who has registered to it
 	if sm.cfg.IsSuperPID(dstPID) {
 		return false
 	}
