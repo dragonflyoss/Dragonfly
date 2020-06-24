@@ -25,7 +25,12 @@ Then, we must provide:
 Deploy the Dragonfly server (Supernode) on the machine `dfsupernode`.
 
 ```bash
-docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 -v /home/admin/supernode:/home/admin/supernode dragonflyoss/supernode:0.4.3 --download-port=8001
+docker run -d --name supernode \
+  --restart=always \
+  -p 8001:8001 \
+  -p 8002:8002 \
+  -v /home/admin/supernode:/home/admin/supernode \
+  dragonflyoss/supernode:1.0.2 --download-port=8001
 ```
 
 ## Step 2: Deploy Dragonfly Client (dfclient)
@@ -48,10 +53,12 @@ EOD
 ### Start Dragonfly Client
 
 ```bash
-docker run -d --name dfclient --restart=always -p 65001:65001 \
+docker run -d --name dfclient \
+    --restart=always \
+    -p 65001:65001 \
     -v /etc/dragonfly:/etc/dragonfly \
     -v $HOME/.small-dragonfly:/root/.small-dragonfly \
-    dragonflyoss/dfclient:0.4.3 --registry https://index.docker.io
+    dragonflyoss/dfclient:1.0.2 --registry https://index.docker.io
 ```
 
 **NOTE**: The `--registry` parameter specifies the mirrored image registry address, and `https://index.docker.io` is the address of official image registry, you can also set it to the others.
