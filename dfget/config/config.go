@@ -212,9 +212,6 @@ type Config struct {
 	// If set true, log level will be 'debug'.
 	Verbose bool `json:"verbose,omitempty"`
 
-	// Region of this peer
-	Region string `json:"region,omitempty"`
-
 	// Nodes specify supernodes.
 	Nodes []string `json:"-"`
 

@@ -267,7 +267,7 @@ func (sm *Manager) tryGetPID(ctx context.Context, taskID, region string, pieceNu
 	return
 }
 
-// filterPeerByArea return true if the dst Peer needs to be skiped
+// filterPeerByArea return true if the dst Peer needs to be skipped
 func (sm *Manager) filterPeerByArea(ctx context.Context, region, dstPID string) bool {
 
 	// if src peer not specify region parameter, all the other peers can serve it
