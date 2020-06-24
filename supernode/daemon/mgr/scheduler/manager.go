@@ -55,7 +55,7 @@ func NewManager(cfg *config.Config, peerMgr mgr.PeerMgr, progressMgr mgr.Progres
 }
 
 // Schedule gets scheduler result with specified taskID, clientID and peerID through some rules.
-func (sm *Manager) Schedule(ctx context.Context, taskID, area, clientID, peerID string) ([]*mgr.PieceResult, error) {
+func (sm *Manager) Schedule(ctx context.Context, taskID, region, clientID, peerID string) ([]*mgr.PieceResult, error) {
 	// get available pieces
 	pieceAvailable, err := sm.progressMgr.GetPieceProgressByCID(ctx, taskID, clientID, "available")
 	if err != nil {
@@ -84,7 +84,7 @@ func (sm *Manager) Schedule(ctx context.Context, taskID, area, clientID, peerID 
 	}
 	logrus.Debugf("scheduler get pieces %v with prioritize for taskID(%s) clientID(%s)", pieceNums, taskID, clientID)
 
-	return sm.getPieceResults(ctx, taskID, area, clientID, peerID, pieceNums, runningCount)
+	return sm.getPieceResults(ctx, taskID, region, clientID, peerID, pieceNums, runningCount)
 }
 
 func (sm *Manager) sort(ctx context.Context, pieceNums, runningPieces []int, taskID string) ([]int, error) {
@@ -143,7 +143,7 @@ func (sm *Manager) sortExecutor(ctx context.Context, pieceNums []int, centerNum 
 	})
 }
 
-func (sm *Manager) getPieceResults(ctx context.Context, taskID, area, clientID, srcPID string, pieceNums []int, runningCount int) ([]*mgr.PieceResult, error) {
+func (sm *Manager) getPieceResults(ctx context.Context, taskID, region, clientID, srcPID string, pieceNums []int, runningCount int) ([]*mgr.PieceResult, error) {
 	// validate ClientErrorCount
 	var useSupernode bool
 	srcPeerState, err := sm.progressMgr.GetPeerStateByPeerID(ctx, srcPID)
@@ -168,7 +168,7 @@ func (sm *Manager) getPieceResults(ctx context.Context, taskID, area, clientID, 
 			if err != nil {
 				return nil, errors.Wrapf(errortypes.ErrUnknownError, "failed to get peerIDs for pieceNum: %d of taskID: %s", pieceNums[i], taskID)
 			}
-			dstPID = sm.tryGetPID(ctx, taskID, area, pieceNums[i], srcPID, peerIDs)
+			dstPID = sm.tryGetPID(ctx, taskID, region, pieceNums[i], srcPID, peerIDs)
 		}
 
 		if dstPID == "" {
@@ -208,7 +208,7 @@ func (sm *Manager) getPieceResults(ctx context.Context, taskID, area, clientID, 
 }
 
 // tryGetPID returns an available dstPID from ps.pieceContainer.
-func (sm *Manager) tryGetPID(ctx context.Context, taskID, area string, pieceNum int, srcPID string, peerIDs []string) (dstPID string) {
+func (sm *Manager) tryGetPID(ctx context.Context, taskID, region string, pieceNum int, srcPID string, peerIDs []string) (dstPID string) {
 	defer func() {
 		if dstPID == "" {
 			dstPID = sm.cfg.GetSuperPID()
@@ -217,7 +217,7 @@ func (sm *Manager) tryGetPID(ctx context.Context, taskID, area string, pieceNum 
 
 	for i := 0; i < len(peerIDs); i++ {
 
-		needSkip := sm.filterPeerByArea(ctx, area, peerIDs[i])
+		needSkip := sm.filterPeerByArea(ctx, region, peerIDs[i])
 		if needSkip {
 			continue
 		}
@@ -268,10 +268,10 @@ func (sm *Manager) tryGetPID(ctx context.Context, taskID, area string, pieceNum 
 }
 
 // filterPeerByArea return true if the dst Peer needs to be skiped
-func (sm *Manager) filterPeerByArea(ctx context.Context, area, dstPID string) bool {
+func (sm *Manager) filterPeerByArea(ctx context.Context, region, dstPID string) bool {
 
-	// if src peer not specify area parameter, all the other peers can serve it
-	if stringutils.IsEmptyStr(area) {
+	// if src peer not specify region parameter, all the other peers can serve it
+	if stringutils.IsEmptyStr(region) {
 		return false
 	}
 
@@ -287,10 +287,10 @@ func (sm *Manager) filterPeerByArea(ctx context.Context, area, dstPID string) bo
 		return true
 	}
 	//skip the peer with different areas
-	if area != peerInfo.Area {
+	if region != peerInfo.Region {
 		return true
 	}
-	//dstPID is in the same area of srcPID
+	//dstPID is in the same region of srcPID
 	return false
 }
 

@@ -30,5 +30,5 @@ type PieceResult struct {
 // SchedulerMgr is responsible for calculating scheduling results according to certain rules.
 type SchedulerMgr interface {
 	// Schedule gets scheduler result with specified taskID, clientID and peerID through some rules.
-	Schedule(ctx context.Context, taskID, area, clientID, peerID string) ([]*PieceResult, error)
+	Schedule(ctx context.Context, taskID, region, clientID, peerID string) ([]*PieceResult, error)
 }

@@ -102,8 +102,8 @@ type TaskCreateRequest struct {
 	//
 	TaskURL string `json:"taskURL,omitempty"`
 
-	// area is the area of this peer
-	Area string `json:"area,omitempty"`
+	// region is the region of this peer
+	Region string `json:"region,omitempty"`
 }
 
 // Validate validates this task create request

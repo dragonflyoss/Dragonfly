@@ -48,8 +48,8 @@ type PeerInfo struct {
 	// version number of dfget binary
 	Version string `json:"version,omitempty"`
 
-	// area is the area of this peer
-	Area string `json:"area,omitempty"`
+	// region is the region of this peer
+	Region string `json:"region,omitempty"`
 }
 
 // Validate validates this peer info

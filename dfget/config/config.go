@@ -64,8 +64,8 @@ type Properties struct {
 	// E.g. ["192.168.33.21=1", "192.168.33.22=2"]
 	Supernodes []*NodeWeight `yaml:"nodes,omitempty" json:"nodes,omitempty"`
 
-	// The physical area of this Peer
-	Area string `yaml:"area,omitempty" json:"area,omitempty"`
+	// The physical region of this Peer
+	Region string `yaml:"region,omitempty" json:"region,omitempty"`
 
 	// LocalLimit rate limit about a single download task, format: G(B)/g/M(B)/m/K(B)/k/B
 	// pure number will also be parsed as Byte.
@@ -212,8 +212,8 @@ type Config struct {
 	// If set true, log level will be 'debug'.
 	Verbose bool `json:"verbose,omitempty"`
 
-	// Area of this peer
-	Area string `json:"area,omitempty"`
+	// Region of this peer
+	Region string `json:"region,omitempty"`
 
 	// Nodes specify supernodes.
 	Nodes []string `json:"-"`

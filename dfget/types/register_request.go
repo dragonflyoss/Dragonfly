@@ -42,7 +42,7 @@ type RegisterRequest struct {
 	TaskID      string   `json:"taskId,omitempty"`
 	FileLength  int64    `json:"fileLength,omitempty"`
 	AsSeed      bool     `json:"asSeed,omitempty"`
-	Area        string   `json:"area,omitempty"`
+	Region      string   `json:"region,omitempty"`
 }
 
 func (r *RegisterRequest) String() string {

@@ -37,9 +37,9 @@ func (m *MockSchedulerMgr) EXPECT() *MockSchedulerMgrMockRecorder {
 }
 
 // Schedule mocks base method
-func (m *MockSchedulerMgr) Schedule(ctx context.Context, taskID, area, clientID, peerID string) ([]*mgr.PieceResult, error) {
+func (m *MockSchedulerMgr) Schedule(ctx context.Context, taskID, region, clientID, peerID string) ([]*mgr.PieceResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Schedule", ctx, taskID, area, clientID, peerID)
+	ret := m.ctrl.Call(m, "Schedule", ctx, taskID, region, clientID, peerID)
 	ret0, _ := ret[0].([]*mgr.PieceResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
