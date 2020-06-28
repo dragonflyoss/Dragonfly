@@ -154,16 +154,6 @@ func (s *HTTPUtilTestSuite) TestCheckConnect(c *check.C) {
 	c.Assert(e, check.NotNil)
 }
 
-func (s *HTTPUtilTestSuite) TestCheckSuperNodeConnect(c *check.C) {
-	ip, e := CheckSuperNodeConnect("127.0.0.1", s.port, 0)
-	c.Assert(e, check.IsNil)
-	c.Assert(ip, check.Equals, "127.0.0.1")
-
-	// Test IPv6
-	_, e = CheckSuperNodeConnect("[::1]", s.port, 0)
-	c.Assert(e, check.NotNil)
-}
-
 func (s *HTTPUtilTestSuite) TestGetRangeSE(c *check.C) {
 	var cases = []struct {
 		rangeHTTPHeader string
