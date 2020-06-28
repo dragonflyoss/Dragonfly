@@ -19,6 +19,7 @@ package app
 import (
 	"bytes"
 	"fmt"
+	api "github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"os"
 	"os/exec"
 	"os/user"
@@ -62,8 +63,23 @@ func getLocalIP(nodes []string) (localIP string) {
 	var (
 		e error
 	)
+	supernodeApi := api.NewSupernodeAPI()
 	for _, n := range nodes {
 		ip, port := netutils.GetIPAndPortFromNode(n, dfgetcfg.DefaultSupernodePort)
+		// step 1. query supernode api get request ip, check if request ip in local eth IPs
+		if localIP, e = supernodeApi.Ping(fmt.Sprintf("%s:%d", ip, port)); e == nil {
+			logrus.Infof("Connect to supernode get self ip:%s", localIP)
+			if localIPs, err := netutils.GetAllIPs(); err == nil {
+				for _, lip := range localIPs {
+					if localIP == lip {
+						return localIP
+					}
+				}
+			}
+		} else {
+			logrus.Warnf("Connect to supernode:%s error: %v", n, e)
+		}
+		// step 2. if request ip not in eth ips, it might behind NAT, try use TCP conn to get localIP
 		if localIP, e = httputils.CheckConnect(ip, port, 1000); e == nil {
 			return localIP
 		}

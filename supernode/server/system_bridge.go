@@ -19,10 +19,15 @@ package server
 import (
 	"context"
 	"net/http"
+	"strings"
 )
 
 func (s *Server) ping(context context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
+	remoteIP := ""
+	if idx := strings.LastIndexByte(req.RemoteAddr, ':'); idx >= 0 {
+		remoteIP = req.RemoteAddr[:idx]
+	}
 	rw.WriteHeader(http.StatusOK)
-	_, err = rw.Write([]byte{'O', 'K'})
+	_, err = rw.Write([]byte(remoteIP))
 	return err
 }

@@ -56,6 +56,11 @@ func init() {
 
 // ----------------------------------------------------------------------------
 // unit tests for SupernodeAPI
+func (s *SupernodeAPITestSuite) TestSupernodeAPI_Ping(c *check.C) {
+	r, e := s.api.Ping(localhost)
+	c.Check(r, check.Equals, "")
+	c.Check(e.Error(), check.Equals, "0:")
+}
 
 func (s *SupernodeAPITestSuite) TestSupernodeAPI_Register(c *check.C) {
 	s.mock.PostJSONFunc = s.mock.CreatePostJSONFunc(0, nil, nil)
