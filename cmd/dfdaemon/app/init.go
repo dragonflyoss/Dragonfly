@@ -19,7 +19,6 @@ package app
 import (
 	"bytes"
 	"fmt"
-	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"os"
 	"os/exec"
 	"os/user"
@@ -30,6 +29,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/constant"
 	dfgetcfg "github.com/dragonflyoss/Dragonfly/dfget/config"
+	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/pkg/algorithm"
 	"github.com/dragonflyoss/Dragonfly/pkg/dflog"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
