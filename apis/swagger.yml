@@ -876,6 +876,9 @@ definitions:
         type: "boolean"
         description: |
           This attribute represents the node as a seed node for the taskURL.
+      region:
+        type: "string"
+        description: "Region is the network location of this peer, it is used to filter other peers."
 
   PeerCreateRequest:
     type: "object"
@@ -905,6 +908,9 @@ definitions:
       version:
         type: "string"
         description: "version number of dfget binary."
+      region:
+        type: "string"
+        description: "Region is the network location of this peer, it is used to filter other peers."
 
   PeerCreateResponse:
     type: "object"
@@ -953,6 +959,9 @@ definitions:
         type: "string"
         format: "date-time"
         description: "the time to join the P2P network"
+      region:
+        type: "string"
+        description: "Region is the network location of this peer, it is used to filter other peers."
 
   TaskCreateRequest:
     type: "object"
@@ -1048,6 +1057,9 @@ definitions:
       supernodeIP:
         type: "string"
         description: "IP address of supernode which the peer connects to"
+      region:
+        type: "string"
+        description: "Region is the network location of this peer, it is used to filter other peers."
 
   TaskCreateResponse:
     type: "object"
@@ -1421,6 +1433,9 @@ definitions:
           this field to supernode and supernode can do some checking and filtering via
           black/white list mechanism to guarantee security, or some other purposes like debugging.
         minLength: 1
+      region:
+        type: "string"
+        description: "Region is the network location of this peer, it is used to filter other peers."
 
   TaskMetricsRequest:
     type: "object"
