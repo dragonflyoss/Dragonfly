@@ -20,11 +20,20 @@ When deploying with Docker, you can mount the default path when starting up imag
 For supernode, you should start a supernode image using the following command.
 
 ```sh
-docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 -v /etc/dragonfly/supernode.yml:/etc/dragonfly/supernode.yml dragonflyoss/supernode:0.4.3
+docker run -d --name supernode \
+    --restart=always \
+    -p 8001:8001 \
+    -p 8002:8002 \
+    -v /etc/dragonfly/supernode.yml:/etc/dragonfly/supernode.yml \
+    dragonflyoss/supernode:1.0.2
 ```
 
 For dfdaemon, you can start the image in the same way.
 
 ```sh
-docker run -d --net=host --name dfclient -p 65001:65001 -v /etc/dragonfly/dfdaemon.yml:/etc/dragonfly/dfdaemon.yml -v /root/.small-dragonfly:/root/.small-dragonfly dragonflyoss/dfclient:0.4.3
+docker run -d --net=host --name dfclient \
+    -p 65001:65001 \
+    -v /etc/dragonfly/dfdaemon.yml:/etc/dragonfly/dfdaemon.yml \
+    -v /root/.small-dragonfly:/root/.small-dragonfly \
+    dragonflyoss/dfclient:1.0.2
 ```

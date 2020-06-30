@@ -305,10 +305,13 @@ supernode cdn file server port | supernode --download-port | You should prepare 
 
 ## Why the time in the log is wrong
 
-If you are in China,docker container uses UTC time(Coordinated Universal Time) and the host uses CST time(China Shanghai Time).So the log's time is 8 hours behind the host time.If you want to make their time consistent,you should add a config `-v /etc/localtime:/etc/localtime:ro` before you start a container.For example,you can run a command as follows to start a dfclient.
+If you are in China, docker container uses UTC time(Coordinated Universal Time), and the host uses CST time(China Shanghai Time). So the log's time is 8 hours behind the host time. If you want to make their time consistent, you should add a config `-v /etc/localtime:/etc/localtime:ro` before you start a container. For example, you can run a command as follows to start a dfclient.
 
 ```sh
- docker run -d --name dfclient -v /etc/localtime:/etc/localtime:ro -p 65001:65001 dragonflyoss/dfclient:0.4.0 --registry https://index.docker.io
+docker run -d --name dfclient \
+    -v /etc/localtime:/etc/localtime:ro \
+    -p 65001:65001 \
+    dragonflyoss/dfclient:1.0.2 --registry https://index.docker.io
 ```
 
 ## How to join Dragonfly as a member

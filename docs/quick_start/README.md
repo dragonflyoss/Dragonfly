@@ -6,19 +6,28 @@ If you are using Dragonfly in your **production environment** to handle producti
 
 ## Prerequisites
 
-All steps in this document are done on the same machine using the docker container, so make sure the docker container engine is installed and started on your machine. You can also refer to the documentation: [multi-machine deployment](../user_guide/multi_machines_deployment.md) to experience Dragonfly.
+All steps in this document is doing on the same machine using the docker container, so make sure the docker container engine installed and started on your machine. You can also refer to the documentation: [multi-machine deployment](../user_guide/multi_machines_deployment.md) to experience Dragonfly.
 
 ## Step 1: Deploy Dragonfly Server (SuperNode)
 
 ```bash
-docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 -v /home/admin/supernode:/home/admin/supernode dragonflyoss/supernode:0.4.3
+docker run -d --name supernode \
+    --restart=always \
+    -p 8001:8001 \
+    -p 8002:8002 \
+    -v /home/admin/supernode:/home/admin/supernode \
+    dragonflyoss/supernode:1.0.2
 ```
 
 ## Step 2: Deploy Dragonfly Client (dfclient)
 
 ```bash
 SUPERNODE_IP=`docker inspect supernode -f '{{.NetworkSettings.Networks.bridge.IPAddress}}'`
-docker run -d --name dfclient --restart=always -p 65001:65001 -v $HOME/.small-dragonfly:/root/.small-dragonfly dragonflyoss/dfclient:0.4.3 --registry https://index.docker.io --node $SUPERNODE_IP
+docker run -d --name dfclient \
+    --restart=always \
+    -p 65001:65001 \
+    -v $HOME/.small-dragonfly:/root/.small-dragonfly \
+    dragonflyoss/dfclient:1.0.2 --registry https://index.docker.io --node $SUPERNODE_IP
 ```
 
 **NOTE**:
