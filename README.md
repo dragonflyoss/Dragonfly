@@ -34,7 +34,7 @@ Dragonfly is an open source intelligent P2P based image and file distribution sy
 - **Intelligent**: host level speed limit, intelligent flow control due to host detection;
 - **Secure**: block transmission encryption, HTTPS connection support.
 
-Dragonfly is now hosted by the [Cloud Native Computing Foundation](https://cncf.io) (CNCF) as a Sandbox Level Project. Originally it was born to solve all kinds of distribution at very large scales, such as application distribution, cache distribution, log distribution, image distribution, and so on.
+Dragonfly is now hosted by the [Cloud Native Computing Foundation](https://cncf.io) (CNCF) as an Incubating Level Project. Originally it was born to solve all kinds of distribution at very large scales, such as application distribution, cache distribution, log distribution, image distribution, and so on.
 
 Dragonfly has finished refactoring in Golang. Now versions > 0.4.0 are totally in Golang, while those < 0.4.0 are in Java. We encourage adopters to try Golang version first, since Java versions will be out of support in the next few releases.
 
