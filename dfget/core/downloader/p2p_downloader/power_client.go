@@ -33,6 +33,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 	"github.com/dragonflyoss/Dragonfly/pkg/limitreader"
 	"github.com/dragonflyoss/Dragonfly/pkg/netutils"
+	"github.com/dragonflyoss/Dragonfly/pkg/pool"
 	"github.com/dragonflyoss/Dragonfly/pkg/queue"
 	"github.com/dragonflyoss/Dragonfly/pkg/ratelimiter"
 
@@ -113,7 +114,7 @@ func (pc *PowerClient) ClientError() *types.ClientErrorRequest {
 	return pc.clientError
 }
 
-func (pc *PowerClient) downloadPiece() (content *bytes.Buffer, e error) {
+func (pc *PowerClient) downloadPiece() (content *pool.Buffer, e error) {
 	dstIP := pc.pieceTask.PeerIP
 	peerPort := pc.pieceTask.PeerPort
 
@@ -149,7 +150,14 @@ func (pc *PowerClient) downloadPiece() (content *bytes.Buffer, e error) {
 	// start to read data from resp
 	// use limitReader to limit the download speed
 	limitReader := limitreader.NewLimitReaderWithLimiter(pc.rateLimiter, resp.Body, pieceMD5 != "")
-	content = &bytes.Buffer{}
+	content = pool.AcquireBufferSize(int(pc.pieceTask.PieceSize))
+	defer func() {
+		// if an error happened, the content cannot be released outside.
+		if e != nil {
+			pool.ReleaseBuffer(content)
+			content = nil
+		}
+	}()
 	if pc.total, e = content.ReadFrom(limitReader); e != nil {
 		return nil, e
 	}
@@ -193,7 +201,7 @@ func (pc *PowerClient) createDownloadRequest() *api.DownloadRequest {
 	}
 }
 
-func (pc *PowerClient) successPiece(content *bytes.Buffer) *Piece {
+func (pc *PowerClient) successPiece(content *pool.Buffer) *Piece {
 	piece := NewPieceContent(pc.taskID, pc.node, pc.pieceTask.Cid, pc.pieceTask.Range,
 		constants.ResultSemiSuc, constants.TaskStatusRunning, content, pc.cdnDource)
 	piece.PieceSize = pc.pieceTask.PieceSize
