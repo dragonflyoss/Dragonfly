@@ -18,11 +18,11 @@ package server
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"net/http/pprof"
+	"strings"
 
-	"github.com/dragonflyoss/Dragonfly/apis/types"
+	"github.com/dragonflyoss/Dragonfly/supernode/server/api"
 	"github.com/dragonflyoss/Dragonfly/version"
 
 	"github.com/gorilla/mux"
@@ -35,13 +35,61 @@ const versionMatcher = "/v{version:[0-9.]+}"
 
 var m = newMetrics(prometheus.DefaultRegisterer)
 
-func initRoute(s *Server) *mux.Router {
+func createRouter(s *Server) *mux.Router {
+	registerCoreHandlers(s)
+
 	r := mux.NewRouter()
-	handlers := []*HandlerSpec{
+	if s.Config.Debug || s.Config.EnableProfiler {
+		initDebugRoutes(r)
+	}
+	initAPIRoutes(r)
+	return r
+}
+
+func registerCoreHandlers(s *Server) {
+	registerV1(s)
+	registerLegacy(s)
+	registerSystem(s)
+}
+
+func registerV1(s *Server) {
+	v1Handlers := []*api.HandlerSpec{
+		// peer
+		{Method: http.MethodPost, Path: "/peers", HandlerFunc: s.registerPeer},
+		{Method: http.MethodDelete, Path: "/peers/{id}", HandlerFunc: s.deRegisterPeer},
+		{Method: http.MethodGet, Path: "/peers/{id}", HandlerFunc: s.getPeer},
+		{Method: http.MethodGet, Path: "/peers", HandlerFunc: s.listPeers},
+		{Method: http.MethodGet, Path: "/tasks/{id}", HandlerFunc: s.getTaskInfo},
+		{Method: http.MethodPost, Path: "/peer/network", HandlerFunc: s.fetchP2PNetworkInfo},
+		{Method: http.MethodPost, Path: "/peer/heartbeat", HandlerFunc: s.reportPeerHealth},
+
+		// task
+		{Method: http.MethodDelete, Path: "/tasks/{id}", HandlerFunc: s.deleteTask},
+
+		// piece
+		{Method: http.MethodGet, Path: "/tasks/{id}/pieces/{pieceRange}/error", HandlerFunc: s.handlePieceError},
+	}
+
+	api.V1.Register(v1Handlers...)
+	// add preheat APIs to v1 category
+	api.V1.Register(preheatHandlers(s)...)
+}
+
+func registerSystem(s *Server) {
+	systemHandlers := []*api.HandlerSpec{
 		// system
 		{Method: http.MethodGet, Path: "/_ping", HandlerFunc: s.ping},
 		{Method: http.MethodGet, Path: "/version", HandlerFunc: version.HandlerWithCtx},
 
+		// metrics
+		{Method: http.MethodGet, Path: "/metrics", HandlerFunc: handleMetrics},
+		{Method: http.MethodPost, Path: "/task/metrics", HandlerFunc: m.handleMetricsReport},
+	}
+	api.Legacy.Register(systemHandlers...)
+}
+
+func registerLegacy(s *Server) {
+	legacyHandlers := []*api.HandlerSpec{
 		// v0.3
 		{Method: http.MethodPost, Path: "/peer/registry", HandlerFunc: s.registry},
 		{Method: http.MethodGet, Path: "/peer/task", HandlerFunc: s.pullPieceTask},
@@ -50,91 +98,46 @@ func initRoute(s *Server) *mux.Router {
 		{Method: http.MethodGet, Path: "/peer/piece/error", HandlerFunc: s.reportPieceError},
 		{Method: http.MethodPost, Path: "/peer/network", HandlerFunc: s.fetchP2PNetworkInfo},
 		{Method: http.MethodPost, Path: "/peer/heartbeat", HandlerFunc: s.reportPeerHealth},
-
-		// v1
-		// peer
-		{Method: http.MethodPost, Path: "/api/v1/peers", HandlerFunc: s.registerPeer},
-		{Method: http.MethodDelete, Path: "/api/v1/peers/{id}", HandlerFunc: s.deRegisterPeer},
-		{Method: http.MethodGet, Path: "/api/v1/peers/{id}", HandlerFunc: s.getPeer},
-		{Method: http.MethodGet, Path: "/api/v1/peers", HandlerFunc: s.listPeers},
-		{Method: http.MethodGet, Path: "/api/v1/tasks/{id}", HandlerFunc: s.getTaskInfo},
-
-		// task
-		{Method: http.MethodDelete, Path: "/api/v1/tasks/{id}", HandlerFunc: s.deleteTask},
-
-		// piece
-		{Method: http.MethodGet, Path: "/api/v1/tasks/{id}/pieces/{pieceRange}/error", HandlerFunc: s.handlePieceError},
-
-		// metrics
-		{Method: http.MethodGet, Path: "/metrics", HandlerFunc: handleMetrics},
-		{Method: http.MethodPost, Path: "/task/metrics", HandlerFunc: m.handleMetricsReport},
 	}
-
-	// register API
-	for _, h := range handlers {
-		if h != nil {
-			r.Path(versionMatcher + h.Path).Methods(h.Method).Handler(m.instrumentHandler(h.Path, filter(h.HandlerFunc)))
-			r.Path(h.Path).Methods(h.Method).Handler(m.instrumentHandler(h.Path, filter(h.HandlerFunc)))
-		}
-	}
-	initPreheatHandlers(s, r)
-
-	if s.Config.Debug || s.Config.EnableProfiler {
-		r.PathPrefix("/debug/pprof/cmdline").HandlerFunc(pprof.Cmdline)
-		r.PathPrefix("/debug/pprof/profile").HandlerFunc(pprof.Profile)
-		r.PathPrefix("/debug/pprof/symbol").HandlerFunc(pprof.Symbol)
-		r.PathPrefix("/debug/pprof/trace").HandlerFunc(pprof.Trace)
-		r.PathPrefix("/debug/pprof/").HandlerFunc(pprof.Index)
-	}
-	return r
+	api.Legacy.Register(legacyHandlers...)
+	api.Legacy.Register(preheatHandlers(s)...)
 }
 
-func handleMetrics(ctx context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
+func initAPIRoutes(r *mux.Router) {
+	add := func(prefix string, h *api.HandlerSpec) {
+		path := h.Path
+		if path == "" || path[0] != '/' {
+			path = "/" + path
+		}
+		if !strings.HasPrefix(path, prefix) {
+			path = prefix + h.Path
+		}
+		r.Path(path).Methods(h.Method).
+			Handler(m.instrumentHandler(path, api.WrapHandler(h.HandlerFunc)))
+		// for sdk client
+		r.Path(versionMatcher + path).Methods(h.Method).
+			Handler(m.instrumentHandler(path, api.WrapHandler(h.HandlerFunc)))
+	}
+
+	api.V1.Range(add)
+	api.Extension.Range(add)
+	api.Legacy.Range(add)
+}
+
+func initDebugRoutes(r *mux.Router) {
+	r.PathPrefix("/debug/pprof/cmdline").HandlerFunc(pprof.Cmdline)
+	r.PathPrefix("/debug/pprof/profile").HandlerFunc(pprof.Profile)
+	r.PathPrefix("/debug/pprof/symbol").HandlerFunc(pprof.Symbol)
+	r.PathPrefix("/debug/pprof/trace").HandlerFunc(pprof.Trace)
+	r.PathPrefix("/debug/pprof/").HandlerFunc(pprof.Index)
+}
+
+func handleMetrics(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
 	promhttp.Handler().ServeHTTP(rw, req)
 	return nil
 }
 
-func filter(handler Handler) http.HandlerFunc {
-	pctx := context.Background()
-
-	return func(w http.ResponseWriter, req *http.Request) {
-		ctx, cancel := context.WithCancel(pctx)
-		defer cancel()
-
-		// Start to handle request.
-
-		if err := handler(ctx, w, req); err != nil {
-			// Handle error if request handling fails.
-			HandleErrorResponse(w, err)
-		}
-	}
-}
-
-// EncodeResponse encodes response in json.
+// EncodeResponse encodes response in json and sends it.
 func EncodeResponse(rw http.ResponseWriter, statusCode int, data interface{}) error {
-	rw.Header().Set("Content-Type", "application/json")
-	rw.WriteHeader(statusCode)
-	return json.NewEncoder(rw).Encode(data)
-}
-
-// HandleErrorResponse handles err from daemon side and constructs response for client side.
-func HandleErrorResponse(w http.ResponseWriter, err error) {
-	var (
-		code   int
-		errMsg string
-	)
-
-	// By default, daemon side returns code 500 if error happens.
-	code = http.StatusInternalServerError
-	errMsg = NewResultInfoWithError(err).Error()
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	enc := json.NewEncoder(w)
-	enc.SetEscapeHTML(false)
-
-	resp := types.Error{
-		Message: errMsg,
-	}
-	enc.Encode(resp)
+	return api.SendResponse(rw, statusCode, data)
 }

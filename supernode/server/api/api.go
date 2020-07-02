@@ -47,6 +47,9 @@ func newCategory(name, prefix string) *category {
 	apiCategories[name] = &category{
 		name:   name,
 		prefix: prefix,
+		handlerSpecs: []*HandlerSpec{
+			listHandler(name),
+		},
 	}
 	return apiCategories[name]
 }
@@ -59,11 +62,12 @@ type category struct {
 }
 
 // Register registers an API into this API category.
-func (c *category) Register(h *HandlerSpec) *category {
-	if !validate(h) {
-		return c
+func (c *category) Register(handlers ...*HandlerSpec) *category {
+	for _, h := range handlers {
+		if valid(h) {
+			c.handlerSpecs = append(c.handlerSpecs, h)
+		}
 	}
-	c.handlerSpecs = append(c.handlerSpecs, h)
 	return c
 }
 
@@ -82,8 +86,11 @@ func (c *category) Handlers() []*HandlerSpec {
 	return c.handlerSpecs
 }
 
-// -----------------------------------------------------------------------------
-
-func validate(h *HandlerSpec) bool {
-	return h != nil && h.HandlerFunc != nil && h.Method != ""
+// Range traverses all the handlers in this category.
+func (c *category) Range(f func(prefix string, h *HandlerSpec)) {
+	for _, h := range c.handlerSpecs {
+		if h != nil {
+			f(c.prefix, h)
+		}
+	}
 }

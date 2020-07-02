@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/go-openapi/strfmt"
 	"github.com/sirupsen/logrus"
@@ -52,26 +53,28 @@ func ParseJSONRequest(req io.Reader, target interface{}, validator ValidateFunc)
 	return nil
 }
 
-// EncodeResponse encodes response in json.
-// The response body is empty if the data is nil or empty value.
-func EncodeResponse(w http.ResponseWriter, code int, data interface{}) error {
+// SendResponse encodes response in json.
+//
+// TODO:
+//  Should the response body should be empty if the data is nil or empty
+//  string? Now it's incompatible with the client.
+func SendResponse(w http.ResponseWriter, code int, data interface{}) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
-	if util.IsNil(data) || data == "" {
-		return nil
-	}
-	return json.NewEncoder(w).Encode(data)
+	enc := json.NewEncoder(w)
+	enc.SetEscapeHTML(false)
+	return enc.Encode(data)
 }
 
 // HandleErrorResponse handles err from server side and constructs response
 // for client side.
-func HandleErrorResponse(w http.ResponseWriter, err error) {
+func HandleErrorResponse(w http.ResponseWriter, err error) error {
 	switch e := err.(type) {
 	case *errortypes.HTTPError:
-		_ = EncodeResponse(w, e.Code, errResp(e.Code, e.Msg))
+		return SendResponse(w, e.Code, errResp(e.Code, e.Msg))
 	default:
 		// By default, server side returns code 500 if error happens.
-		_ = EncodeResponse(w, http.StatusInternalServerError,
+		return SendResponse(w, http.StatusInternalServerError,
 			errResp(http.StatusInternalServerError, e.Error()))
 	}
 }
@@ -86,12 +89,17 @@ func WrapHandler(handler HandlerFunc) http.HandlerFunc {
 		defer cancel()
 
 		// Start to handle request.
+		start := time.Now()
 		err := handler(ctx, w, req)
 		if err != nil {
 			// Handle error if request handling fails.
-			HandleErrorResponse(w, err)
+			if sendErr := HandleErrorResponse(w, err); sendErr != nil {
+				logrus.Errorf("%s %v remote:%s cost:%v handleError:%v sendError:%v",
+					req.Method, req.URL, req.RemoteAddr, time.Since(start), err, sendErr)
+			}
 		}
-		logrus.Debugf("%s %v err:%v", req.Method, req.URL, err)
+		logrus.Debugf("%s %v remote:%s cost:%v err:%v", req.Method, req.URL,
+			req.RemoteAddr, time.Since(start), err)
 	}
 }
 
@@ -100,4 +108,37 @@ func errResp(code int, msg string) *types.ErrorResponse {
 		Code:    int64(code),
 		Message: msg,
 	}
+}
+
+func valid(h *HandlerSpec) bool {
+	return h != nil && h.HandlerFunc != nil && h.Method != ""
+}
+
+func listHandler(name string) *HandlerSpec {
+	h := &HandlerSpec{
+		Method: http.MethodGet,
+		Path:   "/",
+		HandlerFunc: func(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
+			c := apiCategories[name]
+			if c == nil {
+				return errortypes.NewHTTPError(http.StatusBadRequest, "no such category")
+			}
+
+			result := map[string]interface{}{
+				"category": c.name,
+				"prefix":   c.prefix,
+			}
+			handlers := make([]map[string]string, len(c.handlerSpecs))
+			for i, v := range c.handlerSpecs {
+				handlers[i] = map[string]string{
+					"method": v.Method,
+					"path":   v.Path,
+				}
+			}
+			result["api"] = handlers
+
+			return SendResponse(rw, http.StatusOK, result)
+		},
+	}
+	return h
 }
