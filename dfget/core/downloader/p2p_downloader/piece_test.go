@@ -20,6 +20,8 @@ import (
 	"bytes"
 
 	"github.com/go-check/check"
+
+	"github.com/dragonflyoss/Dragonfly/pkg/pool"
 )
 
 type PieceTestSuite struct {
@@ -35,9 +37,9 @@ func (s *PieceTestSuite) TestRawContent(c *check.C) {
 		noWrapper bool
 		expected  *bytes.Buffer
 	}{
-		{piece: &Piece{Content: bytes.NewBufferString("")}, noWrapper: false, expected: nil},
-		{piece: &Piece{Content: bytes.NewBufferString("000010")}, noWrapper: false, expected: bytes.NewBufferString("1")},
-		{piece: &Piece{Content: bytes.NewBufferString("000020")}, noWrapper: true, expected: bytes.NewBufferString("000020")},
+		{piece: &Piece{Content: pool.NewBufferString("")}, noWrapper: false, expected: nil},
+		{piece: &Piece{Content: pool.NewBufferString("000010")}, noWrapper: false, expected: bytes.NewBufferString("1")},
+		{piece: &Piece{Content: pool.NewBufferString("000020")}, noWrapper: true, expected: bytes.NewBufferString("000020")},
 	}
 
 	for _, v := range cases {
