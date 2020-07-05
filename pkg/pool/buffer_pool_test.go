@@ -51,6 +51,7 @@ func (s *BufferPoolTestSuite) TestAcquireBuffer() {
 }
 
 func (s *BufferPoolTestSuite) TestReleaseBuffer() {
+	bufferPool = NewBufferPool(8, defaultAllocatedSize)
 	buf1 := AcquireBuffer()
 	ReleaseBuffer(buf1)
 	ReleaseBuffer(nil)
