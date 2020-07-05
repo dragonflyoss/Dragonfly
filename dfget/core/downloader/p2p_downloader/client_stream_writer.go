@@ -164,7 +164,7 @@ func (csw *ClientStreamWriter) writePieceToPipe(p *Piece) error {
 			break
 		}
 
-		_, err := io.Copy(csw.pipeWriter, p.RawContent(csw.cdnSource == apiTypes.CdnSourceSource))
+		_, err := p.WriteTo(csw.pipeWriter, csw.cdnSource == apiTypes.CdnSourceSource)
 		if err != nil {
 			return err
 		}
