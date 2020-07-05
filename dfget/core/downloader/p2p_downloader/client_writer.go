@@ -18,7 +18,6 @@ package downloader
 
 import (
 	"context"
-	"io"
 	"math/rand"
 	"os"
 	"time"
@@ -220,6 +219,7 @@ func (cw *ClientWriter) write(piece *Piece) error {
 	}
 
 	if cw.acrossWrite {
+		piece.IncWriter()
 		cw.targetQueue.Put(piece)
 	}
 
@@ -245,7 +245,7 @@ func writePieceToFile(piece *Piece, file *os.File, cdnSource apiTypes.CdnSource)
 	}
 
 	writer := pool.AcquireWriter(file)
-	_, err := io.Copy(writer, piece.RawContent(noWrapper))
+	_, err := piece.WriteTo(writer, noWrapper)
 	pool.ReleaseWriter(writer)
 	writer = nil
 	return err
