@@ -116,11 +116,11 @@ Or you can build your own supernode executable file.
 
 ### Start supernode
 
-    ```sh
-    supernodeHomeDir=/home/admin/supernode
-    supernodeDownloadPort=8001
-    supernode --home-dir=$supernodeHomeDir --port=8002 --download-port=$supernodeDownloadPort
-    ```
+```sh
+supernodeHomeDir=/home/admin/supernode
+supernodeDownloadPort=8001
+supernode --home-dir=$supernodeHomeDir --port=8002 --download-port=$supernodeDownloadPort
+```
 
 ### Start file server
 
