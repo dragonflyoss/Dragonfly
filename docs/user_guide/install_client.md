@@ -119,11 +119,11 @@ Or you can build your own dfclient executable files.
 
 **NOTE:** You can ignore this step when using only dfget for file distribution .
 
-    ```sh
-    # Replace ${supernode} with your own supernode node with format `ip:port=weight`.
-    SUPERNODE=$supernode
-    dfdaemon --node $SUPERNODE
-    ```
+```sh
+# Replace ${supernode} with your own supernode node with format `ip:port=weight`.
+SUPERNODE=$supernode
+dfdaemon --node $SUPERNODE
+```
 
 ## After this Task
 
