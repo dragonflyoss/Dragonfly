@@ -165,6 +165,9 @@ func (csw *ClientStreamWriter) writePieceToPipe(p *Piece) error {
 		}
 
 		_, err := io.Copy(csw.pipeWriter, p.RawContent(csw.cdnSource == apiTypes.CdnSourceSource))
+		if p.autoReset {
+			p.ResetContent()
+		}
 		if err != nil {
 			return err
 		}

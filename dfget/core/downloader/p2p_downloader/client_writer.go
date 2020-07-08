@@ -246,6 +246,9 @@ func writePieceToFile(piece *Piece, file *os.File, cdnSource apiTypes.CdnSource)
 
 	writer := pool.AcquireWriter(file)
 	_, err := io.Copy(writer, piece.RawContent(noWrapper))
+	if piece.autoReset {
+		piece.ResetContent()
+	}
 	pool.ReleaseWriter(writer)
 	writer = nil
 	return err

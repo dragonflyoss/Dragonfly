@@ -66,11 +66,6 @@ type Piece struct {
 func (p *Piece) RawContent(noWrapper bool) *bytes.Buffer {
 	contents := p.Content.Bytes()
 	length := len(contents)
-	defer func() {
-		if p.autoReset {
-			p.ResetContent()
-		}
-	}()
 
 	if noWrapper {
 		return bytes.NewBuffer(contents[:])
