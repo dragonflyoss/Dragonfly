@@ -1,3 +1,6 @@
+// BufferPool is no-op under race detector, so all these tests do not work.
+// +build !race
+
 /*
  * Copyright The Dragonfly Authors.
  *
@@ -18,6 +21,7 @@ package pool
 
 import (
 	"fmt"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -51,6 +55,11 @@ func (s *BufferPoolTestSuite) TestAcquireBuffer() {
 }
 
 func (s *BufferPoolTestSuite) TestReleaseBuffer() {
+	// Limit to 1 processor to make sure that the goroutine doesn't migrate
+	// to another P between AcquireBuffer and ReleaseBuffer calls.
+	prev := runtime.GOMAXPROCS(1)
+	defer runtime.GOMAXPROCS(prev)
+
 	buf1 := AcquireBuffer()
 	ReleaseBuffer(buf1)
 	ReleaseBuffer(nil)
