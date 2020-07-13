@@ -1,3 +1,6 @@
+// WriterPool is no-op under race detector, so all these tests do not work.
+// +build !race
+
 /*
  * Copyright The Dragonfly Authors.
  *
@@ -19,6 +22,7 @@ package pool
 import (
 	"bytes"
 	"io/ioutil"
+	"runtime"
 	"sync"
 	"testing"
 
@@ -26,6 +30,11 @@ import (
 )
 
 func TestWriter(t *testing.T) {
+	// Limit to 1 processor to make sure that the goroutine doesn't migrate
+	// to another P between AcquireWriter and ReleaseWriter calls.
+	prev := runtime.GOMAXPROCS(1)
+	defer runtime.GOMAXPROCS(prev)
+
 	tmp := writerPool
 	writerPool = &sync.Pool{}
 
