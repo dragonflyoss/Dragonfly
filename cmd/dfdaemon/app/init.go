@@ -57,7 +57,7 @@ func adjustSupernodeList(nodes []string) []string {
 	}
 }
 
-// getLocalIP return the localIP which connects to supper node
+// getLocalIP return the localIP which connects to super node
 func getLocalIP(nodes []string) (localIP string) {
 	var (
 		e error
