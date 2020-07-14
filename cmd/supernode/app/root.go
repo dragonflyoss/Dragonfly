@@ -375,8 +375,8 @@ func setAdvertiseIP(cfg *config.Config) error {
 		return errors.Wrapf(errortypes.ErrSystemError, "failed to get ip list: %v", err)
 	}
 	if len(ipList) == 0 {
-		logrus.Debugf("get empty system's unicast interface addresses")
-		return nil
+		logrus.Errorf("get empty system's unicast interface addresses")
+		return errors.Wrapf(errortypes.ErrSystemError, "Unable to autodetect advertiser ip, please set it via --advertise-ip")
 	}
 
 	cfg.AdvertiseIP = ipList[0]
