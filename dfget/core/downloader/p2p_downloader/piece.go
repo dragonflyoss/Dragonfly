@@ -19,6 +19,9 @@ package downloader
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"io"
+	"sync/atomic"
 
 	apiTypes "github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/constants"
@@ -57,8 +60,25 @@ type Piece struct {
 	// length the length of the content.
 	length int64
 
-	// autoReset automatically reset content after reading.
-	autoReset bool
+	// writerNum record the writer number which will write this piece.
+	writerNum int32
+}
+
+// WriteTo writes piece raw data in content buffer to w.
+// If the piece has wrapper, the piece content will remove the head and tail before writing.
+func (p *Piece) WriteTo(w io.Writer, noWrapper bool) (n int64, err error) {
+	defer p.TryResetContent()
+
+	content := p.RawContent(noWrapper)
+	if content != nil {
+		return content.WriteTo(w)
+	}
+	return 0, fmt.Errorf("piece content length less than 5 bytes")
+}
+
+// IncWriter increase a writer for the piece.
+func (p *Piece) IncWriter() {
+	atomic.AddInt32(&p.writerNum, 1)
 }
 
 // RawContent returns raw contents,
@@ -66,11 +86,6 @@ type Piece struct {
 func (p *Piece) RawContent(noWrapper bool) *bytes.Buffer {
 	contents := p.Content.Bytes()
 	length := len(contents)
-	defer func() {
-		if p.autoReset {
-			p.ResetContent()
-		}
-	}()
 
 	if noWrapper {
 		return bytes.NewBuffer(contents[:])
@@ -97,7 +112,11 @@ func (p *Piece) String() string {
 }
 
 // ResetContent reset contents and returns it back to buffer pool.
-func (p *Piece) ResetContent() {
+func (p *Piece) TryResetContent() {
+	if atomic.AddInt32(&p.writerNum, -1) > 0 {
+		return
+	}
+
 	if p.Content == nil {
 		return
 	}
@@ -118,7 +137,7 @@ func NewPiece(taskID, node, dstCid, pieceRange string, result, status int, cdnSo
 		Result:    result,
 		Status:    status,
 		Content:   nil,
-		autoReset: true,
+		writerNum: 1,
 	}
 }
 
@@ -130,7 +149,7 @@ func NewPieceSimple(taskID string, node string, status int, cdnSource apiTypes.C
 		Status:    status,
 		Result:    constants.ResultInvalid,
 		Content:   nil,
-		autoReset: true,
+		writerNum: 1,
 	}
 }
 
@@ -146,6 +165,6 @@ func NewPieceContent(taskID, node, dstCid, pieceRange string,
 		Status:    status,
 		Content:   contents,
 		length:    int64(contents.Len()),
-		autoReset: true,
+		writerNum: 1,
 	}
 }
