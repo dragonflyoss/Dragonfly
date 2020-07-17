@@ -215,6 +215,7 @@ func (cw *ClientWriter) write(piece *Piece) error {
 	startTime := time.Now()
 	if !cw.p2pPattern {
 		cw.targetQueue.Put(piece)
+		go sendSuccessPiece(cw.api, cw.cfg.RV.Cid, piece, time.Since(startTime), cw.notifyQueue)
 		return nil
 	}
 
