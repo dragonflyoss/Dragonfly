@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
@@ -83,4 +84,19 @@ func (s *Server) listPeers(ctx context.Context, rw http.ResponseWriter, req *htt
 	}
 
 	return EncodeResponse(rw, http.StatusOK, peerList)
+}
+
+func (s *Server) reportDynamicRate(ctx context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
+	id := mux.Vars(req)["id"]
+	strDynamicRate := mux.Vars(req)["dynamicRate"]
+	dynamicRate, err := strconv.ParseInt(strDynamicRate, 10, 64)
+	if err != nil {
+		return err
+	}
+	err = s.ProgressMgr.UpdatePeerDynamicRate(ctx, id, dynamicRate)
+	if err != nil {
+		return err
+	}
+	rw.WriteHeader(http.StatusOK)
+	return nil
 }

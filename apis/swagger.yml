@@ -88,7 +88,7 @@ paths:
         400:
           description: "bad parameter"
           schema:
-            $ref: '#/definitions/Error'
+            $ref: "#/definitions/Error"
         500:
           $ref: "#/responses/500ErrorResponse"
 
@@ -111,8 +111,7 @@ paths:
           in: query
           type: "string"
           required: true
-          description:
-            When dfget needs to get pieces of specific task, it must mark which peer it plays role of.
+          description: When dfget needs to get pieces of specific task, it must mark which peer it plays role of.
         - name: dstCid
           in: query
           type: "string"
@@ -136,6 +135,7 @@ paths:
           in: query
           description: |
             the range of specific piece in the task, example "0-45565".
+
       responses:
         200:
           description: "no error"
@@ -219,6 +219,40 @@ paths:
         500:
           $ref: "#/responses/500ErrorResponse"
 
+  /peer/dynamicrate:
+    get:
+      summary: "report the newest totalLimit to supernode"
+      produces:
+        - "application/json"
+      parameters:
+        - name: taskId
+          in: query
+          required: true
+          description: "ID of task"
+          type: string
+        - name: cid
+          in: query
+          type: string
+          required: true
+          description: |
+            the downloader clientID
+        - name: dynamicRate
+          in: query
+          type: integer
+          format: int64
+          required: true
+          description: |
+            the newest totalLimit of dfget server
+      responses:
+        200:
+          description: "no error"
+          schema:
+            $ref: "#/definitions/ResultInfo"
+        404:
+          $ref: "#/responses/404ErrorResponse"
+        500:
+          $ref: "#/responses/500ErrorResponse"
+
   /api/v1/peers:
     post:
       summary: "register dfget in Supernode as a peer node"
@@ -237,7 +271,7 @@ paths:
         400:
           description: "bad parameter"
           schema:
-            $ref: '#/definitions/Error'
+            $ref: "#/definitions/Error"
         500:
           $ref: "#/responses/500ErrorResponse"
 
@@ -276,7 +310,7 @@ paths:
         400:
           description: "bad parameter"
           schema:
-            $ref: '#/definitions/Error'
+            $ref: "#/definitions/Error"
         500:
           $ref: "#/responses/500ErrorResponse"
 
@@ -320,7 +354,35 @@ paths:
         404:
           description: "no such peer"
           schema:
-            $ref: '#/responses/404ErrorResponse'
+            $ref: "#/responses/404ErrorResponse"
+        500:
+          $ref: "#/responses/500ErrorResponse"
+
+  /api/v1/peer/{id}/peerState/{dynamicRate}:
+    get:
+      summary: "report the newest dynamicRate of peer server to supernode"
+      produces:
+        - "application/json"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of peer
+          type: string
+        - name: dynamicRate
+          in: path
+          type: integer
+          format: int64
+          required: true
+          description: |
+            the newest dynamicRate of peer server
+      responses:
+        204:
+          description: "no error"
+        404:
+          description: "no such peer"
+          schema:
+            $ref: "#/responses/404ErrorResponse"
         500:
           $ref: "#/responses/500ErrorResponse"
 
@@ -343,7 +405,7 @@ paths:
         400:
           description: "bad parameter"
           schema:
-            $ref: '#/definitions/Error'
+            $ref: "#/definitions/Error"
         500:
           $ref: "#/responses/500ErrorResponse"
 
@@ -427,7 +489,7 @@ paths:
         404:
           description: "no such task"
           schema:
-            $ref: '#/responses/404ErrorResponse'
+            $ref: "#/responses/404ErrorResponse"
         500:
           $ref: "#/responses/500ErrorResponse"
 
@@ -458,7 +520,7 @@ paths:
           in: query
           type: "string"
           required: true
-          description:
+          description: |
             When dfget needs to get pieces of specific task, it must mark which peer it plays role of.
         - name: PiecePullRequest
           in: body
@@ -579,11 +641,11 @@ paths:
         400:
           description: "bad parameter"
           schema:
-            $ref: '#/definitions/Error'
+            $ref: "#/definitions/Error"
         409:
           description: "preheat task already exists"
           schema:
-            $ref: '#/definitions/Error'
+            $ref: "#/definitions/Error"
         500:
           $ref: "#/responses/500ErrorResponse"
 
@@ -603,7 +665,7 @@ paths:
         400:
           description: "bad parameter"
           schema:
-            $ref: '#/definitions/Error'
+            $ref: "#/definitions/Error"
         500:
           $ref: "#/responses/500ErrorResponse"
 
@@ -713,7 +775,6 @@ paths:
             $ref: "#/definitions/NetworkInfoFetchResponse"
         500:
           $ref: "#/responses/500ErrorResponse"
-
 
 definitions:
   Error:

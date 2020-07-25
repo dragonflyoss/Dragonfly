@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/go-openapi/strfmt"
 	"github.com/gorilla/schema"
@@ -321,4 +322,28 @@ func (s *Server) fetchP2PNetworkInfo(ctx context.Context, rw http.ResponseWriter
 
 func (s *Server) reportPeerHealth(ctx context.Context, rw http.ResponseWriter, req *http.Request) error {
 	return EncodeResponse(rw, http.StatusOK, &types.HeartBeatResponse{})
+}
+
+func (s *Server) updateDynamicRate(ctx context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
+	params := req.URL.Query()
+	taskID := params.Get("taskId")
+	cID := params.Get("cid")
+	strDynamicRate := params.Get("dynamicRate")
+	//convert dynamicRate from string to int64
+	dynamicRate, err := strconv.ParseInt(strDynamicRate, 10, 64)
+	if err != nil {
+		return err
+	}
+	// get peerID according to the CID and taskID
+	dfgetTask, err := s.DfgetTaskMgr.Get(ctx, cID, taskID)
+	if err != nil {
+		return err
+	}
+	if err := s.ProgressMgr.UpdatePeerDynamicRate(ctx, dfgetTask.PeerID, dynamicRate); err != nil {
+		return err
+	}
+
+	return EncodeResponse(rw, http.StatusOK, &types.ResultInfo{
+		Code: constants.CodeUpdateDynamicRate,
+	})
 }

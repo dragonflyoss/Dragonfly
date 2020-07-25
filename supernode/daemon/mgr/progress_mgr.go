@@ -40,6 +40,9 @@ type PeerState struct {
 
 	// ServiceDownTime the down time of the peer service.
 	ServiceDownTime int64
+
+	// DynamicRate is the dynimical download rate limit of the peer node
+	DynamicRate int64
 }
 
 // ProgressMgr is responsible for maintaining the correspondence between peer and pieces.
@@ -70,9 +73,10 @@ type ProgressMgr interface {
 	// GetPeerStateByPeerID gets peer state with specified peerID.
 	GetPeerStateByPeerID(ctx context.Context, peerID string) (peerState *PeerState, err error)
 
-	// UpdateSuperLoad updates the superload of taskID by adding the delta.
-	// The updated will be `false` if failed to do update operation.
-	//
+	// UpdatePeerDynamicRate does update dynamicRate when peer server change it totalLimit.
+	// If dfget doesn't in dynamic mode, the dynamicRate will just be replaced by totalLimit.
+	UpdatePeerDynamicRate(ctx context.Context, peerID string, dynamicRate int64) (err error)
+
 	// It's considered as a failure when then superload is greater than limit after adding delta.
 	UpdatePeerServiceDown(ctx context.Context, peerID string) (err error)
 

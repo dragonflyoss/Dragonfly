@@ -93,6 +93,35 @@ func (s *SchedulerMgrTestSuite) TestSortByPieceDistance(c *check.C) {
 	}
 }
 
+func (s *SchedulerMgrTestSuite) TestSortByDynamicRate(c *check.C) {
+	var cases = []struct {
+		peerIDs         []string
+		peerPriorityMap map[string]int
+		expected        []string
+	}{
+		{
+			peerIDs:         []string{"id1", "id2", "id3"},
+			peerPriorityMap: map[string]int{"id1": 2, "id2": 5, "id3": 9},
+			expected:        []string{"id3", "id2", "id1"},
+		},
+		{
+			peerIDs:         []string{"id1", "id2", "id3"},
+			peerPriorityMap: map[string]int{"id1": 19, "id2": 5, "id3": 9},
+			expected:        []string{"id1", "id3", "id2"},
+		},
+	}
+
+	for _, v := range cases {
+		s.manager.sortPeerExecutor(context.Background(), v.peerIDs, v.peerPriorityMap)
+		fmt.Println(v.peerIDs)
+		sortResult := false
+		if reflect.DeepEqual(v.expected, v.peerIDs) {
+			sortResult = true
+		}
+		c.Check(sortResult, check.Equals, true)
+	}
+}
+
 func (s *SchedulerMgrTestSuite) TestGetCenterNum(c *check.C) {
 	var cases = []struct {
 		runningPieces []int

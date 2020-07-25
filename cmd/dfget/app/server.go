@@ -62,6 +62,8 @@ func initServerFlags() {
 
 	flagSet.BoolVar(&cfg.Verbose, "verbose", false,
 		"be verbose")
+	flagSet.BoolVar(&cfg.Dynamic, "dynamic", false,
+		"identify whether the bandwidth rate limit is dynamic")
 }
 
 func runServer() error {

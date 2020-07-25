@@ -25,6 +25,7 @@ import (
 	"math/rand"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/dfget/config"
@@ -56,7 +57,8 @@ func pieceContent(pieceSize int64, origin string) string {
 func newTestPeerServer(workHome string) (srv *peerServer) {
 	cfg := helper.CreateConfig(nil, workHome)
 	srv = newPeerServer(cfg, 0)
-	srv.totalLimitRate = 1000
+	var totalLimitRate int64 = 1000
+	atomic.StoreInt64(srv.totalLimitRate, totalLimitRate)
 	srv.rateLimiter = ratelimiter.NewRateLimiter(int64(defaultRateLimit), 2)
 	return srv
 }

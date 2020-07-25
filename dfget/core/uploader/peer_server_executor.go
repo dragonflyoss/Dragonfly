@@ -82,9 +82,9 @@ func (pe *peerServerExecutor) StartPeerServerProcess(cfg *config.Config) (port i
 	}
 	defer fileLock.Unlock()
 
-	if port = pe.checkPeerServerExist(cfg, 0); port > 0 {
-		return port, nil
-	}
+	// if port = pe.checkPeerServerExist(cfg, 0); port > 0 {
+	// 	return port, nil
+	// }
 
 	cmd := exec.Command(os.Args[0], "server",
 		"--ip", cfg.RV.LocalIP,
@@ -96,6 +96,10 @@ func (pe *peerServerExecutor) StartPeerServerProcess(cfg *config.Config) (port i
 		"--alivetime", cfg.RV.ServerAliveTime.String())
 	if cfg.Verbose {
 		cmd.Args = append(cmd.Args, "--verbose")
+	}
+
+	if cfg.Dynamic {
+		cmd.Args = append(cmd.Args, "--dynamic")
 	}
 
 	var stdout io.ReadCloser

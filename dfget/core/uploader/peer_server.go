@@ -28,6 +28,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	apiTypes "github.com/dragonflyoss/Dragonfly/apis/types"
@@ -46,17 +47,23 @@ import (
 // newPeerServer returns a new P2PServer.
 func newPeerServer(cfg *config.Config, port int) *peerServer {
 	s := &peerServer{
-		cfg:      cfg,
-		finished: make(chan struct{}),
-		host:     cfg.RV.LocalIP,
-		port:     port,
-		api:      api.NewSupernodeAPI(),
+		cfg:            cfg,
+		finished:       make(chan struct{}),
+		host:           cfg.RV.LocalIP,
+		port:           port,
+		api:            api.NewSupernodeAPI(),
+		totalLimitRate: new(int64),
 	}
 
 	r := s.initRouter()
 	s.Server = &http.Server{
 		Addr:    net.JoinHostPort(s.host, strconv.Itoa(port)),
 		Handler: r,
+	}
+
+	if cfg.Dynamic && cfg.DynamicMaxRate > 0 {
+		//get main local network interface
+		go s.turnOnDynamicMode(s.finished, int64(cfg.DynamicMaxRate))
 	}
 
 	return s
@@ -81,7 +88,7 @@ type peerServer struct {
 	rateLimiter *ratelimiter.RateLimiter
 
 	// totalLimitRate is the total network bandwidth shared by tasks on the same host
-	totalLimitRate int
+	totalLimitRate *int64
 
 	// syncTaskMap stores the meta name of tasks on the host
 	syncTaskMap sync.Map
@@ -193,7 +200,8 @@ func (ps *peerServer) parseRateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// no need to calculate rate when totalLimitRate less than or equals zero.
-	if ps.totalLimitRate <= 0 {
+	totalLimitRate := atomic.LoadInt64(ps.totalLimitRate)
+	if totalLimitRate <= 0 {
 		fmt.Fprint(w, rateLimit)
 		return
 	}
@@ -217,9 +225,11 @@ func (ps *peerServer) checkHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			ps.rateLimiter.SetRate(ratelimiter.TransRate(int64(totalLimit)))
 		}
-		ps.totalLimitRate = totalLimit
+		atomic.StoreInt64(ps.totalLimitRate, int64(totalLimit))
 		logrus.Infof("update total limit to %d", totalLimit)
 	}
+	//update rate in supernode
+	ps.updateDynamicRateToSupernode(int64(totalLimit))
 
 	// get parameters
 	taskFileName := mux.Vars(r)["commonFile"]
@@ -279,6 +289,71 @@ func (ps *peerServer) pingHandler(w http.ResponseWriter, r *http.Request) {
 
 // ----------------------------------------------------------------------------
 // handler process
+
+// turn on the dynamic mode
+func (ps *peerServer) turnOnDynamicMode(ch chan struct{}, maxRate int64) {
+	err := getHostNetInter()
+	if err != nil {
+		logrus.Errorf("failed to get main local network interface: %v, turn dynamic rate mode into normal mode", err)
+		return
+	}
+	//initilize params to listen packet, if failed to listen packet then turn down dynamic mode
+
+	errCh := make(chan error)
+	defer close(errCh)
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	// update totalLimit dynamically
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				err := ps.updateDynamicRate(maxRate)
+				if err != nil {
+					logrus.Errorf("update dynamic bandwidth fail: %v", err)
+					errCh <- err
+				}
+			}
+		}
+	}()
+	//wait for peerserver shut down or error
+	select {
+	case <-ch:
+		logrus.Infof("all dynamic rate groutine shut down because of peerserver shutdown")
+		cancel()
+	case err := <-errCh:
+		logrus.Errorf("all dynamic rate groutine shut down because of error: %v", err)
+		cancel()
+
+	}
+}
+
+// updateDynamicRate updates rateLimiter.
+func (ps *peerServer) updateDynamicRate(maxRate int64) error {
+	dynamicRate, err := getHostDynamicRate(maxRate)
+	if err != nil {
+		return err
+	}
+	atomic.StoreInt64(ps.totalLimitRate, dynamicRate)
+	ps.updateDynamicRateToSupernode(dynamicRate)
+	logrus.Infof("update total limit to %d", dynamicRate)
+	return nil
+}
+
+func (ps *peerServer) updateDynamicRateToSupernode(rate int64) {
+	ps.syncTaskMap.Range(func(key, value interface{}) bool {
+		task, ok := value.(*taskConfig)
+		if ok {
+			ps.api.ReportDynamicRate(task.superNode, task.taskID, task.cid, rate)
+			logrus.Infof("report task %s dynamicRate change to %d",
+				task.taskID, rate)
+		}
+		return true
+	})
+}
 
 // getTaskFile finds the file and returns the File object.
 func (ps *peerServer) getTaskFile(taskFileName string) (*os.File, int64, error) {
@@ -392,7 +467,9 @@ func (ps *peerServer) uploadPiece(f *os.File, w http.ResponseWriter, up *uploadP
 
 	f.Seek(up.start, 0)
 	r := io.LimitReader(f, readLen)
+
 	if ps.rateLimiter != nil {
+		ps.rateLimiter.SetRate(ratelimiter.TransRate(atomic.LoadInt64(ps.totalLimitRate)))
 		lr := limitreader.NewLimitReaderWithLimiter(ps.rateLimiter, r, false)
 		_, e = io.CopyBuffer(w, lr, buf)
 	} else {
@@ -418,8 +495,9 @@ func (ps *peerServer) calculateRateLimit(clientRate int) int {
 	ps.syncTaskMap.Range(f)
 
 	// calculate the rate limit again according to totalLimit
-	if total > ps.totalLimitRate {
-		return (clientRate*ps.totalLimitRate + total - 1) / total
+	totalLimitRate := int(atomic.LoadInt64(ps.totalLimitRate))
+	if total > totalLimitRate {
+		return (clientRate*totalLimitRate + total - 1) / total
 	}
 	return clientRate
 }

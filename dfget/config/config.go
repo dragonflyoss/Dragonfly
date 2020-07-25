@@ -209,6 +209,12 @@ type Config struct {
 	// If set true, log level will be 'debug'.
 	Verbose bool `json:"verbose,omitempty"`
 
+	// Dynamic indicates whether the bandwidth rate limit is dynamic.
+	Dynamic bool `json:"dynamic,omitempty"`
+
+	// DynamicMaxRate is the max bandwidth of localhost environment network, which is used in dynamic bandwidth mode.
+	DynamicMaxRate rate.Rate `json:"dynamicmaxrate,omitempty"`
+
 	// Nodes specify supernodes.
 	Nodes []string `json:"-"`
 

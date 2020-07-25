@@ -250,6 +250,11 @@ func initFlags() {
 		"identify whether the request is from dfdaemon")
 	flagSet.BoolVar(&cfg.Insecure, "insecure", false,
 		"identify whether supernode should skip secure verify when interact with the source.")
+	flagSet.BoolVar(&cfg.Dynamic, "dynamic", false,
+		"identify whether the bandwidth rate limit is dynamic, to use the dynamic mode you must add the dynamicmaxrate flag")
+	flagSet.Var(&cfg.DynamicMaxRate, "dynamicmaxrate",
+		"the max bandwidth of localhost environment network, which is used in dynamic bandwidth mode, in format of G(B)/g/M(B)/m/K(B)/k/B, pure number will also be parsed as Byte")
+
 	flagSet.IntVar(&cfg.ClientQueueSize, "clientqueue", config.DefaultClientQueueSize,
 		"specify the size of client queue which controls the number of pieces that can be processed simultaneously")
 
