@@ -99,6 +99,27 @@ func (s *ProgressUtilTestSuite) TestUpdateBlackInfo(c *check.C) {
 	updateAndCheckBlackInfo(pm, "src1", "dst1", 1, c)
 }
 
+func (s *ProgressUtilTestSuite) TestUpdateSlidingWindow(c *check.C) {
+	pm, _ := NewManager(nil)
+	clientID := "foo"
+	pm.clientProgress.add(clientID, &clientState{
+		// the first three pieces are acknowledged, and the forth piece is not prepared
+		pieceBitSet:  bitset.New(32).Set(1).Set(9).Set(17).Set(24),
+		runningPiece: nil,
+	})
+	pm.slidingWindow.add(clientID, &slidingWindowState{
+		wnd: 3,
+		una: 1,
+	})
+
+	// receive the ack of piece 1, update the sliding window
+	err := pm.updateSlidingWindow(clientID, 1, config.PieceCACHED)
+	c.Check(err, check.Equals, nil)
+	window, err := pm.slidingWindow.getAsSlidingWindowState(clientID)
+	c.Check(err, check.Equals, nil)
+	c.Check(window.una, check.Equals, int32(3))
+}
+
 func updateAndCheckBlackInfo(pm *Manager, srcPID, dstPID string, expected int32, c *check.C) {
 	err := pm.updateBlackInfo(srcPID, dstPID)
 	c.Check(err, check.IsNil)

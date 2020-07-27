@@ -337,6 +337,10 @@ type RuntimeVariable struct {
 	// TODO: support p2p mode
 	StreamMode bool
 
+	// WindowSize defines the size of receive window of P2P Streaming mode.
+	// The field will only be used when StreamMode is true.
+	WindowSize int32
+
 	// TargetDir is the directory of the RealTarget path.
 	TargetDir string
 

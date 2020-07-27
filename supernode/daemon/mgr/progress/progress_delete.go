@@ -39,9 +39,18 @@ func (pm *Manager) DeleteTaskID(ctx context.Context, taskID string, pieceTotal i
 	return nil
 }
 
-// DeleteCID deletes the client progress with specified clientID.
+// DeleteCID deletes the client progress and sliding window progress with specified clientID.
 func (pm *Manager) DeleteCID(ctx context.Context, clientID string) (err error) {
-	return pm.clientProgress.remove(clientID)
+	err = pm.clientProgress.remove(clientID)
+	if err != nil {
+		return err
+	}
+
+	if pm.checkStreamMode(clientID) {
+		return pm.slidingWindow.remove(clientID)
+	} else {
+		return nil
+	}
 }
 
 // DeletePeerID deletes the related info with specified PeerID.

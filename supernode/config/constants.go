@@ -47,6 +47,7 @@ const (
 	PieceRUNNING = 0
 	PieceSUCCESS = 1
 	PieceFAILED  = 2
+	PieceCACHED  = 3
 )
 
 const (

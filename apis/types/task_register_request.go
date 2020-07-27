@@ -14,6 +14,7 @@ import (
 )
 
 // TaskRegisterRequest task register request
+//
 // swagger:model TaskRegisterRequest
 type TaskRegisterRequest struct {
 
@@ -104,6 +105,10 @@ type TaskRegisterRequest struct {
 	//
 	RootCAs []strfmt.Base64 `json:"rootCAs"`
 
+	// This attribute is used to notify the supernode whether the task is in P2P Stream Mode or not.
+	//
+	StreamMode bool `json:"streamMode,omitempty"`
+
 	// The address of supernode that the client can connect to
 	SuperNodeIP string `json:"superNodeIp,omitempty"`
 
@@ -119,6 +124,11 @@ type TaskRegisterRequest struct {
 
 	// version number of dfget binary.
 	Version string `json:"version,omitempty"`
+
+	// The window size defines the size of send window, which is the same as receive window in peer.
+	// The field will only be used when StreamMode is set.
+	//
+	Windowsize int32 `json:"windowsize,omitempty"`
 }
 
 // Validate validates this task register request

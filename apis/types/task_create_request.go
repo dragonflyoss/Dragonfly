@@ -6,14 +6,14 @@ package types
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	strfmt "github.com/go-openapi/strfmt"
-
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/go-openapi/validate"
 )
 
 // TaskCreateRequest task create request
+//
 // swagger:model TaskCreateRequest
 type TaskCreateRequest struct {
 
@@ -89,6 +89,11 @@ type TaskCreateRequest struct {
 	//
 	RawURL string `json:"rawURL,omitempty"`
 
+	// This attribute is used to notify the supernode whether the current task is running on
+	// Stream Mode or not. it is associated with windowsize field.
+	//
+	StreamMode bool `json:"streamMode,omitempty"`
+
 	// IP address of supernode which the peer connects to
 	SupernodeIP string `json:"supernodeIP,omitempty"`
 
@@ -101,6 +106,11 @@ type TaskCreateRequest struct {
 	// --filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.
 	//
 	TaskURL string `json:"taskURL,omitempty"`
+
+	// This attribute represents the size of the send window in supernode. The parameter would be
+	// recorded by the progress manager to maintain the stream download progress.
+	//
+	Windowsize int32 `json:"windowsize,omitempty"`
 }
 
 // Validate validates this task create request
