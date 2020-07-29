@@ -70,8 +70,7 @@ Or you can build your own supernode image.
 **NOTE:** Replace ${supernodeDockerImageId} with the ID obtained at the previous step.
 
 ```sh
-version=1.0.0
-docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 -v /home/admin/supernode:/home/admin/supernode dragonflyoss/supernode:$version --download-port=8001
+docker run -d --name supernode --restart=always -p 8001:8001 -p 8002:8002 -v /home/admin/supernode:/home/admin/supernode ${supernodeDockerImageId} --download-port=8001
 ```
 
 ## Procedure - When Deploying with Physical Machines
