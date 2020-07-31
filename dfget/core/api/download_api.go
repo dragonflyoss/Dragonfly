@@ -33,6 +33,7 @@ import (
 // for downloading one piece.
 type DownloadRequest struct {
 	Path       string
+	TaskID     string // this field is used to track the piece in stream mode, which does not have the file name
 	PieceRange string
 	PieceNum   int
 	PieceSize  int32
@@ -61,6 +62,7 @@ func (d *downloadAPI) Download(ip string, port int, req *DownloadRequest, timeou
 		return nil, fmt.Errorf("nil dwonload request")
 	}
 	headers := make(map[string]string)
+	headers[config.StrTaskID] = req.TaskID
 	headers[config.StrPieceNum] = strconv.Itoa(req.PieceNum)
 	headers[config.StrPieceSize] = fmt.Sprint(req.PieceSize)
 	headers[config.StrUserAgent] = "dfget/" + version.DFGetVersion

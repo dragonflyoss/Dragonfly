@@ -192,6 +192,8 @@ func serverGC(cfg *config.Config, interval time.Duration) {
 		if err := filepath.Walk(cfg.RV.SystemDataDir, walkFn); err != nil {
 			logrus.Warnf("server gc error:%v", err)
 		}
+		// TODO: GC of cache manager
+
 		time.Sleep(interval)
 	}
 }

@@ -190,7 +190,7 @@ func (pm *Manager) updateSlidingWindow(srcCID string, pieceNum, pieceStatus int)
 	for {
 		if cs.pieceBitSet.Test(uint(getStartIndexByPieceNum(pieceNum)+config.PieceSUCCESS)) ||
 			cs.pieceBitSet.Test(uint(getStartIndexByPieceNum(pieceNum)+config.PieceCACHED)) {
-			pieceNum += 1
+			pieceNum++
 		} else {
 			break
 		}
@@ -324,9 +324,9 @@ func (pm *Manager) checkStreamMode(clientID string) bool {
 	_, err := pm.slidingWindow.get(clientID)
 	if err != nil {
 		return false
-	} else {
-		return true
 	}
+
+	return true
 }
 
 func (sw *slidingWindowState) updateSlidingWindowUNA(una int) {

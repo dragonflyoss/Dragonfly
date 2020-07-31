@@ -43,7 +43,7 @@ type RegisterRequest struct {
 	FileLength  int64    `json:"fileLength,omitempty"`
 	AsSeed      bool     `json:"asSeed,omitempty"`
 	StreamMode  bool     `json:"streamMode,omitempty"`
-	WindowSize  int32      `json:"windowsize,omitempty"`
+	WindowSize  int32    `json:"windowsize,omitempty"`
 }
 
 func (r *RegisterRequest) String() string {

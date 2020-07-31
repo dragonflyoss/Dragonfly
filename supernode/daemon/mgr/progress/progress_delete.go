@@ -48,9 +48,9 @@ func (pm *Manager) DeleteCID(ctx context.Context, clientID string) (err error) {
 
 	if pm.checkStreamMode(clientID) {
 		return pm.slidingWindow.remove(clientID)
-	} else {
-		return nil
 	}
+
+	return nil
 }
 
 // DeletePeerID deletes the related info with specified PeerID.

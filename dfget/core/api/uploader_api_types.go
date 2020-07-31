@@ -16,6 +16,8 @@
 
 package api
 
+import "bytes"
+
 // ParseRateRequest wraps the request which is sent to uploader
 // in order to calculate the rate limit dynamically.
 type ParseRateRequest struct {
@@ -38,4 +40,20 @@ type FinishTaskRequest struct {
 	TaskID       string `request:"taskID"`
 	ClientID     string `request:"cid"`
 	Node         string `request:"superNode"`
+}
+
+// RegisterStreamTaskRequest wraps the request which is sent to uploader
+// in order to initialize the stream cache window and create the instance in cache manager.
+type RegisterStreamTaskRequest struct {
+	TaskID     string `request:"taskID"`
+	WindowSize string `request:"windowSize"`
+}
+
+// UploadStreamPieceRequest wraps the request which is sent to uploader
+// in order to upload the successfully downloaded piece to the uploader for cache.
+type UploadStreamPieceRequest struct {
+	TaskID    string        `request:"taskID"`
+	PieceNum  int           `request:"pieceNum"`
+	PieceSize int32         `request:"pieceSize"`
+	Content   *bytes.Buffer `request:"content"`
 }

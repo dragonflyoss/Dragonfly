@@ -105,7 +105,7 @@ func (ld *localDownloader) download(ctx context.Context, rangeStruct httputils.R
 		}
 
 		if written < expectedLen {
-			return 0, errors.Wrap(io.ErrShortWrite, fmt.Sprintf("download from [%d,%d], expecte read %d, but got %d", rangeStruct.StartIndex, rangeStruct.EndIndex, expectedLen, written))
+			return 0, errors.Wrap(io.ErrShortWrite, fmt.Sprintf("download from [%d,%d], expected read %d, but got %d", rangeStruct.StartIndex, rangeStruct.EndIndex, expectedLen, written))
 		}
 
 		n, err = writerAt.WriteAt(buf.Bytes(), writeOff)

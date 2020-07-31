@@ -72,6 +72,7 @@ const (
 	StrDataDir      = "dataDir"
 	StrTotalLimit   = "totalLimit"
 	StrCDNSource    = "cdnSource"
+	StrWindowSize   = "windowSize"
 
 	StrBytes   = "bytes"
 	StrPattern = "pattern"
@@ -111,10 +112,12 @@ const (
 	PeerHTTPPathPrefix = "/peer/file/"
 	CDNPathPrefix      = "/qtdown/"
 
-	LocalHTTPPathCheck  = "/check/"
-	LocalHTTPPathClient = "/client/"
-	LocalHTTPPathRate   = "/rate/"
-	LocalHTTPPing       = "/server/ping"
+	LocalHTTPPathCheck      = "/check/"
+	LocalHTTPPathClient     = "/client/"
+	LocalHTTPPathRate       = "/rate/"
+	LocalHTTPPing           = "/server/ping"
+	LocalHTTPStreamRegister = "/stream/task"
+	LocalHTTPStreamPiece    = "/stream/piece"
 
 	DataExpireTime         = 3 * time.Minute
 	ServerAliveTime        = 5 * time.Minute
@@ -123,6 +126,8 @@ const (
 	DefaultSupernodeSchema = "http"
 	DefaultSupernodeIP     = "127.0.0.1"
 	DefaultSupernodePort   = 8002
+
+	StreamWriterRoutineLimit = 4
 )
 
 /* errors code */

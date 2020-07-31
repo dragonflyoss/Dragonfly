@@ -125,6 +125,7 @@ func launchPeerServer(cfg *config.Config) error {
 	return err
 }
 
+// TODO: refactor the method which includes too many function
 func registerToSuperNode(cfg *config.Config, register regist.SupernodeRegister, supernodeLocator locator.SupernodeLocator) (
 	*regist.RegisterResult, error) {
 	defer func() {
@@ -160,6 +161,14 @@ func registerToSuperNode(cfg *config.Config, register regist.SupernodeRegister, 
 	}
 	cfg.RV.FileLength = result.FileLength
 	printer.Printf("client:%s connected to node:%s", cfg.RV.LocalIP, result.Node)
+
+	// if the stream mode is on, register the task to the cache manager of local uploader
+	if cfg.RV.StreamMode {
+		if err := registerStreamTask(cfg, result); err != nil {
+			panic(err)
+		}
+	}
+
 	return result, nil
 }
 
@@ -196,17 +205,13 @@ func downloadFile(cfg *config.Config, supernodeAPI api.SupernodeAPI, locator loc
 
 func doDownload(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 	register regist.SupernodeRegister, result *regist.RegisterResult, timeout time.Duration) error {
-	var getter downloader.Downloader
-	isBackDownload := false
-	if cfg.BackSourceReason > 0 {
-		getter = backDown.NewBackDownloader(cfg, result)
-		isBackDownload = true
-	} else {
-		printer.Printf("start download by dragonfly...")
-		getter = p2pDown.NewP2PDownloader(cfg, supernodeAPI, register, result)
-	}
+	// get the downloader according to the download pattern
+	getter, isBackDownload := getDownloadPattern(cfg, supernodeAPI, register, result)
 
-	err := downloader.DoDownloadTimeout(getter, timeout)
+	// get the downloaderTimeoutTask according to the download mode
+	downloadTimeoutTask := getDownloadTimeoutTask(cfg, supernodeAPI, result)
+
+	err := downloadTimeoutTask.Start(getter, timeout)
 	// report finished task to uploader regardless of the result of downloading from dragonfly
 	reportFinishedTask(cfg, getter)
 	if err == nil {
@@ -222,7 +227,7 @@ func doDownload(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 
 	// try to download the file from the source directly
 	getter = backDown.NewBackDownloader(cfg, result)
-	if err := downloader.DoDownloadTimeout(getter, timeout); err != nil {
+	if err := downloadTimeoutTask.Start(getter, timeout); err != nil {
 		return fmt.Errorf("failed to download file from source: %v", err)
 	}
 	return nil
@@ -348,4 +353,54 @@ func calculateTimeout(cfg *config.Config) time.Duration {
 		return timeout
 	}
 	return config.DefaultDownloadTimeout
+}
+
+// getPatternAndMode gets the download pattern [source, p2p, CDN] and mode [regular, stream] based on the params
+func getDownloadPattern(cfg *config.Config, supernodeAPI api.SupernodeAPI, register regist.SupernodeRegister,
+	result *regist.RegisterResult) (getter downloader.Downloader, isBackDownload bool) {
+	// check download pattern among [source, p2p, CDN]
+	if cfg.BackSourceReason > 0 {
+		getter = backDown.NewBackDownloader(cfg, result)
+		isBackDownload = true
+	} else {
+		printer.Printf("start download by dragonfly...")
+		getter = p2pDown.NewP2PDownloader(cfg, supernodeAPI, register, result)
+	}
+
+	return getter, isBackDownload
+}
+
+func getDownloadTimeoutTask(cfg *config.Config, supernodeAPI api.SupernodeAPI,
+	result *regist.RegisterResult) (downloadTimeoutTask downloader.DownloadTimeoutTask) {
+	// check download mode among [regular mode, stream mode]
+	if cfg.RV.StreamMode {
+		downloadTimeoutTask = &downloader.RegularDownloadTimeoutTask{}
+	} else {
+		downloadTimeoutTask = &downloader.StreamDownloadTimeoutTask{
+			Config:       cfg,
+			SupernodeAPI: supernodeAPI,
+			UploaderAPI:  api.NewUploaderAPI(httputils.DefaultTimeout),
+			Result:       result,
+		}
+	}
+
+	return downloadTimeoutTask
+}
+
+// register to cache manager of uploader
+func registerStreamTask(cfg *config.Config, result *regist.RegisterResult) error {
+	// initialization
+	uploaderAPI := api.NewUploaderAPI(httputils.DefaultTimeout)
+	req := &api.RegisterStreamTaskRequest{
+		TaskID:     result.TaskID,
+		WindowSize: strconv.Itoa(int(cfg.RV.WindowSize)),
+	}
+
+	// register to uploader
+	if err := uploaderAPI.RegisterStreamTask(cfg.RV.LocalIP, cfg.RV.PeerPort, req); err != nil {
+		logrus.Warnf("the stream task with taskID (%s) register failed", result.TaskID)
+		return err
+	}
+
+	return nil
 }

@@ -194,6 +194,7 @@ func (pc *PowerClient) createDownloadRequest() *api.DownloadRequest {
 
 	return &api.DownloadRequest{
 		Path:       pc.pieceTask.Path,
+		TaskID:     pc.taskID,
 		PieceRange: pieceRange,
 		PieceNum:   pc.pieceTask.PieceNum,
 		PieceSize:  pc.pieceTask.PieceSize,

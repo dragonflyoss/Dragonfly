@@ -391,7 +391,7 @@ func parseMapKeyToIntSlice(mmap map[int]bool) (result []int) {
 func getTargetPieceInfo(window *slidingWindowState) (uint, uint, int) {
 	if window == nil {
 		return 0, math.MaxUint32, config.PieceSUCCESS
-	} else {
-		return uint(window.una) * 8, uint(window.una+window.wnd) * 8, config.PieceCACHED
 	}
+
+	return uint(window.una) * 8, uint(window.una+window.wnd) * 8, config.PieceCACHED
 }
