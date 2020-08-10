@@ -1,7 +1,6 @@
 package preheat
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
@@ -9,7 +8,7 @@ import (
 
 func TestParseLayers(t *testing.T) {
 	task := &mgr.PreheatTask{
-		URL: "https://registry.cn-hangzhou.aliyuncs.com/v2/yuhai/pod-counter-controller/manifests/latest",
+		URL: "https://registry.cn-zhangjiakou.aliyuncs.com/v2/acs/alpine/manifests/3.6",
 		Headers: map[string]string{},
 	}
 	worker := &ImageWorker{BaseWorker: newBaseWorker(task, nil, nil)}
@@ -23,5 +22,7 @@ func TestParseLayers(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(len(layers))
+	if len(layers) != 4 {
+		t.Fatal("parse layer failed")
+	}
 }

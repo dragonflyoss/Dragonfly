@@ -105,7 +105,7 @@ func (w *ImageWorker) preheatLayers() (err error) {
 
 	children := make([]string, 0)
 	for _, layer := range layers {
-		logrus.Debug("preheat layer:%s parentId:%s", layer.url, task.ID)
+		logrus.Debugf("preheat layer:%s parentId:%s", layer.url, task.ID)
 		if layer.url == "" {
 			continue
 		}
