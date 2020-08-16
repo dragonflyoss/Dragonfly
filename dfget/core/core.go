@@ -373,7 +373,7 @@ func getDownloadPattern(cfg *config.Config, supernodeAPI api.SupernodeAPI, regis
 func getDownloadTimeoutTask(cfg *config.Config, supernodeAPI api.SupernodeAPI,
 	result *regist.RegisterResult) (downloadTimeoutTask downloader.DownloadTimeoutTask) {
 	// check download mode among [regular mode, stream mode]
-	if cfg.RV.StreamMode {
+	if cfg.RV.StreamMode == false {
 		downloadTimeoutTask = &downloader.RegularDownloadTimeoutTask{}
 	} else {
 		downloadTimeoutTask = &downloader.StreamDownloadTimeoutTask{
