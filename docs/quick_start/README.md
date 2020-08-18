@@ -86,7 +86,8 @@ then Dragonfly works successfully.
 - [multi machines deployment](../user_guide/multi_machines_deployment.md) - experience Dragonfly on multiple machines
 - [install server](../user_guide/install_server.md) - how to install the Dragonfly server
 - [install client](../user_guide/install_client.md) - how to install the Dragonfly dfclient
-- [docker proxy](../user_guide/docker_proxy.md) - make Dragonfly as HTTP proxy for docker daemon
-- [crio mirror](../user_guide/crio_mirror.md) - make Dragonfly as Registry Mirror for CRIO daemon
 - [proxy](../user_guide/proxy.md) - config proxy
 - [download files](../user_guide/download_files.md) - download files with Dragonfly
+- Container Engines
+  - [docker proxy](../user_guide/container_engines/docker_proxy.md) - make Dragonfly as HTTP proxy for docker daemon
+  - [crio mirror](../user_guide/container_engines/crio_mirror.md) - make Dragonfly as Registry Mirror for CRIO daemon
