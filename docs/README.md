@@ -6,9 +6,9 @@ Organization of document is as following:
 
 * [Quick Start](#Quick-Start)
 * [User Guide](#User-Guide)
-    * [Container Engines](#Container-Engines)
-      * [CRIO Mirror](./user_guide/container_engines/crio_mirror.md)
-      * [Docker Proxy](./user_guide/container_engines/docker_proxy.md)
+    * [Container Runtimes](#Container-Runtimes)
+      * [CRIO Mirror](./user_guide/container_runtimes/crio_mirror.md)
+      * [Docker Proxy](./user_guide/container_runtimes/docker_proxy.md)
 * [CLI Reference](#CLI-Reference)
     * [dfget](./cli_reference/dfget.md)
     * [dfdaemon](./cli_reference/dfdaemon.md)
@@ -29,9 +29,9 @@ Organization of document is as following:
 
 [User Guide](./user_guide) helps all kinds of guidance end users need to experience Dragonfly. Not only the very brief [Quick Start](./quick_start), but the detailed binary installation and configure illustration. In addition, any concept and function which help users understand Dragonfly better would be included as well.
 
-### Container Engines
+### Container Runtimes
 
-[Container Engines](./user_guide/container_engines) contains integration guides for container engines, such as docker, cri-o.
+[Container Runtimes](./user_guide/container_runtimes) contains integration guides for container runtimes, such as docker, cri-o.
 
 ## CLI Reference
 

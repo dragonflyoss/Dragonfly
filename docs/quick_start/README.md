@@ -88,6 +88,6 @@ then Dragonfly works successfully.
 - [install client](../user_guide/install_client.md) - how to install the Dragonfly dfclient
 - [proxy](../user_guide/proxy.md) - config proxy
 - [download files](../user_guide/download_files.md) - download files with Dragonfly
-- Container Engines
-  - [docker proxy](../user_guide/container_engines/docker_proxy.md) - make Dragonfly as HTTP proxy for docker daemon
-  - [crio mirror](../user_guide/container_engines/crio_mirror.md) - make Dragonfly as Registry Mirror for CRIO daemon
+- Container Runtimes
+  - [docker proxy](../user_guide/container_runtimes/docker_proxy.md) - make Dragonfly as HTTP proxy for docker daemon
+  - [crio mirror](../user_guide/container_runtimes/crio_mirror.md) - make Dragonfly as Registry Mirror for CRIO daemon
