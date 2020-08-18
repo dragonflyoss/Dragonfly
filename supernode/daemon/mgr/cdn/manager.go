@@ -52,6 +52,7 @@ var _ mgr.CDNMgr = &Manager{}
 type metrics struct {
 	cdnCacheHitCount     *prometheus.CounterVec
 	cdnDownloadCount     *prometheus.CounterVec
+	cdnDownloadBytes     *prometheus.CounterVec
 	cdnDownloadFailCount *prometheus.CounterVec
 }
 
@@ -62,6 +63,10 @@ func newMetrics(register prometheus.Registerer) *metrics {
 
 		cdnDownloadCount: metricsutils.NewCounter(config.SubsystemSupernode, "cdn_download_total",
 			"Total times of cdn download", []string{}, register),
+
+		cdnDownloadBytes: metricsutils.NewCounter(config.SubsystemSupernode, "cdn_download_size_bytes_total",
+			"total file size of cdn downloaded from source in bytes", []string{}, register,
+		),
 
 		cdnDownloadFailCount: metricsutils.NewCounter(config.SubsystemSupernode, "cdn_download_failed_total",
 			"Total failure times of cdn download", []string{}, register),
@@ -165,6 +170,7 @@ func (cm *Manager) TriggerCDN(ctx context.Context, task *types.TaskInfo) (*types
 		logrus.Errorf("failed to write for task %s: %v", task.ID, err)
 		return getUpdateTaskInfoWithStatusOnly(types.TaskInfoCdnStatusFAILED), err
 	}
+	cm.metrics.cdnDownloadBytes.WithLabelValues().Add(float64(downloadMetadata.realHTTPFileLength))
 
 	realMD5 := reader.Md5()
 	success, err := cm.handleCDNResult(ctx, task, realMD5, httpFileLength, downloadMetadata.realHTTPFileLength, downloadMetadata.realFileLength)

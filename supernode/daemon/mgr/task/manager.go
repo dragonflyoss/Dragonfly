@@ -67,7 +67,7 @@ func newMetrics(register prometheus.Registerer) *metrics {
 
 		scheduleDurationMilliSeconds: metricsutils.NewHistogram(config.SubsystemSupernode, "schedule_duration_milliseconds",
 			"Duration for task scheduling in milliseconds", []string{"peer"},
-			prometheus.ExponentialBuckets(0.02, 2, 6), register),
+			prometheus.ExponentialBuckets(0.01, 2, 7), register),
 	}
 }
 
