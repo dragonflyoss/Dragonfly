@@ -19,6 +19,7 @@ package downloader
 import (
 	"context"
 	"fmt"
+	"github.com/dragonflyoss/Dragonfly/dfget/types"
 	"io"
 	"time"
 
@@ -96,7 +97,7 @@ func (csw *ClientStreamWriter) PreRun(ctx context.Context) (err error) {
 	return
 }
 
-func (csw *ClientStreamWriter) PostRun(ctx context.Context) (err error) {
+func (csw *ClientStreamWriter) PostRun(ctx context.Context, response *types.PullPieceTaskResponse) (err error) {
 	return nil
 }
 

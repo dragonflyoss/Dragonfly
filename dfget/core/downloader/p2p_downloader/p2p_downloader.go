@@ -225,7 +225,7 @@ func (p2p *P2PDownloader) run(ctx context.Context, pieceWriter PieceWriter) erro
 			if code == constants.CodePeerContinue {
 				p2p.processPiece(response, &curItem)
 			} else if code == constants.CodePeerFinish {
-				p2p.finishTask(ctx, pieceWriter)
+				p2p.finishTask(ctx, response, pieceWriter)
 				return nil
 			} else {
 				logrus.Warnf("request piece result:%v", response)
@@ -481,7 +481,7 @@ func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 	}
 }
 
-func (p2p *P2PDownloader) finishTask(ctx context.Context, pieceWriter PieceWriter) {
+func (p2p *P2PDownloader) finishTask(ctx context.Context, response *types.PullPieceTaskResponse, pieceWriter PieceWriter) {
 	// wait client writer finished
 	logrus.Infof("remaining piece to be written count:%d", p2p.clientQueue.Len())
 	p2p.clientQueue.Put(last)
@@ -494,7 +494,7 @@ func (p2p *P2PDownloader) finishTask(ctx context.Context, pieceWriter PieceWrite
 		return
 	}
 
-	err := pieceWriter.PostRun(ctx)
+	err := pieceWriter.PostRun(ctx, response)
 	if err != nil {
 		logrus.Warnf("post run error: %s", err)
 	}

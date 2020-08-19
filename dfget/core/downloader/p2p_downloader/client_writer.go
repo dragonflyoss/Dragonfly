@@ -45,7 +45,7 @@ type PieceWriter interface {
 	Run(ctx context.Context)
 
 	// PostRun will run when finish a task
-	PostRun(ctx context.Context) error
+	PostRun(ctx context.Context, response *types.PullPieceTaskResponse) error
 
 	// Wait will block util all piece are processed
 	Wait()
@@ -140,7 +140,7 @@ func (cw *ClientWriter) PreRun(ctx context.Context) (err error) {
 	return
 }
 
-func (cw *ClientWriter) PostRun(ctx context.Context) (err error) {
+func (cw *ClientWriter) PostRun(ctx context.Context, response *types.PullPieceTaskResponse) (err error) {
 	src := cw.clientFilePath
 	if cw.acrossWrite || !helper.IsP2P(cw.cfg.Pattern) {
 		src = cw.cfg.RV.TempTarget
@@ -153,7 +153,18 @@ func (cw *ClientWriter) PostRun(ctx context.Context) (err error) {
 			}
 		}
 	}
-	if err = downloader.MoveFile(src, cw.cfg.RV.RealTarget, cw.cfg.Md5); err != nil {
+
+	var expectMd5 string
+	if cw.cfg.Md5 != "" {
+		expectMd5 = cw.cfg.Md5
+	} else {
+		finishData := response.FinishData()
+		if finishData != nil {
+			expectMd5 = finishData.Md5
+		}
+	}
+
+	if err = downloader.MoveFile(src, cw.cfg.RV.RealTarget, expectMd5); err != nil {
 		return
 	}
 	logrus.Infof("download successfully from dragonfly")
