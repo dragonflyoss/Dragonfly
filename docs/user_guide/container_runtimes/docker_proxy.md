@@ -71,4 +71,4 @@ Read [Control Docker with systemd](https://docs.docker.com/config/daemon/systemd
 Finally you can restart docker daemon and pull images as you normally would.
 
 More details on dfdaemon's proxy configuration can be found
-[here](proxy.md).
+[here](../proxy.md).

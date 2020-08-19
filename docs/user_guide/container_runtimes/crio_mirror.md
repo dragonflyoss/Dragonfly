@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-All steps in this document is doing on the same machine using the docker container, so make sure the docker container engine installed and started on your machine. You can also refer to the documentation: [multi-machine deployment](../user_guide/multi_machines_deployment.md) to experience Dragonfly.
+All steps in this document is doing on the same machine using the docker container, so make sure the docker container engine installed and started on your machine. You can also refer to the documentation: [multi-machine deployment](../multi_machines_deployment.md) to experience Dragonfly.
 
 ## Step 1: Validate Dragonfly Configuration
 
