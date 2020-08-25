@@ -39,6 +39,9 @@ type PreheatInfo struct {
 	// A finished preheat task's information can be queried within 24 hours.
 	//
 	Status PreheatStatus `json:"status,omitempty"`
+
+	// the error message of preheat task when failed
+	ErrorMsg string `json:"errorMsg,omitempty"`
 }
 
 // Validate validates this preheat info

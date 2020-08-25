@@ -18,6 +18,7 @@ package preheat
 
 import (
 	"context"
+	"github.com/sirupsen/logrus"
 	"net/http"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
@@ -44,6 +45,8 @@ func (m *Manager) Create(ctx context.Context, task *types.PreheatCreateRequest) 
 	preheatTask.Filter = task.Filter
 	preheatTask.Identifier = task.Identifier
 	preheatTask.Headers = task.Headers
+	logrus.Debugf("create preheat: Type[%s] URL[%s] Filter[%s] Identifier[%s] Headers[%v]",
+		preheatTask.Type, preheatTask.URL, preheatTask.Filter, preheatTask.Identifier, preheatTask.Headers)
 	return m.service.Create(preheatTask)
 }
 

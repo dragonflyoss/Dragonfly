@@ -16,18 +16,23 @@
 package preheat
 
 import (
+	"bytes"
 	"os/exec"
 )
 
 type PreheatProgress struct {
 	output string
 	cmd *exec.Cmd
+	errmsg *bytes.Buffer
 }
 
 func NewPreheatProgress(output string, cmd *exec.Cmd) *PreheatProgress {
 	p := &PreheatProgress{
 		output: output,
 		cmd: cmd,
+		errmsg: bytes.NewBuffer(make([]byte, 0, 128)),
 	}
+	cmd.Stderr = p.errmsg
+	cmd.Stdout = p.errmsg
 	return p
 }

@@ -64,6 +64,7 @@ func (s *Server) getPreheatTask(ctx context.Context, rw http.ResponseWriter, req
 		FinishTime: strfmt.DateTime(time.Unix(task.FinishTime/1000, task.FinishTime%1000*int64(time.Millisecond)).UTC()),
 		StartTime:  strfmt.DateTime(time.Unix(task.StartTime/1000, task.StartTime%1000*int64(time.Millisecond)).UTC()),
 		Status:     task.Status,
+		ErrorMsg:   task.ErrorMsg,
 	}
 	return EncodeResponse(rw, http.StatusOK, resp)
 }

@@ -23,20 +23,18 @@ import (
 )
 
 const(
+	// preheat image cache one week
 	EXPIRED_TIME = 7 * 24 * 3600 * 1000;
 )
 
 type PreheatTaskRepository struct {
 	preheatTasks *sync.Map
-	loaded *sync.Once
 }
 
 func NewPreheatTaskRepository() *PreheatTaskRepository {
 	r := &PreheatTaskRepository{
 		preheatTasks: new(sync.Map),
-		loaded: new(sync.Once),
 	}
-	r.load()
 	return r
 }
 
@@ -111,11 +109,5 @@ func(r *PreheatTaskRepository) IsExpired(id string) bool {
 
 func (r *PreheatTaskRepository) expired(timestamp int64) bool {
 	return time.Now().UnixNano()/int64(time.Millisecond) > timestamp+EXPIRED_TIME
-}
-
-func(r *PreheatTaskRepository) load() {
-	r.loaded.Do(func(){
-
-	})
 }
 

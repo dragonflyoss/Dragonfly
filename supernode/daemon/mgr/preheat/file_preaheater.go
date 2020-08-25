@@ -17,6 +17,7 @@ package preheat
 
 import (
 	"errors"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"time"
 
@@ -87,7 +88,7 @@ func (w *FileWorker) query() chan error {
 			status := w.progress.cmd.ProcessState
 			if status != nil && status.Exited() {
 				if !status.Success() {
-					errMsg := "dfget failed:" + status.String()
+					errMsg := fmt.Sprintf("dfget failed: %s err: %s",  status.String(), w.progress.errmsg.String())
 					w.failed(errMsg)
 					w.Preheater.Cancel(w.Task.ID)
 					result <- errors.New(errMsg)

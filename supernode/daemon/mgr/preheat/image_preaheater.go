@@ -95,6 +95,7 @@ func (w *ImageWorker) query() chan error {
 					errMsg := childTask.URL + " " + childTask.ErrorMsg
 					w.Preheater.Cancel(w.Task.ID)
 					result <- errors.New(errMsg)
+					logrus.Errorf("PreheatImage Task [%s] prehead failed for ", w.Task.ID, errMsg)
 					return
 				}
 			}
@@ -230,7 +231,18 @@ func (w *ImageWorker) parseLayers(body []byte, header map[string]string) (layers
 	if schemaVersion == "1" {
 		layerDigest = w.parseLayerDigest(meta, "fsLayers", "blobSum")
 	} else {
-		layerDigest = w.parseLayerDigest(meta, "layers", "digest")
+		mediaType := fmt.Sprintf("%s", meta["mediaType"])
+		switch mediaType {
+		case "application/vnd.docker.distribution.manifest.list.v2+json", "application/vnd.oci.image.index.v1+json":
+			manifestDigest := w.parseLayerDigest(meta, "manifests", "digest")
+			for _, digest := range manifestDigest {
+				list, _ := w.getLayers(w.manifestUrl(digest), header, false)
+				layers = append(layers, list...)
+			}
+			return
+		default:
+			layerDigest = w.parseLayerDigest(meta, "layers", "digest")
+		}
 	}
 
 	for _, digest := range layerDigest {
@@ -246,6 +258,10 @@ func (w *ImageWorker) parseLayers(body []byte, header map[string]string) (layers
 
 func (w *ImageWorker) layerUrl(digest string) string {
 	return fmt.Sprintf("%s://%s/v2/%s/blobs/%s", w.protocol, w.domain, w.name, digest)
+}
+
+func (w *ImageWorker) manifestUrl(digest string) string {
+	return fmt.Sprintf("%s://%s/v2/%s/manifests/%s", w.protocol, w.domain, w.name, digest)
 }
 
 func (w *ImageWorker) parseLayerDigest(meta map[string]interface{}, layerKey string, digestKey string) (layers []string) {

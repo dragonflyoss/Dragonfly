@@ -24,7 +24,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 )
 
-const TIMEOUT = 30 * 60;
+const TIMEOUT = 30 * 60
 
 var _ IWorker = &BaseWorker{}
 
