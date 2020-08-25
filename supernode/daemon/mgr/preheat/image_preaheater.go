@@ -95,7 +95,7 @@ func (w *ImageWorker) query() chan error {
 					errMsg := childTask.URL + " " + childTask.ErrorMsg
 					w.Preheater.Cancel(w.Task.ID)
 					result <- errors.New(errMsg)
-					logrus.Errorf("PreheatImage Task [%s] prehead failed for ", w.Task.ID, errMsg)
+					logrus.Errorf("PreheatImage Task [%s] prehead failed for %s", w.Task.ID, errMsg)
 					return
 				}
 			}
