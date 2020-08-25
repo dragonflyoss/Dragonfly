@@ -19,6 +19,7 @@ package server
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
@@ -60,9 +61,10 @@ func (s *Server) getPreheatTask(ctx context.Context, rw http.ResponseWriter, req
 	}
 	resp := types.PreheatInfo{
 		ID:         task.ID,
-		FinishTime: strfmt.NewDateTime(),
-		StartTime:  strfmt.NewDateTime(),
+		FinishTime: strfmt.DateTime(time.Unix(task.FinishTime/1000, task.FinishTime%1000*int64(time.Millisecond)).UTC()),
+		StartTime:  strfmt.DateTime(time.Unix(task.StartTime/1000, task.StartTime%1000*int64(time.Millisecond)).UTC()),
 		Status:     task.Status,
+		ErrorMsg:   task.ErrorMsg,
 	}
 	return EncodeResponse(rw, http.StatusOK, resp)
 }
