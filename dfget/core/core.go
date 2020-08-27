@@ -114,6 +114,10 @@ func prepare(cfg *config.Config, locator locator.SupernodeLocator) (err error) {
 	rv.TaskURL = netutils.FilterURLParam(cfg.URL, cfg.Filter)
 	logrus.Info("runtimeVariable: " + cfg.RV.String())
 
+	if rv.StreamMode {
+		rv.WindowSize = config.StreamWindowSize
+	}
+
 	return nil
 }
 
@@ -394,11 +398,14 @@ func registerStreamTask(cfg *config.Config, result *regist.RegisterResult) error
 	req := &api.RegisterStreamTaskRequest{
 		TaskID:     result.TaskID,
 		WindowSize: strconv.Itoa(int(cfg.RV.WindowSize)),
+		PieceSize:  strconv.Itoa(int(result.PieceSize)),
+		Node:       result.Node,
+		CID:        cfg.RV.Cid,
 	}
 
 	// register to uploader
 	if err := uploaderAPI.RegisterStreamTask(cfg.RV.LocalIP, cfg.RV.PeerPort, req); err != nil {
-		logrus.Warnf("the stream task with taskID (%s) register failed", result.TaskID)
+		logrus.Warnf("the stream task with taskID (%s) register failed with error %s", result.TaskID, err)
 		return err
 	}
 

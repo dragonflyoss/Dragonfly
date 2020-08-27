@@ -47,6 +47,9 @@ type FinishTaskRequest struct {
 type RegisterStreamTaskRequest struct {
 	TaskID     string `request:"taskID"`
 	WindowSize string `request:"windowSize"`
+	PieceSize  string `request:"pieceSize"`
+	Node       string `request:"node"`
+	CID        string `request:"CID"`
 }
 
 // UploadStreamPieceRequest wraps the request which is sent to uploader

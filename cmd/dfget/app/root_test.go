@@ -139,6 +139,14 @@ func (suit *dfgetSuit) TestResultMsg() {
 		`{"Code":1,"Msg":"TestFail"}`)
 }
 
+func (suit *dfgetSuit) TestStreamMode() {
+	flagSet := rootCmd.Flags()
+	err := flagSet.Parse([]string{"--stream"})
+
+	suit.Equal(err, nil)
+	suit.Equal(true, cfg.RV.StreamMode)
+}
+
 func TestSuite(t *testing.T) {
 	suite.Run(t, new(dfgetSuit))
 }

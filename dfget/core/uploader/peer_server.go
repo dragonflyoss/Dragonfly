@@ -53,7 +53,7 @@ func newPeerServer(cfg *config.Config, port int) *peerServer {
 		host:         cfg.RV.LocalIP,
 		port:         port,
 		api:          api.NewSupernodeAPI(),
-		cacheManager: newCacheManager(),
+		cacheManager: newFIFOCacheManager(),
 	}
 
 	r := s.initRouter()
@@ -158,7 +158,7 @@ func (ps *peerServer) uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	// try to find the resource in file system
 	if err = ps.regularUpload(w, r, up); err != nil {
-		logrus.Infof("the file with taskID %s, req:%s is not found in file system. try cache instead...", taskID, jsonStr(r.Header))
+		logrus.Warnf("the file with taskID %s, req:%s is not found in file system. try cache instead...", taskID, jsonStr(r.Header))
 	} else {
 		return
 	}
@@ -281,17 +281,27 @@ func (ps *peerServer) registerStreamTask(w http.ResponseWriter, r *http.Request)
 
 	// check params
 	taskID := r.Header.Get(config.StrTaskID)
-	windowSize, err := strconv.Atoi(r.Header.Get(config.StrWindowSize))
-	if err != nil || taskID == "" || windowSize == 0 {
+	node := r.Header.Get(config.StrSuperNode)
+	cid := r.Header.Get(config.StrClientID)
+	_, pieceSize, windowSize, err := parsePieceInfo(r, "", config.StrPieceSize, config.StrWindowSize)
+	if err != nil || taskID == "" || windowSize == 0 || node == "" || cid == "" {
 		sendHeader(w, http.StatusBadRequest)
 		fmt.Fprintf(w, "invalid params")
 		return
 	}
 
-	err = p2p.cacheManager.register(p2p.cfg, taskID, windowSize)
+	// construct the request and send the HTTP request
+	req := &registerStreamTaskRequest{
+		taskID:     taskID,
+		windowSize: windowSize,
+		pieceSize:  pieceSize,
+		node:       node,
+		cid:        cid,
+	}
+	err = p2p.cacheManager.register(req)
 	if err != nil {
-		sendHeader(w, http.StatusBadRequest)
-		fmt.Fprintf(w, "the task already exists")
+		sendHeader(w, http.StatusInternalServerError)
+		fmt.Fprintf(w, "the task register failed")
 		return
 	}
 
@@ -305,13 +315,11 @@ func (ps *peerServer) receiveStreamPiece(w http.ResponseWriter, r *http.Request)
 
 	// check params
 	taskID := r.Header.Get(config.StrTaskID)
-	pieceNum, _ := strconv.Atoi(r.Header.Get(config.StrPieceNum))
-	pieceSize, _ := strconv.Atoi(r.Header.Get(config.StrPieceSize))
+	pieceNum, pieceSize, _, err := parsePieceInfo(r, config.StrPieceNum, config.StrPieceSize, "")
 	contentType := r.Header.Get(config.StrContentType)
 
 	// get the content from HTTP body
-	content, err := getPieceContent(r.Body, pieceSize)
-	if taskID == "" || strings.Contains(contentType, httputils.ApplicationJSONUtf8Value) || err != nil {
+	if taskID == "" || !strings.Contains(contentType, httputils.ApplicationJSONUtf8Value) || err != nil {
 		sendHeader(w, http.StatusBadRequest)
 		fmt.Fprintf(w, "invalid params")
 		return
@@ -320,6 +328,13 @@ func (ps *peerServer) receiveStreamPiece(w http.ResponseWriter, r *http.Request)
 		taskID, pieceNum, pieceSize)
 
 	// store the piece content into cache
+	content, err := getPieceContent(r.Body, pieceSize)
+	if err != nil {
+		sendHeader(w, http.StatusBadRequest)
+		fmt.Fprintf(w, "the piece content is not found in cache manager")
+		return
+	}
+
 	err = ps.cacheManager.store(taskID, content)
 	if err != nil {
 		sendHeader(w, http.StatusInternalServerError)
@@ -629,12 +644,22 @@ func (ps *peerServer) regularUpload(w http.ResponseWriter, r *http.Request, up *
 
 func (ps *peerServer) streamUpload(w http.ResponseWriter, r *http.Request, up *uploadParam) (err error) {
 	var (
+		f       *os.File
 		content []byte
 		size    int64
 	)
+	taskFileName := mux.Vars(r)["commonFile"]
 	taskID := r.Header.Get(config.StrTaskID)
 	cdnSource := r.Header.Get(config.StrCDNSource)
 	rangeStr := r.Header.Get(config.StrRange)
+
+	// get task file. The file contains nothing, and is only used for GC.
+	if f, _, err = ps.getTaskFile(taskFileName); err != nil {
+		rangeErrorResponse(w, err)
+		logrus.Errorf("failed to open file:%s, %v", taskFileName, err)
+		return
+	}
+	defer f.Close()
 
 	// get the piece from cache
 	if content, size, err = ps.cacheManager.load(taskID, up); err != nil {
@@ -698,4 +723,31 @@ func getPieceContent(reader io.Reader, pieceSize int) ([]byte, error) {
 	}
 
 	return content, nil
+}
+
+// parsePieceInfo tries to parse the information about piece from the http request.
+func parsePieceInfo(r *http.Request, strPieceNum, strPieceSize, strWindowSize string) (pieceNum int, pieceSize int,
+	windowSize int, err error) {
+	if strPieceNum != "" {
+		pieceNum, err = strconv.Atoi(r.Header.Get(strPieceNum))
+		if err != nil {
+			return
+		}
+	}
+
+	if strPieceSize != "" {
+		pieceSize, err = strconv.Atoi(r.Header.Get(strPieceSize))
+		if err != nil {
+			return
+		}
+	}
+
+	if strWindowSize != "" {
+		windowSize, err = strconv.Atoi(r.Header.Get(strWindowSize))
+		if err != nil {
+			return
+		}
+	}
+
+	return
 }

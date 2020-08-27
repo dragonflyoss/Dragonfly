@@ -109,6 +109,9 @@ func (u *uploaderAPI) RegisterStreamTask(ip string, port int, req *RegisterStrea
 	headers := make(map[string]string)
 	headers[config.StrTaskID] = req.TaskID
 	headers[config.StrWindowSize] = req.WindowSize
+	headers[config.StrPieceSize] = req.PieceSize
+	headers[config.StrSuperNode] = req.Node
+	headers[config.StrClientID] = req.CID
 
 	url := fmt.Sprintf("http://%s:%d%s", ip, port, config.LocalHTTPStreamRegister)
 	code, body, err := httputils.PostJSONWithHeaders(url, headers, nil, u.timeout)

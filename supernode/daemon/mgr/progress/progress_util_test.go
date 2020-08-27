@@ -113,7 +113,7 @@ func (s *ProgressUtilTestSuite) TestUpdateSlidingWindow(c *check.C) {
 	})
 
 	// receive the ack of piece 1, update the sliding window
-	err := pm.updateSlidingWindow(clientID, 1, config.PieceCACHED)
+	err := pm.updateSlidingWindow(clientID, 1, config.PieceUNCACHED)
 	c.Check(err, check.Equals, nil)
 	window, err := pm.slidingWindow.getAsSlidingWindowState(clientID)
 	c.Check(err, check.Equals, nil)

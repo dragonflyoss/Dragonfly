@@ -101,8 +101,8 @@ func (s *ProgressManagerTestSuite) TestGetAvailablePieces(c *check.C) {
 			// piece 1 is not in the target because it is within the client bitset
 			// piece 2 is not in the target because it is the running piece
 			// piece 4 is not in the target because it is out of the window
-			clientBitset:  bitset.New(40).Set(11),
-			cdnBitset:     bitset.New(24).Set(3).Set(11).Set(19).Set(27).Set(35),
+			clientBitset:  bitset.New(40).Set(9),
+			cdnBitset:     bitset.New(24).Set(1).Set(9).Set(17).Set(25).Set(35),
 			runningPieces: []int{2},
 			window:        newSlidingWindowState(3),
 			expected:      []int{3},

@@ -256,39 +256,6 @@ func (s *Server) reportPiece(ctx context.Context, rw http.ResponseWriter, req *h
 	})
 }
 
-func (s *Server) addPieceCache(ctx context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
-	params := req.URL.Query()
-	taskID := params.Get("taskId")
-	srcCID := params.Get("cid")
-	dstCID := params.Get("dstCid")
-	pieceRange := params.Get("pieceRange")
-
-	dstDfgetTask, err := s.DfgetTaskMgr.Get(ctx, dstCID, taskID)
-	if err != nil {
-		return err
-	}
-
-	// If piece is downloaded from supernode, add metrics.
-	if s.Config.IsSuperCID(dstCID) {
-		m.pieceDownloadedBytes.WithLabelValues().Add(float64(rangeutils.CalculatePieceSize(pieceRange)))
-	}
-
-	request := &types.PieceUpdateRequest{
-		ClientID:    srcCID,
-		DstPID:      dstDfgetTask.PeerID,
-		PieceStatus: types.PieceUpdateRequestPieceStatusCACHED,
-	}
-
-	if err := s.TaskMgr.UpdatePieceStatus(ctx, taskID, pieceRange, request); err != nil {
-		logrus.Errorf("failed to update pieces status %+v: %v", request, err)
-		return err
-	}
-
-	return EncodeResponse(rw, http.StatusOK, &types.ResultInfo{
-		Code: constants.CodeGetPieceReport,
-	})
-}
-
 func (s *Server) deletePieceCache(ctx context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
 	params := req.URL.Query()
 	taskID := params.Get("taskId")
@@ -299,11 +266,6 @@ func (s *Server) deletePieceCache(ctx context.Context, rw http.ResponseWriter, r
 	dstDfgetTask, err := s.DfgetTaskMgr.Get(ctx, dstCID, taskID)
 	if err != nil {
 		return err
-	}
-
-	// If piece is downloaded from supernode, add metrics.
-	if s.Config.IsSuperCID(dstCID) {
-		m.pieceDownloadedBytes.WithLabelValues().Add(float64(rangeutils.CalculatePieceSize(pieceRange)))
 	}
 
 	request := &types.PieceUpdateRequest{

@@ -20,6 +20,7 @@ import (
 	"container/list"
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -176,6 +177,30 @@ func (s *Starter) DFDaemon(running time.Duration, port int) (*exec.Cmd, error) {
 func (s *Starter) DFGet(running time.Duration, args ...string) (*exec.Cmd, error) {
 	args = append([]string{"--verbose"}, args...)
 	return s.execCmd(running, dfgetPath, args...)
+}
+
+// StreamDFGet returns the cmd object, along with its stdout pipe.
+func (s *Starter) StreamDFGet(running time.Duration, args ...string) (*exec.Cmd, io.ReadCloser, error) {
+	args = append([]string{"--verbose"}, args...)
+
+	// get the command and the stdout pipe
+	cmd := exec.Command(dfgetPath, args...)
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// run the command and start timer
+	err = cmd.Run()
+	if err != nil {
+		return nil, nil, err
+	}
+	s.addCmd(cmd)
+	if running > 0 {
+		time.AfterFunc(running, func() { s.Kill(cmd) })
+	}
+
+	return cmd, stdout, nil
 }
 
 // DFGetServer starts dfget as a peer server.

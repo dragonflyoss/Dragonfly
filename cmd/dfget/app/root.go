@@ -252,6 +252,8 @@ func initFlags() {
 		"identify whether supernode should skip secure verify when interact with the source.")
 	flagSet.IntVar(&cfg.ClientQueueSize, "clientqueue", config.DefaultClientQueueSize,
 		"specify the size of client queue which controls the number of pieces that can be processed simultaneously")
+	flagSet.BoolVar(&cfg.RV.StreamMode, "stream", false,
+		"identify whether the stream mode is on")
 
 	// others
 	flagSet.BoolVarP(&cfg.ShowBar, "showbar", "b", false,

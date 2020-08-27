@@ -201,10 +201,12 @@ func (pm *Manager) UpdateProgress(ctx context.Context, taskID, srcCID, srcPID, d
 	// Step4: update the slidingWindow if the P2P streaming mode is on
 	if pm.checkStreamMode(srcCID) {
 		if err := pm.updateSlidingWindow(srcCID, pieceNum, pieceStatus); err != nil {
-			logrus.Errorf("failed to update SlidingWindowProgress taskID(%s) srcCID(%s) dstPID(%s) pieceNum(%d) pieceStatus(%d): %v",
+			logrus.Errorf("failed to update SlidingWindow taskID(%s) srcCID(%s) dstPID(%s) pieceNum(%d) pieceStatus(%d): %v",
 				taskID, srcCID, dstPID, pieceNum, pieceStatus, err)
 			return err
 		}
+		logrus.Debugf("success to update SlidingWindow taskID(%s) srcCID(%s) dstPIC(%s) pieceNum(%d) pieceStatus(%d)",
+			taskID, srcCID, dstPID, pieceNum, pieceStatus)
 	}
 
 	return nil
@@ -335,7 +337,7 @@ func getSuccessfulPieces(clientBitset, cdnBitset *bitset.BitSet) ([]int, error) 
 	successPieces := make([]int, 0)
 	clientBitset.InPlaceIntersection(cdnBitset)
 	for i, e := clientBitset.NextSet(0); e; i, e = clientBitset.NextSet(i + 1) {
-		if getPieceStatusByIndex(i) == config.PieceSUCCESS {
+		if getPieceStatusByIndex(i) == config.PieceSUCCESS || getPieceStatusByIndex(i) == config.PieceUNCACHED {
 			successPieces = append(successPieces, getPieceNumByIndex(i))
 		}
 	}
@@ -350,11 +352,11 @@ func getAvailablePieces(clientBitset, cdnBitset *bitset.BitSet, runningPieceNums
 	cdnSucCount := cdnBitset.Count()
 	cdnBitset.InPlaceDifference(clientBitset)
 	availablePieces := make(map[int]bool)
-	start, end, targetPieceStatus := getTargetPieceInfo(window)
+	start, end := getTargetPieceInfo(window)
 
 	for i, e := cdnBitset.NextSet(start); e && i < end; i, e = cdnBitset.NextSet(i + 1) {
 		pieceStatus := getPieceStatusByIndex(i)
-		if pieceStatus == targetPieceStatus {
+		if pieceStatus == config.PieceSUCCESS {
 			availablePieces[getPieceNumByIndex(i)] = true
 		}
 
@@ -388,10 +390,10 @@ func parseMapKeyToIntSlice(mmap map[int]bool) (result []int) {
 }
 
 // getPieceSegment returns the iteration range of the available piece, and the target piece status.
-func getTargetPieceInfo(window *slidingWindowState) (uint, uint, int) {
+func getTargetPieceInfo(window *slidingWindowState) (uint, uint) {
 	if window == nil {
-		return 0, math.MaxUint32, config.PieceSUCCESS
+		return 0, math.MaxUint32
 	}
 
-	return uint(window.una) * 8, uint(window.una+window.wnd) * 8, config.PieceCACHED
+	return uint(window.una) * 8, uint(window.una+window.wnd) * 8
 }

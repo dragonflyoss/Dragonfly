@@ -176,7 +176,7 @@ func (pm *Manager) updatePeerProgress(taskID, srcPID, dstPID string, pieceNum, p
 func (pm *Manager) updateSlidingWindow(srcCID string, pieceNum, pieceStatus int) error {
 	// if the status of the piece is not successful, return nil
 	// TODO: if one piece fails too many times, skip it to download the pieces which are currently in the p2p network
-	if pieceStatus != config.PieceCACHED {
+	if pieceStatus != config.PieceUNCACHED {
 		return nil
 	}
 
@@ -189,7 +189,7 @@ func (pm *Manager) updateSlidingWindow(srcCID string, pieceNum, pieceStatus int)
 	// traverse the piece status, until the first acknowledged piece
 	for {
 		if cs.pieceBitSet.Test(uint(getStartIndexByPieceNum(pieceNum)+config.PieceSUCCESS)) ||
-			cs.pieceBitSet.Test(uint(getStartIndexByPieceNum(pieceNum)+config.PieceCACHED)) {
+			cs.pieceBitSet.Test(uint(getStartIndexByPieceNum(pieceNum)+config.PieceUNCACHED)) {
 			pieceNum++
 		} else {
 			break

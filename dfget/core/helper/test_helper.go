@@ -199,6 +199,9 @@ func (m *MockSupernodeAPI) ApplyForSeedNode(node string, req *types.RegisterRequ
 func (m *MockSupernodeAPI) ReportResourceDeleted(node string, taskID string, cid string) (resp *types.BaseResponse, err error) {
 	return nil, nil
 }
+func (m *MockSupernodeAPI) DeleteStreamCache(node string, req *types.ReportPieceRequest) (resp *types.BaseResponse, err error) {
+	return nil, nil
+}
 
 // CreateRegisterFunc creates a mock register function.
 func CreateRegisterFunc() RegisterFuncType {

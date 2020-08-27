@@ -128,6 +128,8 @@ const (
 	DefaultSupernodePort   = 8002
 
 	StreamWriterRoutineLimit = 4
+	// TODO: a more appropriate window size should be considered
+	StreamWindowSize = 5
 )
 
 /* errors code */

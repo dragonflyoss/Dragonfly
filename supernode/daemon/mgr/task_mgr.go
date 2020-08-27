@@ -29,8 +29,7 @@ var PieceStatusMap = map[string]int{
 	types.PieceUpdateRequestPieceStatusFAILED:   config.PieceFAILED,
 	types.PieceUpdateRequestPieceStatusSEMISUC:  config.PieceSEMISUC,
 	types.PieceUpdateRequestPieceStatusSUCCESS:  config.PieceSUCCESS,
-	types.PieceUpdateRequestPieceStatusCACHED:   config.PieceCACHED,
-	types.PieceUpdateRequestPieceStatusUNCACHED: config.PieceSUCCESS,
+	types.PieceUpdateRequestPieceStatusUNCACHED: config.PieceUNCACHED,
 }
 
 // TaskMgr as an interface defines all operations against Task.

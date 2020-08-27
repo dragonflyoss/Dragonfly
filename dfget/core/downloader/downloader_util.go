@@ -155,12 +155,17 @@ func (sdt *StreamDownloadTimeoutTask) writePool(ctx context.Context, wg *sync.Wa
 				}
 
 				// send the upload request
-				if err := sdt.UploaderAPI.DeliverPieceToUploader(sdt.Config.RV.LocalIP, sdt.Config.RV.PeerPort, req); err != nil {
+				if err := sdt.UploaderAPI.DeliverPieceToUploader(sdt.Config.RV.LocalIP,
+					sdt.Config.RV.PeerPort, req); err != nil {
 					logrus.Errorf("failed to deliver the %d-th piece to uploader with taskID: %s: %v",
 						job.pieceNum, job.taskID, err)
 					// TODO: should there be recovery work?
 					continue
 				}
+
+				// TODO: handle the successfully downloaded content to the user.
+				// one alternative is to directly output the content to stdout,
+				// and user can call `popen` method to read from stdoutpipe.
 			}
 			wg.Done()
 		}(i)

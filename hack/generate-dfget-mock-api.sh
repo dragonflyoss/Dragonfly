@@ -17,7 +17,7 @@ goimports -h >/dev/null 2>&1 || go get golang.org/x/tools/cmd/goimports
 
 
 # generate mock files for uploader api interfaces.
-MGR_ARRAY=("uploader_api")
+MGR_ARRAY=("uploader_api" "supernode_api")
 for name in "${MGR_ARRAY[@]}"
 do
 	mockgen -destination "./dfget/core/mock/mock_$name.go" -source "dfget/core/api/$name.go" -package mock
