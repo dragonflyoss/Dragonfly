@@ -225,6 +225,9 @@ func (p2p *P2PDownloader) run(ctx context.Context, pieceWriter PieceWriter) erro
 			if code == constants.CodePeerContinue {
 				p2p.processPiece(response, &curItem)
 			} else if code == constants.CodePeerFinish {
+				if p2p.cfg.Md5 == "" {
+					p2p.cfg.Md5 = response.FinishData().Md5
+				}
 				p2p.finishTask(ctx, pieceWriter)
 				return nil
 			} else {
