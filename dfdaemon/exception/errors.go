@@ -24,8 +24,8 @@ func (authError *AuthError) Error() string {
 	return "NOT AUTH"
 }
 
-// IsNotAuth is to judge whether an error is AuthError.
-func IsNotAuth(err error) bool {
+// IsAuthError is to judge whether an error is AuthError.
+func IsAuthError(err error) bool {
 	if _, ok := err.(*AuthError); ok {
 		return true
 	}

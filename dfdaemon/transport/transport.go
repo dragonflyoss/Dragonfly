@@ -138,7 +138,7 @@ func (roundTripper *DFRoundTripper) RoundTrip(req *http.Request) (*http.Response
 		// result for different requests
 		req.Header.Del("Accept-Encoding")
 		logrus.Debugf("round trip with dfget: %s", req.URL.String())
-		if res, err := roundTripper.download(req, req.URL.String()); err == nil || !exception.IsNotAuth(err) {
+		if res, err := roundTripper.download(req, req.URL.String()); err == nil || exception.IsAuthError(err) {
 			return res, err
 		}
 	}
