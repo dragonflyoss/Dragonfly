@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"github.com/pborman/uuid"
 	"github.com/sirupsen/logrus"
+	"net/http"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -89,7 +90,7 @@ func (svc *PreheatService) 	Create(task *mgr.PreheatTask) (string, error) {
 	task.Status = types.PreheatStatusWAITING
 	previous, _ := svc.repository.Add(task)
 	if previous != nil && previous.FinishTime > 0 {
-		return "", dferr.New(409, "preheat task already exists, id:" + task.ID)
+		return "", dferr.New(http.StatusAlreadyReported, "preheat task already exists, id:" + task.ID)
 	}
 	preheater.NewWorker(task, svc).Run()
 	return task.ID, nil
