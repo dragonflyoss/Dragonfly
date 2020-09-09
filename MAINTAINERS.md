@@ -9,3 +9,4 @@
 |[lowzj](https://github.com/lowzj)|Jin Zhang|zj3142063@gmail.com| Alibaba Group|
 |[Starnop](https://github.com/Starnop)|Yuxing Liu|yuxing.lyx@alibaba-inc.com| Alibaba Group|
 |[zhouhaibing089](https://github.com/zhouhaibing089)|Haibing Zhou|zhouhaibing089@gmail.com| eBay |
+|[jim3ma](https://github.com/jim3ma)|Jim Ma|majinjing3@gmail.com| Ant Group |
