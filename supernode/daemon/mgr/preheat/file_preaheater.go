@@ -18,7 +18,6 @@ package preheat
 import (
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
@@ -27,7 +26,6 @@ import (
 
 func init() {
 	RegisterPreheater("file", &FilePreheat{BasePreheater:new(BasePreheater)})
-	logrus.StandardLogger().SetLevel(logrus.DebugLevel)
 }
 
 type FilePreheat struct {
