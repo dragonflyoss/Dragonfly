@@ -62,6 +62,7 @@ type BaseOpt struct {
 	Info    BaseInfo
 
 	downPreFunc func(sd Seed)
+	Factory     DownloaderFactory
 }
 
 type RateOpt struct {
@@ -85,4 +86,7 @@ type NewSeedManagerOpt struct {
 
 	// expire will be stopped util water level is smaller than LowLevel.
 	LowLevel uint
+
+	//DownloaderFactory create instance of Downloader.
+	Factory DownloaderFactory
 }

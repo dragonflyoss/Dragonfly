@@ -35,11 +35,11 @@ import (
 )
 
 // downloader manage the downloading of seed file.
-type downloader interface {
+type Downloader interface {
 	DownloadToWriterAt(ctx context.Context, rangeStruct httputils.RangeStruct, timeout time.Duration, writeOff int64, writerAt io.WriterAt, rateLimit bool) (length int64, err error)
 }
 
-func newLocalDownloader(url string, header map[string][]string, rate *ratelimiter.RateLimiter, copyCache bool) downloader {
+func newLocalDownloader(url string, header map[string][]string, rate *ratelimiter.RateLimiter, copyCache bool) Downloader {
 	return &localDownloader{
 		url:       url,
 		header:    header,

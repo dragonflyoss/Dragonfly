@@ -245,6 +245,8 @@ type seedManager struct {
 
 	defaultBlockOrder uint32
 	openMemoryCache   bool
+
+	factory DownloaderFactory
 }
 
 func NewSeedManager(opt NewSeedManagerOpt) Manager {
@@ -356,6 +358,7 @@ func newSeedManager(opt NewSeedManagerOpt) (Manager, error) {
 		highLimit:         highLimit,
 		lowLimit:          lowLimit,
 		startWeedOutCh:    make(chan struct{}, 10),
+		factory:           opt.Factory,
 	}
 
 	sm.restore(ctx)
@@ -401,6 +404,7 @@ func (sm *seedManager) Register(key string, info BaseInfo) (Seed, error) {
 		downPreFunc: func(sd Seed) {
 			sm.downPreFunc(key, sd)
 		},
+		Factory: sm.factory,
 	}
 
 	sd, err := NewSeed(opt, RateOpt{DownloadRateLimiter: sm.downRate}, sm.openMemoryCache)
@@ -618,9 +622,10 @@ func (sm *seedManager) restoreSeeds() {
 			continue
 		}
 
-		sd, remove, err := RestoreSeed(filepath.Join(seedDir, key), RateOpt{DownloadRateLimiter: sm.downRate}, func(sd Seed) {
-			sm.downPreFunc(key, sd)
-		})
+		sd, remove, err := RestoreSeed(filepath.Join(seedDir, key), RateOpt{DownloadRateLimiter: sm.downRate},
+			func(sd Seed) {
+				sm.downPreFunc(key, sd)
+			}, sm.factory)
 		if err != nil {
 			logrus.Errorf("failed to restore seed %s: %v", key, err)
 			continue

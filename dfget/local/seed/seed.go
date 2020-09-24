@@ -133,7 +133,7 @@ type seed struct {
 	OpenMemoryCache bool `json:"openMemoryCache"`
 
 	cache      cacheBuffer
-	rate       *ratelimiter.RateLimiter
+	downRate   *ratelimiter.RateLimiter
 	uploadRate *ratelimiter.RateLimiter
 
 	metaPath    string
@@ -141,7 +141,8 @@ type seed struct {
 
 	baseDir string
 
-	down downloader
+	// Download from source.
+	down Downloader
 
 	// block info
 	blockMeta *bitmap.BitMap
@@ -166,6 +167,10 @@ type seed struct {
 
 	// when call Download(), run the downPreFunc first.
 	downPreFunc func(sd Seed)
+
+	// downFactory
+	downFactory DownloaderFactory
+	currentDown Downloader
 }
 
 // TODO: consider management of memory and disk quota.
@@ -195,6 +200,7 @@ func NewSeed(base BaseOpt, rate RateOpt, openMemoryCache bool) (Seed, error) {
 		baseDir:    base.BaseDir,
 		down:       newLocalDownloader(base.Info.URL, base.Info.Header, rate.DownloadRateLimiter, openMemoryCache),
 		//UploadRate: sm.UploadRate,
+		downRate:        rate.DownloadRateLimiter,
 		prefetchCh:      make(chan struct{}),
 		prefetchAq:      &preFetchResultAcquirer{},
 		blockWaitChMap:  make(map[uint32]chan struct{}),
@@ -202,6 +208,7 @@ func NewSeed(base BaseOpt, rate RateOpt, openMemoryCache bool) (Seed, error) {
 		doneCtx:         ctx,
 		cancel:          cancel,
 		downPreFunc:     base.downPreFunc,
+		downFactory:     base.Factory,
 	}
 
 	err = sd.initParam(base.BaseDir)
@@ -221,12 +228,13 @@ func NewSeed(base BaseOpt, rate RateOpt, openMemoryCache bool) (Seed, error) {
 		return nil, err
 	}
 
+	sd.updateDownloader()
 	go sd.syncCacheLoop(sd.doneCtx)
 
 	return sd, nil
 }
 
-func RestoreSeed(seedDir string, rate RateOpt, downPreFunc func(sd Seed)) (s Seed, remove bool, err error) {
+func RestoreSeed(seedDir string, rate RateOpt, downPreFunc func(sd Seed), factory DownloaderFactory) (s Seed, remove bool, err error) {
 	sd := &seed{
 		metaPath:    filepath.Join(seedDir, "meta.json"),
 		downPreFunc: downPreFunc,
@@ -269,6 +277,8 @@ func RestoreSeed(seedDir string, rate RateOpt, downPreFunc func(sd Seed)) (s See
 	ctx, cancel := context.WithCancel(context.Background())
 	sd.doneCtx = ctx
 	sd.cancel = cancel
+	sd.downFactory = factory
+	sd.updateDownloader()
 
 	go sd.syncCacheLoop(sd.doneCtx)
 
@@ -547,9 +557,18 @@ func (sd *seed) tryDownload(startBlock, endBlock uint32, rateLimit bool) (waitCh
 	return sd.getWaitChans(startBlock, endBlock)
 }
 
-func (sd *seed) downloadToFile(start, end int64, rateLimit bool) error {
+func (sd *seed) downloadToFile(start, end int64, rateLimit bool) (err error) {
 	timeout := netutils.CalculateTimeout(end-start+1, 0, config.DefaultMinRate, 10*time.Second)
-	_, err := sd.down.DownloadToWriterAt(context.Background(), httputils.RangeStruct{StartIndex: start, EndIndex: end},
+	down := sd.getDownloader()
+
+	defer func() {
+		// if download failed, try to update downloader.
+		if err != nil {
+			sd.updateDownloader()
+		}
+	}()
+
+	_, err = down.DownloadToWriterAt(context.Background(), httputils.RangeStruct{StartIndex: start, EndIndex: end},
 		timeout, start, sd.cache, rateLimit)
 
 	return err
@@ -809,4 +828,33 @@ func (sd *seed) prefetchAllBlocks(ctx context.Context, perDownloadBlocks int32) 
 	}
 
 	return nil
+}
+
+func (sd *seed) getDownloader() Downloader {
+	sd.RLock()
+	defer sd.RUnlock()
+
+	return sd.currentDown
+}
+
+func (sd *seed) updateDownloader() {
+	sd.Lock()
+	defer sd.Unlock()
+
+	if sd.downFactory != nil {
+		opt := DownloaderFactoryCreateOpt{
+			URL:             sd.URL,
+			Header:          sd.Header,
+			OpenMemoryCache: sd.OpenMemoryCache,
+			RateLimiter:     sd.downRate,
+		}
+		down := sd.downFactory.Create(opt)
+		if down != nil {
+			sd.currentDown = down
+			return
+		}
+	}
+
+	//set source down to currentDown.
+	sd.currentDown = sd.down
 }
