@@ -390,10 +390,9 @@ func (s *Server) fetchP2PNetworkInfo(ctx context.Context, rw http.ResponseWriter
 			}
 			// append tasks
 			node.Tasks = append(node.Tasks, &types.TaskFetchInfo{
-				Task: taskInfo.TaskInfo,
-				Pieces: []*types.PieceInfo{{
-					Path: taskInfo.RequestPath,
-				}},
+				Task:              taskInfo.TaskInfo,
+				Path:              taskInfo.RequestPath,
+				AllowSeedDownload: taskInfo.AllowSeedDownload,
 			})
 		}
 	}

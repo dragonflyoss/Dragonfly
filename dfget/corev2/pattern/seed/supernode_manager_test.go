@@ -39,17 +39,18 @@ func init() {
 	logrus.SetLevel(logrus.DebugLevel)
 }
 
-type nodeTaskBinding struct {
-	taskPath string
-	task     *api_types.TaskInfo
-}
+//type nodeTaskBinding struct {
+//	taskPath string
+//
+//	task *api_types.TaskInfo
+//}
 
 type mockNode struct {
 	cid  string
 	ip   string
 	port int
 	// key is taskID
-	tasks map[string]*nodeTaskBinding
+	tasks map[string]*api_types.TaskFetchInfo
 }
 
 type mockTaskWrapper struct {
@@ -81,7 +82,7 @@ func (sp *mockSupernode) addNode(cid, ip string, port int) {
 		cid:   cid,
 		ip:    ip,
 		port:  port,
-		tasks: make(map[string]*nodeTaskBinding),
+		tasks: make(map[string]*api_types.TaskFetchInfo),
 	}
 }
 
@@ -95,7 +96,7 @@ func (sp *mockSupernode) deleteNode(cid string) {
 	}
 
 	for _, task := range node.tasks {
-		mt, ok := sp.seeds[task.task.TaskURL]
+		mt, ok := sp.seeds[task.Task.TaskURL]
 		if !ok {
 			continue
 		}
@@ -109,16 +110,16 @@ func (sp *mockSupernode) deleteNode(cid string) {
 		}
 
 		if len(newTs) == 0 {
-			delete(sp.seeds, task.task.TaskURL)
+			delete(sp.seeds, task.Task.TaskURL)
 		} else {
-			sp.seeds[task.task.TaskURL] = newTs
+			sp.seeds[task.Task.TaskURL] = newTs
 		}
 	}
 
 	delete(sp.nodes, cid)
 }
 
-func (sp *mockSupernode) addTask(task *api_types.TaskInfo, cid string, path string) error {
+func (sp *mockSupernode) addTask(task *api_types.TaskInfo, cid string, path string, allowSeedDownload bool) error {
 	sp.mutex.Lock()
 	defer sp.mutex.Unlock()
 
@@ -130,9 +131,10 @@ func (sp *mockSupernode) addTask(task *api_types.TaskInfo, cid string, path stri
 
 	_, ok = node.tasks[task.ID]
 	if !ok {
-		node.tasks[task.ID] = &nodeTaskBinding{
-			task:     task,
-			taskPath: path,
+		node.tasks[task.ID] = &api_types.TaskFetchInfo{
+			Task:              task,
+			Path:              path,
+			AllowSeedDownload: allowSeedDownload,
 		}
 	}
 
@@ -201,7 +203,7 @@ func (sp *mockSupernode) getTasks(filterURLs []string) *api_types.NetworkInfoFet
 	sp.mutex.RLock()
 	defer sp.mutex.RUnlock()
 
-	nm := map[string][]*nodeTaskBinding{}
+	nm := map[string][]*api_types.TaskFetchInfo{}
 
 	for _, url := range filterURLs {
 		infos, ok := sp.seeds[url]
@@ -218,7 +220,7 @@ func (sp *mockSupernode) getTasks(filterURLs []string) *api_types.NetworkInfoFet
 
 				bindings, ok := nm[cid]
 				if !ok {
-					bindings = []*nodeTaskBinding{}
+					bindings = []*api_types.TaskFetchInfo{}
 				}
 
 				bd, ok := node.tasks[info.task.ID]
@@ -248,19 +250,15 @@ func (sp *mockSupernode) getTasks(filterURLs []string) *api_types.NetworkInfoFet
 			},
 		}
 
-		infos := []*api_types.TaskFetchInfo{}
-		for _, b := range bd {
-			infos = append(infos, &api_types.TaskFetchInfo{
-				Task: b.task,
-				Pieces: []*api_types.PieceInfo{
-					{
-						Path: b.taskPath,
-					},
-				},
-			})
-		}
+		//infos := []*api_types.TaskFetchInfo{}
+		//for _, b := range bd {
+		//	infos = append(infos, &api_types.TaskFetchInfo{
+		//		Task: b.task,
+		//		Path: b.taskPath,
+		//	})
+		//}
 
-		node.Tasks = infos
+		node.Tasks = bd
 		nodes = append(nodes, node)
 	}
 
@@ -445,11 +443,11 @@ func (suite *seedSuite) TestSupernodeManager(c *check.C) {
 	sp := mss.getSupernode(snode.String())
 	c.Assert(sp, check.NotNil)
 	sp.addNode(nodes[0].Cid, nodes[0].IP, nodes[0].Port)
-	err := sp.addTask(tasks[0], nodes[0].Cid, fmt.Sprintf("%s-%s", tasks[0].ID, nodes[0].Cid))
+	err := sp.addTask(tasks[0], nodes[0].Cid, fmt.Sprintf("%s-%s", tasks[0].ID, nodes[0].Cid), true)
 	c.Assert(err, check.IsNil)
 
 	sp.addNode(nodes[1].Cid, nodes[1].IP, nodes[1].Port)
-	err = sp.addTask(tasks[0], nodes[1].Cid, fmt.Sprintf("%s-%s", tasks[0].ID, nodes[1].Cid))
+	err = sp.addTask(tasks[0], nodes[1].Cid, fmt.Sprintf("%s-%s", tasks[0].ID, nodes[1].Cid), false)
 	c.Assert(err, check.IsNil)
 
 	// add tasks[1] to local
@@ -459,7 +457,7 @@ func (suite *seedSuite) TestSupernodeManager(c *check.C) {
 	sp = mss.getSupernode(snode.String())
 	c.Assert(sp, check.NotNil)
 	sp.addNode(nodes[0].Cid, nodes[0].IP, nodes[0].Port)
-	err = sp.addTask(tasks[1], nodes[0].Cid, fmt.Sprintf("%s-%s", tasks[1].ID, nodes[0].Cid))
+	err = sp.addTask(tasks[1], nodes[0].Cid, fmt.Sprintf("%s-%s", tasks[1].ID, nodes[0].Cid), false)
 	c.Assert(err, check.IsNil)
 
 	// add tasks[2] to remote.
@@ -469,7 +467,7 @@ func (suite *seedSuite) TestSupernodeManager(c *check.C) {
 	sp = mss.getSupernode(snode.String())
 	c.Assert(sp, check.NotNil)
 	sp.addNode(nodes[1].Cid, nodes[1].IP, nodes[1].Port)
-	err = sp.addTask(tasks[2], nodes[1].Cid, fmt.Sprintf("%s-%s", tasks[2].ID, nodes[1].Cid))
+	err = sp.addTask(tasks[2], nodes[1].Cid, fmt.Sprintf("%s-%s", tasks[2].ID, nodes[1].Cid), true)
 	c.Assert(err, check.IsNil)
 
 	// firstly, try to schedule task[0], expect schedule failed.

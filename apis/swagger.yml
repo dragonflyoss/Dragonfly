@@ -1493,11 +1493,17 @@ definitions:
     properties:
       task:
         $ref: "#/definitions/TaskInfo"
-      pieces:
-        type: "array"
-        description: "The pieces which should belong to the peer node"
-        items:
-          $ref: "#/definitions/PieceInfo"
+      path:
+        type: "string"
+        description: |
+          path is used in one peer A for uploading functionality. When peer B hopes
+          to get piece C from peer A, B must provide a URL for piece C.
+          Then when creating a task in supernode, peer A must provide this URL in request.
+      allowSeedDownload:
+        type: "boolean"
+        description: |
+          This attribute represents the node whether to be downloaded by other seed. This attribute
+          is valid when asSeed is set.
 
   Node:
     type: "object"

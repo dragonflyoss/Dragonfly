@@ -16,7 +16,11 @@
 
 package seedtask
 
-import "github.com/sirupsen/logrus"
+import (
+	"time"
+
+	"github.com/sirupsen/logrus"
+)
 
 type seedScheduler interface {
 	// try to schedule a new seed
@@ -25,11 +29,18 @@ type seedScheduler interface {
 
 type defaultScheduler struct{}
 
+func setAllowSeedDownload(newTask *SeedInfo) {
+	// 100MB/s * 30s = 3GB
+	time.Sleep(time.Duration(30 * time.Second))
+	newTask.AllowSeedDownload = true
+}
+
 func (scheduler *defaultScheduler) Schedule(nowTasks []*SeedInfo, newTask *SeedInfo) bool {
 	busyPeer := newTask.P2pInfo
 	newTaskInfo := newTask.TaskInfo
 	pos := -1
 	idx := 0
+	nowAvail := 0
 	for idx < len(nowTasks) {
 		if nowTasks[idx] == nil {
 			/* number of seed < MaxSeedPerObj */
@@ -41,6 +52,7 @@ func (scheduler *defaultScheduler) Schedule(nowTasks []*SeedInfo, newTask *SeedI
 			continue
 		}
 		p2pInfo := nowTasks[idx].P2pInfo
+		nowAvail++
 		if p2pInfo != nil && p2pInfo.peerID == newTask.P2pInfo.peerID {
 			// Hardly run here
 			// This peer already have this task
@@ -60,6 +72,11 @@ func (scheduler *defaultScheduler) Schedule(nowTasks []*SeedInfo, newTask *SeedI
 	if pos >= 0 {
 		nowTasks[pos] = newTask
 		newTask.P2pInfo.addTask(newTaskInfo.ID)
+		if nowAvail < 3 {
+			newTask.AllowSeedDownload = true
+		} else {
+			go setAllowSeedDownload(newTask)
+		}
 	}
 	if busyPeer != nil && busyPeer != newTask.P2pInfo {
 		logrus.Infof("seed %s: peer %s up, peer %s down",

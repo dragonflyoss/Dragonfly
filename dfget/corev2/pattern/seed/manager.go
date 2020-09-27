@@ -27,6 +27,7 @@ import (
 	"sync"
 	"time"
 
+	api_types "github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/dfdaemon/config"
 	dfdaemonDownloader "github.com/dragonflyoss/Dragonfly/dfdaemon/downloader"
 	dfgetcfg "github.com/dragonflyoss/Dragonfly/dfget/config"
@@ -43,15 +44,21 @@ import (
 	"github.com/dragonflyoss/Dragonfly/pkg/protocol"
 	"github.com/dragonflyoss/Dragonfly/pkg/queue"
 
+	"github.com/go-openapi/strfmt"
 	"github.com/pborman/uuid"
 	"github.com/sirupsen/logrus"
 )
+
+type rangeRequestExtra struct {
+	filters map[string]map[string]bool
+}
 
 type rangeRequest struct {
 	url    string
 	off    int64
 	size   int64
 	header map[string]string
+	extra  *rangeRequestExtra
 }
 
 func (rr rangeRequest) URL() string {
@@ -71,7 +78,7 @@ func (rr rangeRequest) Header() map[string]string {
 }
 
 func (rr rangeRequest) Extra() interface{} {
-	return nil
+	return rr.extra
 }
 
 const (
@@ -171,6 +178,12 @@ func newManager(pCfg config.PatternConfig, commonCfg config.DFGetCommonConfig, c
 
 	config.SuperNodes = algorithm.DedupStringArr(config.SuperNodes)
 	m.sm = newSupernodeManager(ctx, cfg, config.SuperNodes, m.supernodeAPI, intervalOpt{})
+	seedDownFactory := newDownloaderFactory(m.sm, &api_types.PeerInfo{
+		IP:   strfmt.IPv4(cfg.IP),
+		Port: int32(cfg.Port),
+		ID:   cfg.Cid,
+	}, api.NewDownloadAPI())
+
 	m.seedManager = seed.NewSeedManager(seed.NewSeedManagerOpt{
 		StoreDir:           filepath.Join(cfg.WorkHome, "localSeed"),
 		ConcurrentLimit:    cfg.ConcurrentLimit,
@@ -181,17 +194,15 @@ func newManager(pCfg config.PatternConfig, commonCfg config.DFGetCommonConfig, c
 		UploadRate:         int64(cfg.UploadRate),
 		HighLevel:          uint(cfg.HighLevel),
 		LowLevel:           uint(cfg.LowLevel),
+		Factory:            seedDownFactory,
 	})
 
 	uploader2.RegisterUploader("seed", newUploader(m.seedManager))
 	m.reportLocalSeedsToSuperNode()
 	go m.handleSuperNodeEventLoop(ctx)
 
-	//todo: init Manager by input config.
 	return m
 }
-
-//todo: add local seed manager and p2pNetwork updater.
 
 // DownloadStreamContext implementation of downloader.Stream.
 func (m *Manager) DownloadStreamContext(ctx context.Context, url string, header map[string][]string, name string) (io.ReadCloser, error) {
@@ -315,8 +326,6 @@ func (m *Manager) getRangeFromHeader(header map[string][]string) (*httputils.Ran
 }
 
 func (m *Manager) tryToApplyForSeedNode(ctx context.Context, url string, header map[string][]string) {
-	//todo: apply for seed node.
-
 	path := uuid.New()
 	cHeader := CopyHeader(header)
 	hr := http.Header(cHeader)

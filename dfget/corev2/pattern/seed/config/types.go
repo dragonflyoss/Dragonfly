@@ -37,6 +37,8 @@ type SeedTaskInfo struct {
 type TaskFetchInfo struct {
 	Path string `json:"path"`
 
+	AllowSeedDownload bool `json:"allowSeedDownload"`
+
 	// task
 	Task *SeedTaskInfo `json:"task,omitempty"`
 }

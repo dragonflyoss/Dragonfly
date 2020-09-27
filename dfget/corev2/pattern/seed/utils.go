@@ -49,3 +49,18 @@ func CopyHeader(src map[string][]string) map[string][]string {
 
 	return ret
 }
+
+func FilterMatch(filter map[string]map[string]bool, firstKey string, secondKey string, match string) bool {
+	v, ok := filter[firstKey]
+	if !ok {
+		return false
+	}
+
+	key := fmt.Sprintf("%s=%s", secondKey, match)
+	dv, ok := v[key]
+	if !ok {
+		return false
+	}
+
+	return dv
+}

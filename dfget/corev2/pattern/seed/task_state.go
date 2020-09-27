@@ -29,8 +29,7 @@ import (
 
 type taskStatePerNode struct {
 	peerID string
-	info   *config.SeedTaskInfo
-	path   string
+	info   *config.TaskFetchInfo
 }
 
 type taskState struct {
@@ -44,7 +43,7 @@ func newTaskState() *taskState {
 	}
 }
 
-func (ts *taskState) add(peerID string, path string, info *config.SeedTaskInfo) error {
+func (ts *taskState) add(peerID string, info *config.TaskFetchInfo) error {
 	if stringutils.IsEmptyStr(peerID) {
 		return errors.Wrap(errortypes.ErrEmptyValue, "peerID")
 	}
@@ -56,7 +55,6 @@ func (ts *taskState) add(peerID string, path string, info *config.SeedTaskInfo) 
 
 	item := &taskStatePerNode{
 		peerID: peerID,
-		path:   path,
 		info:   info,
 	}
 
@@ -65,11 +63,16 @@ func (ts *taskState) add(peerID string, path string, info *config.SeedTaskInfo) 
 
 // getPeersByLoad return the peers which satisfy the request, and order by load
 // the number of peers should not more than maxCount;
-func (ts *taskState) getPeersByLoad(maxCount int) []*taskStatePerNode {
+func (ts *taskState) getPeersByLoad(maxCount int, filters map[string]map[string]bool) []*taskStatePerNode {
 	result := []*taskStatePerNode{}
 
 	ts.peerContainer.Range(func(key, value interface{}) bool {
 		pn := value.(*taskStatePerNode)
+		if filters != nil && FilterMatch(filters, "taskFetchInfo", "allowSeedDownload", "true") {
+			if !pn.info.AllowSeedDownload {
+				return true
+			}
+		}
 		result = append(result, pn)
 		return true
 	})
