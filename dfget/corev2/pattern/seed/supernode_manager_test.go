@@ -39,11 +39,11 @@ func init() {
 	logrus.SetLevel(logrus.DebugLevel)
 }
 
-type nodeTaskBinding struct {
-	taskPath string
-
-	task *api_types.TaskInfo
-}
+//type nodeTaskBinding struct {
+//	taskPath string
+//
+//	task *api_types.TaskInfo
+//}
 
 type mockNode struct {
 	cid  string

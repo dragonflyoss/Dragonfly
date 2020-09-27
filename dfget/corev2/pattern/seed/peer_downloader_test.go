@@ -58,8 +58,8 @@ func newMockPeerServer() *mockPeerServer {
 		cancel: cancel,
 	}
 
-	ps.fsPort = ps.foundTcpListenPort()
-	ps.port = ps.foundTcpListenPort()
+	ps.fsPort = ps.foundTCPListenPort()
+	ps.port = ps.foundTCPListenPort()
 
 	r := ps.initRouter()
 	ps.server = &http.Server{
@@ -70,7 +70,7 @@ func newMockPeerServer() *mockPeerServer {
 	return ps
 }
 
-func (ps *mockPeerServer) foundTcpListenPort() int {
+func (ps *mockPeerServer) foundTCPListenPort() int {
 	for i := 0; i < 1000; i++ {
 		port := rand.Intn(1000+10) + 62000
 		conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port))

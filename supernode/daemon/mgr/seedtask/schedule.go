@@ -17,8 +17,9 @@
 package seedtask
 
 import (
-	"github.com/sirupsen/logrus"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 type seedScheduler interface {
@@ -30,7 +31,7 @@ type defaultScheduler struct{}
 
 func setAllowSeedDownload(newTask *SeedInfo) {
 	// 100MB/s * 30s = 3GB
-	time.Sleep(time.Duration(30*time.Second))
+	time.Sleep(time.Duration(30 * time.Second))
 	newTask.AllowSeedDownload = true
 }
 
