@@ -291,7 +291,7 @@ func sendSuccessPiece(api api.SupernodeAPI, cid string, piece *Piece, cost time.
 
 	if cost.Seconds() > 2.0 {
 		logrus.Infof(
-			"async writer and report suc from dst:%s... cost:%.3f for range:%s",
-			piece.DstCid[:25], cost.Seconds(), piece.Range)
+			"async writer and report suc from dst:%s cost:%.3f for range:%s",
+			piece.DstCid, cost.Seconds(), piece.Range)
 	}
 }
