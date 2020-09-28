@@ -41,6 +41,10 @@ func (s *hashCirclerLocatorTestSuite) TestHashCirclerLocator(c *check.C) {
 
 	c.Assert(hl.Get(), check.IsNil)
 	c.Assert(hl.Next(), check.IsNil)
+	c.Assert(hl.GetGroup("nonexistentName"), check.IsNil)
+	c.Assert(hl.GetGroup(testGroupName1).Name, check.Equals, testGroupName1)
+	c.Assert(hl.Size(), check.Equals, len(nodes))
+	c.Assert(hl.Refresh(), check.Equals, true)
 
 	groups := hl.All()
 	c.Assert(len(groups), check.Equals, 1)
