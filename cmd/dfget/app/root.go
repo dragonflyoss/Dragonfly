@@ -262,6 +262,8 @@ func initFlags() {
 		"be verbose")
 	flagSet.StringVar(&cfg.WorkHome, "home", cfg.WorkHome,
 		"the work home directory of dfget")
+	flagSet.IntVar(&cfg.MaxPieceConcurrent, "max-piece-concurrent", 100,
+		"maximum concurrent goroutines to download pieces")
 
 	// pass to peer server which as a uploader server
 	flagSet.StringVar(&cfg.RV.LocalIP, "ip", "",

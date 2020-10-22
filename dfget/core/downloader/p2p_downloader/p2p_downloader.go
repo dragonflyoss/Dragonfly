@@ -114,6 +114,9 @@ type P2PDownloader struct {
 	// unit: Millisecond
 	minTimeout int
 	maxTimeout int
+
+	// pieceTaskChannel is used to limit concurrency when download all pieces
+	pieceTaskChannel chan *types.PullPieceTaskResponseContinueData
 }
 
 var _ downloader.Downloader = &P2PDownloader{}
@@ -202,6 +205,22 @@ func (p2p *P2PDownloader) run(ctx context.Context, pieceWriter PieceWriter) erro
 	go func() {
 		pieceWriter.Run(ctx)
 	}()
+
+	p2p.pieceTaskChannel = make(chan *types.PullPieceTaskResponseContinueData)
+	for i := 0; i < p2p.cfg.MaxPieceConcurrent; i++ {
+		go func(worker int) {
+			for {
+				select {
+				case pieceTask := <-p2p.pieceTaskChannel:
+					logrus.Debugf("piece download worker #%d start to process piece task: %v", worker, pieceTask)
+					p2p.startTask(pieceTask)
+				case <-ctx.Done():
+					logrus.Debugf("piece download worker #%d ctx.Done() detected", worker)
+					return
+				}
+			}
+		}(i)
+	}
 
 	for {
 		goNext, lastItem = p2p.getItem(lastItem)
@@ -471,7 +490,7 @@ func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 		if !ok {
 			p2p.pieceSet[pieceRange] = false
 			p2p.getPullRate(pieceTask)
-			go p2p.startTask(pieceTask)
+			p2p.pieceTaskChannel <- pieceTask
 			hasTask = true
 		}
 	}

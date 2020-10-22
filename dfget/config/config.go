@@ -235,6 +235,9 @@ type Config struct {
 	// The reason of backing to source.
 	BackSourceReason int `json:"-"`
 
+	// Maximum concurrent goroutines to download pieces
+	MaxPieceConcurrent int `json:"maxPieceConcurrent"`
+
 	// Embedded Properties holds all configurable properties.
 	Properties
 }
