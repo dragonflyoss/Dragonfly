@@ -54,13 +54,12 @@ func (suite *ConfigSuite) SetUpTest(c *check.C) {
 
 func (suite *ConfigSuite) TestConfig_String(c *check.C) {
 	cfg := NewConfig()
-	expected := "{\"url\":\"\",\"output\":\"\""
+	expected := `{"url":"","output":""`
 	c.Assert(strings.Contains(cfg.String(), expected), check.Equals, true)
 	cfg.LocalLimit = 20 * rate.MB
 	cfg.MinRate = 64 * rate.KB
 	cfg.Pattern = "p2p"
-	expected = "\"url\":\"\",\"output\":\"\",\"pattern\":\"p2p\"," +
-		"\"localLimit\":\"20MB\",\"minRate\":\"64KB\""
+	expected = `"url":"","output":"","pattern":"p2p","maxPieceConcurrent":100,"localLimit":"20MB","minRate":"64KB"`
 	c.Assert(strings.Contains(cfg.String(), expected), check.Equals, true)
 }
 
@@ -176,7 +175,8 @@ func (suite *ConfigSuite) TestProperties_Load(c *check.C) {
 			content: "nodes:\n\t- 10.10.10.1", errMsg: "yaml", expected: nil},
 		{create: true, ext: "yaml",
 			content: "nodes:\n  - 10.10.10.1\n  - 10.10.10.2\n",
-			errMsg:  "", expected: &Properties{Supernodes: []*NodeWeight{
+			errMsg:  "",
+			expected: &Properties{Supernodes: []*NodeWeight{
 				{"10.10.10.1:8002", 1},
 				{"10.10.10.2:8002", 1},
 			}}},

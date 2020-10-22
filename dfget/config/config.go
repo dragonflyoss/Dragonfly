@@ -261,6 +261,7 @@ func NewConfig() *Config {
 	}
 	cfg.User = currentUser.Username
 	cfg.RV.FileLength = -1
+	cfg.MaxPieceConcurrent = 100
 	cfg.ConfigFiles = []string{DefaultYamlConfigFile, DefaultIniConfigFile}
 	return cfg
 }
