@@ -186,6 +186,7 @@ func (client *OriginClient) Download(url string, headers map[string]string, chec
 	if checkCode(resp.StatusCode) {
 		return resp, nil
 	}
+	resp.Body.Close()
 	return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 }
 
