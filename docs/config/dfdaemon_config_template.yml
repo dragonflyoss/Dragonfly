@@ -40,9 +40,9 @@ hijack_https:
         certs: []
 
 # dfget properties
-# node: specify the addresses
-# ip: IP address that server will listen on
-# port: port number that server will listen on
+# node: specify the supernode addresses, eg: "192.168.33.21:8002=1,192.168.33.22:8002=1" or "dragonfly-supernode-0.svc.kubernetes.local:8002"
+# ip: IP address that server will listen on , also used to identify different peers by supernode, default current server ip (no required) , 
+# port: port number that server will listen on , default 15001 (no required) ,
 # expiretime: caching duration for which cached file keeps no accessed by any process(default 3min). Deploying with Docker, this param is supported after dragonfly 0.4.3
 # alivetime: Alive duration for which uploader keeps no accessing by any uploading requests, after this period uploader will automically exit (default 5m0s)
 # f: filter some query params of URL, use char '&' to separate different params
