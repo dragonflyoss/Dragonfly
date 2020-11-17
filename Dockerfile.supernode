@@ -11,7 +11,7 @@ ARG GOPROXY
 RUN make build-supernode && make install-supernode
 RUN make build-client && make install-client
 
-FROM dragonflyoss/nginx:apline
+FROM nginx:1.19.2-alpine
 
 RUN apk --no-cache add ca-certificates bash
 
