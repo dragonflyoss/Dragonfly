@@ -2,6 +2,9 @@
 services:
   - docker
 sudo: false
+arch:
+  - amd64
+  - arm64
 git:
   depth: false
 language: go
