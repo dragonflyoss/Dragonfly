@@ -119,7 +119,7 @@ func (pc *PowerClient) downloadPiece() (content *pool.Buffer, e error) {
 	peerPort := pc.pieceTask.PeerPort
 
 	// check that the target download peer is available
-	if dstIP != "" && dstIP != pc.node {
+	if dstIP != "" && dstIP != pc.node && pc.pieceTask.Path != pc.cfg.URL {
 		if _, e = httputils.CheckConnect(dstIP, peerPort, -1); e != nil {
 			return nil, e
 		}
