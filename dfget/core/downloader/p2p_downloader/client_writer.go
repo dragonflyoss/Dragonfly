@@ -296,9 +296,9 @@ func sendSuccessPiece(api api.SupernodeAPI, cid string, piece *Piece, cost time.
 	}
 }
 
-func sendSuccessAlreadyDownloadedPiece(api api.SupernodeAPI, node string, taskId string, cid string, dstCid string, pieceRange string, notifyQueue queue.Queue) {
+func sendSuccessAlreadyDownloadedPiece(api api.SupernodeAPI, node string, taskID string, cid string, dstCid string, pieceRange string, notifyQueue queue.Queue) {
 	reportPieceRequest := &types.ReportPieceRequest{
-		TaskID:     taskId,
+		TaskID:     taskID,
 		Cid:        cid,
 		DstCid:     dstCid,
 		PieceRange: pieceRange,
