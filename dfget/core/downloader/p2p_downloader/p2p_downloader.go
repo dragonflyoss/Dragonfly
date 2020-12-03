@@ -466,6 +466,7 @@ func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 				constants.ResultSemiSuc,
 				constants.TaskStatusRunning,
 				p2p.RegisterResult.CDNSource))
+			go sendSuccessAlreadyDownloadedPiece(p2p.API, p2p.node, p2p.taskID, p2p.cfg.RV.Cid, pieceTask.Cid, pieceTask.Range, p2p.notifyQueue)
 			continue
 		}
 		if !ok {
