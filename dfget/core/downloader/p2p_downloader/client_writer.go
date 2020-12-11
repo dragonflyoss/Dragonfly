@@ -295,38 +295,3 @@ func sendSuccessPiece(api api.SupernodeAPI, cid string, piece *Piece, cost time.
 			piece.DstCid, cost.Seconds(), piece.Range)
 	}
 }
-
-func sendSuccessAlreadyDownloadedPiece(api api.SupernodeAPI, node string, taskID string, cid string, dstCid string, pieceRange string, notifyQueue queue.Queue) {
-	reportPieceRequest := &types.ReportPieceRequest{
-		TaskID:     taskID,
-		Cid:        cid,
-		DstCid:     dstCid,
-		PieceRange: pieceRange,
-	}
-
-	var retry = 0
-	var maxRetryTime = 3
-	for {
-		if retry >= maxRetryTime {
-			logrus.Errorf("failed to report piece to supernode with request(%+v) even after retrying max retry time", reportPieceRequest)
-			break
-		}
-
-		_, err := api.ReportPiece(node, reportPieceRequest)
-		if err == nil {
-			if notifyQueue != nil {
-				notifyQueue.Put("success")
-			}
-			if retry > 0 {
-				logrus.Warnf("success to report piece with request(%+v) after retrying (%d) times", reportPieceRequest, retry)
-			}
-			break
-		}
-
-		sleepTime := time.Duration(rand.Intn(500)+50) * time.Millisecond
-		logrus.Warnf("failed to report piece to supernode with request(%+v) for (%d) times and will retry after sleep %.3fs", reportPieceRequest, retry, sleepTime.Seconds())
-		time.Sleep(sleepTime)
-		retry++
-	}
-
-}

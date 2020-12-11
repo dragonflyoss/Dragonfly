@@ -459,14 +459,9 @@ func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 		v, ok := p2p.pieceSet[pieceRange]
 		if ok && v {
 			alreadyDownload = append(alreadyDownload, pieceRange)
-			p2p.queue.Put(NewPiece(p2p.taskID,
-				p2p.node,
-				pieceTask.Cid,
-				pieceRange,
-				constants.ResultSemiSuc,
-				constants.TaskStatusRunning,
-				p2p.RegisterResult.CDNSource))
-			go sendSuccessAlreadyDownloadedPiece(p2p.API, p2p.node, p2p.taskID, p2p.cfg.RV.Cid, pieceTask.Cid, pieceTask.Range, p2p.notifyQueue)
+			alreadyDownloadedPiece := NewPiece(p2p.taskID, p2p.node, pieceTask.Cid, pieceRange, constants.ResultSemiSuc, constants.TaskStatusRunning, p2p.RegisterResult.CDNSource)
+			p2p.queue.Put(alreadyDownloadedPiece)
+			go sendSuccessPiece(p2p.API, p2p.cfg.RV.Cid, alreadyDownloadedPiece, 0, p2p.notifyQueue)
 			continue
 		}
 		if !ok {
