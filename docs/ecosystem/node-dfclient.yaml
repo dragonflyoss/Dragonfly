@@ -1,0 +1,42 @@
+kind: DaemonSet
+apiVersion: apps/v1beta2
+metadata:
+  labels:
+    app: node-dfclient
+  name: node-dfclient
+  namespace: kube-system
+spec:
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: node-dfclient
+  template:
+    metadata:
+      labels:
+        app: node-dfclient
+    spec:
+      containers:
+        - name: node-dfclient
+          image: 10.1.1.5/kube-system/dfclient:1.0.6
+          command:
+          - /opt/dragonfly/df-client/dfdaemon
+          - --registry
+          - http://10.1.1.5
+          - --node
+          - 10.1.1.25
+          ports:
+            - containerPort: 65001
+              hostPort: 65001
+              name: node-dfclient
+          volumeMounts:
+          - mountPath: /root/.small-dragonfly
+            name: dfclient
+      volumes:
+      - name: dfclient
+        hostPath:
+          path: /data/small-dragonfly
+      hostNetwork: true
+      hostPID: true
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
