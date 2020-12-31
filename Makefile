@@ -147,8 +147,8 @@ release:  ## Build a release
 .PHONY: release
 
 df.key:
-	openssl genrsa -des3 -passout pass:x -out df.pass.key 2048
-	openssl rsa -passin pass:x -in df.pass.key -out df.key
+	openssl genrsa -des3 -passout pass:xxxx -out df.pass.key 2048
+	openssl rsa -passin pass:xxxx -in df.pass.key -out df.key
 	rm df.pass.key
 
 df.crt: df.key
