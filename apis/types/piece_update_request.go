@@ -72,6 +72,12 @@ const (
 
 	// PieceUpdateRequestPieceStatusSEMISUC captures enum value "SEMISUC"
 	PieceUpdateRequestPieceStatusSEMISUC string = "SEMISUC"
+
+	// PieceUpdateRequestPieceStatusCACHED captures enum value "CACHED"
+	PieceUpdateRequestPieceStatusCACHED string = "CACHED"
+
+	// PieceUpdateRequestPieceStatusUNCACHED captures enum value "UNCACHED"
+	PieceUpdateRequestPieceStatusUNCACHED string = "UNCACHED"
 )
 
 // prop value enum

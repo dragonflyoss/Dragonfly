@@ -102,6 +102,20 @@ func (mmap *stateSyncMap) getAsPieceState(key string) (*pieceState, error) {
 	return nil, errors.Wrapf(errortypes.ErrConvertFailed, "key %s: %v", key, v)
 }
 
+// getAsSlidingWindowState returns result as *slidingWindow.
+// The ErrConvertFailed error will be returned if the assertion fails.
+func (mmap *stateSyncMap) getAsSlidingWindowState(key string) (*slidingWindowState, error) {
+	v, err := mmap.get(key)
+	if err != nil {
+		return nil, errors.Wrapf(err, "key: %s", key)
+	}
+
+	if value, ok := v.(*slidingWindowState); ok {
+		return value, nil
+	}
+	return nil, errors.Wrapf(errortypes.ErrConvertFailed, "key %s: %v", key, v)
+}
+
 // remove deletes the key-value pair from the mmap.
 // The ErrEmptyValue error will be returned if the key is empty.
 // And the ErrDataNotFound error will be returned if the key cannot be found.

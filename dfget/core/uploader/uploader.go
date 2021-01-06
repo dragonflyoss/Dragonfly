@@ -120,7 +120,7 @@ func launch(cfg *config.Config, p2pPtr *unsafe.Pointer) error {
 	return fmt.Errorf("start peer server error and retried at most %d times", retryCount)
 }
 
-// waitForStartup It's a goal to start 'dfget server' process and make it working
+// waitForStartup's goal is to start 'dfget server' process and make it work
 // within 300ms, such as in the case of downloading very small files, especially
 // in parallel.
 // The ticker which has a 5ms period can test the server whether is working
@@ -192,6 +192,8 @@ func serverGC(cfg *config.Config, interval time.Duration) {
 		if err := filepath.Walk(cfg.RV.SystemDataDir, walkFn); err != nil {
 			logrus.Warnf("server gc error:%v", err)
 		}
+		// TODO: GC of cache manager
+
 		time.Sleep(interval)
 	}
 }

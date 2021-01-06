@@ -156,6 +156,14 @@ func (tm *Manager) Register(ctx context.Context, req *types.TaskCreateRequest) (
 	if err := tm.progressMgr.InitProgress(ctx, task.ID, req.PeerID, req.CID); err != nil {
 		return nil, err
 	}
+
+	if req.StreamMode {
+		err := tm.progressMgr.InitSlidingWindow(ctx, req.CID, req.Windowsize)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	logrus.Debugf("success to init progress for taskID: %s peerID: %s cID: %s", task.ID, req.PeerID, req.CID)
 	// TODO: defer rollback init Progress
 

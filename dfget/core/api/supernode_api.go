@@ -40,6 +40,7 @@ const (
 	metricsReportPath     = "/task/metrics"
 	fetchP2PNetworkPath   = "/peer/network"
 	peerHeartBeatPath     = "/peer/heartbeat"
+	deleteStreamCache     = "/peer/piece/stream"
 )
 
 // NewSupernodeAPI creates a new instance of SupernodeAPI with default value.
@@ -64,6 +65,7 @@ type SupernodeAPI interface {
 	ReportResource(node string, req *types.RegisterRequest) (resp *types.RegisterResponse, err error)
 	ApplyForSeedNode(node string, req *types.RegisterRequest) (resp *types.RegisterResponse, err error)
 	ReportResourceDeleted(node string, taskID string, cid string) (resp *types.BaseResponse, err error)
+	DeleteStreamCache(node string, req *types.ReportPieceRequest) (resp *types.BaseResponse, err error)
 }
 
 type supernodeAPI struct {
@@ -352,4 +354,22 @@ func (api *supernodeAPI) HeartBeat(node string, req *api_types.HeartBeatRequest)
 		return nil, err
 	}
 	return resp, err
+}
+
+func (api *supernodeAPI) DeleteStreamCache(node string, req *types.ReportPieceRequest) (
+	resp *types.BaseResponse, e error) {
+
+	url := fmt.Sprintf("%s://%s%s?%s",
+		api.Scheme, node, deleteStreamCache, httputils.ParseQuery(req))
+
+	resp = new(types.BaseResponse)
+	if e = api.get(url, resp); e != nil {
+		logrus.Errorf("failed to report piece{taskid:%s,range:%s},err: %v", req.TaskID, req.PieceRange, e)
+		return nil, errors.Wrapf(e, "failed to report piece{taskid:%s,range:%s}", req.TaskID, req.PieceRange)
+	}
+	if resp.Code != constants.CodeGetPieceReport {
+		logrus.Errorf("failed to report piece{taskid:%s,range:%s} to supernode: api response code is %d not equal to %d", req.TaskID, req.PieceRange, resp.Code, constants.CodeGetPieceReport)
+		return nil, errors.Wrapf(e, "failed to report piece{taskid:%s,range:%s} to supernode: api response code is %d not equal to %d", req.TaskID, req.PieceRange, resp.Code, constants.CodeGetPieceReport)
+	}
+	return
 }

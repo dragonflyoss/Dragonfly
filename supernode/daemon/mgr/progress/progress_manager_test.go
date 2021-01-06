@@ -75,6 +75,7 @@ func (s *ProgressManagerTestSuite) TestGetAvailablePieces(c *check.C) {
 		clientBitset  *bitset.BitSet
 		cdnBitset     *bitset.BitSet
 		runningPieces []int
+		window        *slidingWindowState
 		expected      []int
 		errCheck      func(error) bool
 	}{
@@ -82,6 +83,7 @@ func (s *ProgressManagerTestSuite) TestGetAvailablePieces(c *check.C) {
 			clientBitset:  bitset.New(24).Set(8),
 			cdnBitset:     bitset.New(24).Set(1).Set(9),
 			runningPieces: []int{1},
+			window:        nil,
 			expected:      []int{0},
 			errCheck:      errortypes.IsNilError,
 		},
@@ -89,13 +91,29 @@ func (s *ProgressManagerTestSuite) TestGetAvailablePieces(c *check.C) {
 			clientBitset:  bitset.New(24).Set(8),
 			cdnBitset:     bitset.New(24).Set(1).Set(9).Set(18),
 			runningPieces: []int{1},
+			window:        nil,
 			expected:      nil,
 			errCheck:      errortypes.IsCDNFail,
 		},
+		{
+			// test the sliding window in the piece range [1, 2, 3]
+			// piece 0 is not in the target because it is out of the window
+			// piece 1 is not in the target because it is within the client bitset
+			// piece 2 is not in the target because it is the running piece
+			// piece 4 is not in the target because it is out of the window
+			clientBitset:  bitset.New(40).Set(9),
+			cdnBitset:     bitset.New(24).Set(1).Set(9).Set(17).Set(25).Set(35),
+			runningPieces: []int{2},
+			window:        newSlidingWindowState(3),
+			expected:      []int{3},
+			errCheck:      errortypes.IsNilError,
+		},
 	}
 
+	cases[2].window.updateSlidingWindowUNA(1)
+
 	for _, v := range cases {
-		result, err := getAvailablePieces(v.clientBitset, v.cdnBitset, v.runningPieces)
+		result, err := getAvailablePieces(v.clientBitset, v.cdnBitset, v.runningPieces, v.window)
 		c.Check(v.errCheck(err), check.Equals, true)
 		c.Check(result, check.DeepEquals, v.expected)
 	}

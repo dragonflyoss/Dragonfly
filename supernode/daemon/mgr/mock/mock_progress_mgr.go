@@ -52,6 +52,20 @@ func (mr *MockProgressMgrMockRecorder) InitProgress(ctx, taskID, peerID, clientI
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitProgress", reflect.TypeOf((*MockProgressMgr)(nil).InitProgress), ctx, taskID, peerID, clientID)
 }
 
+// InitSlidingWindow mocks base method
+func (m *MockProgressMgr) InitSlidingWindow(ctx context.Context, clientID string, windowSize int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InitSlidingWindow", ctx, clientID, windowSize)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// InitSlidingWindow indicates an expected call of InitSlidingWindow
+func (mr *MockProgressMgrMockRecorder) InitSlidingWindow(ctx, clientID, windowSize interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitSlidingWindow", reflect.TypeOf((*MockProgressMgr)(nil).InitSlidingWindow), ctx, clientID, windowSize)
+}
+
 // UpdateProgress mocks base method
 func (m *MockProgressMgr) UpdateProgress(ctx context.Context, taskID, srcCID, srcPID, dstPID string, pieceNum, pieceStatus int) error {
 	m.ctrl.T.Helper()

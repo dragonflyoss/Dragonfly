@@ -171,6 +171,42 @@ func (pm *Manager) updatePeerProgress(taskID, srcPID, dstPID string, pieceNum, p
 	return nil
 }
 
+// updateSlidingWindow updates the sliding window according to the successful pieceNum.
+// The window will keep extending until the piece with the minimum num which is not yet acknowledged.
+func (pm *Manager) updateSlidingWindow(srcCID string, pieceNum, pieceStatus int) error {
+	// if the status of the piece is not successful, return nil
+	// TODO: if one piece fails too many times, skip it to download the pieces which are currently in the p2p network
+	if pieceStatus != config.PieceUNCACHED {
+		return nil
+	}
+
+	// get client state
+	cs, err := pm.clientProgress.getAsClientState(srcCID)
+	if err != nil {
+		return err
+	}
+
+	// traverse the piece status, until the first acknowledged piece
+	for {
+		if cs.pieceBitSet.Test(uint(getStartIndexByPieceNum(pieceNum)+config.PieceSUCCESS)) ||
+			cs.pieceBitSet.Test(uint(getStartIndexByPieceNum(pieceNum)+config.PieceUNCACHED)) {
+			pieceNum++
+		} else {
+			break
+		}
+	}
+
+	// get the window
+	window, err := pm.slidingWindow.getAsSlidingWindowState(srcCID)
+	if err != nil {
+		return err
+	}
+
+	// update the oldest unacknowledged number
+	window.updateSlidingWindowUNA(pieceNum)
+	return nil
+}
+
 func (pm *Manager) updateBlackInfo(srcPID, dstPID string) error {
 	// update black List
 	blackList, err := pm.clientBlackInfo.GetAsMap(srcPID)
@@ -280,4 +316,19 @@ func getPieceNumByIndex(index uint) int {
 
 func getPieceStatusByIndex(index uint) int {
 	return int(index % 8)
+}
+
+// checkStreamMode is used to check whether the stream mode is on for the dfget task.
+// If the dfget task is in stream mode, there must be one sliding window in the progress manager.
+func (pm *Manager) checkStreamMode(clientID string) bool {
+	_, err := pm.slidingWindow.get(clientID)
+	if err != nil {
+		return false
+	}
+
+	return true
+}
+
+func (sw *slidingWindowState) updateSlidingWindowUNA(una int) {
+	sw.una = int32(una)
 }

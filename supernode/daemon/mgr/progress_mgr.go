@@ -47,6 +47,9 @@ type ProgressMgr interface {
 	// InitProgress inits the correlation information between peers and pieces, etc.
 	InitProgress(ctx context.Context, taskID, peerID, clientID string) error
 
+	// InitSlidingWindow inits the sliding window for P2P stream mode.
+	InitSlidingWindow(ctx context.Context, clientID string, windowSize int32) error
+
 	// UpdateProgress updates the correlation information between peers and pieces.
 	// 1. update the info about srcCID to tell the scheduler that corresponding peer has the piece now.
 	// 2. update the info about dstPID to tell the scheduler that someone has downloaded the piece form here.
@@ -90,7 +93,7 @@ type ProgressMgr interface {
 	// DeleteTaskID deletes the super progress with specified taskID.
 	DeleteTaskID(ctx context.Context, taskID string, pieceTotal int) (err error)
 
-	// DeleteCID deletes the super progress with specified clientID.
+	// DeleteCID deletes the client progress and sliding window progress with specified clientID.
 	DeleteCID(ctx context.Context, clientID string) (err error)
 
 	// DeletePeerID deletes the peerState by PeerID.

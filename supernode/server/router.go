@@ -98,6 +98,7 @@ func registerLegacy(s *Server) {
 		{Method: http.MethodGet, Path: "/peer/piece/error", HandlerFunc: s.reportPieceError},
 		{Method: http.MethodPost, Path: "/peer/network", HandlerFunc: s.fetchP2PNetworkInfo},
 		{Method: http.MethodPost, Path: "/peer/heartbeat", HandlerFunc: s.reportPeerHealth},
+		{Method: http.MethodDelete, Path: "/peer/piece/stream", HandlerFunc: s.deletePieceCache},
 	}
 	api.Legacy.Register(legacyHandlers...)
 	api.Legacy.Register(preheatHandlers(s)...)

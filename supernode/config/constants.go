@@ -42,11 +42,12 @@ const (
 
 // PieceStatus code
 const (
-	PieceSEMISUC = -3
-	PieceWAITING = -1
-	PieceRUNNING = 0
-	PieceSUCCESS = 1
-	PieceFAILED  = 2
+	PieceSEMISUC  = -3
+	PieceWAITING  = -1
+	PieceRUNNING  = 0
+	PieceSUCCESS  = 1
+	PieceFAILED   = 2
+	PieceUNCACHED = 3
 )
 
 const (

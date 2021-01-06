@@ -17,6 +17,7 @@
 package uploader
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"encoding/json"
@@ -35,6 +36,7 @@ import (
 	"github.com/dragonflyoss/Dragonfly/dfget/core/api"
 	"github.com/dragonflyoss/Dragonfly/dfget/core/helper"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/pkg/httputils"
 	"github.com/dragonflyoss/Dragonfly/pkg/limitreader"
 	"github.com/dragonflyoss/Dragonfly/pkg/ratelimiter"
 	"github.com/dragonflyoss/Dragonfly/version"
@@ -46,11 +48,12 @@ import (
 // newPeerServer returns a new P2PServer.
 func newPeerServer(cfg *config.Config, port int) *peerServer {
 	s := &peerServer{
-		cfg:      cfg,
-		finished: make(chan struct{}),
-		host:     cfg.RV.LocalIP,
-		port:     port,
-		api:      api.NewSupernodeAPI(),
+		cfg:          cfg,
+		finished:     make(chan struct{}),
+		host:         cfg.RV.LocalIP,
+		port:         port,
+		api:          api.NewSupernodeAPI(),
+		cacheManager: newFIFOCacheManager(),
 	}
 
 	r := s.initRouter()
@@ -85,6 +88,9 @@ type peerServer struct {
 
 	// syncTaskMap stores the meta name of tasks on the host
 	syncTaskMap sync.Map
+
+	// cacheManager includes the set of operations for uploader to interact with cache
+	cacheManager cacheManager
 }
 
 // taskConfig refers to some name about peer task.
@@ -118,6 +124,8 @@ func (ps *peerServer) initRouter() *mux.Router {
 	r.HandleFunc(config.LocalHTTPPathCheck+"{commonFile:.*}", ps.checkHandler).Methods("GET")
 	r.HandleFunc(config.LocalHTTPPathClient+"finish", ps.oneFinishHandler).Methods("GET")
 	r.HandleFunc(config.LocalHTTPPing, ps.pingHandler).Methods("GET")
+	r.HandleFunc(config.LocalHTTPStreamRegister, ps.registerStreamTask).Methods("POST")
+	r.HandleFunc(config.LocalHTTPStreamPiece, ps.receiveStreamPiece).Methods("POST")
 
 	return r
 }
@@ -130,44 +138,34 @@ func (ps *peerServer) uploadHandler(w http.ResponseWriter, r *http.Request) {
 	sendAlive(ps.cfg)
 
 	var (
-		up   *uploadParam
-		f    *os.File
-		size int64
-		err  error
+		up  *uploadParam
+		err error
 	)
 
 	taskFileName := mux.Vars(r)["commonFile"]
+	taskID := r.Header.Get(config.StrTaskID)
 	rangeStr := r.Header.Get(config.StrRange)
-	cdnSource := r.Header.Get(config.StrCDNSource)
 
-	logrus.Debugf("upload file:%s to %s, req:%v", taskFileName, r.RemoteAddr, jsonStr(r.Header))
+	logrus.Debugf("upload file:%s with taskID (%s) to %s, req:%v", taskFileName, taskID, r.RemoteAddr, jsonStr(r.Header))
 
-	// Step1: parse param
+	// parse param
 	if up, err = parseParams(rangeStr, r.Header.Get(config.StrPieceNum),
 		r.Header.Get(config.StrPieceSize)); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		logrus.Warnf("invalid param file:%s req:%v, %v", taskFileName, r.Header, err)
+		logrus.Warnf("invalid param file:%s with taskID (%s), req:%v, %v", taskFileName, taskID, r.Header, err)
 		return
 	}
 
-	// Step2: get task file
-	if f, size, err = ps.getTaskFile(taskFileName); err != nil {
-		rangeErrorResponse(w, err)
-		logrus.Errorf("failed to open file:%s, %v", taskFileName, err)
-		return
-	}
-	defer f.Close()
-
-	// Step3: amend range with piece meta data
-	if err = amendRange(size, cdnSource != string(apiTypes.CdnSourceSource), up); err != nil {
-		rangeErrorResponse(w, err)
-		logrus.Errorf("failed to amend range of file %s: %v", taskFileName, err)
+	// try to find the resource in file system
+	if err = ps.regularUpload(w, r, up); err != nil {
+		logrus.Warnf("the file with taskID %s, req:%s is not found in file system. try cache instead...", taskID, jsonStr(r.Header))
+	} else {
 		return
 	}
 
-	// Step4: send piece wrapped by meta data
-	if err := ps.uploadPiece(f, w, up); err != nil {
-		logrus.Errorf("failed to send range(%s) of file(%s): %v", rangeStr, taskFileName, err)
+	// try to find the resource in local cache
+	if err = ps.streamUpload(w, r, up); err != nil {
+		logrus.Warnf("the file with taskID %s, req:%s is not found in this peer. piece upload task failed.", taskID, jsonStr(r.Header))
 	}
 }
 
@@ -273,6 +271,77 @@ func (ps *peerServer) oneFinishHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ps *peerServer) pingHandler(w http.ResponseWriter, r *http.Request) {
+	sendSuccess(w)
+	fmt.Fprintf(w, "success")
+}
+
+// registerStreamTask is used to register the stream task to cache manager in uploader.
+func (ps *peerServer) registerStreamTask(w http.ResponseWriter, r *http.Request) {
+	sendAlive(ps.cfg)
+
+	// check params
+	taskID := r.Header.Get(config.StrTaskID)
+	node := r.Header.Get(config.StrSuperNode)
+	cid := r.Header.Get(config.StrClientID)
+	_, pieceSize, windowSize, err := parsePieceInfo(r, "", config.StrPieceSize, config.StrWindowSize)
+	if err != nil || taskID == "" || windowSize == 0 || node == "" || cid == "" {
+		sendHeader(w, http.StatusBadRequest)
+		fmt.Fprintf(w, "invalid params")
+		return
+	}
+
+	// construct the request and send the HTTP request
+	req := &registerStreamTaskRequest{
+		taskID:     taskID,
+		windowSize: windowSize,
+		pieceSize:  pieceSize,
+		node:       node,
+		cid:        cid,
+	}
+	err = p2p.cacheManager.register(req)
+	if err != nil {
+		sendHeader(w, http.StatusInternalServerError)
+		fmt.Fprintf(w, "the task register failed")
+		return
+	}
+
+	sendSuccess(w)
+	fmt.Fprintf(w, "success")
+}
+
+// receiveStreamPiece is used to receive a piece from downloader to cache.
+func (ps *peerServer) receiveStreamPiece(w http.ResponseWriter, r *http.Request) {
+	sendAlive(ps.cfg)
+
+	// check params
+	taskID := r.Header.Get(config.StrTaskID)
+	pieceNum, pieceSize, _, err := parsePieceInfo(r, config.StrPieceNum, config.StrPieceSize, "")
+	contentType := r.Header.Get(config.StrContentType)
+
+	// get the content from HTTP body
+	if taskID == "" || !strings.Contains(contentType, httputils.ApplicationJSONUtf8Value) || err != nil {
+		sendHeader(w, http.StatusBadRequest)
+		fmt.Fprintf(w, "invalid params")
+		return
+	}
+	logrus.Infof("received stream piece from downloader with taskID: %s, pieceNum: %d, pieceSize: %d",
+		taskID, pieceNum, pieceSize)
+
+	// store the piece content into cache
+	content, err := getPieceContent(r.Body, pieceSize)
+	if err != nil {
+		sendHeader(w, http.StatusBadRequest)
+		fmt.Fprintf(w, "the piece content is not found in cache manager")
+		return
+	}
+
+	err = ps.cacheManager.store(taskID, content)
+	if err != nil {
+		sendHeader(w, http.StatusInternalServerError)
+		fmt.Fprintf(w, "the cache failed to update")
+		return
+	}
+
 	sendSuccess(w)
 	fmt.Fprintf(w, "success")
 }
@@ -402,6 +471,32 @@ func (ps *peerServer) uploadPiece(f *os.File, w http.ResponseWriter, up *uploadP
 	return
 }
 
+// uploadStreamPiece sends a piece from cache to the remote peer.
+// TODO: refactor with the uploadPiece method
+func (ps *peerServer) uploadStreamPiece(content []byte, w http.ResponseWriter, up *uploadParam) (e error) {
+	w.Header().Set(config.StrContentLength, strconv.FormatInt(up.length, 10))
+	sendHeader(w, http.StatusPartialContent)
+
+	readLen := up.length - up.padSize
+	buf := make([]byte, 256*1024)
+
+	if up.padSize > 0 {
+		binary.BigEndian.PutUint32(buf, uint32((readLen)|(up.pieceSize)<<4))
+		w.Write(buf[:config.PieceHeadSize])
+		defer w.Write([]byte{config.PieceTailChar})
+	}
+
+	r := io.LimitReader(bytes.NewBuffer(content), readLen)
+	if ps.rateLimiter != nil {
+		lr := limitreader.NewLimitReaderWithLimiter(ps.rateLimiter, r, false)
+		_, e = io.CopyBuffer(w, lr, buf)
+	} else {
+		_, e = io.CopyBuffer(w, r, buf)
+	}
+
+	return
+}
+
 func (ps *peerServer) calculateRateLimit(clientRate int) int {
 	total := 0
 
@@ -513,6 +608,82 @@ func (ps *peerServer) deleteExpiredFile(path string, info os.FileInfo,
 	return false
 }
 
+func (ps *peerServer) regularUpload(w http.ResponseWriter, r *http.Request, up *uploadParam) (err error) {
+	var (
+		f    *os.File
+		size int64
+	)
+
+	taskFileName := mux.Vars(r)["commonFile"]
+	cdnSource := r.Header.Get(config.StrCDNSource)
+	rangeStr := r.Header.Get(config.StrRange)
+
+	// get task file
+	if f, size, err = ps.getTaskFile(taskFileName); err != nil {
+		rangeErrorResponse(w, err)
+		logrus.Errorf("failed to open file:%s, %v", taskFileName, err)
+		return
+	}
+	defer f.Close()
+
+	// amend range with piece meta data
+	if err = amendRange(size, cdnSource != string(apiTypes.CdnSourceSource), up); err != nil {
+		rangeErrorResponse(w, err)
+		logrus.Errorf("failed to amend range of file %s: %v", taskFileName, err)
+		return
+	}
+
+	// send piece wrapped by meta data
+	if err = ps.uploadPiece(f, w, up); err != nil {
+		logrus.Errorf("failed to send range(%s) of file(%s): %v", rangeStr, taskFileName, err)
+		return
+	}
+
+	return
+}
+
+func (ps *peerServer) streamUpload(w http.ResponseWriter, r *http.Request, up *uploadParam) (err error) {
+	var (
+		f       *os.File
+		content []byte
+		size    int64
+	)
+	taskFileName := mux.Vars(r)["commonFile"]
+	taskID := r.Header.Get(config.StrTaskID)
+	cdnSource := r.Header.Get(config.StrCDNSource)
+	rangeStr := r.Header.Get(config.StrRange)
+
+	// get task file. The file contains nothing, and is only used for GC.
+	if f, _, err = ps.getTaskFile(taskFileName); err != nil {
+		rangeErrorResponse(w, err)
+		logrus.Errorf("failed to open file:%s, %v", taskFileName, err)
+		return
+	}
+	defer f.Close()
+
+	// get the piece from cache
+	if content, size, err = ps.cacheManager.load(taskID, up); err != nil {
+		rangeErrorResponse(w, err)
+		logrus.Errorf("failed to open file with taskID:%s, %v", taskID, err)
+		return
+	}
+
+	// amend range with piece meta data
+	if err = amendRange(size, cdnSource != string(apiTypes.CdnSourceSource), up); err != nil {
+		rangeErrorResponse(w, err)
+		logrus.Errorf("failed to amend range of file with taskID %s: %v", taskID, err)
+		return
+	}
+
+	// send piece wrapped by meta data
+	if err = ps.uploadStreamPiece(content, w, up); err != nil {
+		logrus.Errorf("failed to send range(%s) of file with taskID (%s): %v", rangeStr, taskID, err)
+		return
+	}
+
+	return
+}
+
 // ----------------------------------------------------------------------------
 // helper functions
 
@@ -540,4 +711,43 @@ func rangeErrorResponse(w http.ResponseWriter, err error) {
 func jsonStr(v interface{}) string {
 	b, _ := json.Marshal(v)
 	return string(b)
+}
+
+func getPieceContent(reader io.Reader, pieceSize int) ([]byte, error) {
+	content := make([]byte, pieceSize)
+	err := json.NewDecoder(reader).Decode(&content)
+
+	if err != nil {
+		logrus.Warnf("the uploaded piece with pieceSize: %d, is not decoded successfully", pieceSize)
+		return nil, err
+	}
+
+	return content, nil
+}
+
+// parsePieceInfo tries to parse the information about piece from the http request.
+func parsePieceInfo(r *http.Request, strPieceNum, strPieceSize, strWindowSize string) (pieceNum int, pieceSize int,
+	windowSize int, err error) {
+	if strPieceNum != "" {
+		pieceNum, err = strconv.Atoi(r.Header.Get(strPieceNum))
+		if err != nil {
+			return
+		}
+	}
+
+	if strPieceSize != "" {
+		pieceSize, err = strconv.Atoi(r.Header.Get(strPieceSize))
+		if err != nil {
+			return
+		}
+	}
+
+	if strWindowSize != "" {
+		windowSize, err = strconv.Atoi(r.Header.Get(strWindowSize))
+		if err != nil {
+			return
+		}
+	}
+
+	return
 }

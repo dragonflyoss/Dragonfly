@@ -127,6 +127,8 @@ func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http
 		RawURL:      request.RawURL,
 		TaskURL:     request.TaskURL,
 		SupernodeIP: request.SuperNodeIP,
+		StreamMode:  request.StreamMode,
+		Windowsize:  request.Windowsize,
 	}
 	s.originClient.RegisterTLSConfig(taskCreateRequest.RawURL, request.Insecure, request.RootCAs)
 	resp, err := s.TaskMgr.Register(ctx, taskCreateRequest)
@@ -242,6 +244,34 @@ func (s *Server) reportPiece(ctx context.Context, rw http.ResponseWriter, req *h
 		ClientID:    srcCID,
 		DstPID:      dstDfgetTask.PeerID,
 		PieceStatus: types.PieceUpdateRequestPieceStatusSUCCESS,
+	}
+
+	if err := s.TaskMgr.UpdatePieceStatus(ctx, taskID, pieceRange, request); err != nil {
+		logrus.Errorf("failed to update pieces status %+v: %v", request, err)
+		return err
+	}
+
+	return EncodeResponse(rw, http.StatusOK, &types.ResultInfo{
+		Code: constants.CodeGetPieceReport,
+	})
+}
+
+func (s *Server) deletePieceCache(ctx context.Context, rw http.ResponseWriter, req *http.Request) (err error) {
+	params := req.URL.Query()
+	taskID := params.Get("taskId")
+	srcCID := params.Get("cid")
+	dstCID := params.Get("dstCid")
+	pieceRange := params.Get("pieceRange")
+
+	dstDfgetTask, err := s.DfgetTaskMgr.Get(ctx, dstCID, taskID)
+	if err != nil {
+		return err
+	}
+
+	request := &types.PieceUpdateRequest{
+		ClientID:    srcCID,
+		DstPID:      dstDfgetTask.PeerID,
+		PieceStatus: types.PieceUpdateRequestPieceStatusUNCACHED,
 	}
 
 	if err := s.TaskMgr.UpdatePieceStatus(ctx, taskID, pieceRange, request); err != nil {

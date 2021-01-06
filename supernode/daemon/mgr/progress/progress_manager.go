@@ -19,6 +19,7 @@ package progress
 import (
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
@@ -40,6 +41,9 @@ const (
 
 	// PieceSuccess means that the piece has been downloaded successful.
 	PieceSuccess = "success"
+
+	// PieceCached means that the piece has been cached by the client.
+	PieceCached = "cached"
 
 	// PieceAvailable means that the piece has neither been downloaded successfully
 	// nor being downloaded and supernode has downloaded it successfully.
@@ -75,6 +79,11 @@ type Manager struct {
 	// key:taskID string, value:superLoadState *superLoadState
 	superLoad *stateSyncMap
 
+	// slidingWindow maintains the state of the send window when stream mode is on.
+	// In stream mode, the progress manager would only return the pieces info inside the piece range [una, una + wnd).
+	// key:CID string, value:window *slidingWindowState
+	slidingWindow *stateSyncMap
+
 	cfg *config.Config
 }
 
@@ -88,6 +97,7 @@ func NewManager(cfg *config.Config) (*Manager, error) {
 		pieceProgress:   newStateSyncMap(),
 		clientBlackInfo: syncmap.NewSyncMap(),
 		superLoad:       newStateSyncMap(),
+		slidingWindow:   newStateSyncMap(),
 	}
 
 	manager.startMonitorSuperLoad()
@@ -125,6 +135,17 @@ func (pm *Manager) InitProgress(ctx context.Context, taskID, peerID, clientID st
 	}()
 
 	return pm.peerProgress.add(peerID, newPeerState())
+}
+
+// InitSlidingWindow inits the sliding window for every task
+func (pm *Manager) InitSlidingWindow(ctx context.Context, clientID string, windowSize int32) (err error) {
+	// init the sliding window for the task
+	// question: does supernode require the sliding window?
+	if err := pm.slidingWindow.add(clientID, newSlidingWindowState(windowSize)); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // UpdateProgress updates the correlation information between peers and pieces.
@@ -176,6 +197,18 @@ func (pm *Manager) UpdateProgress(ctx context.Context, taskID, srcCID, srcPID, d
 	}
 	logrus.Debugf("success to update PeerProgress taskID(%s) srcCID(%s) dstPID(%s) pieceNum(%d) pieceStatus(%d)",
 		taskID, srcCID, dstPID, pieceNum, pieceStatus)
+
+	// Step4: update the slidingWindow if the P2P streaming mode is on
+	if pm.checkStreamMode(srcCID) {
+		if err := pm.updateSlidingWindow(srcCID, pieceNum, pieceStatus); err != nil {
+			logrus.Errorf("failed to update SlidingWindow taskID(%s) srcCID(%s) dstPID(%s) pieceNum(%d) pieceStatus(%d): %v",
+				taskID, srcCID, dstPID, pieceNum, pieceStatus, err)
+			return err
+		}
+		logrus.Debugf("success to update SlidingWindow taskID(%s) srcCID(%s) dstPIC(%s) pieceNum(%d) pieceStatus(%d)",
+			taskID, srcCID, dstPID, pieceNum, pieceStatus)
+	}
+
 	return nil
 }
 
@@ -229,8 +262,18 @@ func (pm *Manager) GetPieceProgressByCID(ctx context.Context, taskID, clientID, 
 		return getSuccessfulPieces(clientBitset, cdnBitset)
 	}
 
-	// get available pieces
-	return getAvailablePieces(clientBitset, cdnBitset, runningPieces)
+	// get available pieces in regular mode
+	if !pm.checkStreamMode(clientID) {
+		return getAvailablePieces(clientBitset, cdnBitset, runningPieces, nil)
+	}
+
+	// get available pieces in stream mode
+	window, err := pm.slidingWindow.getAsSlidingWindowState(clientID)
+	if err != nil {
+		return nil, err
+	}
+
+	return getAvailablePieces(clientBitset, cdnBitset, runningPieces, window)
 }
 
 // GetPeerIDsByPieceNum gets all peerIDs with specified taskID and pieceNum.
@@ -294,7 +337,7 @@ func getSuccessfulPieces(clientBitset, cdnBitset *bitset.BitSet) ([]int, error) 
 	successPieces := make([]int, 0)
 	clientBitset.InPlaceIntersection(cdnBitset)
 	for i, e := clientBitset.NextSet(0); e; i, e = clientBitset.NextSet(i + 1) {
-		if getPieceStatusByIndex(i) == config.PieceSUCCESS {
+		if getPieceStatusByIndex(i) == config.PieceSUCCESS || getPieceStatusByIndex(i) == config.PieceUNCACHED {
 			successPieces = append(successPieces, getPieceNumByIndex(i))
 		}
 	}
@@ -304,12 +347,14 @@ func getSuccessfulPieces(clientBitset, cdnBitset *bitset.BitSet) ([]int, error) 
 
 // getAvailablePieces gets pieces that has neither been downloaded successfully
 // nor being downloaded and supernode has downloaded it successfully.
-func getAvailablePieces(clientBitset, cdnBitset *bitset.BitSet, runningPieceNums []int) ([]int, error) {
+func getAvailablePieces(clientBitset, cdnBitset *bitset.BitSet, runningPieceNums []int, window *slidingWindowState) ([]int, error) {
 	clientSucCount := clientBitset.Count()
 	cdnSucCount := cdnBitset.Count()
 	cdnBitset.InPlaceDifference(clientBitset)
 	availablePieces := make(map[int]bool)
-	for i, e := cdnBitset.NextSet(0); e; i, e = cdnBitset.NextSet(i + 1) {
+	start, end := getTargetPieceInfo(window)
+
+	for i, e := cdnBitset.NextSet(start); e && i < end; i, e = cdnBitset.NextSet(i + 1) {
 		pieceStatus := getPieceStatusByIndex(i)
 		if pieceStatus == config.PieceSUCCESS {
 			availablePieces[getPieceNumByIndex(i)] = true
@@ -342,4 +387,13 @@ func parseMapKeyToIntSlice(mmap map[int]bool) (result []int) {
 	}
 
 	return
+}
+
+// getPieceSegment returns the iteration range of the available piece, and the target piece status.
+func getTargetPieceInfo(window *slidingWindowState) (uint, uint) {
+	if window == nil {
+		return 0, math.MaxUint32
+	}
+
+	return uint(window.una) * 8, uint(window.una+window.wnd) * 8
 }

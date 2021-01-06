@@ -42,6 +42,8 @@ type RegisterRequest struct {
 	TaskID      string   `json:"taskId,omitempty"`
 	FileLength  int64    `json:"fileLength,omitempty"`
 	AsSeed      bool     `json:"asSeed,omitempty"`
+	StreamMode  bool     `json:"streamMode,omitempty"`
+	WindowSize  int32    `json:"windowsize,omitempty"`
 }
 
 func (r *RegisterRequest) String() string {

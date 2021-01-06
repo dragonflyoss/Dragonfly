@@ -876,6 +876,16 @@ definitions:
         type: "boolean"
         description: |
           This attribute represents the node as a seed node for the taskURL.
+      streamMode:
+        type: "boolean"
+        description: |
+          This attribute is used to notify the supernode whether the task is in P2P Stream Mode or not.
+      windowsize:
+        type: "integer"
+        description: |
+          The window size defines the size of send window, which is the same as receive window in peer.
+          The field will only be used when StreamMode is set.
+        format: "int32"
 
   PeerCreateRequest:
     type: "object"
@@ -1048,6 +1058,18 @@ definitions:
       supernodeIP:
         type: "string"
         description: "IP address of supernode which the peer connects to"
+      streamMode:
+        type: "boolean"
+        description: |
+          This attribute is used to notify the supernode whether the current task is running on
+          Stream Mode or not. it is associated with windowsize field.
+      windowsize:
+        type: "integer"
+        description: |
+          This attribute represents the size of the send window in supernode. The parameter would be
+          recorded by the progress manager to maintain the stream download progress.
+        format: "int32"
+
 
   TaskCreateResponse:
     type: "object"
@@ -1218,7 +1240,7 @@ definitions:
         type: "string"
         description: |
           pieceStatus indicates whether the peer task successfully download the piece.
-        enum: ["FAILED", "SUCCESS", "INVALID", "SEMISUC"]
+        enum: ["FAILED", "SUCCESS", "INVALID", "SEMISUC", "CACHED", "UNCACHED"]
 
   PiecePullRequest:
     type: "object"

@@ -51,7 +51,7 @@ func (s *DFGetP2PTestSuite) TearDownSuite(c *check.C) {
 	s.starter.Clean()
 }
 
-func (s *DFGetP2PTestSuite) TestDownloadFile(c *check.C) {
+func (s *DFGetP2PTestSuite) TestRegularDownloadFile(c *check.C) {
 	var cases = []struct {
 		filePath    string
 		fileContent []byte
@@ -114,3 +114,65 @@ func (s *DFGetP2PTestSuite) TestDownloadFile(c *check.C) {
 		}
 	}
 }
+
+//func (s *DFGetP2PTestSuite) TestStreamDownloadFile(c *check.C) {
+//	var cases = []struct {
+//		filePath    string
+//		fileContent []byte
+//		targetPath  string
+//		createFile  bool
+//		execSuccess bool
+//		timeout     time.Duration
+//		streamMode  bool
+//	}{
+//		{
+//			filePath:    "stream.txt",
+//			fileContent: []byte("Dragonfly stream mode test"),
+//			targetPath:  Join(s.starter.Home, "stream.test"),
+//			createFile:  true,
+//			execSuccess: false,
+//			timeout:     5,
+//			streamMode:  true,
+//		},
+//	}
+//
+//	for _, ca := range cases {
+//		if ca.createFile {
+//			err := s.starter.WriteSupernodeFileServer(ca.filePath, ca.fileContent, os.ModePerm)
+//			c.Assert(err, check.IsNil)
+//		}
+//		cmd, stdout, err := s.starter.StreamDFGet(ca.timeout*time.Second,
+//			"-u", fmt.Sprintf("http://127.0.0.1:%d/%s", environment.SupernodeDownloadPort, ca.filePath),
+//			"-o", ca.targetPath,
+//			"--node", fmt.Sprintf("127.0.0.1:%d", environment.SupernodeListenPort),
+//			"--notbs",
+//			getStreamFlag(ca.streamMode))
+//
+//		cmd.Start()
+//
+//		c.Assert(err, check.IsNil)
+//		execResult := cmd.ProcessState.Success()
+//		if ca.execSuccess {
+//			c.Assert(execResult, check.Equals, true)
+//
+//			if execResult {
+//				// check the downloaded file content
+//				buf := new(bytes.Buffer)
+//				n, err := buf.ReadFrom(stdout)
+//				c.Assert(err, check.IsNil)
+//				c.Assert(n, check.Equals, len(ca.fileContent))
+//				c.Assert(buf.Bytes(), check.DeepEquals, ca.fileContent)
+//			}
+//		} else {
+//			c.Assert(execResult, check.Equals, false)
+//		}
+//	}
+//}
+//
+//func getStreamFlag(flag bool) string {
+//	if flag {
+//		return "--stream"
+//	}
+//
+//	return ""
+//}

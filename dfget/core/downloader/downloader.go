@@ -41,9 +41,15 @@ type Downloader interface {
 	Cleanup()
 }
 
-// DoDownloadTimeout downloads the file and waits for response during
-// the given timeout duration.
-func DoDownloadTimeout(downloader Downloader, timeout time.Duration) error {
+// downloadTimeoutTask performs as the branches to separate the
+// flow of DoDownloadTimeout between regular mode and stream mode.
+type DownloadTimeoutTask interface {
+	Start(downloader Downloader, timeout time.Duration) error
+}
+
+// Start method of RegularDownloadTimeoutTask downloads the file and waits for response during
+// the given timeout duration in regular mode.
+func (rdt *RegularDownloadTimeoutTask) Start(downloader Downloader, timeout time.Duration) error {
 	if timeout <= 0 {
 		logrus.Warnf("invalid download timeout(%.3fs), use default:(%.3fs)",
 			timeout.Seconds(), config.DefaultDownloadTimeout.Seconds())
@@ -58,6 +64,38 @@ func DoDownloadTimeout(downloader Downloader, timeout time.Duration) error {
 	defer cancel()
 
 	var err error
+	select {
+	case err = <-ch:
+		return err
+	case <-time.After(timeout):
+		err = fmt.Errorf("download timeout(%.3fs)", timeout.Seconds())
+		downloader.Cleanup()
+	}
+	return err
+}
+
+// Start method of RegularDownloadTimeoutTask downloads the file and waits for response during
+// the given timeout duration in stream mode.
+func (sdt *StreamDownloadTimeoutTask) Start(downloader Downloader, timeout time.Duration) error {
+	if timeout <= 0 {
+		logrus.Warnf("invalid download timeout(%.3fs), use default:(%.3fs)",
+			timeout.Seconds(), config.DefaultDownloadTimeout.Seconds())
+		timeout = config.DefaultDownloadTimeout
+	}
+	var ch = make(chan error)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	reader, err := downloader.RunStream(ctx)
+	if err != nil {
+		logrus.Debugf("runStream of downloader failed to start, taskID: %s", sdt.Result.TaskID)
+		return err
+	}
+
+	go func() {
+		ch <- sdt.startWriter(ctx, reader)
+	}()
+
 	select {
 	case err = <-ch:
 		return err

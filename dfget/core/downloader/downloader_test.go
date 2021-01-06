@@ -41,17 +41,32 @@ func init() {
 	check.Suite(&DownloaderTestSuite{})
 }
 
-func (s *DownloaderTestSuite) TestDoDownloadTimeout(c *check.C) {
+func (s *DownloaderTestSuite) TestRegularDoDownloadTimeout(c *check.C) {
 	md := &MockDownloader{100}
+	regularDoDownloadTimeout := RegularDownloadTimeoutTask{}
 
-	err := DoDownloadTimeout(md, 0*time.Millisecond)
+	err := regularDoDownloadTimeout.Start(md, 0*time.Millisecond)
 	c.Assert(err, check.IsNil)
 
-	err = DoDownloadTimeout(md, 50*time.Millisecond)
+	err = regularDoDownloadTimeout.Start(md, 50*time.Millisecond)
 	c.Assert(err, check.NotNil)
 
-	err = DoDownloadTimeout(md, 110*time.Millisecond)
+	err = regularDoDownloadTimeout.Start(md, 110*time.Millisecond)
 	c.Assert(err, check.IsNil)
+}
+
+func (s *DownloaderTestSuite) TestStreamDoDownloadTimeout(c *check.C) {
+	md := &MockDownloader{100}
+	streamDoDownloadTimeout := StreamDownloadTimeoutTask{}
+
+	err := streamDoDownloadTimeout.Start(md, 0*time.Millisecond)
+	c.Assert(err, check.NotNil)
+
+	err = streamDoDownloadTimeout.Start(md, 50*time.Millisecond)
+	c.Assert(err, check.NotNil)
+
+	err = streamDoDownloadTimeout.Start(md, 110*time.Millisecond)
+	c.Assert(err, check.NotNil)
 }
 
 func (s *DownloaderTestSuite) TestMoveFile(c *check.C) {

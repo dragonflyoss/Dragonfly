@@ -35,11 +35,18 @@ type UploaderAPI interface {
 	// CheckServer checks the peer server on port whether is available.
 	CheckServer(ip string, port int, req *CheckServerRequest) (string, error)
 
-	// FinishTask report a finished task to peer server.
+	// FinishTask reports a finished task to peer server.
 	FinishTask(ip string, port int, req *FinishTaskRequest) error
 
-	// PingServer send a request to determine whether the server has started.
+	// PingServer sends a request to determine whether the server has started.
 	PingServer(ip string, port int) bool
+
+	// --------------------------- stream mode -------------------------------
+	// RegisterStreamTask sends a POST request to uploader to register the stream task.
+	RegisterStreamTask(ip string, port int, req *RegisterStreamTaskRequest) error
+
+	// DeliverPieceToUploader delivers a successfully processed piece to uploader to cache.
+	DeliverPieceToUploader(ip string, port int, req *UploadStreamPieceRequest) error
 }
 
 // uploaderAPI is an implementation of interface UploaderAPI.
@@ -96,4 +103,40 @@ func (u *uploaderAPI) PingServer(ip string, port int) bool {
 	url := fmt.Sprintf("http://%s:%d%s", ip, port, config.LocalHTTPPing)
 	code, _, _ := httputils.Get(url, u.timeout)
 	return code == http.StatusOK
+}
+
+func (u *uploaderAPI) RegisterStreamTask(ip string, port int, req *RegisterStreamTaskRequest) error {
+	headers := make(map[string]string)
+	headers[config.StrTaskID] = req.TaskID
+	headers[config.StrWindowSize] = req.WindowSize
+	headers[config.StrPieceSize] = req.PieceSize
+	headers[config.StrSuperNode] = req.Node
+	headers[config.StrClientID] = req.CID
+
+	url := fmt.Sprintf("http://%s:%d%s", ip, port, config.LocalHTTPStreamRegister)
+	code, body, err := httputils.PostJSONWithHeaders(url, headers, nil, u.timeout)
+	if code == http.StatusOK {
+		return nil
+	}
+	if err == nil {
+		return fmt.Errorf("%d:%s", code, body)
+	}
+	return err
+}
+
+func (u *uploaderAPI) DeliverPieceToUploader(ip string, port int, req *UploadStreamPieceRequest) error {
+	headers := make(map[string]string)
+	headers[config.StrTaskID] = req.TaskID
+	headers[config.StrPieceNum] = strconv.Itoa(req.PieceNum)
+	headers[config.StrPieceSize] = strconv.Itoa(int(req.PieceSize))
+
+	url := fmt.Sprintf("http://%s:%d%s", ip, port, config.LocalHTTPStreamPiece)
+	code, body, err := httputils.PostJSONWithHeaders(url, headers, req.Content, u.timeout)
+	if code == http.StatusOK {
+		return nil
+	}
+	if err == nil {
+		return fmt.Errorf("%d:%s", code, body)
+	}
+	return err
 }
