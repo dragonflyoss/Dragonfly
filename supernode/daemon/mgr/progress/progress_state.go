@@ -61,6 +61,9 @@ type peerState struct {
 
 	// serviceDownTime the down time of the peer service.
 	serviceDownTime int64
+
+	// dynamicRate is the dynimical download rate limit of the peer node
+	dynamicRate int64
 }
 
 type superLoadState struct {

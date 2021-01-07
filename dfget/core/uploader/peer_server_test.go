@@ -17,6 +17,7 @@
 package uploader
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -24,6 +25,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"strconv"
+	"sync/atomic"
 	"time"
 
 	"github.com/go-check/check"
@@ -71,6 +73,25 @@ func (s *PeerServerTestSuite) TearDownSuite(c *check.C) {
 			fmt.Printf("remove path:%s error", s.workHome)
 		}
 	}
+}
+
+var live = flag.Bool("dynamic", false, "Include one dynamic test")
+
+func (s *PeerServerTestSuite) TestUpdateDynamicRate(c *check.C) {
+	if !*live {
+		c.Skip("skip this test, because it need 20 seconds time. To enable it, add -dynamic")
+	}
+	cfg := createConfig(s.workHome, 0)
+	cfg.Dynamic = true
+	ps := newPeerServer(cfg, 0)
+
+	time.Sleep(time.Duration(20) * time.Second)
+	totalLimitRate := atomic.LoadInt64(ps.totalLimitRate)
+
+	c.Check(totalLimitRate, check.Not(check.Equals), int64(0))
+
+	c.Check(bandInfo.maxRate, check.Not(check.Equals), int64(0))
+	c.Check(bandInfo.inter, check.Not(check.Equals), "")
 }
 
 func (s *PeerServerTestSuite) TestGetTaskFile(c *check.C) {
@@ -460,7 +481,8 @@ func (s *PeerServerTestSuite) TestParseRateHandler(c *check.C) {
 	}
 
 	// totalLimitRate zero test
-	s.srv.totalLimitRate = 0
+	var totalLimitRate int64
+	atomic.StoreInt64(s.srv.totalLimitRate, totalLimitRate)
 	if rr, err := testHandlerHelper(s.srv, &HandlerHelper{
 		method:  http.MethodGet,
 		url:     config.LocalHTTPPathRate + file2000,
@@ -469,7 +491,8 @@ func (s *PeerServerTestSuite) TestParseRateHandler(c *check.C) {
 		c.Check(rr.Code, check.Equals, http.StatusOK)
 		c.Check(rr.Body.String(), check.Equals, strconv.Itoa(testRateLimit))
 	}
-	s.srv.totalLimitRate = 1000
+	totalLimitRate = 1000
+	atomic.StoreInt64(s.srv.totalLimitRate, totalLimitRate)
 
 	// wrong rateLimit test
 	headers["rateLimit"] = "foo"

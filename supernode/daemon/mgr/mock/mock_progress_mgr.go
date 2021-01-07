@@ -139,6 +139,20 @@ func (mr *MockProgressMgrMockRecorder) GetPeerStateByPeerID(ctx, peerID interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPeerStateByPeerID", reflect.TypeOf((*MockProgressMgr)(nil).GetPeerStateByPeerID), ctx, peerID)
 }
 
+// UpdatePeerDynamicRate mocks base method
+func (m *MockProgressMgr) UpdatePeerDynamicRate(ctx context.Context, peerID string, dynamicRate int64) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePeerDynamicRate", ctx, peerID, dynamicRate)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdatePeerDynamicRate indicates an expected call of UpdatePeerDynamicRate
+func (mr *MockProgressMgrMockRecorder) UpdatePeerDynamicRate(ctx, peerID, dynamicRate interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePeerDynamicRate", reflect.TypeOf((*MockProgressMgr)(nil).UpdatePeerDynamicRate), ctx, peerID, dynamicRate)
+}
+
 // UpdatePeerServiceDown mocks base method
 func (m *MockProgressMgr) UpdatePeerServiceDown(ctx context.Context, peerID string) error {
 	m.ctrl.T.Helper()

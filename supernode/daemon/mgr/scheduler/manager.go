@@ -140,6 +140,33 @@ func (sm *Manager) sortExecutor(ctx context.Context, pieceNums []int, centerNum 
 	})
 }
 
+func (sm *Manager) getPeerPriorityMap(ctx context.Context, peerIDs []string) map[string]int {
+	peerPriorityMap := make(map[string]int)
+	for i := 0; i < len(peerIDs); i++ {
+		// NOTE: should we return errors here or just record an error log?
+		// if failed to get peerState, and then it priority need to be the lowest.
+		peerState, err := sm.progressMgr.GetPeerStateByPeerID(ctx, peerIDs[i])
+		if err != nil {
+			peerPriorityMap[peerIDs[i]] = 0
+		} else {
+			peerPriorityMap[peerIDs[i]] = int(peerState.DynamicRate / int64(peerState.ProducerLoad.Get()))
+		}
+	}
+	return peerPriorityMap
+}
+
+// sortPeerExecutor sorts the peers by DynamicRate/ProducerLoad
+func (sm *Manager) sortPeerExecutor(ctx context.Context, peerIDs []string, peerPriorityMap map[string]int) {
+	if len(peerIDs) == 0 || len(peerPriorityMap) == 0 {
+		return
+	}
+	sort.Slice(peerIDs, func(i, j int) bool {
+		// sort by distributedCount to ensure that
+		// the least distributed pieces in the network are prioritized
+		return peerPriorityMap[peerIDs[i]] > peerPriorityMap[peerIDs[j]]
+	})
+}
+
 func (sm *Manager) getPieceResults(ctx context.Context, taskID, clientID, srcPID string, pieceNums []int, runningCount int) ([]*mgr.PieceResult, error) {
 	// validate ClientErrorCount
 	var useSupernode bool
@@ -212,6 +239,9 @@ func (sm *Manager) tryGetPID(ctx context.Context, taskID string, pieceNum int, s
 		}
 	}()
 
+	// sort the peerIDs by DynamicRate/ProducerLoad
+	peerPriorityMap := sm.getPeerPriorityMap(ctx, peerIDs)
+	sm.sortPeerExecutor(ctx, peerIDs, peerPriorityMap)
 	for i := 0; i < len(peerIDs); i++ {
 		// if failed to get peerState, and then it should not be needed.
 		peerState, err := sm.progressMgr.GetPeerStateByPeerID(ctx, peerIDs[i])

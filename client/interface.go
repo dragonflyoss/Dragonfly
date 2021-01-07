@@ -41,6 +41,7 @@ type PeerAPIClient interface {
 	PeerDelete(ctx context.Context, id string) error
 	PeerInfo(ctx context.Context, id string) (peerInfoResponse *types.PeerInfo, err error)
 	PeerList(ctx context.Context, id string) (peersInfoResponse []*types.PeerInfo, err error)
+	PeerDynamicRate(ctx context.Context, id string, dynamicRate int64) error
 }
 
 // TaskAPIClient defines methods of task related client.

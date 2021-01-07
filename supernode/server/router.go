@@ -59,6 +59,7 @@ func registerV1(s *Server) {
 		{Method: http.MethodDelete, Path: "/peers/{id}", HandlerFunc: s.deRegisterPeer},
 		{Method: http.MethodGet, Path: "/peers/{id}", HandlerFunc: s.getPeer},
 		{Method: http.MethodGet, Path: "/peers", HandlerFunc: s.listPeers},
+		{Method: http.MethodGet, Path: "/peer/{id}/peerState/{dynamicRate}", HandlerFunc: s.reportDynamicRate},
 		{Method: http.MethodGet, Path: "/tasks/{id}", HandlerFunc: s.getTaskInfo},
 		{Method: http.MethodPost, Path: "/peer/network", HandlerFunc: s.fetchP2PNetworkInfo},
 		{Method: http.MethodPost, Path: "/peer/heartbeat", HandlerFunc: s.reportPeerHealth},
@@ -98,6 +99,7 @@ func registerLegacy(s *Server) {
 		{Method: http.MethodGet, Path: "/peer/piece/error", HandlerFunc: s.reportPieceError},
 		{Method: http.MethodPost, Path: "/peer/network", HandlerFunc: s.fetchP2PNetworkInfo},
 		{Method: http.MethodPost, Path: "/peer/heartbeat", HandlerFunc: s.reportPeerHealth},
+		{Method: http.MethodGet, Path: "/peer/dynamicrate", HandlerFunc: s.updateDynamicRate},
 	}
 	api.Legacy.Register(legacyHandlers...)
 	api.Legacy.Register(preheatHandlers(s)...)

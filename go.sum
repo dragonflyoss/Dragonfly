@@ -63,6 +63,7 @@ github.com/go-openapi/swag v0.0.0-20170606142751-f3f9494671f9 h1:4Zsyv/tIS5V+22f
 github.com/go-openapi/swag v0.0.0-20170606142751-f3f9494671f9/go.mod h1:DXUve3Dpr1UfpPtxFw+EFuQ41HhCWZfha5jSVRG7C7I=
 github.com/go-openapi/validate v0.0.0-20170705144413-8a82927c942c h1:+cB2AzkH5ansXyfJT+M4BH9zpRz3hNuvbtMpCwbV7ys=
 github.com/go-openapi/validate v0.0.0-20170705144413-8a82927c942c/go.mod h1:ve8xoSHgqBUifiKgaVbxLmOE0ckvH0oXfsJcnm6SIz0=
+github.com/go-stack/stack v1.8.0 h1:5SgMzNM5HxrEjV0ww2lTmX6E2Izsfxas4+YHWRs3Lsk=
 github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/melR3HDY=
 github.com/gogo/protobuf v1.1.1/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7atdtwQ=
 github.com/gogo/protobuf v1.2.1/go.mod h1:hp+jE20tsWTFYpLwKvXlhS1hjn+gTNwPg2I6zVXpSg4=

@@ -20,8 +20,11 @@ import (
 	"testing"
 
 	"github.com/dragonflyoss/Dragonfly/pkg/errortypes"
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
+	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr/mock"
 
 	"github.com/go-check/check"
+	"github.com/golang/mock/gomock"
 	"github.com/willf/bitset"
 )
 
@@ -34,6 +37,24 @@ func init() {
 }
 
 type ProgressManagerTestSuite struct {
+	mockCtl         *gomock.Controller
+	mockProgressMgr *mock.MockProgressMgr
+
+	manager *Manager
+}
+
+func (s *ProgressManagerTestSuite) SetUpSuite(c *check.C) {
+	s.mockCtl = gomock.NewController(c)
+	s.mockProgressMgr = mock.NewMockProgressMgr(s.mockCtl)
+	s.mockProgressMgr.EXPECT().GetPeerIDsByPieceNum(gomock.Any(), gomock.Any(), gomock.Any()).Return([]string{"peerID"}, nil).AnyTimes()
+
+	cfg := config.NewConfig()
+	cfg.SetSuperPID("fooPid")
+	s.manager, _ = NewManager(cfg)
+}
+
+func (s *ProgressManagerTestSuite) TearDownSuite(c *check.C) {
+	s.mockCtl.Finish()
 }
 
 func (s *ProgressManagerTestSuite) TestGetSuccessfulPieces(c *check.C) {

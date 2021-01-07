@@ -115,6 +115,9 @@ type ReportFuncType func(ip string, req *types.ReportPieceRequest) (*types.BaseR
 // ServiceDownFuncType function type of SupernodeAPI#ServiceDown
 type ServiceDownFuncType func(ip string, taskID string, cid string) (*types.BaseResponse, error)
 
+// ReportDynamicRateFuncType function type of SupernodeAPI#ReportDynamicRate
+type ReportDynamicRateFuncType func(ip string, taskID string, cid string, dynamicRate int64) (*types.BaseResponse, error)
+
 // ClientErrorFuncType function type of SupernodeAPI#ReportClientError
 type ClientErrorFuncType func(ip string, req *types.ClientErrorRequest) (*types.BaseResponse, error)
 
@@ -123,12 +126,13 @@ type ReportMetricsFuncType func(node string, req *api_types.TaskMetricsRequest) 
 
 // MockSupernodeAPI mocks the SupernodeAPI.
 type MockSupernodeAPI struct {
-	RegisterFunc      RegisterFuncType
-	PullFunc          PullFuncType
-	ReportFunc        ReportFuncType
-	ServiceDownFunc   ServiceDownFuncType
-	ClientErrorFunc   ClientErrorFuncType
-	ReportMetricsFunc ReportMetricsFuncType
+	RegisterFunc          RegisterFuncType
+	PullFunc              PullFuncType
+	ReportFunc            ReportFuncType
+	ServiceDownFunc       ServiceDownFuncType
+	ClientErrorFunc       ClientErrorFuncType
+	ReportMetricsFunc     ReportMetricsFuncType
+	ReportDynamicRateFunc ReportDynamicRateFuncType
 }
 
 var _ api.SupernodeAPI = &MockSupernodeAPI{}
@@ -165,6 +169,15 @@ func (m *MockSupernodeAPI) ServiceDown(ip string, taskID string, cid string) (
 	*types.BaseResponse, error) {
 	if m.ServiceDownFunc != nil {
 		return m.ServiceDownFunc(ip, taskID, cid)
+	}
+	return nil, nil
+}
+
+// ReportDynamicRate implements SupernodeAPI#ReportDynamicRate.
+func (m *MockSupernodeAPI) ReportDynamicRate(ip string, taskID string, cid string, dynamicRate int64) (
+	*types.BaseResponse, error) {
+	if m.ReportDynamicRateFunc != nil {
+		return m.ReportDynamicRateFunc(ip, taskID, cid, dynamicRate)
 	}
 	return nil, nil
 }

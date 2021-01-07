@@ -110,6 +110,13 @@ func (s *SupernodeAPITestSuite) TestSupernodeAPI_ReportPiece(c *check.C) {
 	c.Check(r.Code, check.Equals, 611)
 }
 
+func (s *SupernodeAPITestSuite) TestSupernodeAPI_ReportDynamicRate(c *check.C) {
+	s.mock.GetFunc = s.mock.CreateGetFunc(200, []byte(`{"Code":200}`), nil)
+	r, e := s.api.ReportDynamicRate(localhost, "", "", 10000000)
+	c.Check(e, check.IsNil)
+	c.Check(r.Code, check.Equals, 200)
+}
+
 func (s *SupernodeAPITestSuite) TestSupernodeAPI_ServiceDown(c *check.C) {
 	s.mock.GetFunc = s.mock.CreateGetFunc(200, []byte(`{"Code":200}`), nil)
 	r, e := s.api.ServiceDown(localhost, "", "")

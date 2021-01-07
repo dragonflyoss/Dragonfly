@@ -61,19 +61,20 @@ const (
 	CodeParamError     = 501
 	CodeTargetNotFound = 502
 
-	CodePeerFinish      = 600
-	CodePeerContinue    = 601
-	CodePeerWait        = 602
-	CodePeerLimited     = 603
-	CodeSuperFail       = 604
-	CodeUnknownError    = 605
-	CodeTaskConflict    = 606
-	CodeURLNotReachable = 607
-	CodeNeedAuth        = 608
-	CodeWaitAuth        = 609
-	CodeSourceError     = 610
-	CodeGetPieceReport  = 611
-	CodeGetPeerDown     = 612
+	CodePeerFinish        = 600
+	CodePeerContinue      = 601
+	CodePeerWait          = 602
+	CodePeerLimited       = 603
+	CodeSuperFail         = 604
+	CodeUnknownError      = 605
+	CodeTaskConflict      = 606
+	CodeURLNotReachable   = 607
+	CodeNeedAuth          = 608
+	CodeWaitAuth          = 609
+	CodeSourceError       = 610
+	CodeGetPieceReport    = 611
+	CodeGetPeerDown       = 612
+	CodeUpdateDynamicRate = 613
 )
 
 /* the code of task result that dfget will report to supernode */

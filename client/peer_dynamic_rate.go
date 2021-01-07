@@ -14,14 +14,21 @@
  * limitations under the License.
  */
 
-package uploader
+package client
 
-//FuzzParseParams is a function to determine whether the params can use function parseParams
-func FuzzParseParams(data []byte) int {
-	s := string(data)
-	_, err := parseParams(s, s, s)
+import (
+	"context"
+	"strconv"
+)
+
+// PeerDynamicRate update the dynamicRate in superload schdule algorithm
+func (client *APIClient) PeerDynamicRate(ctx context.Context, id string, dynamicRate int64) error {
+	resp, err := client.get(ctx, "/api/v1/peers/"+id+"/dynamicRate/"+strconv.FormatInt(dynamicRate, 10), nil, nil)
 	if err != nil {
-		return 0
+		return err
 	}
-	return 1
+	if err := ensureCloseReader(resp); err != nil {
+		return err
+	}
+	return nil
 }

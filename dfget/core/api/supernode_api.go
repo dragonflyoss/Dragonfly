@@ -40,6 +40,7 @@ const (
 	metricsReportPath     = "/task/metrics"
 	fetchP2PNetworkPath   = "/peer/network"
 	peerHeartBeatPath     = "/peer/heartbeat"
+	peerDynamicRatePath   = "/peer/dynamicrate"
 )
 
 // NewSupernodeAPI creates a new instance of SupernodeAPI with default value.
@@ -64,6 +65,7 @@ type SupernodeAPI interface {
 	ReportResource(node string, req *types.RegisterRequest) (resp *types.RegisterResponse, err error)
 	ApplyForSeedNode(node string, req *types.RegisterRequest) (resp *types.RegisterResponse, err error)
 	ReportResourceDeleted(node string, taskID string, cid string) (resp *types.BaseResponse, err error)
+	ReportDynamicRate(node string, taskID string, cid string, dynamicRate int64) (resp *types.BaseResponse, err error)
 }
 
 type supernodeAPI struct {
@@ -352,4 +354,22 @@ func (api *supernodeAPI) HeartBeat(node string, req *api_types.HeartBeatRequest)
 		return nil, err
 	}
 	return resp, err
+}
+
+// ServiceDown reports the status of the local peer to supernode.
+func (api *supernodeAPI) ReportDynamicRate(node string, taskID string, cid string, dynamicRate int64) (
+	resp *types.BaseResponse, err error) {
+
+	url := fmt.Sprintf("%s://%s%s?taskId=%s&cid=%s&dynamicRate=%d",
+		api.Scheme, node, peerDynamicRatePath, taskID, cid, dynamicRate)
+
+	resp = new(types.BaseResponse)
+	if err = api.get(url, resp); err != nil {
+		logrus.Errorf("failed to send dynamicRate,err: %v", err)
+		return nil, err
+	}
+	if resp.Code != constants.CodeUpdateDynamicRate {
+		logrus.Errorf("failed to send dynamicRate to supernode: api response code is %d not equal to %d", resp.Code, constants.CodeUpdateDynamicRate)
+	}
+	return
 }

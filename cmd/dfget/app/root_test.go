@@ -45,6 +45,7 @@ func (suit *dfgetSuit) Test_initFlagsNoArguments() {
 	suit.Equal(cfg.DFDaemon, false)
 	suit.Equal(cfg.Console, false)
 	suit.Equal(cfg.Verbose, false)
+	suit.Equal(cfg.Dynamic, false)
 	suit.Equal(cfg.URL, "")
 }
 

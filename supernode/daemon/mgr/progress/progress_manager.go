@@ -261,6 +261,7 @@ func (pm *Manager) GetPeerStateByPeerID(ctx context.Context, peerID string) (*mg
 		ClientErrorCount:  peerState.clientErrorCount,
 		ServiceErrorCount: peerState.serviceErrorCount,
 		ProducerLoad:      peerState.producerLoad,
+		DynamicRate:       peerState.dynamicRate,
 	}, nil
 }
 
@@ -276,6 +277,22 @@ func (pm *Manager) UpdatePeerServiceDown(ctx context.Context, peerID string) (er
 	}
 
 	peerState.serviceDownTime = timeutils.GetCurrentTimeMillis()
+	return nil
+}
+
+// UpdatePeerDynamicRate does update dynamicRate when peer server change it totalLimit.
+// If dfget doesn't in dynamic mode, the dynamicRate will just be replaced by totalLimit.
+func (pm *Manager) UpdatePeerDynamicRate(ctx context.Context, peerID string, dynamicRate int64) (err error) {
+	peerState, err := pm.peerProgress.getAsPeerState(peerID)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get peer state peerID(%s): %v", peerID, err)
+	}
+
+	if dynamicRate <= 0 {
+		return fmt.Errorf("dynamicRate should be a positive interger, rate: %d is not allowed", dynamicRate)
+	}
+
+	peerState.dynamicRate = dynamicRate
 	return nil
 }
 

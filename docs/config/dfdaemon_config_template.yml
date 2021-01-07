@@ -33,7 +33,7 @@ hijack_https:
    cert: df.crt
    key: df.key
    hosts:
-      - regx: mirror.aliyuncs.com:443  # regexp to match request hosts
+      - regx: mirror.aliyuncs.com:443 # regexp to match request hosts
         # whether to ignore https certificate errors
         insecure: false
         # optional certificates if the host uses self-signed certificates
@@ -46,8 +46,23 @@ hijack_https:
 # expiretime: caching duration for which cached file keeps no accessed by any process(default 3min). Deploying with Docker, this param is supported after dragonfly 0.4.3
 # alivetime: Alive duration for which uploader keeps no accessing by any uploading requests, after this period uploader will automically exit (default 5m0s)
 # f: filter some query params of URL, use char '&' to separate different params
-dfget_flags: ["--node", "192.168.33.21", "--verbose", "--ip", "192.168.33.23", "--port", "15001",
-              "--expiretime", "3m0s", "--alivetime", "5m0s", "-f", "filterParam1&filterParam2"]
+dfget_flags:
+   [
+      "--node",
+      "192.168.33.21",
+      "--verbose",
+      "--dynamic",
+      "--ip",
+      "192.168.33.23",
+      "--port",
+      "15001",
+      "--expiretime",
+      "3m0s",
+      "--alivetime",
+      "5m0s",
+      "-f",
+      "filterParam1&filterParam2",
+   ]
 
 # Specify the addresses(host:port) of supernodes, it is just to be compatible with previous versions
 supernodes:
