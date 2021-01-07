@@ -39,6 +39,9 @@ type PeerCreateRequest struct {
 
 	// version number of dfget binary.
 	Version string `json:"version,omitempty"`
+
+	// region is the region of this peer
+	Region string `json:"region,omitempty"`
 }
 
 // Validate validates this peer create request

@@ -81,6 +81,7 @@ func (pm *Manager) Register(ctx context.Context, peerCreateRequest *types.PeerCr
 		HostName: peerCreateRequest.HostName,
 		Port:     peerCreateRequest.Port,
 		Version:  peerCreateRequest.Version,
+		Region:   peerCreateRequest.Region,
 		Created:  strfmt.DateTime(time.Now()),
 	}
 	pm.peerStore.Put(id, peerInfo)

@@ -106,6 +106,7 @@ func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http
 		HostName: strfmt.Hostname(request.HostName),
 		Port:     request.Port,
 		Version:  request.Version,
+		Region:   request.Region,
 	}
 	peerCreateResponse, err := s.PeerMgr.Register(ctx, peerCreateRequest)
 	if err != nil {
@@ -127,6 +128,7 @@ func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http
 		RawURL:      request.RawURL,
 		TaskURL:     request.TaskURL,
 		SupernodeIP: request.SuperNodeIP,
+		Region:      request.Region,
 	}
 	s.originClient.RegisterTLSConfig(taskCreateRequest.RawURL, request.Insecure, request.RootCAs)
 	resp, err := s.TaskMgr.Register(ctx, taskCreateRequest)

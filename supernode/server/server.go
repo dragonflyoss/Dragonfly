@@ -90,7 +90,7 @@ func New(cfg *config.Config, logger *logrus.Logger, register prometheus.Register
 		return nil, err
 	}
 
-	schedulerMgr, err := scheduler.NewManager(cfg, progressMgr)
+	schedulerMgr, err := scheduler.NewManager(cfg, peerMgr, progressMgr)
 	if err != nil {
 		return nil, err
 	}

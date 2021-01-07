@@ -64,6 +64,9 @@ type Properties struct {
 	// E.g. ["192.168.33.21=1", "192.168.33.22=2"]
 	Supernodes []*NodeWeight `yaml:"nodes,omitempty" json:"nodes,omitempty"`
 
+	// The physical region of this Peer
+	Region string `yaml:"region,omitempty" json:"region,omitempty"`
+
 	// LocalLimit rate limit about a single download task, format: G(B)/g/M(B)/m/K(B)/k/B
 	// pure number will also be parsed as Byte.
 	LocalLimit rate.Rate `yaml:"localLimit,omitempty" json:"localLimit,omitempty"`

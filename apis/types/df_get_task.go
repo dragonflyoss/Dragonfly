@@ -68,6 +68,9 @@ type DfGetTask struct {
 
 	// task Id
 	TaskID string `json:"taskId,omitempty"`
+
+	// region is the region of this peer
+	Region string `json:"region,omitempty"`
 }
 
 // Validate validates this df get task
