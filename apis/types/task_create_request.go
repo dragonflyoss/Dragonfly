@@ -101,6 +101,8 @@ type TaskCreateRequest struct {
 	// --filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.
 	//
 	TaskURL string `json:"taskURL,omitempty"`
+	// peer Pattern p2p or cdn
+	PeerPattern int32
 }
 
 // Validate validates this task create request

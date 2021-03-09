@@ -19,6 +19,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"net/http"
 
 	"github.com/go-openapi/strfmt"
@@ -113,7 +114,11 @@ func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http
 		return errors.Wrapf(errortypes.ErrSystemError, "failed to register peer: %v", err)
 	}
 	logrus.Infof("success to register peer %+v", peerCreateRequest)
-
+	DownloadPattern := config.P2pPattern
+	if request.Pattern == "cdn" || request.Port == 0 {
+		logrus.Infof("pattern is not p2p or peer port is 0,set pattern is cdn,peer %+v", peerCreateRequest)
+		DownloadPattern = config.CdnPattern
+	}
 	peerID := peerCreateResponse.ID
 	taskCreateRequest := &types.TaskCreateRequest{
 		CID:         request.CID,
@@ -127,6 +132,7 @@ func (s *Server) registry(ctx context.Context, rw http.ResponseWriter, req *http
 		RawURL:      request.RawURL,
 		TaskURL:     request.TaskURL,
 		SupernodeIP: request.SuperNodeIP,
+		PeerPattern: DownloadPattern,
 	}
 	s.originClient.RegisterTLSConfig(taskCreateRequest.RawURL, request.Insecure, request.RootCAs)
 	resp, err := s.TaskMgr.Register(ctx, taskCreateRequest)

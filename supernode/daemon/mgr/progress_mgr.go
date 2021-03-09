@@ -40,12 +40,15 @@ type PeerState struct {
 
 	// ServiceDownTime the down time of the peer service.
 	ServiceDownTime int64
+
+	// ServicePattern default 0 is p2p, 1 is cdn.
+	PeerPattern int32
 }
 
 // ProgressMgr is responsible for maintaining the correspondence between peer and pieces.
 type ProgressMgr interface {
 	// InitProgress inits the correlation information between peers and pieces, etc.
-	InitProgress(ctx context.Context, taskID, peerID, clientID string) error
+	InitProgress(ctx context.Context, taskID, peerID, clientID string, peerPattern int32) error
 
 	// UpdateProgress updates the correlation information between peers and pieces.
 	// 1. update the info about srcCID to tell the scheduler that corresponding peer has the piece now.

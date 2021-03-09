@@ -119,6 +119,9 @@ type TaskRegisterRequest struct {
 
 	// version number of dfget binary.
 	Version string `json:"version,omitempty"`
+
+	// Pattern download  must be p2p,cdn,source
+	Pattern string `json:"pattern,omitempty"`
 }
 
 // Validate validates this task register request

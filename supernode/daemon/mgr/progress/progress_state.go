@@ -17,6 +17,7 @@
 package progress
 
 import (
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"time"
 
 	"github.com/dragonflyoss/Dragonfly/pkg/atomiccount"
@@ -61,6 +62,9 @@ type peerState struct {
 
 	// serviceDownTime the down time of the peer service.
 	serviceDownTime int64
+
+	// ServicePattern default 0 is p2p, 1 is cdn.
+	peerPattern int32
 }
 
 type superLoadState struct {
@@ -89,6 +93,16 @@ func newPeerState() *peerState {
 		producerLoad:      atomiccount.NewAtomicInt(0),
 		clientErrorCount:  atomiccount.NewAtomicInt(0),
 		serviceErrorCount: atomiccount.NewAtomicInt(0),
+		peerPattern:       config.P2pPattern,
+	}
+}
+
+func newCdnPeerState() *peerState {
+	return &peerState{
+		producerLoad:      atomiccount.NewAtomicInt(0),
+		clientErrorCount:  atomiccount.NewAtomicInt(0),
+		serviceErrorCount: atomiccount.NewAtomicInt(0),
+		peerPattern:       config.CdnPattern,
 	}
 }
 

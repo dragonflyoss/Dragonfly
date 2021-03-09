@@ -95,7 +95,7 @@ func NewManager(cfg *config.Config) (*Manager, error) {
 }
 
 // InitProgress inits the correlation information between peers and pieces, etc.
-func (pm *Manager) InitProgress(ctx context.Context, taskID, peerID, clientID string) (err error) {
+func (pm *Manager) InitProgress(ctx context.Context, taskID, peerID, clientID string, peerPattern int32) (err error) {
 	// validate the param
 	if stringutils.IsEmptyStr(taskID) {
 		return errors.Wrap(errortypes.ErrEmptyValue, "taskID")
@@ -123,6 +123,10 @@ func (pm *Manager) InitProgress(ctx context.Context, taskID, peerID, clientID st
 			}
 		}
 	}()
+	if peerPattern != config.P2pPattern {
+		logrus.Infof("peer pattern not p2p taskID(%s),peerID(%s),clientID(%s)", taskID, peerID, clientID)
+		return pm.peerProgress.add(peerID, newCdnPeerState())
+	}
 
 	return pm.peerProgress.add(peerID, newPeerState())
 }
@@ -261,6 +265,7 @@ func (pm *Manager) GetPeerStateByPeerID(ctx context.Context, peerID string) (*mg
 		ClientErrorCount:  peerState.clientErrorCount,
 		ServiceErrorCount: peerState.serviceErrorCount,
 		ProducerLoad:      peerState.producerLoad,
+		PeerPattern:       peerState.peerPattern,
 	}, nil
 }
 
