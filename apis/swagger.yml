@@ -1263,7 +1263,7 @@ definitions:
       dstIP:
         type: "string"
         description: |
-          the peer ID of the target Peer.
+          the peer IP of the target Peer.
       range:
         type: "string"
         description: |
