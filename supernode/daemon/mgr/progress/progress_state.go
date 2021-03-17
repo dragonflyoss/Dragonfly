@@ -17,8 +17,9 @@
 package progress
 
 import (
-	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	"time"
+
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
 
 	"github.com/dragonflyoss/Dragonfly/pkg/atomiccount"
 	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
