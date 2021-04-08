@@ -6,6 +6,7 @@ package types
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
@@ -102,7 +103,7 @@ type TaskCreateRequest struct {
 	//
 	TaskURL string `json:"taskURL,omitempty"`
 	// peer Pattern p2p or cdn
-	PeerPattern int32 `json:"peerPattern,omitempty"`
+	PeerPattern config.Pattern `json:"peerPattern,omitempty"`
 }
 
 // Validate validates this task create request
