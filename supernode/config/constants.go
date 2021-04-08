@@ -138,7 +138,9 @@ const (
 )
 
 // Pattern
+type Pattern int32
+
 const (
-	P2pPattern = int32(0)
-	CdnPattern = int32(1)
+	P2pPattern = Pattern(0)
+	CdnPattern = Pattern(1)
 )

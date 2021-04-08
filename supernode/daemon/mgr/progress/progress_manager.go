@@ -95,7 +95,7 @@ func NewManager(cfg *config.Config) (*Manager, error) {
 }
 
 // InitProgress inits the correlation information between peers and pieces, etc.
-func (pm *Manager) InitProgress(ctx context.Context, taskID, peerID, clientID string, peerPattern int32) (err error) {
+func (pm *Manager) InitProgress(ctx context.Context, taskID, peerID, clientID string, peerPattern config.Pattern) (err error) {
 	// validate the param
 	if stringutils.IsEmptyStr(taskID) {
 		return errors.Wrap(errortypes.ErrEmptyValue, "taskID")

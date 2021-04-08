@@ -65,7 +65,7 @@ type peerState struct {
 	serviceDownTime int64
 
 	// ServicePattern default 0 is p2p, 1 is cdn.
-	peerPattern int32
+	peerPattern config.Pattern
 }
 
 type superLoadState struct {

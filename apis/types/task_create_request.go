@@ -102,7 +102,7 @@ type TaskCreateRequest struct {
 	//
 	TaskURL string `json:"taskURL,omitempty"`
 	// peer Pattern p2p or cdn
-	PeerPattern int32
+	PeerPattern int32 `json:"peerPattern,omitempty"`
 }
 
 // Validate validates this task create request
