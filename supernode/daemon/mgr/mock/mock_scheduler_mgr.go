@@ -13,30 +13,30 @@ import (
 	mgr "github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 )
 
-// MockSchedulerMgr is a mock of SchedulerMgr interface
+// MockSchedulerMgr is a mock of SchedulerMgr interface.
 type MockSchedulerMgr struct {
 	ctrl     *gomock.Controller
 	recorder *MockSchedulerMgrMockRecorder
 }
 
-// MockSchedulerMgrMockRecorder is the mock recorder for MockSchedulerMgr
+// MockSchedulerMgrMockRecorder is the mock recorder for MockSchedulerMgr.
 type MockSchedulerMgrMockRecorder struct {
 	mock *MockSchedulerMgr
 }
 
-// NewMockSchedulerMgr creates a new mock instance
+// NewMockSchedulerMgr creates a new mock instance.
 func NewMockSchedulerMgr(ctrl *gomock.Controller) *MockSchedulerMgr {
 	mock := &MockSchedulerMgr{ctrl: ctrl}
 	mock.recorder = &MockSchedulerMgrMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockSchedulerMgr) EXPECT() *MockSchedulerMgrMockRecorder {
 	return m.recorder
 }
 
-// Schedule mocks base method
+// Schedule mocks base method.
 func (m *MockSchedulerMgr) Schedule(ctx context.Context, taskID, clientID, peerID string) ([]*mgr.PieceResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Schedule", ctx, taskID, clientID, peerID)
@@ -45,7 +45,7 @@ func (m *MockSchedulerMgr) Schedule(ctx context.Context, taskID, clientID, peerI
 	return ret0, ret1
 }
 
-// Schedule indicates an expected call of Schedule
+// Schedule indicates an expected call of Schedule.
 func (mr *MockSchedulerMgrMockRecorder) Schedule(ctx, taskID, clientID, peerID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Schedule", reflect.TypeOf((*MockSchedulerMgr)(nil).Schedule), ctx, taskID, clientID, peerID)

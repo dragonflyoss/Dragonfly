@@ -14,75 +14,58 @@ import (
 	mgr "github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
 )
 
-// MockCDNMgr is a mock of CDNMgr interface
+// MockCDNMgr is a mock of CDNMgr interface.
 type MockCDNMgr struct {
 	ctrl     *gomock.Controller
 	recorder *MockCDNMgrMockRecorder
 }
 
-// MockCDNMgrMockRecorder is the mock recorder for MockCDNMgr
+// MockCDNMgrMockRecorder is the mock recorder for MockCDNMgr.
 type MockCDNMgrMockRecorder struct {
 	mock *MockCDNMgr
 }
 
-// NewMockCDNMgr creates a new mock instance
+// NewMockCDNMgr creates a new mock instance.
 func NewMockCDNMgr(ctrl *gomock.Controller) *MockCDNMgr {
 	mock := &MockCDNMgr{ctrl: ctrl}
 	mock.recorder = &MockCDNMgrMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockCDNMgr) EXPECT() *MockCDNMgrMockRecorder {
 	return m.recorder
 }
 
-// TriggerCDN mocks base method
-func (m *MockCDNMgr) TriggerCDN(ctx context.Context, taskInfo *types.TaskInfo) (*types.TaskInfo, error) {
+// CheckFile mocks base method.
+func (m *MockCDNMgr) CheckFile(ctx context.Context, taskID string) bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "TriggerCDN", ctx, taskInfo)
-	ret0, _ := ret[0].(*types.TaskInfo)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "CheckFile", ctx, taskID)
+	ret0, _ := ret[0].(bool)
+	return ret0
 }
 
-// TriggerCDN indicates an expected call of TriggerCDN
-func (mr *MockCDNMgrMockRecorder) TriggerCDN(ctx, taskInfo interface{}) *gomock.Call {
+// CheckFile indicates an expected call of CheckFile.
+func (mr *MockCDNMgrMockRecorder) CheckFile(ctx, taskID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TriggerCDN", reflect.TypeOf((*MockCDNMgr)(nil).TriggerCDN), ctx, taskInfo)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckFile", reflect.TypeOf((*MockCDNMgr)(nil).CheckFile), ctx, taskID)
 }
 
-// GetHTTPPath mocks base method
-func (m *MockCDNMgr) GetHTTPPath(ctx context.Context, taskInfo *types.TaskInfo) (string, error) {
+// Delete mocks base method.
+func (m *MockCDNMgr) Delete(ctx context.Context, taskID string, force bool) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetHTTPPath", ctx, taskInfo)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "Delete", ctx, taskID, force)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
-// GetHTTPPath indicates an expected call of GetHTTPPath
-func (mr *MockCDNMgrMockRecorder) GetHTTPPath(ctx, taskInfo interface{}) *gomock.Call {
+// Delete indicates an expected call of Delete.
+func (mr *MockCDNMgrMockRecorder) Delete(ctx, taskID, force interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHTTPPath", reflect.TypeOf((*MockCDNMgr)(nil).GetHTTPPath), ctx, taskInfo)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockCDNMgr)(nil).Delete), ctx, taskID, force)
 }
 
-// GetStatus mocks base method
-func (m *MockCDNMgr) GetStatus(ctx context.Context, taskID string) (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetStatus", ctx, taskID)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetStatus indicates an expected call of GetStatus
-func (mr *MockCDNMgrMockRecorder) GetStatus(ctx, taskID interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatus", reflect.TypeOf((*MockCDNMgr)(nil).GetStatus), ctx, taskID)
-}
-
-// GetGCTaskIDs mocks base method
+// GetGCTaskIDs mocks base method.
 func (m *MockCDNMgr) GetGCTaskIDs(ctx context.Context, taskMgr mgr.TaskMgr) ([]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetGCTaskIDs", ctx, taskMgr)
@@ -91,13 +74,28 @@ func (m *MockCDNMgr) GetGCTaskIDs(ctx context.Context, taskMgr mgr.TaskMgr) ([]s
 	return ret0, ret1
 }
 
-// GetGCTaskIDs indicates an expected call of GetGCTaskIDs
+// GetGCTaskIDs indicates an expected call of GetGCTaskIDs.
 func (mr *MockCDNMgrMockRecorder) GetGCTaskIDs(ctx, taskMgr interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGCTaskIDs", reflect.TypeOf((*MockCDNMgr)(nil).GetGCTaskIDs), ctx, taskMgr)
 }
 
-// GetPieceMD5 mocks base method
+// GetHTTPPath mocks base method.
+func (m *MockCDNMgr) GetHTTPPath(ctx context.Context, taskInfo *types.TaskInfo) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetHTTPPath", ctx, taskInfo)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetHTTPPath indicates an expected call of GetHTTPPath.
+func (mr *MockCDNMgrMockRecorder) GetHTTPPath(ctx, taskInfo interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHTTPPath", reflect.TypeOf((*MockCDNMgr)(nil).GetHTTPPath), ctx, taskInfo)
+}
+
+// GetPieceMD5 mocks base method.
 func (m *MockCDNMgr) GetPieceMD5(ctx context.Context, taskID string, pieceNum int, pieceRange, source string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPieceMD5", ctx, taskID, pieceNum, pieceRange, source)
@@ -106,36 +104,38 @@ func (m *MockCDNMgr) GetPieceMD5(ctx context.Context, taskID string, pieceNum in
 	return ret0, ret1
 }
 
-// GetPieceMD5 indicates an expected call of GetPieceMD5
+// GetPieceMD5 indicates an expected call of GetPieceMD5.
 func (mr *MockCDNMgrMockRecorder) GetPieceMD5(ctx, taskID, pieceNum, pieceRange, source interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPieceMD5", reflect.TypeOf((*MockCDNMgr)(nil).GetPieceMD5), ctx, taskID, pieceNum, pieceRange, source)
 }
 
-// CheckFile mocks base method
-func (m *MockCDNMgr) CheckFile(ctx context.Context, taskID string) bool {
+// GetStatus mocks base method.
+func (m *MockCDNMgr) GetStatus(ctx context.Context, taskID string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CheckFile", ctx, taskID)
-	ret0, _ := ret[0].(bool)
-	return ret0
+	ret := m.ctrl.Call(m, "GetStatus", ctx, taskID)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// CheckFile indicates an expected call of CheckFile
-func (mr *MockCDNMgrMockRecorder) CheckFile(ctx, taskID interface{}) *gomock.Call {
+// GetStatus indicates an expected call of GetStatus.
+func (mr *MockCDNMgrMockRecorder) GetStatus(ctx, taskID interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckFile", reflect.TypeOf((*MockCDNMgr)(nil).CheckFile), ctx, taskID)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatus", reflect.TypeOf((*MockCDNMgr)(nil).GetStatus), ctx, taskID)
 }
 
-// Delete mocks base method
-func (m *MockCDNMgr) Delete(ctx context.Context, taskID string, force bool) error {
+// TriggerCDN mocks base method.
+func (m *MockCDNMgr) TriggerCDN(ctx context.Context, taskInfo *types.TaskInfo) (*types.TaskInfo, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Delete", ctx, taskID, force)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret := m.ctrl.Call(m, "TriggerCDN", ctx, taskInfo)
+	ret0, _ := ret[0].(*types.TaskInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// Delete indicates an expected call of Delete
-func (mr *MockCDNMgrMockRecorder) Delete(ctx, taskID, force interface{}) *gomock.Call {
+// TriggerCDN indicates an expected call of TriggerCDN.
+func (mr *MockCDNMgrMockRecorder) TriggerCDN(ctx, taskInfo interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockCDNMgr)(nil).Delete), ctx, taskID, force)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TriggerCDN", reflect.TypeOf((*MockCDNMgr)(nil).TriggerCDN), ctx, taskInfo)
 }

@@ -6,6 +6,7 @@ package types
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
 	strfmt "github.com/go-openapi/strfmt"
 
 	"github.com/go-openapi/errors"
@@ -101,6 +102,8 @@ type TaskCreateRequest struct {
 	// --filter parameter of dfget. The usage of it is that different rawURL may generate the same taskID.
 	//
 	TaskURL string `json:"taskURL,omitempty"`
+	// peer Pattern p2p or cdn
+	PeerPattern config.Pattern `json:"peerPattern,omitempty"`
 }
 
 // Validate validates this task create request

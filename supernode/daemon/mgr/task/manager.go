@@ -153,7 +153,7 @@ func (tm *Manager) Register(ctx context.Context, req *types.TaskCreateRequest) (
 	}()
 
 	// Step4: init Progress
-	if err := tm.progressMgr.InitProgress(ctx, task.ID, req.PeerID, req.CID); err != nil {
+	if err := tm.progressMgr.InitProgress(ctx, task.ID, req.PeerID, req.CID, req.PeerPattern); err != nil {
 		return nil, err
 	}
 	logrus.Debugf("success to init progress for taskID: %s peerID: %s cID: %s", task.ID, req.PeerID, req.CID)

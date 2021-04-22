@@ -19,6 +19,8 @@ package mgr
 import (
 	"context"
 
+	"github.com/dragonflyoss/Dragonfly/supernode/config"
+
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/pkg/atomiccount"
 	"github.com/dragonflyoss/Dragonfly/pkg/syncmap"
@@ -40,12 +42,15 @@ type PeerState struct {
 
 	// ServiceDownTime the down time of the peer service.
 	ServiceDownTime int64
+
+	// ServicePattern default 0 is p2p, 1 is cdn.
+	PeerPattern config.Pattern
 }
 
 // ProgressMgr is responsible for maintaining the correspondence between peer and pieces.
 type ProgressMgr interface {
 	// InitProgress inits the correlation information between peers and pieces, etc.
-	InitProgress(ctx context.Context, taskID, peerID, clientID string) error
+	InitProgress(ctx context.Context, taskID, peerID, clientID string, peerPattern config.Pattern) error
 
 	// UpdateProgress updates the correlation information between peers and pieces.
 	// 1. update the info about srcCID to tell the scheduler that corresponding peer has the piece now.
