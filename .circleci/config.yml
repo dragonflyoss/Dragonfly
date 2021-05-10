@@ -119,7 +119,7 @@ jobs:
   # TODO(yeya24): Consider changing to use goreleaser to publish images later
   publish-images:
     docker:
-      - image: circleci/golang:1.12.10
+      - image: circleci/golang:1.13.15
     working_directory: /go/src/github.com/dragonflyoss/Dragonfly
     steps:
       - checkout
