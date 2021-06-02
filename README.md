@@ -86,7 +86,7 @@ Other active channels:
 - Dingtalk Group(钉钉群)
 
 <div align="center">
-  <img src="docs/images/df-dev-dingtalk.png" width="250" title="dingtalk">
+  <img src="docs/images/df-dev-dingtalk.jpg" width="250" title="dingtalk">
 </div>
 
 ## Contributing
