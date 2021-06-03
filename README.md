@@ -1,6 +1,7 @@
 # Dragonfly
-
-<strong><big><font color='red'>Welcome to Version</font> [2.X](https://github.com/dragonflyoss/Dragonfly2)</big></strong>
+[Join Dragonfly 2.0](https://github.com/dragonflyoss/Dragonfly2)
+====
+<br>
 
 [![License](https://img.shields.io/badge/license-Apache%202-brightgreen.svg)](https://github.com/dragonflyoss/Dragonfly/blob/master/LICENSE)
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fdragonflyoss%2FDragonfly.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fdragonflyoss%2FDragonfly?ref=badge_shield)
