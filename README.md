@@ -1,6 +1,6 @@
 # Dragonfly
 
-<font size=5> Welcome to Version [2.X](https://github.com/dragonflyoss/Dragonfly2) </font>
+<font size="5"> Welcome to Version <a href="https://github.com/dragonflyoss/Dragonfly2">2.X</a> </font>
 
 [![License](https://img.shields.io/badge/license-Apache%202-brightgreen.svg)](https://github.com/dragonflyoss/Dragonfly/blob/master/LICENSE)
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fdragonflyoss%2FDragonfly.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fdragonflyoss%2FDragonfly?ref=badge_shield)
