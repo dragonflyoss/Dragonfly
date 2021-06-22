@@ -37,7 +37,7 @@ require (
 	github.com/sirupsen/logrus v1.2.0
 	github.com/spf13/afero v1.6.0
 	github.com/spf13/cobra v0.0.0-20181021141114-fe5e611709b0
-	github.com/spf13/viper v1.5.0
+	github.com/spf13/viper v1.4.0
 	github.com/stretchr/testify v1.7.0
 	github.com/valyala/fasthttp v1.3.0
 	github.com/willf/bitset v0.0.0-20190228212526-18bd95f470f9
