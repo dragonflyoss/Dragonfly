@@ -20,34 +20,30 @@ require (
 	github.com/go-openapi/strfmt v0.0.0-20171222154016-4dd3d302e100
 	github.com/go-openapi/swag v0.0.0-20170606142751-f3f9494671f9
 	github.com/go-openapi/validate v0.0.0-20170705144413-8a82927c942c
-	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef
-	github.com/golang/mock v1.4.0
+	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
+	github.com/golang/mock v1.5.0
 	github.com/gorilla/context v0.0.0-20181012153548-51ce91d2eadd // indirect
 	github.com/gorilla/mux v1.5.0
 	github.com/gorilla/schema v1.1.0
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/mailru/easyjson v0.0.0-20170902151237-2a92e673c9a6 // indirect
-	github.com/mitchellh/mapstructure v1.1.2
+	github.com/mitchellh/mapstructure v1.4.1
 	github.com/openacid/low v0.1.10
 	github.com/pborman/uuid v0.0.0-20180122190007-c65b2f87fee3
-	github.com/pkg/errors v0.8.0
+	github.com/pkg/errors v0.8.1
 	github.com/prashantv/gostub v1.0.0
 	github.com/prometheus/client_golang v0.9.3
 	github.com/russross/blackfriday v0.0.0-20171011182219-6d1ef893fcb0 // indirect
 	github.com/sirupsen/logrus v1.2.0
-	github.com/spf13/afero v1.2.2
+	github.com/spf13/afero v1.6.0
 	github.com/spf13/cobra v0.0.0-20181021141114-fe5e611709b0
-	github.com/spf13/jwalterweatherman v1.1.0 // indirect
-	github.com/spf13/viper v1.8.0
-	github.com/stretchr/testify v1.3.0
+	github.com/spf13/viper v1.5.0
+	github.com/stretchr/testify v1.7.0
 	github.com/valyala/fasthttp v1.3.0
 	github.com/willf/bitset v0.0.0-20190228212526-18bd95f470f9
-	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550 // indirect
-	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
 	gopkg.in/gcfg.v1 v1.2.3
 	gopkg.in/mgo.v2 v2.0.0-20160818020120-3f83fa500528 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/warnings.v0 v0.1.2
-	gopkg.in/yaml.v2 v2.2.8
+	gopkg.in/yaml.v2 v2.4.0
 )
