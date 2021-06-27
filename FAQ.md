@@ -41,7 +41,7 @@ After finishing distributing file from other peers, `dfget` should do two kinds 
 - second, backup the unioned file(s) in a configured directory, by default "$HOME/.small-dragonfly/data" with a suffix of ".server";
 - third, move the original unioned file(s) to the destination path.
 
-**NOTE**: The supernode cannot manage the cached file which is already distributed to peer nodes at all. For  what will happen if the cached file on a peer is deleted, please refer to [What if you kill the dfget server process or delete the source files](#what-if-you-kill-the-dfget-server-process-or-delete-the-source-files)
+**NOTE**: The supernode cannot manage the cached file which is already distributed to peer nodes at all. For  what will happen if the cached file on a peer is deleted, please refer to [What if you kill the dfget server process or delete the source files](#what-will-happen-if-you-kill-the-dfget-server-process-or-delete-the-source-files)
 
 ## What is the sequence of supernode's CDN functionality
 
@@ -61,7 +61,7 @@ If the requested file has already been cached in supernode, supernode will send 
 
 In addition, supernode does not have to wait for all the piece downloading finished, so it can concurrently start pieces downloading once one piece has been downloaded.
 
-## What will happen  if you kill the dfget server process or delete the source files
+## What will happen if you kill the dfget server process or delete the source files
 
 If a file on a peer is deleted manually or by GC, the supernode won't know that. And in the subsequent scheduling, if multiple download tasks fail from this peer, the scheduler will add it to a blacklist. So do with that if the server process is killed or other abnormal conditions.
 
