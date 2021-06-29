@@ -33,7 +33,6 @@ require (
 	github.com/valyala/fasthttp v1.3.0
 	github.com/willf/bitset v0.0.0-20190228212526-18bd95f470f9
 	gopkg.in/gcfg.v1 v1.2.3
-	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/warnings.v0 v0.1.2
 	gopkg.in/yaml.v2 v2.4.0
