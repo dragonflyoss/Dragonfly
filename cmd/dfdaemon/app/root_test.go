@@ -87,7 +87,7 @@ func (ts *rootTestSuite) TestNodeFlag() {
 		r.NotNil(readConfigFile(v, rootCmd))
 		cfg, err := getConfigFromViper(rootCmd, v)
 		r.Nil(err)
-		r.EqualValues([]string(nil), cfg.SuperNodes)
+		r.EqualValues([]string{}, cfg.SuperNodes)
 	}
 
 	// when --node flag is set, should always use the flag
