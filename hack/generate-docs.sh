@@ -19,7 +19,7 @@ generate-cli-docs(){
     ${DFGET_BIN_PATH} gen-doc -p "${CLI_DOCS_DIR}" || return
     ${DFDAEMON_BIN_PATH} gen-doc -p "${CLI_DOCS_DIR}" || return
     ${SUPERNODE_BIN_PATH} gen-doc -p "${CLI_DOCS_DIR}" || return
-    echo "Generate: CLI docs in ${CLI_DOCS_DIR}" 
+    echo "Generate: CLI docs in ${CLI_DOCS_DIR}"
 }
 
 main () {
@@ -29,7 +29,7 @@ main () {
         ;;
         *)
             generate-cli-docs
-        ;;  
+        ;;
     esac
 }
 
