@@ -124,6 +124,9 @@ func NetLimit() *rate.Rate {
 
 // ExtractHost extracts host ip from the giving string.
 func ExtractHost(hostAndPort string) string {
+	if stringutils.IsEmptyStr(hostAndPort) {
+		return ""
+	}
 	fields := strings.Split(strings.TrimSpace(hostAndPort), ":")
 	return fields[0]
 }
