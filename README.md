@@ -1,1 +1,1 @@
-# Link to [Dragonfly 2.0](https://github.com/dragonflyoss/Dragonfly2)
+# Link to [Dragonfly 2.X](https://github.com/dragonflyoss/Dragonfly2)
