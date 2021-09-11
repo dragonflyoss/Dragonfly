@@ -25,7 +25,9 @@ import (
 
 // NewNotify creates Notify which implements basic.Notify.
 func NewNotify() *Notify {
-	return &Notify{}
+	return &Notify{
+		done: make(chan struct{}),
+	}
 }
 
 // Notify is an implementation of basic.Notify.
