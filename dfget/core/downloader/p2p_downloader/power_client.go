@@ -52,7 +52,7 @@ type PowerClient struct {
 	taskID string
 	// headers is the extra HTTP headers when downloading a piece.
 	headers []string
-	// node indicates the IP address of the currently registered supernode.
+	// node indicates the IP address[:port] of the currently registered supernode.
 	node string
 	// pieceTask is the data when successfully pulling piece task
 	// and the task is continuing.
@@ -119,7 +119,7 @@ func (pc *PowerClient) downloadPiece() (content *pool.Buffer, e error) {
 	peerPort := pc.pieceTask.PeerPort
 
 	// check that the target download peer is available
-	if dstIP != "" && dstIP != pc.node {
+	if dstIP != "" && dstIP != netutils.ExtractHost(pc.node) {
 		if _, e = httputils.CheckConnect(dstIP, peerPort, -1); e != nil {
 			return nil, e
 		}
