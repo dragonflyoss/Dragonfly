@@ -32,6 +32,7 @@ import (
 
 /* the url paths of supernode APIs*/
 const (
+	pingPath              = "/_ping"
 	peerRegisterPath      = "/peer/registry"
 	peerPullPieceTaskPath = "/peer/task"
 	peerReportPiecePath   = "/peer/piece/suc"
@@ -53,6 +54,7 @@ func NewSupernodeAPI() SupernodeAPI {
 
 // SupernodeAPI defines the communication methods between supernode and dfget.
 type SupernodeAPI interface {
+	Ping(node string) (reqIP string, e error)
 	Register(node string, req *types.RegisterRequest) (resp *types.RegisterResponse, e error)
 	PullPieceTask(node string, req *types.PullPieceTaskRequest) (resp *types.PullPieceTaskResponse, e error)
 	ReportPiece(node string, req *types.ReportPieceRequest) (resp *types.BaseResponse, e error)
@@ -73,6 +75,24 @@ type supernodeAPI struct {
 }
 
 var _ SupernodeAPI = &supernodeAPI{}
+
+// Ping sends a request to the supernode to check if suppernode is ok
+// and get request ip from supernode.
+func (api *supernodeAPI) Ping(node string) (reqIP string, e error) {
+	var (
+		code int
+		body []byte
+	)
+	url := fmt.Sprintf("%s://%s%s",
+		api.Scheme, node, pingPath)
+	if code, body, e = api.HTTPClient.Get(url, api.Timeout); e != nil {
+		return "", e
+	}
+	if !httputils.HTTPStatusOk(code) {
+		return "", fmt.Errorf("%d:%s", code, body)
+	}
+	return string(body), e
+}
 
 // Register sends a request to the supernode to register itself as a peer
 // and create downloading task.
