@@ -28,7 +28,7 @@ type SchedulePeerInfo struct {
 	Path string
 }
 
-// SchedulerResult defines the result of schedule of range data.
+// SchedulePieceDataResult defines the result of schedule of range data.
 type SchedulePieceDataResult struct {
 	Off  int64
 	Size int64
