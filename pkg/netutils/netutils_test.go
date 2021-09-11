@@ -181,6 +181,18 @@ func (suite *NetUtilSuite) TestIsValidIP(c *check.C) {
 			expected: true,
 		},
 		{
+			ip:       "FE80::0202:B3FF:FE1E:8329",
+			expected: true,
+		},
+		{
+			ip:       "fe80::1",
+			expected: true,
+		},
+		{
+			ip:       "::1",
+			expected: true,
+		},
+		{
 			ip:       "255.255.255.255",
 			expected: true,
 		},
