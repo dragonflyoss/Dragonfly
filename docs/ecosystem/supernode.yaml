@@ -1,0 +1,85 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: supernode
+  namespace: kube-system
+  labels:
+    app: supernode
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: supernode
+  template:
+    metadata:
+      labels:
+        app: supernode
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - ai-node-25
+      containers:
+      - name: supernode
+        image: 10.1.1.5/kube-system/supernode:1.0.6
+        imagePullPolicy: IfNotPresent
+        command:
+        - /root/start.sh
+        - --download-port=8001
+        ports:
+          - containerPort: 8001
+            hostPort: 8001
+            name: download-port
+          - containerPort: 8002
+            hostPort: 8002
+            name: harbor-port
+        volumeMounts:
+        - mountPath: /home/admin/supernode
+          name: supernode-data
+        resources:
+          limits:
+            cpu: 4000m
+            memory: 4096Mi
+          requests:
+            cpu: 1000m
+            memory: 1024Mi
+        readinessProbe:
+          tcpSocket:
+            port: 8001
+          initialDelaySeconds: 2
+          timeoutSeconds: 3
+          periodSeconds: 40
+          successThreshold: 1
+          failureThreshold: 3
+      volumes:
+      - name: supernode-data
+        hostPath:
+          path: /data/dragonfly/supernode
+      hostNetwork: true
+      hostPID: true
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: supernode
+  name: supernode-svc
+  namespace: kube-system
+spec:
+  ports:
+    - name:	download
+      port: 8001
+      protocol: TCP
+  type: ClusterIP
+  selector:
+    app: supernode
