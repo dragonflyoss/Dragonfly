@@ -32,8 +32,8 @@ type StorageBuilder func(conf string) (StorageDriver, error)
 // Register defines an interface to register a driver with specified name.
 // All drivers should call this function to register itself to the driverFactory.
 func Register(name string, builder StorageBuilder) {
-	var f plugins.Builder = func(conf string) (plugin plugins.Plugin, e error) {
-		return NewStore(name, builder, conf)
+	var f plugins.Builder = func(conf plugins.BuilderConfig) (plugin plugins.Plugin, e error) {
+		return NewStore(name, builder, conf.Conf)
 	}
 	plugins.RegisterPlugin(config.StoragePlugin, name, f)
 }

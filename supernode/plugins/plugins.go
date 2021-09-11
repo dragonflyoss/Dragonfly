@@ -44,7 +44,12 @@ func Initialize(cfg *config.Config) error {
 				return fmt.Errorf("cannot find builder to create plugin[%s][%s]",
 					pt, v.Name)
 			}
-			p, err := builder(v.Config)
+
+			c := &BuilderConfig{
+				Conf: v.Config,
+			}
+
+			p, err := builder(*c)
 			if err != nil {
 				return fmt.Errorf("failed to build plugin[%s][%s]: %v",
 					pt, v.Name, err)

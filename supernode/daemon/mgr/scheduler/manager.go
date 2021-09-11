@@ -37,6 +37,9 @@ func init() {
 
 var _ mgr.SchedulerMgr = &Manager{}
 
+// LocalScheduleDriver is a const of local schedule driver.
+const LocalScheduleDriver = "local"
+
 // Manager is an implement of the interface of SchedulerMgr.
 type Manager struct {
 	cfg         *config.Config
@@ -44,7 +47,7 @@ type Manager struct {
 }
 
 // NewManager returns a new Manager.
-func NewManager(cfg *config.Config, progressMgr mgr.ProgressMgr) (*Manager, error) {
+func NewLocalManager(cfg *config.Config, progressMgr mgr.ProgressMgr) (mgr.SchedulerMgr, error) {
 	return &Manager{
 		cfg:         cfg,
 		progressMgr: progressMgr,

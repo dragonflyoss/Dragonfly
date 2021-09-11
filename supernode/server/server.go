@@ -90,7 +90,11 @@ func New(cfg *config.Config, logger *logrus.Logger, register prometheus.Register
 		return nil, err
 	}
 
-	schedulerMgr, err := scheduler.NewManager(cfg, progressMgr)
+	schedulerDriver, err := scheduler.NewScheduleDriverManager(cfg, progressMgr)
+	if err != nil {
+		return nil, err
+	}
+	schedulerMgr, err := schedulerDriver.Get(scheduler.LocalScheduleDriver)
 	if err != nil {
 		return nil, err
 	}
