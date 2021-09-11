@@ -19,7 +19,7 @@ import (
 // swagger:model PieceErrorRequest
 type PieceErrorRequest struct {
 
-	// the peer ID of the target Peer.
+	// the peer IP of the target Peer.
 	//
 	DstIP string `json:"dstIP,omitempty"`
 

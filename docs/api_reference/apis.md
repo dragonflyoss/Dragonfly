@@ -981,7 +981,7 @@ Peer's detailed information in supernode.
 
 |Name|Description|Schema|
 |---|---|---|
-|**dstIP**  <br>*optional*|the peer ID of the target Peer.|string|
+|**dstIP**  <br>*optional*|the peer IP of the target Peer.|string|
 |**dstPid**  <br>*optional*|the peer ID of the target Peer.|string|
 |**errorType**  <br>*optional*|the error type when failed to download from supernode that dfget will report to supernode|enum (FILE_NOT_EXIST, FILE_MD5_NOT_MATCH)|
 |**expectedMd5**  <br>*optional*|the MD5 value of piece which returned by the supernode that<br>in order to verify the correctness of the piece content which<br>downloaded from the other peers.|string|
