@@ -114,6 +114,11 @@ type Properties struct {
 	LocalIP    string          `yaml:"localIP" json:"localIP"`
 	PeerPort   int             `yaml:"peerPort" json:"peerPort"`
 	StreamMode bool            `yaml:"streamMode" json:"streamMode"`
+
+	ProtocolConf []ProtocolConfig `yaml:"protocolConf" json:"protocolConf"`
+	// DefaultDownloadMode is the default pattern.
+	DefaultDownloadMode string           `yaml:"defaultDownloadMode" json:"defaultDownloadMode"`
+	DownloadConf        []DownloadConfig `yaml:"downloadConf" json:"downloadConf"`
 }
 
 // Validate validates the config
@@ -412,4 +417,16 @@ func NewProxy(regx string, useHTTPS bool, direct bool, redirect string) (*Proxy,
 // Match checks if the given url matches the rule.
 func (r *Proxy) Match(url string) bool {
 	return r.Regx != nil && r.Regx.MatchString(url)
+}
+
+// ProtocolConfig is the config of url protocol.
+type ProtocolConfig struct {
+	Name string `yaml:"name" json:"name"`
+	// Opts defines the opts for protocol, such as tls config.
+	Opts map[string]interface{} `yaml:"opts" json:"opts"`
+}
+
+type DownloadConfig struct {
+	Name string                 `yaml:"name" json:"name"`
+	Opts map[string]interface{} `yaml:"opts" json:"opts"`
 }
