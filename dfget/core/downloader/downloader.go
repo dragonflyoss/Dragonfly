@@ -53,7 +53,12 @@ func DoDownloadTimeout(downloader Downloader, timeout time.Duration) error {
 
 	var ch = make(chan error)
 	go func() {
-		ch <- downloader.Run(ctx)
+		select {
+		case <- ctx.Done():
+			return
+		case ch <- downloader.Run(ctx):
+			return
+		}
 	}()
 	defer cancel()
 
