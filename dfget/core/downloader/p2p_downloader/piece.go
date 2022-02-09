@@ -83,6 +83,7 @@ func (p *Piece) IncWriter() {
 
 // RawContent returns raw contents,
 // If the piece has wrapper, and the piece content will remove the head and tail.
+// 返回去掉头尾的原始数据
 func (p *Piece) RawContent(noWrapper bool) *bytes.Buffer {
 	contents := p.Content.Bytes()
 	length := len(contents)
@@ -111,7 +112,7 @@ func (p *Piece) String() string {
 	return ""
 }
 
-// ResetContent reset contents and returns it back to buffer pool.
+// TryResetContent reset contents and returns it back to buffer pool.
 func (p *Piece) TryResetContent() {
 	if atomic.AddInt32(&p.writerNum, -1) > 0 {
 		return

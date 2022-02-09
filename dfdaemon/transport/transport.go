@@ -42,6 +42,7 @@ var (
 // DFRoundTripper implements RoundTripper for dfget.
 // It uses http.fileTransport to serve requests that need to use dfget,
 // and uses http.Transport to serve the other requests.
+// 使用 http.fileTransport 来处理需要使用 dfget 的请求， 使用 http.Transport 处理其他请求
 type DFRoundTripper struct {
 	Round            *http.Transport
 	Round2           http.RoundTripper
@@ -133,6 +134,7 @@ func WithCondition(c func(r *http.Request) bool) Option {
 // RoundTrip only process first redirect at present
 // fix resource release
 func (roundTripper *DFRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	// 如果需要使用 dfget 下载
 	if roundTripper.ShouldUseDfget(req) {
 		// delete the Accept-Encoding header to avoid returning the same cached
 		// result for different requests
@@ -198,7 +200,7 @@ func (roundTripper *DFRoundTripper) downloadByStream(ctx context.Context, url st
 	return resp, nil
 }
 
-// needUseGetter is the default value for ShouldUseDfget, which downloads all
+// NeedUseGetter is the default value for ShouldUseDfget, which downloads all
 // images layers with dfget.
 func NeedUseGetter(req *http.Request) bool {
 	return req.Method == http.MethodGet && layerReg.MatchString(req.URL.Path)

@@ -68,7 +68,7 @@ type P2PDownloader struct {
 	taskID string
 	// targetFile indicates the full target path whose value is equal to the `Output`.
 	targetFile string
-	// taskFileName is a string composed of `the last element of RealTarget path + "-" + sign`.
+	// taskFileName is a string composed of `the last element of RealTarget path + "-" + sign`.  example -output=xxx  task_file_name=xxx-sign
 	taskFileName string
 	// headers is the extra HTTP headers when downloading the task.
 	headers []string
@@ -222,9 +222,11 @@ func (p2p *P2PDownloader) run(ctx context.Context, pieceWriter PieceWriter) erro
 			}
 		} else {
 			code := response.Code
+			// 601
 			if code == constants.CodePeerContinue {
 				p2p.processPiece(response, &curItem)
 			} else if code == constants.CodePeerFinish {
+				// 600
 				if p2p.cfg.Md5 == "" {
 					p2p.cfg.Md5 = response.FinishData().Md5
 				}
@@ -232,9 +234,11 @@ func (p2p *P2PDownloader) run(ctx context.Context, pieceWriter PieceWriter) erro
 			} else {
 				logrus.Warnf("request piece result:%v", response)
 				if code == constants.CodePeerWait {
+					// 602
 					continue
 				}
 				if code == constants.CodeSourceError {
+					// 610
 					p2p.cfg.BackSourceReason = config.BackSourceReasonSourceError
 				}
 			}
@@ -280,13 +284,15 @@ func (p2p *P2PDownloader) pullPieceTask(item *Piece) (
 			logrus.Errorf("failed to pull piece task(%+v): %v", item, err)
 			break
 		}
+		// 如果不是让客户端等待，则跳出循环
 		if res.Code != constants.CodePeerWait {
 			break
 		}
+		// 如果当前待下载的任务 > 0 也跳出循环
 		if p2p.queue.Len() > 0 {
 			break
 		}
-
+		// 如果当前返回的是 CodePeerWait 状态而且待下载任务数量为0，则等一会在请求
 		actual, expected := p2p.sleepInterval()
 		if expected > actual || logrus.IsLevelEnabled(logrus.DebugLevel) {
 			logrus.Infof("pull piece task(%+v) result:%s and sleep actual:%.3fs expected:%.3fs",
@@ -372,6 +378,7 @@ func (p2p *P2PDownloader) getPullRate(data *types.PullPieceTaskResponseContinueD
 	p2p.rateLimiter.SetRate(ratelimiter.TransRate(int64(reqRate)))
 }
 
+// 开始分片下载流程
 func (p2p *P2PDownloader) startTask(data *types.PullPieceTaskResponseContinueData) {
 	powerClient := &PowerClient{
 		taskID:      p2p.taskID,
@@ -405,7 +412,9 @@ func (p2p *P2PDownloader) getItem(latestItem *Piece) (bool, *Piece) {
 			item.SuperNode = p2p.node
 			item.TaskID = p2p.taskID
 		}
+		// 初始化时放入的 item Range 是空字符串
 		if item.Range != "" {
+			// 正常的 item
 			v, ok := p2p.pieceSet[item.Range]
 			if !ok {
 				logrus.Warnf("pieceRange:%s is neither running nor success", item.Range)
@@ -413,9 +422,11 @@ func (p2p *P2PDownloader) getItem(latestItem *Piece) (bool, *Piece) {
 			}
 			if !v && (item.Result == constants.ResultSemiSuc ||
 				item.Result == constants.ResultSuc) {
+				// 如果当前分片已经下载成功，但是 pieceSet 中的状态还没有更新，则更新状态
 				p2p.total += item.ContentLength()
 				p2p.pieceSet[item.Range] = true
 			} else if !v {
+				// 如果当前分片还在处理中同时是失败的状态，则从 pieceSet 删除
 				delete(p2p.pieceSet, item.Range)
 			}
 		}
@@ -438,12 +449,15 @@ func (p2p *P2PDownloader) getItem(latestItem *Piece) (bool, *Piece) {
 			runningCount++
 		}
 	}
+	// lastItem 是半成功状态时 needMerge 为true
 	if needMerge && (p2p.queue.Len() > 0 || runningCount > 2) {
+		// 如果需要合并，并且待下载的任务 > 0 或者当前正在下载的任务数量 > 2
 		return false, latestItem
 	}
 	return true, latestItem
 }
 
+// 处理从 超级节点 拉取到的分片
 func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 	item *Piece) {
 	var (
@@ -455,16 +469,19 @@ func (p2p *P2PDownloader) processPiece(response *types.PullPieceTaskResponse,
 	data := response.ContinueData()
 	logrus.Debugf("pieces to be processed:%v", data)
 	for _, pieceTask := range data {
+		// 遍历分片任务
 		pieceRange := pieceTask.Range
 		v, ok := p2p.pieceSet[pieceRange]
 		if ok && v {
 			alreadyDownload = append(alreadyDownload, pieceRange)
 			alreadyDownloadedPiece := NewPiece(p2p.taskID, p2p.node, pieceTask.Cid, pieceRange, constants.ResultSemiSuc, constants.TaskStatusRunning, p2p.RegisterResult.CDNSource)
 			p2p.queue.Put(alreadyDownloadedPiece)
+			// 客户端已经下载成功，上报的分片是半成功状态
 			go sendSuccessPiece(p2p.API, p2p.cfg.RV.Cid, alreadyDownloadedPiece, 0, p2p.notifyQueue)
 			continue
 		}
 		if !ok {
+			// 将分片状态设置成处理中
 			p2p.pieceSet[pieceRange] = false
 			p2p.getPullRate(pieceTask)
 			go p2p.startTask(pieceTask)

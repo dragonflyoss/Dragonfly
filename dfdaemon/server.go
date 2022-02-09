@@ -100,6 +100,7 @@ func New(opts ...Option) (*Server, error) {
 
 // NewFromConfig returns a new server instance from given configuration.
 func NewFromConfig(cfg config.Properties) (*Server, error) {
+	// 根据 cfg 创建 proxy
 	p, err := proxy.NewFromConfig(cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "create proxy")

@@ -171,6 +171,7 @@ func (pm *Manager) updatePeerProgress(taskID, srcPID, dstPID string, pieceNum, p
 	return nil
 }
 
+// 更新 srcPID 的白名单
 func (pm *Manager) updateBlackInfo(srcPID, dstPID string) error {
 	// update black List
 	blackList, err := pm.clientBlackInfo.GetAsMap(srcPID)
@@ -184,7 +185,7 @@ func (pm *Manager) updateBlackInfo(srcPID, dstPID string) error {
 			return err
 		}
 	}
-
+	// 更新 srcPID 到 dstPID 的失败次数
 	v, err := blackList.GetAsAtomicInt(dstPID)
 	if err == nil {
 		v.Add(1)

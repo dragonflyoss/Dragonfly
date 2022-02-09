@@ -81,6 +81,7 @@ type ClientWriter struct {
 	// acrossWrite indicates whether the target file location and temporary file location cross file systems.
 	// If that, the value is true. And vice versa.
 	// We judge this by trying to make a hard link.
+	// 表示目标文件和临时文件路径是否跨文件系统，如果不在同一个磁盘上 acrossWrite 为 true
 	acrossWrite bool
 	// p2pPattern records whether the pattern equals "p2p".
 	p2pPattern bool
@@ -235,6 +236,7 @@ func (cw *ClientWriter) write(piece *Piece) error {
 func writePieceToFile(piece *Piece, file *os.File, cdnSource apiTypes.CdnSource) error {
 	var pieceHeader = 5
 	// the piece is not wrapped with source cdn type
+	// 如果是直接从源下载，则 piece 数据没有封装信息
 	noWrapper := (cdnSource == apiTypes.CdnSourceSource)
 	if noWrapper {
 		pieceHeader = 0
@@ -256,6 +258,7 @@ func startSyncWriter(q queue.Queue) queue.Queue {
 	return nil
 }
 
+// 向超级节点上报分片成功请求
 func sendSuccessPiece(api api.SupernodeAPI, cid string, piece *Piece, cost time.Duration, notifyQueue queue.Queue) {
 	reportPieceRequest := &types.ReportPieceRequest{
 		TaskID:     piece.TaskID,

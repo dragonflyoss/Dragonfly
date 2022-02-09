@@ -129,6 +129,7 @@ func (pm *Manager) InitProgress(ctx context.Context, taskID, peerID, clientID st
 
 // UpdateProgress updates the correlation information between peers and pieces.
 // NOTE: What if the update failed?
+// 更新分片状态
 func (pm *Manager) UpdateProgress(ctx context.Context, taskID, srcCID, srcPID, dstPID string, pieceNum, pieceStatus int) error {
 	if stringutils.IsEmptyStr(taskID) {
 		return errors.Wrap(errortypes.ErrEmptyValue, "taskID")

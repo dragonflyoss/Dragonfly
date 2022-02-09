@@ -204,6 +204,7 @@ type Proxy struct {
 }
 
 func (proxy *Proxy) mirrorRegistry(w http.ResponseWriter, r *http.Request) {
+	// 创建反向代理
 	reverseProxy := httputil.NewSingleHostReverseProxy(proxy.registry.Remote.URL)
 	t, err := transport.New(
 		transport.WithDownloader(proxy.downloadFactory()),

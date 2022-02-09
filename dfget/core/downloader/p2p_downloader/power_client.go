@@ -84,9 +84,10 @@ type PowerClient struct {
 }
 
 // Run starts run the task.
+// 下载分片数据内容，分片状态设置成半成功状态 ResultSemiSuc，同时将分片添加到待写盘队列
 func (pc *PowerClient) Run() error {
 	startTime := time.Now()
-
+	// 下载分片数据内容
 	content, err := pc.downloadPiece()
 
 	timeDuring := time.Since(startTime).Seconds()
@@ -104,6 +105,7 @@ func (pc *PowerClient) Run() error {
 	}
 
 	piece := pc.successPiece(content)
+	// 将分片写入待写磁盘队列
 	pc.clientQueue.Put(piece)
 	pc.queue.Put(piece)
 	return nil
