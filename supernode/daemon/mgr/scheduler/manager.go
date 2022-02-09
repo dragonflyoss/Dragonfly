@@ -237,7 +237,11 @@ func (sm *Manager) tryGetPID(ctx context.Context, taskID string, pieceNum int, s
 				continue
 			}
 		}
-
+		//if the cdn  pattern  ,try the next one
+		if peerState.PeerPattern != config.P2pPattern {
+			logrus.Debugf("scheduler: it is not p2p pattern taskID(%s) peerID(%s): %v", taskID, peerIDs[i], err)
+			continue
+		}
 		// if the v is in the blackList, try the next one.
 		blackInfo, err := sm.progressMgr.GetBlackInfoByPeerID(ctx, srcPID)
 		if err != nil && !errortypes.IsDataNotFound(err) {

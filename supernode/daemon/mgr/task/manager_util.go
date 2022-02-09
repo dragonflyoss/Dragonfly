@@ -276,7 +276,7 @@ func (tm *Manager) initCdnNode(ctx context.Context, task *types.TaskInfo) error 
 		return errors.Wrapf(err, "failed to add cdn dfgetTask for taskID %s", task.ID)
 	}
 
-	return tm.progressMgr.InitProgress(ctx, task.ID, pid, cid)
+	return tm.progressMgr.InitProgress(ctx, task.ID, pid, cid, config.P2pPattern)
 }
 
 func (tm *Manager) processTaskStart(ctx context.Context, srcCID string, task *types.TaskInfo, dfgetTask *types.DfGetTask) (bool, interface{}, error) {
@@ -344,6 +344,9 @@ func (tm *Manager) parseAvailablePeers(ctx context.Context, clientID string, tas
 		finishInfo := make(map[string]interface{})
 		finishInfo["md5"] = task.RealMd5
 		finishInfo["fileLength"] = task.FileLength
+		//if cdn source ,update  peer service down
+		tm.processPeerPatternCdn(ctx, dfgetTask.PeerID)
+
 		return true, finishInfo, nil
 	}
 
@@ -565,4 +568,20 @@ func (tm *Manager) getHTTPFileLength(taskID, url string, headers map[string]stri
 	}
 
 	return fileLength, nil
+}
+func (tm *Manager) processPeerPatternCdn(ctx context.Context, peerID string) {
+	peerInfo, _ := tm.peerMgr.Get(ctx, peerID)
+	peerState, err := tm.progressMgr.GetPeerStateByPeerID(ctx, peerID)
+	if err != nil {
+		logrus.Warnf("scheduler: failed to GetPeerStateByPeerID peerID(%s): %v", peerID, err)
+		return
+	}
+	if peerState.PeerPattern == config.CdnPattern || peerInfo.Port == 0 {
+		logrus.Debugf("cdn pattern finish will update peer service down peerID(%s)", peerID)
+		if err := tm.progressMgr.UpdatePeerServiceDown(ctx, peerID); err != nil {
+			logrus.Errorf("failed to update peer  service down "+
+				" peerID(%s),err %+v", peerID, err)
+		}
+
+	}
 }

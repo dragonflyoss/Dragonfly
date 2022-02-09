@@ -136,3 +136,11 @@ const (
 	// unit: MB/s
 	DefaultMaxBandwidth = 200 * rate.MB
 )
+
+// Pattern
+type Pattern int32
+
+const (
+	P2pPattern = Pattern(0)
+	CdnPattern = Pattern(1)
+)
