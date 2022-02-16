@@ -102,6 +102,11 @@ func initDfdaemon(cfg *config.Properties) error {
 
 	if !cfg.StreamMode {
 		dfgetVersion, err := exec.Command(cfg.DFPath, "version").CombinedOutput()
+		if err == nil {
+			logrus.Infof("use %s from %s", bytes.TrimSpace(dfgetVersion), cfg.DFPath)
+			return nil
+		}
+		dfgetVersion, err = exec.Command(cfg.DFPath, "-v").CombinedOutput()
 		if err != nil {
 			return errors.Wrap(err, "get dfget version")
 		}
