@@ -86,7 +86,7 @@ const (
 	PieceHeadSize = 4
 
 	// PieceTailSize every piece ends with a piece tail which has 1 byte,
-	// its value is: 0x7f
+	// its value is: 0x7ftask_register_request.
 	PieceTailSize = 1
 
 	// PieceMetaSize piece meta is constructed with piece head and tail,
