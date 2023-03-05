@@ -16,10 +16,10 @@
 package preheat
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -28,6 +28,7 @@ import (
 
 	"github.com/dragonflyoss/Dragonfly/apis/types"
 	"github.com/dragonflyoss/Dragonfly/supernode/daemon/mgr"
+	"github.com/sirupsen/logrus"
 )
 
 func init() {
@@ -43,6 +44,10 @@ type ImagePreheat struct {
 func (p *ImagePreheat) Type() string {
 	return "image"
 }
+
+const (
+	timeout = 1 * time.Minute
+)
 
 /**
  * Create a worker to preheat the task.
@@ -153,7 +158,13 @@ func (w *ImageWorker) getLayers(url string, header map[string]string, retryIfUnA
 	for k, v := range header {
 		req.Header.Add(k, v)
 	}
-	resp, err := http.DefaultClient.Do(req)
+	client := &http.Client {
+		Timeout: timeout,
+		Transport: &http.Transport {
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return
 	}
