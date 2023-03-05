@@ -58,15 +58,26 @@ func (s *PowerClientTestSuite) TearDownTest(c *check.C) {
 }
 
 func (s *PowerClientTestSuite) TestDownloadPiece(c *check.C) {
-	// dstIP != pc.node && CheckConnect Fail
+	// dstIP != pc.node && pc.pieceTask.Path != pc.cfg.URL && CheckConnect Fail
 	s.powerClient.pieceTask.PeerIP = "127.0.0.2"
 	content, err := s.powerClient.downloadPiece()
 	c.Check(content, check.IsNil)
 	c.Check(err, check.NotNil)
 	s.reset()
 
-	// dstIP != pc.node && CheckConnect Success && Download Fail
+	// dstIP != pc.node && pc.pieceTask.Path != pc.cfg.URL && CheckConnect Success && Download Fail
 	s.powerClient.node = "127.0.0.2"
+	downloadMock = func() (*http.Response, error) {
+		return nil, fmt.Errorf("error")
+	}
+	content, err = s.powerClient.downloadPiece()
+	c.Check(content, check.IsNil)
+	c.Check(err, check.DeepEquals, fmt.Errorf("error"))
+	s.reset()
+
+	// dstIP != pc.node && pc.pieceTask.Path == pc.cfg.URL && Download Fail
+	s.powerClient.node = "127.0.0.3"
+	s.powerClient.pieceTask.Path = s.powerClient.cfg.URL
 	downloadMock = func() (*http.Response, error) {
 		return nil, fmt.Errorf("error")
 	}
@@ -162,7 +173,7 @@ func (s *PowerClientTestSuite) TestReadBody(c *check.C) {
 
 func (s *PowerClientTestSuite) reset() {
 	s.powerClient = &PowerClient{
-		cfg:         &config.Config{RV: config.RuntimeVariable{Cid: ""}},
+		cfg:         &config.Config{RV: config.RuntimeVariable{Cid: ""}, URL: "http://127.0.0.1/"},
 		node:        "127.0.0.1",
 		rateLimiter: ratelimiter.NewRateLimiter(int64(5), 2),
 		downloadAPI: NewMockDownloadAPI(),
