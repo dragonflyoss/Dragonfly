@@ -44,6 +44,8 @@ const (
 	// DFDaemonEnvPrefix is the default environment prefix for Viper.
 	// Both BindEnv and AutomaticEnv will use this prefix.
 	DFDaemonEnvPrefix = "dfdaemon"
+
+	DefaultDownloadMode = "p2p"
 )
 
 var rootCmd = &cobra.Command{
@@ -201,6 +203,10 @@ func getConfigFromViper(cmd *cobra.Command, v *viper.Viper) (*config.Properties,
 	// use `{WorkHome}/dfdaemon/data/` as repo dir if localrepo is not configured.
 	if cfg.DFRepo == "" {
 		cfg.DFRepo = filepath.Join(cfg.WorkHome, "dfdaemon/data/")
+	}
+
+	if cfg.DefaultDownloadMode == "" {
+		cfg.DefaultDownloadMode = DefaultDownloadMode
 	}
 
 	return &cfg, cfg.Validate()
