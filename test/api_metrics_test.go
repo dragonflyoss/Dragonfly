@@ -69,8 +69,8 @@ func (s *APIMetricsSuite) TestHttpMetrics(c *check.C) {
 	// Get httpRequest counter value equals 1.
 	CheckMetric(c, fmt.Sprintf(requestCounter, 200, "/_ping"), 1)
 
-	// Get httpResponse size sum value equals 2.
-	CheckMetric(c, fmt.Sprintf(responseSizeSum, "/_ping"), 2)
+	// Get httpResponse size sum value equals 9(127.0.0.1).
+	CheckMetric(c, fmt.Sprintf(responseSizeSum, "/_ping"), 9)
 
 	// Get httpResponse size count value equals 1.
 	CheckMetric(c, fmt.Sprintf(responseSizeCount, "/_ping"), 1)

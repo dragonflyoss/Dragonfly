@@ -103,6 +103,8 @@ func CreateRandomString(cap int) string {
 // ----------------------------------------------------------------------------
 // MockSupernodeAPI
 
+type PingFuncType func(ip string) (string, error)
+
 // RegisterFuncType function type of SupernodeAPI#Register
 type RegisterFuncType func(ip string, req *types.RegisterRequest) (*types.RegisterResponse, error)
 
@@ -123,6 +125,7 @@ type ReportMetricsFuncType func(node string, req *api_types.TaskMetricsRequest) 
 
 // MockSupernodeAPI mocks the SupernodeAPI.
 type MockSupernodeAPI struct {
+	PingFunc          PingFuncType
 	RegisterFunc      RegisterFuncType
 	PullFunc          PullFuncType
 	ReportFunc        ReportFuncType
@@ -132,6 +135,14 @@ type MockSupernodeAPI struct {
 }
 
 var _ api.SupernodeAPI = &MockSupernodeAPI{}
+
+// Ping implements SupernodeAPI#Ping.
+func (m *MockSupernodeAPI) Ping(node string) (reqIP string, err error) {
+	if m.PingFunc != nil {
+		return m.PingFunc(node)
+	}
+	return "127.0.0.1", nil
+}
 
 // Register implements SupernodeAPI#Register.
 func (m *MockSupernodeAPI) Register(ip string, req *types.RegisterRequest) (
