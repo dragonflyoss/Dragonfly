@@ -121,7 +121,7 @@ func (client *OriginClient) RegisterTLSConfig(rawURL string, insecure bool, caBl
 // GetContentLength sends a head request to get file length.
 func (client *OriginClient) GetContentLength(url string, headers map[string]string) (int64, int, error) {
 	// send request
-	resp, err := client.HTTPWithHeaders(http.MethodGet, url, headers, 4*time.Second)
+	resp, err := client.HTTPWithHeaders(http.MethodHead, url, headers, 4*time.Second)
 	if err != nil {
 		return 0, 0, err
 	}
