@@ -18,7 +18,6 @@ package server
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"math/rand"
 	"net"
 	"net/http"
@@ -59,8 +58,7 @@ type RouterTestSuite struct {
 func (rs *RouterTestSuite) SetUpSuite(c *check.C) {
 	port := rand.Intn(1000) + 63000
 	rs.addr = "127.0.0.1:" + strconv.Itoa(port)
-	tmpDir, err := ioutil.TempDir("/tmp", "supernode-routerTestSuite-")
-	c.Check(err, check.IsNil)
+	tmpDir := c.MkDir()
 
 	testConf := &config.Config{
 		BaseProperties: &config.BaseProperties{
