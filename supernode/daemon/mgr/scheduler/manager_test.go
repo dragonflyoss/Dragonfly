@@ -52,7 +52,10 @@ func (s *SchedulerMgrTestSuite) SetUpSuite(c *check.C) {
 
 	cfg := config.NewConfig()
 	cfg.SetSuperPID("fooPid")
-	s.manager, _ = NewManager(cfg, s.mockProgressMgr)
+	s.manager = &Manager{
+		cfg:         cfg,
+		progressMgr: s.mockProgressMgr,
+	}
 }
 
 func (s *SchedulerMgrTestSuite) TearDownSuite(c *check.C) {

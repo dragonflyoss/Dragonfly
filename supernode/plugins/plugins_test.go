@@ -84,7 +84,7 @@ func (s *PluginsTestSuite) TestInitialize(c *check.C) {
 		errMsg := "build error"
 		name := "test"
 		var createBuilder = func(err bool) Builder {
-			return func(conf string) (plugin Plugin, e error) {
+			return func(buildConf BuilderConfig) (plugin Plugin, e error) {
 				if err {
 					return nil, fmt.Errorf(errMsg)
 				}
@@ -112,7 +112,7 @@ func (s *PluginsTestSuite) TestInitialize(c *check.C) {
 }
 
 func (s *PluginsTestSuite) TestManagerIml_Builder(c *check.C) {
-	var builder Builder = func(conf string) (plugin Plugin, e error) {
+	var builder Builder = func(builderConf BuilderConfig) (plugin Plugin, e error) {
 		return nil, nil
 	}
 	manager := NewManager()
