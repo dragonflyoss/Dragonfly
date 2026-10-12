@@ -257,6 +257,21 @@ func TestHostManager_Load(t *testing.T) {
 			},
 		},
 		{
+			name: "missing cpu_process_percent and memory_process_used_percent default to zero",
+			mock: func(mock redismock.ClientMock) {
+				fields := mockRawHostFields(mockRawHost.ID)
+				delete(fields, "cpu_process_percent")
+				delete(fields, "memory_process_used_percent")
+				mock.ExpectHGetAll(pkgredis.MakePersistentHostKeyInScheduler(1, mockRawHost.ID)).SetVal(fields)
+			},
+			expect: func(t *testing.T, host *Host, loaded bool) {
+				assert := assert.New(t)
+				assert.True(loaded)
+				assert.Equal(float64(0), host.CPU.ProcessPercent)
+				assert.Equal(float64(0), host.Memory.ProcessUsedPercent)
+			},
+		},
+		{
 			name: "invalid port value",
 			mock: func(mock redismock.ClientMock) {
 				fields := mockRawHostFields(mockRawHost.ID)
@@ -1180,6 +1195,43 @@ func TestHostManager_RunGC(t *testing.T) {
 				mock.ExpectSScan(pkgredis.MakePersistentHostsInScheduler(1), 0, "*", 10).SetVal([]string{"host1"}, 0)
 				mock.ExpectHGetAll(pkgredis.MakePersistentHostKeyInScheduler(1, "host1")).SetVal(fields)
 				mockDeleteHostScript(mock, "host1").SetErr(errors.New("redis error"))
+			},
+			expect: func(t *testing.T, err error) {
+				assert := assert.New(t)
+				assert.NoError(err)
+			},
+		},
+		{
+			name: "host that can not be parsed is reclaimed",
+			mock: func(mock redismock.ClientMock) {
+				fields := mockRawHostFields("host1")
+				fields["port"] = mockInvalidFieldValue
+				mock.ExpectSScan(pkgredis.MakePersistentHostsInScheduler(1), 0, "*", 10).SetVal([]string{"host1"}, 0)
+				mock.ExpectHGetAll(pkgredis.MakePersistentHostKeyInScheduler(1, "host1")).SetVal(fields)
+				mockDeleteHostScript(mock, "host1").SetVal(true)
+			},
+			expect: func(t *testing.T, err error) {
+				assert := assert.New(t)
+				assert.NoError(err)
+			},
+		},
+		{
+			name: "host id without host hash is reclaimed",
+			mock: func(mock redismock.ClientMock) {
+				mock.ExpectSScan(pkgredis.MakePersistentHostsInScheduler(1), 0, "*", 10).SetVal([]string{"host1"}, 0)
+				mock.ExpectHGetAll(pkgredis.MakePersistentHostKeyInScheduler(1, "host1")).SetVal(map[string]string{})
+				mockDeleteHostScript(mock, "host1").SetVal(true)
+			},
+			expect: func(t *testing.T, err error) {
+				assert := assert.New(t)
+				assert.NoError(err)
+			},
+		},
+		{
+			name: "host that fails to load because of a redis error is kept",
+			mock: func(mock redismock.ClientMock) {
+				mock.ExpectSScan(pkgredis.MakePersistentHostsInScheduler(1), 0, "*", 10).SetVal([]string{"host1"}, 0)
+				mock.ExpectHGetAll(pkgredis.MakePersistentHostKeyInScheduler(1, "host1")).SetErr(errors.New("redis error"))
 			},
 			expect: func(t *testing.T, err error) {
 				assert := assert.New(t)
