@@ -1,6 +1,6 @@
 module d7y.io/dragonfly/v2
 
-go 1.25.0
+go 1.26.0
 
 require (
 	d7y.io/api/v2 v2.3.8
@@ -20,7 +20,7 @@ require (
 	github.com/dragonflyoss/machinery v1.10.14
 	github.com/elastic/go-freelru v0.16.0
 	github.com/gin-contrib/gzip v1.2.7
-	github.com/gin-contrib/static v1.1.5
+	github.com/gin-contrib/static v1.1.8
 	github.com/gin-contrib/zap v1.1.6
 	github.com/gin-gonic/gin v1.12.0
 	github.com/go-echarts/statsview v0.4.2
@@ -62,7 +62,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.46.0
 	go.uber.org/mock v0.6.0
 	go.uber.org/zap v1.27.1
-	golang.org/x/crypto v0.55.0
+	golang.org/x/crypto v0.56.0
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/sync v0.22.0
 	golang.org/x/sys v0.47.0
