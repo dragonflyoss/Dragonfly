@@ -17,10 +17,28 @@
 package redis
 
 import (
+	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+// hashTagPattern matches a Redis Cluster hash tag, i.e. the substring
+// wrapped in curly braces that Redis Cluster uses to compute a key's slot
+// instead of hashing the whole key.
+var hashTagPattern = regexp.MustCompile(`\{([^{}]*)\}`)
+
+// hashTag returns the Redis Cluster hash tag embedded in key, or an empty
+// string if key has no hash tag.
+func hashTag(key string) string {
+	match := hashTagPattern.FindStringSubmatch(key)
+	if match == nil {
+		return ""
+	}
+
+	return match[1]
+}
 
 func Test_IsEnabled(t *testing.T) {
 	tests := []struct {
@@ -453,6 +471,90 @@ func Test_MakeKeyInScheduler(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.expect(t, MakeKeyInScheduler(tc.namespace, tc.id))
+		})
+	}
+}
+
+func Test_MakePersistentHostKeyInScheduler(t *testing.T) {
+	assert := assert.New(t)
+	assert.Equal("scheduler:scheduler-clusters:{1}:persistent-hosts:host-1", MakePersistentHostKeyInScheduler(1, "host-1"))
+}
+
+func Test_MakePersistentHostsInScheduler(t *testing.T) {
+	assert := assert.New(t)
+	assert.Equal("scheduler:scheduler-clusters:{1}:persistent-hosts", MakePersistentHostsInScheduler(1))
+}
+
+func Test_MakePersistentCacheHostKeyInScheduler(t *testing.T) {
+	assert := assert.New(t)
+	assert.Equal("scheduler:scheduler-clusters:{1}:persistent-cache-hosts:host-1", MakePersistentCacheHostKeyInScheduler(1, "host-1"))
+}
+
+func Test_MakePersistentCacheHostsInScheduler(t *testing.T) {
+	assert := assert.New(t)
+	assert.Equal("scheduler:scheduler-clusters:{1}:persistent-cache-hosts", MakePersistentCacheHostsInScheduler(1))
+}
+
+// Test_SchedulerKeysShareHashTagForClusterSafety verifies that every group
+// of scheduler Redis keys which is read and written together inside a
+// single Lua script (see host_manager.go and peer_manager.go in
+// scheduler/resource/persistent and scheduler/resource/persistentcache)
+// shares the same Redis Cluster hash tag. If the keys in a group did not
+// share a hash tag, Redis Cluster would reject the script with a
+// CROSSSLOT error whenever the keys land on different nodes, even though
+// the same script works fine against standalone/Sentinel Redis (see
+// dragonflyoss/dragonfly#5050).
+func Test_SchedulerKeysShareHashTagForClusterSafety(t *testing.T) {
+	const schedulerClusterID = uint(1)
+
+	tests := []struct {
+		name string
+		keys []string
+	}{
+		{
+			name: "persistent host store/delete script keys",
+			keys: []string{
+				MakePersistentHostKeyInScheduler(schedulerClusterID, "host-1"),
+				MakePersistentHostsInScheduler(schedulerClusterID),
+			},
+		},
+		{
+			name: "persistent cache host store/delete script keys",
+			keys: []string{
+				MakePersistentCacheHostKeyInScheduler(schedulerClusterID, "host-1"),
+				MakePersistentCacheHostsInScheduler(schedulerClusterID),
+			},
+		},
+		{
+			name: "persistent peer store/delete script keys",
+			keys: []string{
+				MakePersistentCachePeerKeyForPersistentTaskInScheduler(schedulerClusterID, "peer-1"),
+				MakePersistentCachePeersOfPersistentTaskInScheduler(schedulerClusterID, "task-1"),
+				MakePersistentPeersOfPersistentTaskInScheduler(schedulerClusterID, "task-1"),
+				MakePersistentCachePeersOfPersistentHostInScheduler(schedulerClusterID, "host-1"),
+			},
+		},
+		{
+			name: "persistent cache peer store/delete script keys",
+			keys: []string{
+				MakePersistentCachePeerKeyForPersistentCacheTaskInScheduler(schedulerClusterID, "peer-1"),
+				MakePersistentCachePeersOfPersistentCacheTaskInScheduler(schedulerClusterID, "task-1"),
+				MakePersistentPeersOfPersistentCacheTaskInScheduler(schedulerClusterID, "task-1"),
+				MakePersistentCachePeersOfPersistentCacheHostInScheduler(schedulerClusterID, "host-1"),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			wantTag := fmt.Sprintf("%d", schedulerClusterID)
+			for _, key := range tc.keys {
+				tag := hashTag(key)
+				assert.NotEmptyf(tag, "key %q is missing a Redis Cluster hash tag", key)
+				assert.Equalf(wantTag, tag, "key %q does not share the scheduler cluster hash tag %q with the rest of the group %v", key, wantTag, tc.keys)
+			}
 		})
 	}
 }
