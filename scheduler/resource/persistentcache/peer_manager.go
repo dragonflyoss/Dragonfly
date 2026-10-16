@@ -382,7 +382,7 @@ func (p *peerManager) LoadAll(ctx context.Context) ([]*Peer, error) {
 		// "{prefix}{peerID1}", "{prefix}{peerID2}", "{prefix}{peerID3}", ...
 		// Scan all keys with prefix.
 		prefix := fmt.Sprintf("%s:", pkgredis.MakePersistentCachePeersForPersistentCacheTaskInScheduler(p.config.Manager.SchedulerClusterID))
-		peerKeys, cursor, err = p.rdb.Scan(ctx, cursor, fmt.Sprintf("%s*", prefix), 10).Result()
+		peerKeys, cursor, err = pkgredis.ScanSchedulerKeys(ctx, p.rdb, cursor, fmt.Sprintf("%s*", prefix), 10)
 		if err != nil {
 			logger.Errorf("scan tasks failed: %v", err)
 			return nil, err

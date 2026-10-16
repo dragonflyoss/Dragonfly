@@ -17,10 +17,13 @@
 package redis
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
 
+	"github.com/go-redis/redismock/v9"
+	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -475,24 +478,82 @@ func Test_MakeKeyInScheduler(t *testing.T) {
 	}
 }
 
+// withClusterModeEnabled enables the Redis Cluster hash-tag key format for
+// the duration of a single test, restoring the previous value afterwards so
+// other tests in this package are unaffected.
+func withClusterModeEnabled(t *testing.T, enabled bool) {
+	t.Helper()
+
+	previous := IsClusterModeEnabled()
+	SetClusterModeEnabled(enabled)
+	t.Cleanup(func() {
+		SetClusterModeEnabled(previous)
+	})
+}
+
 func Test_MakePersistentHostKeyInScheduler(t *testing.T) {
+	withClusterModeEnabled(t, true)
 	assert := assert.New(t)
 	assert.Equal("scheduler:scheduler-clusters:{1}:persistent-hosts:host-1", MakePersistentHostKeyInScheduler(1, "host-1"))
 }
 
 func Test_MakePersistentHostsInScheduler(t *testing.T) {
+	withClusterModeEnabled(t, true)
 	assert := assert.New(t)
 	assert.Equal("scheduler:scheduler-clusters:{1}:persistent-hosts", MakePersistentHostsInScheduler(1))
 }
 
 func Test_MakePersistentCacheHostKeyInScheduler(t *testing.T) {
+	withClusterModeEnabled(t, true)
 	assert := assert.New(t)
 	assert.Equal("scheduler:scheduler-clusters:{1}:persistent-cache-hosts:host-1", MakePersistentCacheHostKeyInScheduler(1, "host-1"))
 }
 
 func Test_MakePersistentCacheHostsInScheduler(t *testing.T) {
+	withClusterModeEnabled(t, true)
 	assert := assert.New(t)
 	assert.Equal("scheduler:scheduler-clusters:{1}:persistent-cache-hosts", MakePersistentCacheHostsInScheduler(1))
+}
+
+// Test_SchedulerKeysClusterModeDisabledByDefault verifies that, without
+// calling SetClusterModeEnabled, scheduler key builders keep rendering the
+// original, non-hash-tagged key format. This locks in backward
+// compatibility for standalone/Sentinel Redis deployments, whose existing
+// keys must not change format on upgrade (see dragonflyoss/dragonfly#5050
+// review discussion).
+func Test_SchedulerKeysClusterModeDisabledByDefault(t *testing.T) {
+	assert := assert.New(t)
+	assert.False(IsClusterModeEnabled(), "cluster mode must default to disabled")
+	assert.Equal("scheduler:scheduler-clusters:1:persistent-hosts:host-1", MakePersistentHostKeyInScheduler(1, "host-1"))
+	assert.Equal("scheduler:scheduler-clusters:1:persistent-cache-hosts:host-1", MakePersistentCacheHostKeyInScheduler(1, "host-1"))
+	assert.Empty(hashTag(MakePersistentHostKeyInScheduler(1, "host-1")), "legacy key format must not contain a hash tag")
+}
+
+func Test_SetClusterModeEnabled(t *testing.T) {
+	previous := IsClusterModeEnabled()
+	t.Cleanup(func() {
+		SetClusterModeEnabled(previous)
+	})
+
+	assert := assert.New(t)
+
+	SetClusterModeEnabled(true)
+	assert.True(IsClusterModeEnabled())
+
+	SetClusterModeEnabled(false)
+	assert.False(IsClusterModeEnabled())
+}
+
+func Test_IsClusterClient(t *testing.T) {
+	assert := assert.New(t)
+
+	standalone := redis.NewClient(&redis.Options{Addr: "127.0.0.1:6379"})
+	defer standalone.Close()
+	assert.False(IsClusterClient(standalone))
+
+	cluster := redis.NewClusterClient(&redis.ClusterOptions{Addrs: []string{"127.0.0.1:7000"}})
+	defer cluster.Close()
+	assert.True(IsClusterClient(cluster))
 }
 
 // Test_SchedulerKeysShareHashTagForClusterSafety verifies that every group
@@ -509,52 +570,97 @@ func Test_SchedulerKeysShareHashTagForClusterSafety(t *testing.T) {
 
 	tests := []struct {
 		name string
-		keys []string
+		keys func() []string
 	}{
 		{
 			name: "persistent host store/delete script keys",
-			keys: []string{
-				MakePersistentHostKeyInScheduler(schedulerClusterID, "host-1"),
-				MakePersistentHostsInScheduler(schedulerClusterID),
+			keys: func() []string {
+				return []string{
+					MakePersistentHostKeyInScheduler(schedulerClusterID, "host-1"),
+					MakePersistentHostsInScheduler(schedulerClusterID),
+				}
 			},
 		},
 		{
 			name: "persistent cache host store/delete script keys",
-			keys: []string{
-				MakePersistentCacheHostKeyInScheduler(schedulerClusterID, "host-1"),
-				MakePersistentCacheHostsInScheduler(schedulerClusterID),
+			keys: func() []string {
+				return []string{
+					MakePersistentCacheHostKeyInScheduler(schedulerClusterID, "host-1"),
+					MakePersistentCacheHostsInScheduler(schedulerClusterID),
+				}
 			},
 		},
 		{
 			name: "persistent peer store/delete script keys",
-			keys: []string{
-				MakePersistentCachePeerKeyForPersistentTaskInScheduler(schedulerClusterID, "peer-1"),
-				MakePersistentCachePeersOfPersistentTaskInScheduler(schedulerClusterID, "task-1"),
-				MakePersistentPeersOfPersistentTaskInScheduler(schedulerClusterID, "task-1"),
-				MakePersistentCachePeersOfPersistentHostInScheduler(schedulerClusterID, "host-1"),
+			keys: func() []string {
+				return []string{
+					MakePersistentCachePeerKeyForPersistentTaskInScheduler(schedulerClusterID, "peer-1"),
+					MakePersistentCachePeersOfPersistentTaskInScheduler(schedulerClusterID, "task-1"),
+					MakePersistentPeersOfPersistentTaskInScheduler(schedulerClusterID, "task-1"),
+					MakePersistentCachePeersOfPersistentHostInScheduler(schedulerClusterID, "host-1"),
+				}
 			},
 		},
 		{
 			name: "persistent cache peer store/delete script keys",
-			keys: []string{
-				MakePersistentCachePeerKeyForPersistentCacheTaskInScheduler(schedulerClusterID, "peer-1"),
-				MakePersistentCachePeersOfPersistentCacheTaskInScheduler(schedulerClusterID, "task-1"),
-				MakePersistentPeersOfPersistentCacheTaskInScheduler(schedulerClusterID, "task-1"),
-				MakePersistentCachePeersOfPersistentCacheHostInScheduler(schedulerClusterID, "host-1"),
+			keys: func() []string {
+				return []string{
+					MakePersistentCachePeerKeyForPersistentCacheTaskInScheduler(schedulerClusterID, "peer-1"),
+					MakePersistentCachePeersOfPersistentCacheTaskInScheduler(schedulerClusterID, "task-1"),
+					MakePersistentPeersOfPersistentCacheTaskInScheduler(schedulerClusterID, "task-1"),
+					MakePersistentCachePeersOfPersistentCacheHostInScheduler(schedulerClusterID, "host-1"),
+				}
 			},
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			withClusterModeEnabled(t, true)
 			assert := assert.New(t)
 
+			keys := tc.keys()
 			wantTag := fmt.Sprintf("%d", schedulerClusterID)
-			for _, key := range tc.keys {
+			for _, key := range keys {
 				tag := hashTag(key)
 				assert.NotEmptyf(tag, "key %q is missing a Redis Cluster hash tag", key)
-				assert.Equalf(wantTag, tag, "key %q does not share the scheduler cluster hash tag %q with the rest of the group %v", key, wantTag, tc.keys)
+				assert.Equalf(wantTag, tag, "key %q does not share the scheduler cluster hash tag %q with the rest of the group %v", key, wantTag, keys)
 			}
 		})
 	}
+}
+
+// Test_ScanSchedulerKeys_NonCluster verifies that, for a non-cluster Redis
+// client, ScanSchedulerKeys behaves exactly like a plain SCAN call.
+func Test_ScanSchedulerKeys_NonCluster(t *testing.T) {
+	rdb, mock := redismock.NewClientMock()
+	assert := assert.New(t)
+
+	mock.ExpectScan(0, "scheduler:scheduler-clusters:1:persistent-tasks:*", 10).SetVal([]string{"task-1", "task-2"}, 0)
+
+	keys, cursor, err := ScanSchedulerKeys(context.Background(), rdb, 0, "scheduler:scheduler-clusters:1:persistent-tasks:*", 10)
+	assert.NoError(err)
+	assert.Equal(uint64(0), cursor)
+	assert.Equal([]string{"task-1", "task-2"}, keys)
+	assert.NoError(mock.ExpectationsWereMet())
+}
+
+// Test_ScanSchedulerKeys_Cluster verifies that, for a Redis Cluster client,
+// ScanSchedulerKeys resolves the master node owning pattern's hash tag
+// (via MasterForKey) instead of calling SCAN directly against the cluster
+// client, so that SCAN is pinned to a single node. A real cluster isn't
+// reachable in this unit test, so MasterForKey is expected to fail against
+// the unconfigured client; this still proves ScanSchedulerKeys takes the
+// cluster-aware code path (rather than silently falling back to a
+// node-local cluster-wide SCAN) for *redis.ClusterClient.
+func Test_ScanSchedulerKeys_Cluster(t *testing.T) {
+	assert := assert.New(t)
+
+	cluster := redis.NewClusterClient(&redis.ClusterOptions{
+		Addrs: []string{"127.0.0.1:0"},
+	})
+	defer cluster.Close()
+
+	_, _, err := ScanSchedulerKeys(context.Background(), cluster, 0, "scheduler:scheduler-clusters:{1}:persistent-tasks:*", 10)
+	assert.Error(err, "expected MasterForKey resolution to be attempted (and fail without a reachable cluster)")
 }

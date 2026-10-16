@@ -252,7 +252,7 @@ func (t *taskManager) LoadAll(ctx context.Context) ([]*Task, error) {
 		//
 		// Purpose: Scan all keys starting with {prefix}.
 		prefix := fmt.Sprintf("%s:", pkgredis.MakePersistentTasksInScheduler(t.config.Manager.SchedulerClusterID))
-		taskKeys, cursor, err = t.rdb.Scan(ctx, cursor, fmt.Sprintf("%s*", prefix), 10).Result()
+		taskKeys, cursor, err = pkgredis.ScanSchedulerKeys(ctx, t.rdb, cursor, fmt.Sprintf("%s*", prefix), 10)
 		if err != nil {
 			logger.Error("scan tasks failed")
 			return nil, err

@@ -349,7 +349,20 @@ func newRedisClient(cfg *config.Config) (redis.UniversalClient, error) {
 		redisOpts.TLSConfig = tlsCfg
 	}
 
-	return pkgredis.NewRedis(redisOpts)
+	rdb, err := pkgredis.NewRedis(redisOpts)
+	if err != nil {
+		return nil, err
+	}
+
+	// Record whether this is a Redis Cluster client so that scheduler key
+	// builders in pkg/redis can scope their Redis Cluster hash-tag format to
+	// Cluster deployments only, keeping standalone/Sentinel key names
+	// unchanged. This must happen before any resource manager that builds
+	// scheduler keys (e.g. persistent.New, persistentcache.New) is
+	// constructed.
+	pkgredis.SetClusterModeEnabled(pkgredis.IsClusterClient(rdb))
+
+	return rdb, nil
 }
 
 // newClientTransportCredentials returns the client transport credentials for
