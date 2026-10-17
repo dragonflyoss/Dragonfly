@@ -592,6 +592,50 @@ func (t *Task) StorePiece(piece *Piece) {
 	t.Pieces.Store(piece.Number, piece)
 }
 
+// StoreBackToSourcePiece stores the piece downloaded from the source by a peer,
+// and returns whether it is stored. The digests of the stored pieces are
+// distributed to the peers downloading the task as trusted digests, so the
+// piece of a normal peer only fills a piece without digest, and only the piece
+// of a seed peer replaces a stored digest.
+func (t *Task) StoreBackToSourcePiece(piece *Piece, fromSeedPeer bool) bool {
+	if fromSeedPeer {
+		if stored, loaded := t.LoadPiece(piece.Number); loaded {
+			t.warnPieceDigestConflict(stored, piece, true)
+		}
+
+		t.StorePiece(piece)
+		return true
+	}
+
+	for {
+		rawStored, loaded := t.Pieces.LoadOrStore(piece.Number, piece)
+		if !loaded {
+			return true
+		}
+
+		stored := rawStored.(*Piece)
+		if stored.Digest != nil {
+			t.warnPieceDigestConflict(stored, piece, false)
+			return false
+		}
+
+		if t.Pieces.CompareAndSwap(piece.Number, stored, piece) {
+			return true
+		}
+	}
+}
+
+// warnPieceDigestConflict logs a piece reported with a digest different from
+// the stored one.
+func (t *Task) warnPieceDigestConflict(stored, piece *Piece, replaced bool) {
+	if stored.Digest == nil || piece.Digest == nil || stored.Digest.String() == piece.Digest.String() {
+		return
+	}
+
+	t.Log.Warnf("piece %d reported with digest %s, stored digest is %s, replaced: %t",
+		piece.Number, piece.Digest.String(), stored.Digest.String(), replaced)
+}
+
 // DeletePiece deletes piece for a key.
 func (t *Task) DeletePiece(key int32) {
 	t.Pieces.Delete(key)

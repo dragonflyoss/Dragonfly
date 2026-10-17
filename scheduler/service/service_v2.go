@@ -1767,8 +1767,10 @@ func (v *V2) handleDownloadPieceBackToSourceFinishedRequest(_ context.Context, p
 	peer.PieceUpdatedAt.Store(time.Now())
 	peer.UpdatedAt.Store(time.Now())
 
-	// Handle task with piece back-to-source finished request.
-	peer.Task.StorePiece(piece)
+	// Handle task with piece back-to-source finished request. The digest of the
+	// piece is distributed to the peers as a trusted digest, so only a seed peer
+	// replaces a stored digest.
+	peer.Task.StoreBackToSourcePiece(piece, peer.Host.Type != types.HostTypeNormal)
 	peer.Task.UpdatedAt.Store(time.Now())
 
 	// Collect piece and traffic metrics.

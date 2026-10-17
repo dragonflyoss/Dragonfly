@@ -21,6 +21,7 @@ package scheduling
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -1058,7 +1059,7 @@ func (s *scheduling) filterReplicatePersistentCacheHosts(ctx context.Context, ta
 // including nested task, host, and resource details.
 func constructSuccessNormalTaskResponse(candidateParents []*standard.Peer) *schedulerv2.AnnouncePeerResponse_NormalTaskResponse {
 	parents := make([]*commonv2.Peer, 0, len(candidateParents))
-	for _, candidateParent := range candidateParents {
+	for i, candidateParent := range candidateParents {
 		// Construct the base peer structure.
 		parent := &commonv2.Peer{
 			Id:                   candidateParent.ID,
@@ -1101,6 +1102,14 @@ func constructSuccessNormalTaskResponse(candidateParents []*standard.Peer) *sche
 		if candidateParent.Task.Digest != nil {
 			dgst := candidateParent.Task.Digest.String()
 			parent.Task.Digest = &dgst
+		}
+
+		// Set the trusted piece digests, recorded from the peers downloading the
+		// pieces from the source, so the peer verifies the pieces against them
+		// instead of the digests announced by the parents. The candidate parents
+		// share the task, so they are set once, in the first candidate parent.
+		if i == 0 {
+			parent.Task.Pieces = constructTrustedPieces(candidateParent.Task)
 		}
 
 		// Construct the host structure with nested resources.
@@ -1207,4 +1216,32 @@ func constructSuccessPeerPacket(peer *standard.Peer, parent *standard.Peer, cand
 		CandidatePeers: parents,
 		Code:           commonv1.Code_Success,
 	}
+}
+
+// constructTrustedPieces returns the pieces of the task with digest, ordered by
+// number. The scheduler stores the pieces reported by the peers downloading
+// them from the source, so their digests do not depend on the parent serving
+// the pieces.
+func constructTrustedPieces(task *standard.Task) []*commonv2.Piece {
+	var pieces []*commonv2.Piece
+	task.Pieces.Range(func(_, value any) bool {
+		piece, ok := value.(*standard.Piece)
+		if !ok || piece.Digest == nil {
+			return true
+		}
+
+		pieces = append(pieces, &commonv2.Piece{
+			Number: uint32(piece.Number),
+			Offset: piece.Offset,
+			Length: piece.Length,
+			Digest: piece.Digest.String(),
+		})
+		return true
+	})
+
+	sort.Slice(pieces, func(i, j int) bool {
+		return pieces[i].Number < pieces[j].Number
+	})
+
+	return pieces
 }

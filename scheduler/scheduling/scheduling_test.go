@@ -1676,6 +1676,36 @@ func TestScheduling_FindParentAndCandidateParents(t *testing.T) {
 	}
 }
 
+func TestScheduling_constructTrustedPieces(t *testing.T) {
+	mockTask := standard.NewTask(mockTaskID, mockTaskURL, mockTaskTag, mockTaskApplication, commonv2.TaskType_STANDARD, mockTaskFilteredQueryParams, mockTaskHeader, mockTaskBackToSourceLimit)
+	pieceDigest := digest.New(digest.AlgorithmSHA256, "0f2592159700536c81cd58094265e92089ebabb3e06f802c5f2d6e8e753cb233")
+	mockTask.StorePiece(&standard.Piece{Number: 2, Offset: 20, Length: 10, Digest: pieceDigest})
+	mockTask.StorePiece(&standard.Piece{Number: 0, Offset: 0, Length: 10, Digest: pieceDigest})
+	// A piece without digest is not trusted.
+	mockTask.StorePiece(&standard.Piece{Number: 1, Offset: 10, Length: 10})
+
+	assert := assert.New(t)
+	assert.Equal([]*commonv2.Piece{
+		{Number: 0, Offset: 0, Length: 10, Digest: pieceDigest.String()},
+		{Number: 2, Offset: 20, Length: 10, Digest: pieceDigest.String()},
+	}, constructTrustedPieces(mockTask))
+
+	// The pieces are set in the task of the first candidate parent only.
+	mockHost := standard.NewHost(
+		mockRawHost.ID, mockRawHost.IP, mockRawHost.Name, mockRawHost.Hostname,
+		mockRawHost.Port, mockRawHost.DownloadPort, mockRawHost.ProxyPort, mockRawHost.Type)
+	candidateParents := []*standard.Peer{
+		standard.NewPeer(idgen.PeerID(), mockTask, mockHost),
+		standard.NewPeer(idgen.PeerID(), mockTask, mockHost),
+	}
+	resp := constructSuccessNormalTaskResponse(candidateParents)
+	assert.Len(resp.NormalTaskResponse.CandidateParents[0].Task.Pieces, 2)
+	assert.Empty(resp.NormalTaskResponse.CandidateParents[1].Task.Pieces)
+
+	// A task without pieces has no trusted pieces.
+	assert.Empty(constructTrustedPieces(standard.NewTask(mockTaskID, mockTaskURL, mockTaskTag, mockTaskApplication, commonv2.TaskType_STANDARD, mockTaskFilteredQueryParams, mockTaskHeader, mockTaskBackToSourceLimit)))
+}
+
 func TestScheduling_constructSuccessNormalTaskResponse(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -1714,8 +1744,16 @@ func TestScheduling_constructSuccessNormalTaskResponse(t *testing.T) {
 									SizeScope:           candidateParents[0].Task.SizeScope(),
 									State:               candidateParents[0].Task.FSM.Current(),
 									PeerCount:           uint32(candidateParents[0].Task.PeerCount()),
-									CreatedAt:           timestamppb.New(candidateParents[0].Task.CreatedAt.Load()),
-									UpdatedAt:           timestamppb.New(candidateParents[0].Task.UpdatedAt.Load()),
+									Pieces: []*commonv2.Piece{
+										{
+											Number: uint32(mockPiece.Number),
+											Offset: mockPiece.Offset,
+											Length: mockPiece.Length,
+											Digest: mockPiece.Digest.String(),
+										},
+									},
+									CreatedAt: timestamppb.New(candidateParents[0].Task.CreatedAt.Load()),
+									UpdatedAt: timestamppb.New(candidateParents[0].Task.UpdatedAt.Load()),
 								},
 								Host: &commonv2.Host{
 									Id:              candidateParents[0].Host.ID,

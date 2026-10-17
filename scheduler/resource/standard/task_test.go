@@ -1853,6 +1853,69 @@ func TestTask_StorePiece(t *testing.T) {
 	}
 }
 
+func TestTask_StoreBackToSourcePiece(t *testing.T) {
+	digestA := digest.New(digest.AlgorithmSHA256, "0f2592159700536c81cd58094265e92089ebabb3e06f802c5f2d6e8e753cb233")
+	digestB := digest.New(digest.AlgorithmSHA256, "a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e")
+
+	type report struct {
+		digest       *digest.Digest
+		fromSeedPeer bool
+		stored       bool
+	}
+
+	tests := []struct {
+		name    string
+		reports []report
+		expect  *digest.Digest
+	}{
+		{
+			name:    "store the first piece of a normal peer",
+			reports: []report{{digestA, false, true}},
+			expect:  digestA,
+		},
+		{
+			name:    "keep the digest when a normal peer reports another digest",
+			reports: []report{{digestA, false, true}, {digestB, false, false}},
+			expect:  digestA,
+		},
+		{
+			name:    "fill a piece without digest with the digest of a normal peer",
+			reports: []report{{nil, false, true}, {digestB, false, true}},
+			expect:  digestB,
+		},
+		{
+			name:    "replace the digest of a normal peer with the digest of a seed peer",
+			reports: []report{{digestA, false, true}, {digestB, true, true}},
+			expect:  digestB,
+		},
+		{
+			name:    "keep the digest of a seed peer when a normal peer reports another digest",
+			reports: []report{{digestA, true, true}, {digestB, false, false}},
+			expect:  digestA,
+		},
+		{
+			name:    "replace the digest of a seed peer with the digest of a seed peer",
+			reports: []report{{digestA, true, true}, {digestB, true, true}},
+			expect:  digestB,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert := assert.New(t)
+			task := NewTask(mockTaskID, mockTaskURL, mockTaskTag, mockTaskApplication, commonv2.TaskType_STANDARD, mockTaskFilteredQueryParams, mockTaskHeader, mockTaskBackToSourceLimit)
+			for _, r := range tc.reports {
+				stored := task.StoreBackToSourcePiece(&Piece{Number: 1, Length: 10, Digest: r.digest}, r.fromSeedPeer)
+				assert.Equal(r.stored, stored)
+			}
+
+			piece, loaded := task.LoadPiece(1)
+			assert.True(loaded)
+			assert.Equal(tc.expect.String(), piece.Digest.String())
+		})
+	}
+}
+
 func TestTask_DeletePiece(t *testing.T) {
 	tests := []struct {
 		name        string
