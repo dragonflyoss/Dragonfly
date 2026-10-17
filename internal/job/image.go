@@ -143,6 +143,7 @@ func (i *image) CreatePreheatRequestsByManifestURL(ctx context.Context, req *Man
 		pkgoci.WithAuth(req.Username, req.Password),
 		pkgoci.WithPlatform(req.Platform),
 		pkgoci.WithHeader(header.Clone()),
+		pkgoci.WithHTTPClient(pkgoci.NewHTTPClient(req.RootCAs, req.InsecureSkipVerify)),
 	)
 	if err != nil {
 		return nil, err

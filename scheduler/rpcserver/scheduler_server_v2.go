@@ -19,6 +19,7 @@ package rpcserver
 import (
 	"context"
 
+	"google.golang.org/grpc"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 
 	commonv2 "d7y.io/api/v2/pkg/apis/common/v2"
@@ -50,8 +51,10 @@ func newSchedulerServerV2(
 	scheduling scheduling.Scheduling,
 	job job.Job,
 	dynconfig config.DynconfigInterface,
+	peerDialOptions []grpc.DialOption,
 ) schedulerv2.SchedulerServer {
-	return &schedulerServerV2{service.NewV2(cfg, resource, persistentResource, persistentCacheResource, scheduling, job, internaljob.NewImage(), dynconfig)}
+	return &schedulerServerV2{service.NewV2(cfg, resource, persistentResource, persistentCacheResource, scheduling, job, internaljob.NewImage(), dynconfig,
+		service.WithPeerDialOptions(peerDialOptions...))}
 }
 
 // AnnouncePeer announces peer to scheduler.

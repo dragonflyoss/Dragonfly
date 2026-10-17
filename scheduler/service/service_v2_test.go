@@ -35,6 +35,7 @@ import (
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -354,6 +355,28 @@ func mockPersistentCacheTask(state string) *persistentcache.Task {
 
 func mockPersistentCachePeer(id, state string, task *persistentcache.Task, host *persistentcache.Host) *persistentcache.Peer {
 	return persistentcache.NewPeer(id, state, true, bitset.New(2), []string{}, task, host, 0, time.Now().Add(-time.Minute), time.Now().Add(-time.Minute), logger.WithPeer(host.ID, task.ID, id))
+}
+
+func TestService_WithPeerDialOptions(t *testing.T) {
+	ctl := gomock.NewController(t)
+	defer ctl.Finish()
+
+	newV2 := func(opts ...V2Option) *V2 {
+		return NewV2(&config.Config{Scheduler: mockSchedulerConfig}, standard.NewMockResource(ctl), persistent.NewMockResource(ctl),
+			persistentcache.NewMockResource(ctl), schedulingmocks.NewMockScheduling(ctl), jobmocks.NewMockJob(ctl),
+			internaljobmocks.NewMockImage(ctl), configmocks.NewMockDynconfigInterface(ctl), opts...)
+	}
+
+	// Without the option, the peers are dialed with the insecure credentials.
+	assert.Len(t, newV2().peerDialOptions, 1)
+
+	// An empty option keeps the default.
+	assert.Len(t, newV2(WithPeerDialOptions()).peerDialOptions, 1)
+
+	// The configured options replace the default.
+	creds := insecure.NewCredentials()
+	svc := newV2(WithPeerDialOptions(grpc.WithTransportCredentials(creds), grpc.WithUserAgent("test")))
+	assert.Len(t, svc.peerDialOptions, 2)
 }
 
 func TestService_NewV2(t *testing.T) {

@@ -37,11 +37,12 @@ func New(
 	scheduling scheduling.Scheduling,
 	job job.Job,
 	dynconfig config.DynconfigInterface,
+	peerDialOptions []grpc.DialOption,
 	opts ...grpc.ServerOption,
 ) *grpc.Server {
 	return server.New(
 		newSchedulerServerV1(cfg, resource, scheduling, dynconfig),
-		newSchedulerServerV2(cfg, resource, persistentResource, persistentCacheResource, scheduling, job, dynconfig),
+		newSchedulerServerV2(cfg, resource, persistentResource, persistentCacheResource, scheduling, job, dynconfig, peerDialOptions),
 		cfg.Server.RequestRateLimit,
 		opts...)
 }

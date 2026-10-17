@@ -145,14 +145,15 @@ func New(ctx context.Context, cfg *config.Config, d dfpath.Dfpath, dynconfigPath
 	}
 	s.resource = resource
 
+	// Initialize the transport credentials of the connections to the peers.
+	peerClientTransportCredentials, err := newClientTransportCredentials(cfg.Peer.TLS)
+	if err != nil {
+		return nil, err
+	}
+
 	// Initialize persistent resource and persistent cache resource if redis
 	// is enabled.
 	if rdb != nil {
-		peerClientTransportCredentials, err := newClientTransportCredentials(cfg.Peer.TLS)
-		if err != nil {
-			return nil, err
-		}
-
 		s.persistentResource, err = persistent.New(cfg, s.gc, rdb, peerClientTransportCredentials)
 		if err != nil {
 			return nil, err
@@ -185,7 +186,11 @@ func New(ctx context.Context, cfg *config.Config, d dfpath.Dfpath, dynconfigPath
 			return nil, err
 		}
 	}
-	s.grpcServer = rpcserver.New(cfg, resource, s.persistentResource, s.persistentCacheResource, scheduling, s.job, dynconfig, grpc.Creds(serverTransportCredentials))
+	peerDialOptions := []grpc.DialOption{
+		grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
+		grpc.WithTransportCredentials(peerClientTransportCredentials),
+	}
+	s.grpcServer = rpcserver.New(cfg, resource, s.persistentResource, s.persistentCacheResource, scheduling, s.job, dynconfig, peerDialOptions, grpc.Creds(serverTransportCredentials))
 
 	// Initialize metrics server if metrics is enabled.
 	if cfg.Metrics.Enable {
