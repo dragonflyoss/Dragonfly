@@ -79,7 +79,7 @@ func Check(ctx context.Context, target string, opts ...grpc.DialOption) error {
 	}
 	defer healthClient.Close()
 
-	if err := healthClient.Check(context.Background(), &healthpb.HealthCheckRequest{}); err != nil {
+	if err := healthClient.Check(ctx, &healthpb.HealthCheckRequest{}); err != nil {
 		return err
 	}
 
