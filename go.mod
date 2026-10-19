@@ -8,7 +8,7 @@ require (
 	github.com/VividCortex/mysqlerr v1.0.0
 	github.com/appleboy/gin-jwt/v2 v2.10.3
 	github.com/avast/retry-go/v5 v5.0.0
-	github.com/bits-and-blooms/bitset v1.24.6
+	github.com/bits-and-blooms/bitset v1.26.0
 	github.com/casbin/casbin/v2 v2.81.0
 	github.com/casbin/gorm-adapter/v3 v3.5.0
 	github.com/cespare/xxhash/v2 v2.3.0
