@@ -27,6 +27,12 @@ const (
 	ClientServerName     = "client"
 )
 
+const (
+	// SchedulerStatefulSetName is the name of the scheduler statefulset installed
+	// by the dragonfly chart.
+	SchedulerStatefulSetName = "dragonfly-scheduler"
+)
+
 type server struct {
 	Name       string
 	Namespace  string

@@ -22,14 +22,17 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"maps"
 	"net"
+	"slices"
 	"strconv"
 	"sync"
 	"time"
 
+	"d7y.io/hashring"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
-	"stathat.com/c/consistent"
 
 	cdnsystemv1 "d7y.io/api/v2/pkg/apis/cdnsystem/v1"
 	commonv1 "d7y.io/api/v2/pkg/apis/common/v1"
@@ -55,6 +58,10 @@ const (
 
 	// SeedPeerRefreshInterval is the interval of refreshing seed peers.
 	SeedPeerRefreshInterval = 30 * time.Second
+
+	// SeedPeerHealthCheckConcurrencyLimit is the number of seed peers checked
+	// for health concurrently by refresh.
+	SeedPeerHealthCheckConcurrencyLimit = 32
 )
 
 // SeedPeer is the interface used for seed peer.
@@ -97,11 +104,11 @@ type seedPeer struct {
 	// mu protects hosts and hashring, which are replaced together by refresh.
 	mu sync.RWMutex
 
-	// hosts is the list of seed peers.
-	hosts *sync.Map
+	// hosts is the healthy seed peers keyed by name.
+	hosts map[string]*Host
 
-	// hashring is the hashring constructed from seed peers.
-	hashring *consistent.Consistent
+	// hashring is the hashring constructed from the names of seed peers.
+	hashring *hashring.VNodeHashRing
 
 	// done is the channel to stop the seed peer service.
 	done chan struct{}
@@ -114,8 +121,8 @@ func newSeedPeer(peerManager PeerManager, hostManager HostManager, clientPool df
 		hostManager: hostManager,
 		clientPool:  clientPool,
 		dialOptions: dialOptions,
-		hosts:       &sync.Map{},
-		hashring:    consistent.New(),
+		hosts:       map[string]*Host{},
+		hashring:    hashring.New(),
 		done:        make(chan struct{}),
 	}
 }
@@ -291,21 +298,17 @@ func (s *seedPeer) Select(ctx context.Context, taskID string) (*Host, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	if len(s.hashring.Members()) == 0 {
+	vnode, ok := s.hashring.Get(taskID)
+	if !ok {
 		return nil, fmt.Errorf("no available seed peer")
 	}
 
-	addr, err := s.hashring.Get(taskID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to select seed peer: %w", err)
-	}
-
-	host, ok := s.hosts.Load(addr)
+	host, ok := s.hosts[vnode.Name()]
 	if !ok {
-		return nil, fmt.Errorf("failed to load host: %s", addr)
+		return nil, fmt.Errorf("failed to load host: %s", vnode.Name())
 	}
 
-	return host.(*Host), nil
+	return host, nil
 }
 
 // HasAvailable returns whether there is any available seed peer.
@@ -313,7 +316,7 @@ func (s *seedPeer) HasAvailable() bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	return len(s.hashring.Members()) > 0
+	return !s.hashring.IsEmpty()
 }
 
 // Initialize seed peer.
@@ -351,32 +354,71 @@ func (s *seedPeer) initSeedPeer(ctx context.Context, rg *http.Range, task *Task,
 }
 
 // refresh refreshes the hosts and hashring of seed peers, and clears
-// them when no seed peer is found in host manager.
+// them when no seed peer is found in host manager. The hashring is keyed
+// by the name of the seed peer instead of the address, so that the seed peer
+// keeps its position in the hashring when its ip changes, refer to
+// https://github.com/grpc/proposal/blob/master/A76-ring-hash-improvements.md.
 func (s *seedPeer) refresh(ctx context.Context) {
 	hosts := s.hostManager.LoadAllSeeds()
 	if len(hosts) == 0 {
 		logger.Warnf("no seed peer found in host manager")
 	}
 
-	healthyHosts := &sync.Map{}
-	for _, host := range hosts {
-		addr := net.JoinHostPort(host.IP, strconv.Itoa(int(host.Port)))
-		if err := healthclient.Check(ctx, addr, s.dialOptions...); err != nil {
-			logger.Errorf("failed to check the healthy for seed peer %s: %v", addr, err)
-		} else {
-			healthyHosts.Store(addr, host)
+	// Check the health of the seed peers concurrently, an unhealthy seed peer
+	// costs the health check timeout and must not delay the others.
+	healthy := make([]*Host, len(hosts))
+	eg, ctx := errgroup.WithContext(ctx)
+	eg.SetLimit(SeedPeerHealthCheckConcurrencyLimit)
+	for i, host := range hosts {
+		eg.Go(func() error {
+			addr := net.JoinHostPort(host.IP, strconv.Itoa(int(host.Port)))
+			if err := healthclient.Check(ctx, addr, s.dialOptions...); err != nil {
+				logger.Errorf("failed to check the healthy for seed peer %s: %v", addr, err)
+				return nil
+			}
+
+			healthy[i] = host
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		logger.Errorf("failed to check the healthy for seed peers: %v", err)
+	}
+
+	healthyHosts := make(map[string]*Host, len(hosts))
+	for _, host := range healthy {
+		if host == nil {
+			continue
+		}
+
+		// Keep the most recently announced host when the same seed peer is
+		// announced from several addresses, such as after a pod restart.
+		if current, ok := healthyHosts[host.Name]; ok && current.UpdatedAt.Load().After(host.UpdatedAt.Load()) {
+			continue
+		}
+
+		healthyHosts[host.Name] = host
+	}
+
+	// Rebuilding the hashring hashes every virtual node of every seed peer, so
+	// reuse the current hashring when the names of the healthy seed peers are
+	// unchanged and only refresh the hosts.
+	s.mu.RLock()
+	ring := s.hashring
+	unchanged := slices.Equal(slices.Sorted(maps.Keys(s.hosts)), slices.Sorted(maps.Keys(healthyHosts)))
+	s.mu.RUnlock()
+
+	if !unchanged {
+		ring = hashring.New()
+		for name := range healthyHosts {
+			ring.Add(name)
 		}
 	}
 
-	hashring := consistent.New()
-	healthyHosts.Range(func(addr, _ any) bool {
-		hashring.Add(addr.(string))
-		return true
-	})
-
 	s.mu.Lock()
 	s.hosts = healthyHosts
-	s.hashring = hashring
+	s.hashring = ring
 	s.mu.Unlock()
 }
 

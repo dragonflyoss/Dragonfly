@@ -763,7 +763,7 @@ func (s *managerServerV2) listSchedulersByClusterID(ctx context.Context, req *ma
 	}
 
 	var schedulers []models.Scheduler
-	if err := s.db.Find(&schedulers, "scheduler_cluster_id = ?", req.SchedulerClusterId).Error; err != nil {
+	if err := s.db.Find(&schedulers, "scheduler_cluster_id = ? AND state = ?", req.SchedulerClusterId, models.SchedulerStateActive).Error; err != nil {
 		log.Errorf("failed to get schedulers by cluster id %d: %s", req.SchedulerClusterId, err.Error())
 		return nil, err
 	}

@@ -827,6 +827,7 @@ func TestManagerServerV2_ListSchedulersByClusterID(t *testing.T) {
 				}
 
 				assert.Contains(hostnames, mockActiveSchedulerHostname)
+				assert.NotContains(hostnames, mockInactiveSchedulerHostname)
 				assert.NotContains(hostnames, mockSecondClusterSchedulerHostname)
 				assert.True(s.cache.Exists(context.Background(), pkgredis.MakeSchedulersByClusterIDKeyForPeerInManager(mockSchedulerClusterID)))
 			},
