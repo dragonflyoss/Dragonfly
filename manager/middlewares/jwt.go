@@ -127,7 +127,7 @@ func Jwt(cfg config.JWTConfig, service service.Service) (*jwt.GinJWTMiddleware, 
 		TokenHeadName:  "Bearer",
 		TimeFunc:       time.Now,
 		SendCookie:     true,
-		CookieHTTPOnly: false,
+		CookieHTTPOnly: true,
 	})
 	if err != nil {
 		return nil, err
