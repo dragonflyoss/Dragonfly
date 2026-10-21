@@ -20,10 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"net/url"
 	"reflect"
-	"strings"
 	"sync"
 	"time"
 
@@ -74,19 +71,8 @@ func New(cfg *Config, queue Queue) (*Job, error) {
 		return nil, err
 	}
 
-	var broker string
-	if cfg.Username != "" {
-		broker = fmt.Sprintf("redis://%s:%s@%s/%d", url.QueryEscape(cfg.Username), url.QueryEscape(cfg.Password), strings.Join(cfg.Addrs, ","), cfg.BrokerDB)
-	} else {
-		broker = fmt.Sprintf("redis://%s@%s/%d", url.QueryEscape(cfg.Password), strings.Join(cfg.Addrs, ","), cfg.BrokerDB)
-	}
-
-	var backend string
-	if cfg.Username != "" {
-		backend = fmt.Sprintf("redis://%s:%s@%s/%d", url.QueryEscape(cfg.Username), url.QueryEscape(cfg.Password), strings.Join(cfg.Addrs, ","), cfg.BackendDB)
-	} else {
-		backend = fmt.Sprintf("redis://%s@%s/%d", url.QueryEscape(cfg.Password), strings.Join(cfg.Addrs, ","), cfg.BackendDB)
-	}
+	broker := redisURL(cfg.Addrs, cfg.Username, cfg.Password, cfg.BrokerDB)
+	backend := redisURL(cfg.Addrs, cfg.Username, cfg.Password, cfg.BackendDB)
 
 	server, err := machinery.NewServer(&machineryv1config.Config{
 		Broker:          broker,
