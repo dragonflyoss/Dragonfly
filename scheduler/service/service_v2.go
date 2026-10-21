@@ -18,6 +18,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -27,6 +28,7 @@ import (
 	"time"
 
 	"github.com/bits-and-blooms/bitset"
+	"github.com/looplab/fsm"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -1565,6 +1567,23 @@ func (v *V2) handleReschedulePeerRequest(ctx context.Context, peerID string, can
 	return nil
 }
 
+// handlePeerTerminalEvent applies a terminal event and ignores a late report for a peer that already left.
+func handlePeerTerminalEvent(ctx context.Context, peer *standard.Peer, event string) (bool, error) {
+	// Terminal state updates must finish even when the announce stream is canceled.
+	// looplab/fsm leaves an incomplete transition behind if its context is canceled
+	// after the transition starts, causing subsequent events to fail with
+	// InTransitionError.
+	if err := peer.FSM.Event(context.WithoutCancel(ctx), event); err != nil {
+		if errors.Is(err, fsm.InvalidEventError{Event: event, State: standard.PeerStateLeave}) {
+			peer.Log.Infof("peer already left, ignoring late %s request", event)
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
+}
+
 // handleDownloadPeerFinishedRequest handles DownloadPeerFinishedRequest of AnnouncePeerRequest.
 func (v *V2) handleDownloadPeerFinishedRequest(ctx context.Context, peerID string) error {
 	peer, loaded := v.resource.PeerManager().Load(peerID)
@@ -1573,10 +1592,14 @@ func (v *V2) handleDownloadPeerFinishedRequest(ctx context.Context, peerID strin
 	}
 
 	// Handle peer with peer finished request.
-	peer.Cost.Store(time.Since(peer.CreatedAt.Load()))
-	if err := peer.FSM.Event(ctx, standard.PeerEventDownloadSucceeded); err != nil {
+	transitioned, err := handlePeerTerminalEvent(ctx, peer, standard.PeerEventDownloadSucceeded)
+	if err != nil {
 		return status.Error(codes.Internal, err.Error())
 	}
+	if !transitioned {
+		return nil
+	}
+	peer.Cost.Store(time.Since(peer.CreatedAt.Load()))
 
 	// Collect DownloadPeerCount and DownloadPeerDuration metrics.
 	priority := peer.CalculatePriority(v.dynconfig)
@@ -1596,10 +1619,14 @@ func (v *V2) handleDownloadPeerBackToSourceFinishedRequest(ctx context.Context, 
 	}
 
 	// Handle peer with peer back-to-source finished request.
-	peer.Cost.Store(time.Since(peer.CreatedAt.Load()))
-	if err := peer.FSM.Event(ctx, standard.PeerEventDownloadSucceeded); err != nil {
+	transitioned, err := handlePeerTerminalEvent(ctx, peer, standard.PeerEventDownloadSucceeded)
+	if err != nil {
 		return status.Error(codes.Internal, err.Error())
 	}
+	if !transitioned {
+		return nil
+	}
+	peer.Cost.Store(time.Since(peer.CreatedAt.Load()))
 
 	// Handle task with peer back-to-source finished request, peer can only represent
 	// a successful task after downloading the complete task.
@@ -1627,8 +1654,12 @@ func (v *V2) handleDownloadPeerFailedRequest(ctx context.Context, peerID string)
 	}
 
 	// Handle peer with peer failed request.
-	if err := peer.FSM.Event(ctx, standard.PeerEventDownloadFailed); err != nil {
+	transitioned, err := handlePeerTerminalEvent(ctx, peer, standard.PeerEventDownloadFailed)
+	if err != nil {
 		return status.Error(codes.Internal, err.Error())
+	}
+	if !transitioned {
+		return nil
 	}
 
 	// Collect DownloadPeerCount and DownloadPeerFailureCount metrics.
@@ -1649,8 +1680,12 @@ func (v *V2) handleDownloadPeerBackToSourceFailedRequest(ctx context.Context, pe
 	}
 
 	// Handle peer with peer back-to-source failed request.
-	if err := peer.FSM.Event(ctx, standard.PeerEventDownloadFailed); err != nil {
+	transitioned, err := handlePeerTerminalEvent(ctx, peer, standard.PeerEventDownloadFailed)
+	if err != nil {
 		return status.Error(codes.Internal, err.Error())
+	}
+	if !transitioned {
+		return nil
 	}
 
 	// Handle task with peer back-to-source failed request.

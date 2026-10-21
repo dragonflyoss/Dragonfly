@@ -24,6 +24,7 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -222,9 +223,12 @@ func (s *scheduling) ScheduleCandidateParents(ctx context.Context, peer *standar
 		}
 
 		peer.Log.Info("send NormalTaskResponse")
-		if err := stream.Send(&schedulerv2.AnnouncePeerResponse{
+		rawResponse := &schedulerv2.AnnouncePeerResponse{
 			Response: constructSuccessNormalTaskResponse(addedParents),
-		}); err != nil {
+		}
+		clonedResponse := proto.Clone(rawResponse).(*schedulerv2.AnnouncePeerResponse)
+
+		if err := stream.Send(clonedResponse); err != nil {
 			if err := peer.Task.DeletePeerInEdges(peer.ID); err != nil {
 				err = fmt.Errorf("peer deletes inedges failed: %w", err)
 				peer.Log.Error(err)
@@ -493,6 +497,36 @@ func (s *scheduling) FindParentAndCandidateParents(ctx context.Context, peer *st
 	return candidateParents, true
 }
 
+// candidateHasRequestedPiece reports whether a candidate has at least one piece
+// covered by the requesting peer's range. Full-file requests retain the existing
+// optimistic candidate selection because their requested piece set is not bounded
+// by a range at scheduling time.
+func candidateHasRequestedPiece(peer, candidateParent *standard.Peer) bool {
+	if peer.Range == nil || peer.Range.Length <= 0 || peer.Task.PieceLength == 0 || peer.Range.Start < 0 {
+		return true
+	}
+
+	start := uint64(peer.Range.Start)
+	length := uint64(peer.Range.Length)
+	end := start + length - 1
+	if end < start {
+		return true
+	}
+
+	firstPiece := start / peer.Task.PieceLength
+	lastPiece := end / peer.Task.PieceLength
+	for pieceNumber := firstPiece; pieceNumber <= lastPiece; pieceNumber++ {
+		if candidateParent.FinishedPieces.Test(uint(pieceNumber)) {
+			return true
+		}
+		if pieceNumber == lastPiece {
+			break
+		}
+	}
+
+	return false
+}
+
 // filterCandidateParents selects eligible candidate parent peers from a random sample of peers.
 // It applies multiple filters: blocklist exclusion, shared disable check, host uniqueness,
 // DAG presence, state validation for normal hosts, bad parent exclusion, and edge feasibility.
@@ -546,9 +580,28 @@ func (s *scheduling) filterCandidateParents(peer *standard.Peer, blocklist set.S
 			continue
 		}
 
+		// Skip candidates that do not have any piece requested by this ranged peer.
+		// A peer participating in the same task is not proof that it has the
+		// particular piece requested by this independent range request.
+		if !candidateHasRequestedPiece(peer, candidateParent) {
+			peer.Log.Debugf("parent %s host %s is not selected because it does not have a requested piece", candidateParent.ID, candidateParent.Host.ID)
+			continue
+		}
+
 		// Skip if candidate is deemed a bad parent by the evaluator.
 		if s.evaluator.IsBadParent(candidateParent) {
 			peer.Log.Debugf("parent %s host %s is not selected because it is bad node", candidateParent.ID, candidateParent.Host.ID)
+			continue
+		}
+
+		// Skip candidates that cannot accept another upload.
+		if candidateParent.Host.FreeUploadCount() <= 0 {
+			peer.Log.Debugf("parent %s host %s is not selected because its free upload is empty, upload limit is %d, upload count is %d",
+				candidateParent.ID,
+				candidateParent.Host.ID,
+				candidateParent.Host.ConcurrentUploadLimit.Load(),
+				candidateParent.Host.ConcurrentUploadCount.Load(),
+			)
 			continue
 		}
 

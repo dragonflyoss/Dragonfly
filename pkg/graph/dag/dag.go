@@ -21,6 +21,7 @@ package dag
 import (
 	"errors"
 	"maps"
+	"math/rand"
 	"sync"
 
 	"d7y.io/dragonfly/v2/pkg/container/set"
@@ -194,12 +195,20 @@ func (d *dag[T]) GetRandomVertices(n uint) []*Vertex[T] {
 		return nil
 	}
 
+	// Use reservoir sampling so every vertex has an equal chance of being selected
+	// without allocating a slice for the entire graph.
 	randomVertices := make([]*Vertex[T], 0, n)
+	count := 0
 	for _, vertex := range d.vertices {
-		randomVertices = append(randomVertices, vertex)
-		if uint(len(randomVertices)) >= n {
-			break
+		if uint(len(randomVertices)) < n {
+			randomVertices = append(randomVertices, vertex)
+		} else {
+			index := rand.Intn(count + 1)
+			if index < int(n) {
+				randomVertices[index] = vertex
+			}
 		}
+		count++
 	}
 
 	return randomVertices

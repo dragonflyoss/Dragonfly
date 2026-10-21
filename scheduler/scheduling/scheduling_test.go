@@ -1010,6 +1010,42 @@ func TestScheduling_ScheduleParentAndCandidateParents(t *testing.T) {
 	}
 }
 
+func TestCandidateHasRequestedPiece(t *testing.T) {
+	task := standard.NewTask(
+		mockTaskID,
+		mockTaskURL,
+		mockTaskTag,
+		mockTaskApplication,
+		commonv2.TaskType_STANDARD,
+		mockTaskFilteredQueryParams,
+		mockTaskHeader,
+		mockTaskBackToSourceLimit,
+		standard.WithPieceLength(4*1024*1024),
+	)
+	requester := standard.NewPeer(
+		mockPeerID,
+		task,
+		standard.NewHost(mockHostID, mockRawHost.IP, mockRawHost.Name, mockRawHost.Hostname,
+			mockRawHost.Port, mockRawHost.DownloadPort, mockRawHost.ProxyPort, mockRawHost.Type),
+		standard.WithRange(nethttp.Range{Start: 8 * 1024 * 1024, Length: 4 * 1024 * 1024}),
+	)
+	candidate := standard.NewPeer(
+		"candidate-parent",
+		task,
+		standard.NewHost("candidate-host", mockRawHost.IP, mockRawHost.Name, mockRawHost.Hostname,
+			mockRawHost.Port, mockRawHost.DownloadPort, mockRawHost.ProxyPort, mockRawHost.Type),
+	)
+
+	assert.False(t, candidateHasRequestedPiece(requester, candidate))
+	candidate.FinishedPieces.Set(1)
+	assert.False(t, candidateHasRequestedPiece(requester, candidate))
+	candidate.FinishedPieces.Set(2)
+	assert.True(t, candidateHasRequestedPiece(requester, candidate))
+
+	requester.Range = nil
+	assert.True(t, candidateHasRequestedPiece(requester, candidate))
+}
+
 func TestScheduling_FindCandidateParents(t *testing.T) {
 	tests := []struct {
 		name   string

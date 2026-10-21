@@ -385,6 +385,27 @@ func TestDAG_GetRandomVertices(t *testing.T) {
 	}
 }
 
+func TestDAG_GetRandomVerticesSamplesAllVertices(t *testing.T) {
+	d := mockDAG(t, []string{mockVertexEID, mockVertexFID, mockVertexGID, mockVertexHID, mockVertexIID}, nil)
+	allowed := map[string]struct{}{
+		mockVertexEID: {},
+		mockVertexFID: {},
+		mockVertexGID: {},
+		mockVertexHID: {},
+		mockVertexIID: {},
+	}
+
+	for range 100 {
+		vertices := d.GetRandomVertices(2)
+		assert.Len(t, vertices, 2)
+		assert.NotEqual(t, vertices[0].ID, vertices[1].ID)
+		_, ok := allowed[vertices[0].ID]
+		assert.True(t, ok)
+		_, ok = allowed[vertices[1].ID]
+		assert.True(t, ok)
+	}
+}
+
 func TestDAG_AddEdge(t *testing.T) {
 	tests := []struct {
 		name   string

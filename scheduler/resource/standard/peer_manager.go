@@ -236,7 +236,7 @@ func (p *peerManager) RunGC(ctx context.Context) error {
 		if elapsed > p.hostTTL {
 			peer.Log.Info("peer elapsed exceeds the host ttl, causing the peer to leave")
 			if err := peer.FSM.Event(ctx, PeerEventLeave); err != nil {
-				peer.Log.Infof("peer fsm event failed: %s", err.Error())
+				peer.Log.Errorf("peer fsm event failed: %s", err.Error())
 				return true
 			}
 

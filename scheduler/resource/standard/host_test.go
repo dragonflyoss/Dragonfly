@@ -21,9 +21,12 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest/observer"
 
 	commonv2 "d7y.io/api/v2/pkg/apis/common/v2"
 
+	logger "d7y.io/dragonfly/v2/internal/dflog"
 	pkgatomic "d7y.io/dragonfly/v2/pkg/atomic"
 	"d7y.io/dragonfly/v2/pkg/idgen"
 	"d7y.io/dragonfly/v2/pkg/types"
@@ -805,6 +808,21 @@ func TestHost_LeavePeers(t *testing.T) {
 				assert.True(loaded)
 				assert.True(peer.FSM.Is(PeerStateLeave))
 				assert.Equal(int32(1), host.PeerCount.Load())
+			},
+		},
+		{
+			name: "leave peers does not log an error for peers already left",
+			expect: func(t *testing.T, host *Host, mockPeer *Peer) {
+				mockPeer.FSM.SetState(PeerStateLeave)
+				host.StorePeer(mockPeer)
+
+				core, logs := observer.New(zap.ErrorLevel)
+				original := logger.CoreLogger
+				logger.SetCoreLogger(zap.New(core).Sugar())
+				defer logger.SetCoreLogger(original)
+
+				host.LeavePeers()
+				assert.Empty(t, logs.All())
 			},
 		},
 		{

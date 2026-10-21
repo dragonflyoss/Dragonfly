@@ -3430,6 +3430,109 @@ func TestServiceV2_handleRescheduleRequest(t *testing.T) {
 	}
 }
 
+func TestServiceV2_handleDownloadPeerTerminalRequestAfterLeave(t *testing.T) {
+	tests := []struct {
+		name string
+		run  func(*V2, context.Context, string) error
+	}{
+		{name: "finished", run: (*V2).handleDownloadPeerFinishedRequest},
+		{name: "back-to-source finished", run: (*V2).handleDownloadPeerBackToSourceFinishedRequest},
+		{name: "failed", run: (*V2).handleDownloadPeerFailedRequest},
+		{name: "back-to-source failed", run: (*V2).handleDownloadPeerBackToSourceFailedRequest},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctl := gomock.NewController(t)
+			resource := standard.NewMockResource(ctl)
+			peerManager := standard.NewMockPeerManager(ctl)
+			host := standard.NewHost(mockRawHost.ID, mockRawHost.IP, mockRawHost.Name, mockRawHost.Hostname,
+				mockRawHost.Port, mockRawHost.DownloadPort, mockRawHost.ProxyPort, mockRawHost.Type)
+			task := standard.NewTask(mockTaskID, mockTaskURL, mockTaskTag, mockTaskApplication, commonv2.TaskType_STANDARD,
+				mockTaskFilteredQueryParams, mockTaskHeader, mockTaskBackToSourceLimit)
+			peer := standard.NewPeer(mockPeerID, task, host)
+			task.StorePeer(peer)
+			host.StorePeer(peer)
+			peer.FSM.SetState(standard.PeerStateBackToSource)
+			task.FSM.SetState(standard.TaskStateSucceeded)
+			task.ContentLength.Store(1024)
+			task.TotalPieceCount.Store(1)
+			task.DirectPiece = []byte{1}
+
+			// Host cleanup can leave a peer while its announce stream is still open.
+			host.LeavePeers()
+			assert.Equal(t, standard.PeerStateLeave, peer.FSM.Current())
+			updatedAt := peer.UpdatedAt.Load()
+			resource.EXPECT().PeerManager().Return(peerManager).Times(2)
+			peerManager.EXPECT().Load(peer.ID).Return(peer, true).Times(2)
+			svc := &V2{resource: resource}
+
+			for i := 0; i < 2; i++ {
+				assert.NoError(t, tc.run(svc, context.Background(), peer.ID))
+				assert.Equal(t, standard.PeerStateLeave, peer.FSM.Current())
+				assert.Equal(t, time.Duration(0), peer.Cost.Load())
+				assert.Equal(t, updatedAt, peer.UpdatedAt.Load())
+				assert.Equal(t, standard.TaskStateSucceeded, task.FSM.Current())
+				assert.Equal(t, int64(1024), task.ContentLength.Load())
+				assert.Equal(t, int32(1), task.TotalPieceCount.Load())
+				assert.Equal(t, []byte{1}, task.DirectPiece)
+			}
+		})
+	}
+}
+
+func TestHandlePeerTerminalEventUsesNonCancelableContext(t *testing.T) {
+	host := standard.NewHost(mockRawHost.ID, mockRawHost.IP, mockRawHost.Name, mockRawHost.Hostname,
+		mockRawHost.Port, mockRawHost.DownloadPort, mockRawHost.ProxyPort, mockRawHost.Type)
+	task := standard.NewTask(mockTaskID, mockTaskURL, mockTaskTag, mockTaskApplication, commonv2.TaskType_STANDARD,
+		mockTaskFilteredQueryParams, mockTaskHeader, mockTaskBackToSourceLimit)
+	peer := standard.NewPeer(mockPeerID, task, host)
+	peer.FSM.SetState(standard.PeerStateRunning)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	transitioned, err := handlePeerTerminalEvent(ctx, peer, standard.PeerEventDownloadSucceeded)
+	assert.NoError(t, err)
+	assert.True(t, transitioned)
+	assert.Equal(t, standard.PeerStateSucceeded, peer.FSM.Current())
+
+	// A canceled request must not leave the FSM in an incomplete transition.
+	assert.NoError(t, peer.FSM.Event(context.Background(), standard.PeerEventLeave))
+	assert.Equal(t, standard.PeerStateLeave, peer.FSM.Current())
+}
+
+func TestHandlePeerTerminalEventConcurrentWithLeave(t *testing.T) {
+	for i := 0; i < 100; i++ {
+		host := standard.NewHost(mockRawHost.ID, mockRawHost.IP, mockRawHost.Name, mockRawHost.Hostname,
+			mockRawHost.Port, mockRawHost.DownloadPort, mockRawHost.ProxyPort, mockRawHost.Type)
+		task := standard.NewTask(mockTaskID, mockTaskURL, mockTaskTag, mockTaskApplication, commonv2.TaskType_STANDARD,
+			mockTaskFilteredQueryParams, mockTaskHeader, mockTaskBackToSourceLimit)
+		peer := standard.NewPeer(mockPeerID, task, host)
+		peer.FSM.SetState(standard.PeerStateRunning)
+
+		start := make(chan struct{})
+		var wg sync.WaitGroup
+		var terminalErr error
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			<-start
+			_, terminalErr = handlePeerTerminalEvent(context.Background(), peer, standard.PeerEventDownloadSucceeded)
+		}()
+		go func() {
+			defer wg.Done()
+			<-start
+			host.LeavePeers()
+		}()
+		close(start)
+		wg.Wait()
+
+		assert.NoError(t, terminalErr)
+		assert.Contains(t, []string{standard.PeerStateSucceeded, standard.PeerStateLeave}, peer.FSM.Current())
+	}
+}
+
 func TestServiceV2_handleDownloadPeerFinishedRequest(t *testing.T) {
 	tests := []struct {
 		name string

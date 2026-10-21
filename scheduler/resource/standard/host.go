@@ -475,6 +475,10 @@ func (h *Host) LeavePeers() {
 			return true
 		}
 
+		if peer.FSM.Is(PeerStateLeave) {
+			return true
+		}
+
 		peer.Log.Info("host leaves peers, causing the peer to leave")
 		if err := peer.FSM.Event(context.Background(), PeerEventLeave); err != nil {
 			peer.Log.Errorf("peer fsm event failed: %s", err.Error())
