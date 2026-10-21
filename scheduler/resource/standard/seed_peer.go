@@ -22,9 +22,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"maps"
 	"net"
-	"slices"
 	"strconv"
 	"sync"
 	"time"
@@ -33,6 +31,8 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	cdnsystemv1 "d7y.io/api/v2/pkg/apis/cdnsystem/v1"
 	commonv1 "d7y.io/api/v2/pkg/apis/common/v1"
@@ -56,7 +56,8 @@ const (
 	// Default value of seed peer failed timeout.
 	SeedPeerFailedTimeout = 30 * time.Minute
 
-	// SeedPeerRefreshInterval is the interval of refreshing seed peers.
+	// SeedPeerRefreshInterval is the interval of refreshing seed peers, which
+	// drops the seed peers whose announcements have stopped.
 	SeedPeerRefreshInterval = 30 * time.Second
 
 	// SeedPeerHealthCheckConcurrencyLimit is the number of seed peers checked
@@ -76,6 +77,12 @@ type SeedPeer interface {
 
 	// Select selects a seed peer target by the task id.
 	Select(context.Context, string) (*Host, error)
+
+	// Store stores the announced seed peer in the hashring.
+	Store(*Host)
+
+	// Delete deletes the seed peer from the hashring.
+	Delete(*Host)
 
 	// HasAvailable returns whether there is any available seed peer.
 	HasAvailable() bool
@@ -101,10 +108,10 @@ type seedPeer struct {
 	// dialOpts is the options for grpc dial.
 	dialOptions []grpc.DialOption
 
-	// mu protects hosts and hashring, which are replaced together by refresh.
+	// mu protects hosts and hashring.
 	mu sync.RWMutex
 
-	// hosts is the healthy seed peers keyed by name.
+	// hosts is the seed peers keyed by name.
 	hosts map[string]*Host
 
 	// hashring is the hashring constructed from the names of seed peers.
@@ -148,6 +155,7 @@ func (s *seedPeer) TriggerDownloadTask(ctx context.Context, taskID string, req *
 
 	stream, err := client.DownloadTask(ctx, taskID, req)
 	if err != nil {
+		s.evict(selected, err)
 		return err
 	}
 
@@ -159,9 +167,22 @@ func (s *seedPeer) TriggerDownloadTask(ctx context.Context, taskID string, req *
 				return nil
 			}
 
+			s.evict(selected, err)
 			return err
 		}
 	}
+}
+
+// evict deletes the seed peer from the hashring when the error reports it
+// unreachable, the seed peer is stored again by its next announcement, refer to
+// https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/outlier.
+func (s *seedPeer) evict(host *Host, err error) {
+	if status.Code(err) != codes.Unavailable {
+		return
+	}
+
+	host.Log.Warnf("evict unavailable seed peer from hashring: %s", err)
+	s.Delete(host)
 }
 
 // TriggerTask triggers the seed peer to download task.
@@ -311,6 +332,55 @@ func (s *seedPeer) Select(ctx context.Context, taskID string) (*Host, error) {
 	return host, nil
 }
 
+// Store stores the announced seed peer in the hashring. The hashring is keyed
+// by the name of the seed peer instead of the address, so that the seed peer
+// keeps its position in the hashring when its ip changes, refer to
+// https://github.com/grpc/proposal/blob/master/A76-ring-hash-improvements.md.
+func (s *seedPeer) Store(host *Host) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if _, ok := s.hosts[host.Name]; !ok {
+		s.hashring.Add(host.Name)
+	}
+
+	// The most recently announced host of the seed peer wins, such as
+	// the new pod after a restart.
+	s.hosts[host.Name] = host
+}
+
+// Delete deletes the seed peer from the hashring.
+func (s *seedPeer) Delete(host *Host) {
+	s.deleteHosts([]*Host{host})
+}
+
+// deleteHosts deletes the hosts from the hashring at once, and keeps the
+// seed peer when a more recently announced host of the same name has
+// replaced the host.
+func (s *seedPeer) deleteHosts(hosts []*Host) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	changed := false
+	for _, host := range hosts {
+		if current, ok := s.hosts[host.Name]; !ok || current != host {
+			continue
+		}
+
+		delete(s.hosts, host.Name)
+		changed = true
+	}
+
+	if changed {
+		ring := hashring.New()
+		for name := range s.hosts {
+			ring.Add(name)
+		}
+
+		s.hashring = ring
+	}
+}
+
 // HasAvailable returns whether there is any available seed peer.
 func (s *seedPeer) HasAvailable() bool {
 	s.mu.RLock()
@@ -353,31 +423,48 @@ func (s *seedPeer) initSeedPeer(ctx context.Context, rg *http.Range, task *Task,
 	return peer, nil
 }
 
-// refresh refreshes the hosts and hashring of seed peers, and clears
-// them when no seed peer is found in host manager. The hashring is keyed
-// by the name of the seed peer instead of the address, so that the seed peer
-// keeps its position in the hashring when its ip changes, refer to
-// https://github.com/grpc/proposal/blob/master/A76-ring-hash-improvements.md.
+// refresh drops the seed peers whose announcements have stopped, the one
+// missed an announcement is dropped when it fails the health check, refer to
+// https://www.cs.cornell.edu/projects/Quicksilver/public_pdfs/SWIM.pdf.
 func (s *seedPeer) refresh(ctx context.Context) {
-	hosts := s.hostManager.LoadAllSeeds()
-	if len(hosts) == 0 {
-		logger.Warnf("no seed peer found in host manager")
-	}
+	now := time.Now()
 
-	// Check the health of the seed peers concurrently, an unhealthy seed peer
-	// costs the health check timeout and must not delay the others.
-	healthy := make([]*Host, len(hosts))
+	var expiredHosts, suspectedHosts []*Host
+	s.mu.RLock()
+	for _, host := range s.hosts {
+		if host.AnnounceInterval <= 0 {
+			continue
+		}
+
+		// If the host's elapsed exceeds twice the announcing interval,
+		// then delete the seed peer without health check.
+		elapsed := now.Sub(host.UpdatedAt.Load())
+		if elapsed > host.AnnounceInterval*2 {
+			expiredHosts = append(expiredHosts, host)
+			continue
+		}
+
+		// If the host's elapsed exceeds the announcing interval,
+		// then check the health of the seed peer.
+		if elapsed > host.AnnounceInterval {
+			suspectedHosts = append(suspectedHosts, host)
+		}
+	}
+	s.mu.RUnlock()
+
+	// Check the health of the suspected seed peers concurrently, an unhealthy
+	// seed peer costs the health check timeout and must not delay the others.
+	unhealthyHosts := make([]*Host, len(suspectedHosts))
 	eg, ctx := errgroup.WithContext(ctx)
 	eg.SetLimit(SeedPeerHealthCheckConcurrencyLimit)
-	for i, host := range hosts {
+	for i, host := range suspectedHosts {
 		eg.Go(func() error {
 			addr := net.JoinHostPort(host.IP, strconv.Itoa(int(host.Port)))
 			if err := healthclient.Check(ctx, addr, s.dialOptions...); err != nil {
-				logger.Errorf("failed to check the healthy for seed peer %s: %v", addr, err)
-				return nil
+				host.Log.Infof("host missed an announcement and failed to check the healthy: %s", err)
+				unhealthyHosts[i] = host
 			}
 
-			healthy[i] = host
 			return nil
 		})
 	}
@@ -386,40 +473,20 @@ func (s *seedPeer) refresh(ctx context.Context) {
 		logger.Errorf("failed to check the healthy for seed peers: %v", err)
 	}
 
-	healthyHosts := make(map[string]*Host, len(hosts))
-	for _, host := range healthy {
-		if host == nil {
+	// Delete the seed peers, and keep the host which announced during the refresh.
+	var hosts []*Host
+	for _, host := range append(expiredHosts, unhealthyHosts...) {
+		if host == nil || host.UpdatedAt.Load().After(now) {
 			continue
 		}
 
-		// Keep the most recently announced host when the same seed peer is
-		// announced from several addresses, such as after a pod restart.
-		if current, ok := healthyHosts[host.Name]; ok && current.UpdatedAt.Load().After(host.UpdatedAt.Load()) {
-			continue
-		}
-
-		healthyHosts[host.Name] = host
+		host.Log.Info("seed peer has been deleted from hashring")
+		hosts = append(hosts, host)
 	}
 
-	// Rebuilding the hashring hashes every virtual node of every seed peer, so
-	// reuse the current hashring when the names of the healthy seed peers are
-	// unchanged and only refresh the hosts.
-	s.mu.RLock()
-	ring := s.hashring
-	unchanged := slices.Equal(slices.Sorted(maps.Keys(s.hosts)), slices.Sorted(maps.Keys(healthyHosts)))
-	s.mu.RUnlock()
-
-	if !unchanged {
-		ring = hashring.New()
-		for name := range healthyHosts {
-			ring.Add(name)
-		}
+	if len(hosts) > 0 {
+		s.deleteHosts(hosts)
 	}
-
-	s.mu.Lock()
-	s.hosts = healthyHosts
-	s.hashring = ring
-	s.mu.Unlock()
 }
 
 // Serve serves the seed peer service.
