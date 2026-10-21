@@ -25,6 +25,7 @@ import (
 	"io"
 	"net"
 	"slices"
+	"sort"
 	"strconv"
 	"sync"
 
@@ -888,7 +889,18 @@ func (j *job) selectPeers(ips []string, count *uint32, percentage *uint32, log *
 }
 
 // syncPeers is a job to sync peers.
-func (j *job) syncPeers() (string, error) {
+func (j *job) syncPeers(_ context.Context, data string) (string, error) {
+	req := &internaljob.SyncPeerRequest{}
+	if err := internaljob.UnmarshalRequest(data, req); err != nil {
+		logger.Errorf("[sync-peers] unmarshal request err: %s, request body: %s", err.Error(), data)
+		return "", err
+	}
+
+	if err := validator.New().Struct(req); err != nil {
+		logger.Errorf("[sync-peers] sync peer task %s validate failed: %s", req.GroupUUID, err.Error())
+		return "", err
+	}
+
 	hosts := make([]*resource.Host, 0, j.resource.HostManager().Len())
 	j.resource.HostManager().Range(func(key, value any) bool {
 		host, ok := value.(*resource.Host)
@@ -901,7 +913,32 @@ func (j *job) syncPeers() (string, error) {
 		return true
 	})
 
-	return internaljob.MarshalResponse(hosts)
+	// Sort hosts by ID.
+	sort.Slice(hosts, func(i, j int) bool {
+		return hosts[i].ID < hosts[j].ID
+	})
+
+	// We ignore changes in hosts data across multiple task requests within the same group.
+	// TODO: (Could this cause problems? Perhaps we should create a snapshot of the hosts for same group to ensure that the host information is completely accurate.)
+	// Split hosts by task count.
+	total := len(hosts)
+	groupSize := total / req.TotalGroupTask
+	remainder := total % req.TotalGroupTask
+
+	var start int
+	if req.GroupTaskCount < remainder {
+		start = req.GroupTaskCount * (groupSize + 1)
+	} else {
+		start = remainder*(groupSize+1) + (req.GroupTaskCount-remainder)*groupSize
+	}
+	end := start + groupSize
+	if req.GroupTaskCount < remainder {
+		end++
+	}
+
+	taskHosts := hosts[start:end]
+
+	return internaljob.MarshalResponse(taskHosts)
 }
 
 // getTask is a job to get task.

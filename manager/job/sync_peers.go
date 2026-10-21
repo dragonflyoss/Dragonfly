@@ -22,6 +22,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"sync"
 	"time"
 
@@ -161,25 +162,52 @@ func (s *syncPeers) createSyncPeers(ctx context.Context, scheduler models.Schedu
 		return nil, err
 	}
 
-	// Initialize task signature.
-	task := &machineryv1tasks.Signature{
-		UUID:       fmt.Sprintf("task_%s", uuid.New().String()),
-		Name:       internaljob.SyncPeersJob,
-		RoutingKey: queue.String(),
+	var tasks []*machineryv1tasks.Signature
+	for i := 0; i < s.config.Job.SyncPeers.SyncBatchSize; i++ {
+		// Initialize task signature.
+		task := &machineryv1tasks.Signature{
+			UUID:       fmt.Sprintf("task_%s", uuid.New().String()),
+			Name:       internaljob.SyncPeersJob,
+			RoutingKey: queue.String(),
+		}
+		tasks = append(tasks, task)
 	}
-
+	if len(tasks) <= 0 {
+		return []*resource.Host{}, nil
+	}
+	group, err := machineryv1tasks.NewGroup(tasks...)
+	if err != nil {
+		return nil, err
+	}
+	for i, signature := range group.Tasks {
+		// Set signature args.
+		args, err := internaljob.MarshalRequest(internaljob.SyncPeerRequest{
+			GroupUUID:      group.GroupUUID,
+			GroupTaskCount: i,
+			TotalGroupTask: len(group.Tasks),
+		})
+		if err != nil {
+			logger.Errorf("[sync-peers] sync peer task marshal request: %v, error: %v", args, err)
+			return nil, err
+		}
+		signature.Args = args
+	}
 	// Send sync peer task to worker.
-	logger.Infof("[sync-peers] create sync peers in queue %v, task: %#v", queue, task)
-	asyncResult, err := s.job.Server.SendTaskWithContext(ctx, task)
+	logger.Infof("[sync-peers] create sync peers in queue %v, tasksNumber %d, taskUUID %v", queue, len(tasks), tasks[0].UUID)
+	asyncResults, err := s.job.Server.SendGroupWithContext(ctx, group, 0)
 	if err != nil {
 		logger.Errorf("[sync-peers] create sync peers in queue %v failed", queue, err)
 		return nil, err
 	}
 
 	// Get sync peer task result.
-	results, err := asyncResult.GetWithTimeout(s.config.Job.SyncPeers.Timeout, DefaultTaskPollingInterval)
-	if err != nil {
-		return nil, err
+	results := make([]reflect.Value, 0, len(asyncResults))
+	for _, asyncResult := range asyncResults {
+		result, err := asyncResult.GetWithTimeout(s.config.Job.SyncPeers.Timeout, DefaultTaskPollingInterval)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, result...)
 	}
 
 	// Unmarshal sync peer task result.

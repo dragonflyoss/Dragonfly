@@ -149,3 +149,10 @@ type DeleteFailureTask struct {
 	HostType    string `json:"host_type"`
 	Description string `json:"description"`
 }
+
+// SyncPeerRequest defines the request parameters for sync peer task.
+type SyncPeerRequest struct {
+	GroupUUID      string `json:"group_uuid"`
+	GroupTaskCount int    `json:"group_task_count"`
+	TotalGroupTask int    `json:"total_group_task"`
+}
