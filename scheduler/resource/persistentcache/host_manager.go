@@ -20,6 +20,8 @@ package persistentcache
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"math/rand/v2"
 	"strconv"
 	"time"
@@ -32,6 +34,14 @@ import (
 	pkgredis "d7y.io/dragonfly/v2/pkg/redis"
 	pkgtypes "d7y.io/dragonfly/v2/pkg/types"
 	"d7y.io/dragonfly/v2/scheduler/config"
+)
+
+var (
+	// ErrHostNotFound is returned when the host hash does not exist in redis.
+	ErrHostNotFound = errors.New("host not found")
+
+	// ErrHostInvalid is returned when a stored host field can not be parsed.
+	ErrHostInvalid = errors.New("host invalid")
 )
 
 const (
@@ -86,134 +96,134 @@ func newHostManager(cfg *config.Config, gc pkggc.GC, rdb redis.UniversalClient) 
 }
 
 // Load returns host by a key.
+// Load returns host by host id, and whether it was found and valid.
 func (h *hostManager) Load(ctx context.Context, hostID string) (*Host, bool) {
-	log := logger.WithHostID(hostID)
-	rawHost, err := h.rdb.HGetAll(ctx, pkgredis.MakePersistentCacheHostKeyInScheduler(h.config.Manager.SchedulerClusterID, hostID)).Result()
+	host, err := h.load(ctx, hostID)
 	if err != nil {
-		log.Errorf("getting host failed from redis: %v", err)
+		if !errors.Is(err, ErrHostNotFound) {
+			logger.WithHostID(hostID).Errorf("load host failed: %v", err)
+		}
+
 		return nil, false
 	}
 
+	return host, true
+}
+
+// load returns host by host id. It returns ErrHostNotFound if the host hash does
+// not exist and a wrapped ErrHostInvalid if a stored field can not be parsed.
+func (h *hostManager) load(ctx context.Context, hostID string) (*Host, error) {
+	rawHost, err := h.rdb.HGetAll(ctx, pkgredis.MakePersistentCacheHostKeyInScheduler(h.config.Manager.SchedulerClusterID, hostID)).Result()
+	if err != nil {
+		return nil, fmt.Errorf("getting host from redis: %w", err)
+	}
+
 	if len(rawHost) == 0 {
-		return nil, false
+		return nil, ErrHostNotFound
 	}
 
 	// Set integer fields from raw host.
 	port, err := strconv.ParseInt(rawHost["port"], 10, 32)
 	if err != nil {
-		log.Errorf("parsing port failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing port failed: %w", ErrHostInvalid, err)
 	}
 
 	downloadPort, err := strconv.ParseInt(rawHost["download_port"], 10, 32)
 	if err != nil {
-		log.Errorf("parsing download port failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing download port failed: %w", ErrHostInvalid, err)
 	}
 
 	proxyPort, err := strconv.ParseInt(rawHost["proxy_port"], 10, 32)
 	if err != nil {
-		log.Errorf("parsing proxy port failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing proxy port failed: %w", ErrHostInvalid, err)
 	}
 
 	// Set cpu fields from raw host.
 	schedulerClusterID, err := strconv.ParseUint(rawHost["scheduler_cluster_id"], 10, 64)
 	if err != nil {
-		log.Errorf("parsing scheduler cluster id failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing scheduler cluster id failed: %w", ErrHostInvalid, err)
 	}
 
 	// Set boolean fields from raw host.
 	disableShared, err := strconv.ParseBool(rawHost["disable_shared"])
 	if err != nil {
-		log.Errorf("parsing disable shared failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing disable shared failed: %w", ErrHostInvalid, err)
 	}
 
 	// Set cpu fields from raw host.
 	cpuLogicalCount, err := strconv.ParseUint(rawHost["cpu_logical_count"], 10, 32)
 	if err != nil {
-		log.Errorf("parsing cpu logical count failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing cpu logical count failed: %w", ErrHostInvalid, err)
 	}
 
 	cpuPhysicalCount, err := strconv.ParseUint(rawHost["cpu_physical_count"], 10, 32)
 	if err != nil {
-		log.Errorf("parsing cpu physical count failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing cpu physical count failed: %w", ErrHostInvalid, err)
 	}
 
 	cpuPercent, err := strconv.ParseFloat(rawHost["cpu_percent"], 64)
 	if err != nil {
-		log.Errorf("parsing cpu percent failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing cpu percent failed: %w", ErrHostInvalid, err)
 	}
 
-	cpuProcessPercent, err := strconv.ParseFloat(rawHost["cpu_process_percent"], 64)
-	if err != nil {
-		log.Errorf("parsing cpu process percent failed: %v", err)
-		return nil, false
+	// cpu_process_percent was introduced in v2.5.0, hosts stored by older schedulers do
+	// not have it yet.
+	var cpuProcessPercent float64
+	if raw := rawHost["cpu_process_percent"]; raw != "" {
+		cpuProcessPercent, err = strconv.ParseFloat(raw, 64)
+		if err != nil {
+			return nil, fmt.Errorf("%w: parsing cpu process percent failed: %w", ErrHostInvalid, err)
+		}
 	}
 
 	cpuTimesUser, err := strconv.ParseFloat(rawHost["cpu_times_user"], 64)
 	if err != nil {
-		log.Errorf("parsing cpu times user failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing cpu times user failed: %w", ErrHostInvalid, err)
 	}
 
 	cpuTimesSystem, err := strconv.ParseFloat(rawHost["cpu_times_system"], 64)
 	if err != nil {
-		log.Errorf("parsing cpu times system failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing cpu times system failed: %w", ErrHostInvalid, err)
 	}
 
 	cpuTimesIdle, err := strconv.ParseFloat(rawHost["cpu_times_idle"], 64)
 	if err != nil {
-		log.Errorf("parsing cpu times idle failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing cpu times idle failed: %w", ErrHostInvalid, err)
 	}
 
 	cpuTimesNice, err := strconv.ParseFloat(rawHost["cpu_times_nice"], 64)
 	if err != nil {
-		log.Errorf("parsing cpu times nice failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing cpu times nice failed: %w", ErrHostInvalid, err)
 	}
 
 	cpuTimesIowait, err := strconv.ParseFloat(rawHost["cpu_times_iowait"], 64)
 	if err != nil {
-		log.Errorf("parsing cpu times iowait failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing cpu times iowait failed: %w", ErrHostInvalid, err)
 	}
 
 	cpuTimesIrq, err := strconv.ParseFloat(rawHost["cpu_times_irq"], 64)
 	if err != nil {
-		log.Errorf("parsing cpu times irq failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing cpu times irq failed: %w", ErrHostInvalid, err)
 	}
 
 	cpuTimesSoftirq, err := strconv.ParseFloat(rawHost["cpu_times_softirq"], 64)
 	if err != nil {
-		log.Errorf("parsing cpu times softirq failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing cpu times softirq failed: %w", ErrHostInvalid, err)
 	}
 
 	cpuTimesSteal, err := strconv.ParseFloat(rawHost["cpu_times_steal"], 64)
 	if err != nil {
-		log.Errorf("parsing cpu times steal failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing cpu times steal failed: %w", ErrHostInvalid, err)
 	}
 
 	cpuTimesGuest, err := strconv.ParseFloat(rawHost["cpu_times_guest"], 64)
 	if err != nil {
-		log.Errorf("parsing cpu times guest failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing cpu times guest failed: %w", ErrHostInvalid, err)
 	}
 
 	cpuTimesGuestNice, err := strconv.ParseFloat(rawHost["cpu_times_guest_nice"], 64)
 	if err != nil {
-		log.Errorf("parsing cpu times guest nice failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing cpu times guest nice failed: %w", ErrHostInvalid, err)
 	}
 
 	cpu := CPU{
@@ -238,38 +248,37 @@ func (h *hostManager) Load(ctx context.Context, hostID string) (*Host, bool) {
 	// Set memory fields from raw host.
 	memoryTotal, err := strconv.ParseUint(rawHost["memory_total"], 10, 64)
 	if err != nil {
-		log.Errorf("parsing memory total failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing memory total failed: %w", ErrHostInvalid, err)
 	}
 
 	memoryAvailable, err := strconv.ParseUint(rawHost["memory_available"], 10, 64)
 	if err != nil {
-		log.Errorf("parsing memory available failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing memory available failed: %w", ErrHostInvalid, err)
 	}
 
 	memoryUsed, err := strconv.ParseUint(rawHost["memory_used"], 10, 64)
 	if err != nil {
-		log.Errorf("parsing memory used failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing memory used failed: %w", ErrHostInvalid, err)
 	}
 
 	memoryUsedPercent, err := strconv.ParseFloat(rawHost["memory_used_percent"], 64)
 	if err != nil {
-		log.Errorf("parsing memory used percent failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing memory used percent failed: %w", ErrHostInvalid, err)
 	}
 
-	memoryProcessUsedPercent, err := strconv.ParseFloat(rawHost["memory_process_used_percent"], 64)
-	if err != nil {
-		log.Errorf("parsing memory process used percent failed: %v", err)
-		return nil, false
+	// memory_process_used_percent was introduced in v2.5.0, hosts stored by older schedulers do
+	// not have it yet.
+	var memoryProcessUsedPercent float64
+	if raw := rawHost["memory_process_used_percent"]; raw != "" {
+		memoryProcessUsedPercent, err = strconv.ParseFloat(raw, 64)
+		if err != nil {
+			return nil, fmt.Errorf("%w: parsing memory process used percent failed: %w", ErrHostInvalid, err)
+		}
 	}
 
 	memoryFree, err := strconv.ParseUint(rawHost["memory_free"], 10, 64)
 	if err != nil {
-		log.Errorf("parsing memory free failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing memory free failed: %w", ErrHostInvalid, err)
 	}
 
 	memory := Memory{
@@ -284,38 +293,32 @@ func (h *hostManager) Load(ctx context.Context, hostID string) (*Host, bool) {
 	// Set network fields from raw host.
 	networkTCPConnectionCount, err := strconv.ParseUint(rawHost["network_tcp_connection_count"], 10, 32)
 	if err != nil {
-		log.Errorf("parsing network tcp connection count failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing network tcp connection count failed: %w", ErrHostInvalid, err)
 	}
 
 	networkUploadTCPConnectionCount, err := strconv.ParseUint(rawHost["network_upload_tcp_connection_count"], 10, 32)
 	if err != nil {
-		log.Errorf("parsing network upload tcp connection count failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing network upload tcp connection count failed: %w", ErrHostInvalid, err)
 	}
 
 	rxBandwidth, err := strconv.ParseUint(rawHost["network_rx_bandwidth"], 10, 64)
 	if err != nil {
-		log.Errorf("parsing download rate failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing download rate failed: %w", ErrHostInvalid, err)
 	}
 
 	maxRxBandwidth, err := strconv.ParseUint(rawHost["network_max_rx_bandwidth"], 10, 64)
 	if err != nil {
-		log.Errorf("parsing download rate limit failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing download rate limit failed: %w", ErrHostInvalid, err)
 	}
 
 	txBandwidth, err := strconv.ParseUint(rawHost["network_tx_bandwidth"], 10, 64)
 	if err != nil {
-		log.Errorf("parsing upload rate failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing upload rate failed: %w", ErrHostInvalid, err)
 	}
 
 	maxTxBandwidth, err := strconv.ParseUint(rawHost["network_max_tx_bandwidth"], 10, 64)
 	if err != nil {
-		log.Errorf("parsing upload rate limit failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing upload rate limit failed: %w", ErrHostInvalid, err)
 	}
 
 	network := Network{
@@ -332,62 +335,52 @@ func (h *hostManager) Load(ctx context.Context, hostID string) (*Host, bool) {
 	// Set disk fields from raw host.
 	diskTotal, err := strconv.ParseUint(rawHost["disk_total"], 10, 64)
 	if err != nil {
-		log.Errorf("parsing disk total failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing disk total failed: %w", ErrHostInvalid, err)
 	}
 
 	diskFree, err := strconv.ParseUint(rawHost["disk_free"], 10, 64)
 	if err != nil {
-		log.Errorf("parsing disk free failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing disk free failed: %w", ErrHostInvalid, err)
 	}
 
 	diskUsed, err := strconv.ParseUint(rawHost["disk_used"], 10, 64)
 	if err != nil {
-		log.Errorf("parsing disk used failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing disk used failed: %w", ErrHostInvalid, err)
 	}
 
 	diskUsedPercent, err := strconv.ParseFloat(rawHost["disk_used_percent"], 64)
 	if err != nil {
-		log.Errorf("parsing disk used percent failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing disk used percent failed: %w", ErrHostInvalid, err)
 	}
 
 	diskInodesTotal, err := strconv.ParseUint(rawHost["disk_inodes_total"], 10, 64)
 	if err != nil {
-		log.Errorf("parsing disk inodes total failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing disk inodes total failed: %w", ErrHostInvalid, err)
 	}
 
 	diskInodesUsed, err := strconv.ParseUint(rawHost["disk_inodes_used"], 10, 64)
 	if err != nil {
-		log.Errorf("parsing disk inodes used failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing disk inodes used failed: %w", ErrHostInvalid, err)
 	}
 
 	diskInodesFree, err := strconv.ParseUint(rawHost["disk_inodes_free"], 10, 64)
 	if err != nil {
-		log.Errorf("parsing disk inodes free failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing disk inodes free failed: %w", ErrHostInvalid, err)
 	}
 
 	diskInodesUsedPercent, err := strconv.ParseFloat(rawHost["disk_inodes_used_percent"], 64)
 	if err != nil {
-		log.Errorf("parsing disk inodes used percent failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing disk inodes used percent failed: %w", ErrHostInvalid, err)
 	}
 
 	diskWriteBandwidth, err := strconv.ParseUint(rawHost["disk_write_bandwidth"], 10, 64)
 	if err != nil {
-		log.Errorf("parsing disk write bandwidth failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing disk write bandwidth failed: %w", ErrHostInvalid, err)
 	}
 
 	diskReadBandwidth, err := strconv.ParseUint(rawHost["disk_read_bandwidth"], 10, 64)
 	if err != nil {
-		log.Errorf("parsing disk read bandwidth failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing disk read bandwidth failed: %w", ErrHostInvalid, err)
 	}
 
 	disk := Disk{
@@ -413,20 +406,17 @@ func (h *hostManager) Load(ctx context.Context, hostID string) (*Host, bool) {
 	// Set time fields from raw host.
 	announceInterval, err := strconv.ParseInt(rawHost["announce_interval"], 10, 64)
 	if err != nil {
-		log.Errorf("parsing announce interval failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing announce interval failed: %w", ErrHostInvalid, err)
 	}
 
 	createdAt, err := time.Parse(time.RFC3339, rawHost["created_at"])
 	if err != nil {
-		log.Errorf("parsing created at failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing created at failed: %w", ErrHostInvalid, err)
 	}
 
 	updatedAt, err := time.Parse(time.RFC3339, rawHost["updated_at"])
 	if err != nil {
-		log.Errorf("parsing updated at failed: %v", err)
-		return nil, false
+		return nil, fmt.Errorf("%w: parsing updated at failed: %w", ErrHostInvalid, err)
 	}
 
 	return NewHost(
@@ -454,7 +444,7 @@ func (h *hostManager) Load(ctx context.Context, hostID string) (*Host, bool) {
 		createdAt,
 		updatedAt,
 		logger.WithHost(rawHost["id"], rawHost["hostname"], rawHost["ip"]),
-	), true
+	), nil
 }
 
 // Store sets host.
@@ -796,21 +786,52 @@ func (h *hostManager) LoadRandom(ctx context.Context, n int, blocklist set.SafeS
 
 // RunGC runs garbage collection.
 func (h *hostManager) RunGC(ctx context.Context) error {
-	hosts, err := h.LoadAll(ctx)
-	if err != nil {
-		logger.Error("load all hosts failed")
-		return err
-	}
+	var cursor uint64
+	for {
+		var (
+			hostIDs []string
+			err     error
+		)
 
-	for _, host := range hosts {
-		// If the host's elapsed exceeds twice the announcing interval,
-		// then leave peers in host.
-		elapsed := time.Since(host.UpdatedAt)
-		if host.AnnounceInterval > 0 && elapsed > host.AnnounceInterval*2 {
-			host.Log.Info("host has been reclaimed")
-			if err := h.Delete(ctx, host.ID); err != nil {
-				host.Log.Errorf("delete host failed: %v", err)
+		hostIDs, cursor, err = h.rdb.SScan(ctx, pkgredis.MakePersistentCacheHostsInScheduler(h.config.Manager.SchedulerClusterID), cursor, "*", 10).Result()
+		if err != nil {
+			logger.Error("scan hosts failed")
+			return err
+		}
+
+		for _, hostID := range hostIDs {
+			log := logger.WithHostID(hostID)
+			host, err := h.load(ctx, hostID)
+			if err != nil {
+				// A host whose hash is gone or can not be parsed will never be
+				// usable again, so reclaim it instead of skipping it on every run.
+				// Transient redis errors are left for the next run.
+				if !errors.Is(err, ErrHostNotFound) && !errors.Is(err, ErrHostInvalid) {
+					log.Errorf("load host failed: %v", err)
+					continue
+				}
+
+				log.Infof("host has been reclaimed: %v", err)
+				if err := h.Delete(ctx, hostID); err != nil {
+					log.Errorf("delete host failed: %v", err)
+				}
+
+				continue
 			}
+
+			// If the host's elapsed exceeds twice the announcing interval,
+			// then leave peers in host.
+			elapsed := time.Since(host.UpdatedAt)
+			if host.AnnounceInterval > 0 && elapsed > host.AnnounceInterval*2 {
+				host.Log.Info("host has been reclaimed")
+				if err := h.Delete(ctx, host.ID); err != nil {
+					host.Log.Errorf("delete host failed: %v", err)
+				}
+			}
+		}
+
+		if cursor == 0 {
+			break
 		}
 	}
 
