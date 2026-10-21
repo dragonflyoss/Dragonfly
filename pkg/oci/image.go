@@ -19,6 +19,7 @@ package oci
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net/http"
 	"time"
@@ -32,13 +33,21 @@ import (
 // defaultRegistryTimeout is the default timeout for registry requests.
 const defaultRegistryTimeout = 1 * time.Minute
 
-// DefaultHTTPClient returns the default http client for registry requests.
+// DefaultHTTPClient returns the default http client for registry requests, the
+// registry certificate is verified against the system root CAs.
 func DefaultHTTPClient() *http.Client {
+	return NewHTTPClient(nil, false)
+}
+
+// NewHTTPClient returns a http client for registry requests. The registry
+// certificate is verified against rootCAs, or against the system root CAs when
+// rootCAs is nil, unless insecureSkipVerify is set.
+func NewHTTPClient(rootCAs *x509.CertPool, insecureSkipVerify bool) *http.Client {
 	return &http.Client{
 		Timeout: defaultRegistryTimeout,
 		Transport: &http.Transport{
 			DialContext:         nethttp.NewSafeDialer().DialContext,
-			TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
+			TLSClientConfig:     &tls.Config{RootCAs: rootCAs, InsecureSkipVerify: insecureSkipVerify},
 			MaxIdleConns:        400,
 			MaxIdleConnsPerHost: 20,
 			MaxConnsPerHost:     50,

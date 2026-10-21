@@ -19,6 +19,8 @@ package oci
 import (
 	"context"
 	"crypto/sha256"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -107,6 +109,62 @@ func TestParseImage(t *testing.T) {
 			tc.expect(t, ref, err)
 		})
 	}
+}
+
+func TestNewHTTPClient(t *testing.T) {
+	rootCAs := x509.NewCertPool()
+
+	tests := []struct {
+		name               string
+		rootCAs            *x509.CertPool
+		insecureSkipVerify bool
+		expect             func(t *testing.T, tlsConfig *tls.Config)
+	}{
+		{
+			name: "default client verifies the registry certificate",
+			expect: func(t *testing.T, tlsConfig *tls.Config) {
+				assert := assert.New(t)
+				assert.False(tlsConfig.InsecureSkipVerify)
+				assert.Nil(tlsConfig.RootCAs)
+			},
+		},
+		{
+			name:    "verify the registry certificate against the given root cas",
+			rootCAs: rootCAs,
+			expect: func(t *testing.T, tlsConfig *tls.Config) {
+				assert := assert.New(t)
+				assert.False(tlsConfig.InsecureSkipVerify)
+				assert.Equal(rootCAs, tlsConfig.RootCAs)
+			},
+		},
+		{
+			name:               "skip the registry certificate verification",
+			insecureSkipVerify: true,
+			expect: func(t *testing.T, tlsConfig *tls.Config) {
+				assert := assert.New(t)
+				assert.True(tlsConfig.InsecureSkipVerify)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			assert := assert.New(t)
+
+			client := NewHTTPClient(tc.rootCAs, tc.insecureSkipVerify)
+			transport, ok := client.Transport.(*http.Transport)
+			assert.True(ok)
+			tc.expect(t, transport.TLSClientConfig)
+		})
+	}
+}
+
+func TestDefaultHTTPClient(t *testing.T) {
+	assert := assert.New(t)
+
+	transport, ok := DefaultHTTPClient().Transport.(*http.Transport)
+	assert.True(ok)
+	assert.False(transport.TLSClientConfig.InsecureSkipVerify)
 }
 
 func TestResolve(t *testing.T) {
