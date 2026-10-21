@@ -249,7 +249,7 @@ func (t *taskManager) LoadAll(ctx context.Context) ([]*Task, error) {
 			err      error
 		)
 
-		// Example: If {prefix} is "scheduler:scheduler-clusters:1:persistent-cache-tasks:".
+		// Example: If {prefix} is "scheduler:scheduler-clusters:{1}:persistent-cache-tasks:".
 		//
 		// Keys include:
 		// - "{prefix}{taskID}:persistent-cache-peers"
@@ -258,7 +258,7 @@ func (t *taskManager) LoadAll(ctx context.Context) ([]*Task, error) {
 		//
 		// Purpose: Scan all keys starting with {prefix}.
 		prefix := fmt.Sprintf("%s:", pkgredis.MakePersistentCacheTasksInScheduler(t.config.Manager.SchedulerClusterID))
-		taskKeys, cursor, err = t.rdb.Scan(ctx, cursor, fmt.Sprintf("%s*", prefix), 10).Result()
+		taskKeys, cursor, err = pkgredis.ScanSchedulerKeys(ctx, t.rdb, cursor, fmt.Sprintf("%s*", prefix), 10)
 		if err != nil {
 			logger.Error("scan tasks failed")
 			return nil, err

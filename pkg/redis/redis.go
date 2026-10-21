@@ -19,6 +19,7 @@ package redis
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/redis/go-redis/v9"
 
@@ -74,6 +75,9 @@ const (
 
 // NewRedis returns a new redis client.
 func NewRedis(cfg *redis.UniversalOptions) (redis.UniversalClient, error) {
+	if cfg.MasterName == "" && len(cfg.Addrs) > 1 && cfg.DB != 0 {
+		return nil, fmt.Errorf("redis cluster requires database 0, got %d", cfg.DB)
+	}
 	redis.SetLogger(&redisLogger{})
 	client := redis.NewUniversalClient(&redis.UniversalOptions{
 		Addrs:            cfg.Addrs,
@@ -89,6 +93,7 @@ func NewRedis(cfg *redis.UniversalOptions) (redis.UniversalClient, error) {
 	})
 
 	if err := client.Ping(context.Background()).Err(); err != nil {
+		_ = client.Close()
 		logger.Errorf("failed to ping redis: %v", err)
 		return nil, err
 	}
@@ -99,6 +104,19 @@ func NewRedis(cfg *redis.UniversalOptions) (redis.UniversalClient, error) {
 // IsEnabled check redis is enabled.
 func IsEnabled(addrs []string) bool {
 	return len(addrs) != 0
+}
+
+// ScanSchedulerKeys scans the master owning the scheduler cluster hash tag.
+// ClusterClient.Scan otherwise selects an arbitrary node and can miss records.
+func ScanSchedulerKeys(ctx context.Context, client redis.UniversalClient, cursor uint64, pattern string, count int64) ([]string, uint64, error) {
+	if cluster, ok := client.(*redis.ClusterClient); ok {
+		master, err := cluster.MasterForKey(ctx, pattern)
+		if err != nil {
+			return nil, 0, err
+		}
+		return master.Scan(ctx, cursor, pattern, count).Result()
+	}
+	return client.Scan(ctx, cursor, pattern, count).Result()
 }
 
 // MakeNamespaceKeyInManager make namespace key in manager.
@@ -148,6 +166,14 @@ func MakeNamespaceKeyInScheduler(namespace string) string {
 
 // MakeKeyInScheduler make key in scheduler.
 func MakeKeyInScheduler(namespace, id string) string {
+	if namespace == SchedulerClustersNamespace {
+		clusterID, suffix, found := strings.Cut(id, ":")
+		if found {
+			// Host, peer and task Lua scripts touch several related keys. Pin all
+			// keys for one scheduler cluster to the same Redis Cluster hash slot.
+			return fmt.Sprintf("%s:{%s}:%s", MakeNamespaceKeyInScheduler(namespace), clusterID, suffix)
+		}
+	}
 	return fmt.Sprintf("%s:%s", MakeNamespaceKeyInScheduler(namespace), id)
 }
 
