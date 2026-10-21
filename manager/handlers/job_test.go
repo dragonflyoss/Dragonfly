@@ -194,6 +194,40 @@ var (
 		Type:      "preheat",
 		BIO:       "bio",
 		TaskID:    "dec6fe878785cea844dcecdf2ea25e19156822201016455733e47e9f0bfab563",
+		Args: models.JSONMap{
+			"url":      "https://registry.example.com/v2/library/busybox/manifests/latest",
+			"username": "robot$dragonfly",
+			"password": "super-secret",
+			"headers": map[string]any{
+				"Authorization": "Bearer abc123",
+				"Accept":        "application/json",
+			},
+			"object_storage": map[string]any{
+				"endpoint":          "https://s3.example.com",
+				"access_key_id":     "access-key",
+				"access_key_secret": "secret-key",
+				"session_token":     "session-token",
+				"security_token":    "security-token",
+			},
+			"hdfs": map[string]any{
+				"delegation_token": "delegation-token",
+			},
+		},
+	}
+	mockSanitizedPreheatJobModel = &models.Job{
+		BaseModel: mockBaseModel,
+		UserID:    4,
+		Type:      "preheat",
+		BIO:       "bio",
+		TaskID:    "dec6fe878785cea844dcecdf2ea25e19156822201016455733e47e9f0bfab563",
+		Args: models.JSONMap{
+			"url":      "https://registry.example.com/v2/library/busybox/manifests/latest",
+			"username": "robot$dragonfly",
+			"object_storage": map[string]any{
+				"endpoint": "https://s3.example.com",
+			},
+			"hdfs": map[string]any{},
+		},
 	}
 
 	mockGetTaskJobModel = &models.Job{
@@ -293,7 +327,7 @@ func TestHandlers_CreateJob(t *testing.T) {
 				job := models.Job{}
 				err := json.Unmarshal(w.Body.Bytes(), &job)
 				assert.NoError(err)
-				assert.Equal(mockPreheatJobModel, &job)
+				assert.Equal(mockSanitizedPreheatJobModel, &job)
 			},
 		},
 		{
@@ -570,7 +604,7 @@ func TestHandlers_UpdateJob(t *testing.T) {
 				job := models.Job{}
 				err := json.Unmarshal(w.Body.Bytes(), &job)
 				assert.NoError(err)
-				assert.Equal(mockPreheatJobModel, &job)
+				assert.Equal(mockSanitizedPreheatJobModel, &job)
 			},
 		},
 	}
@@ -619,7 +653,7 @@ func TestHandlers_GetJob(t *testing.T) {
 				job := models.Job{}
 				err := json.Unmarshal(w.Body.Bytes(), &job)
 				assert.NoError(err)
-				assert.Equal(mockPreheatJobModel, &job)
+				assert.Equal(mockSanitizedPreheatJobModel, &job)
 			},
 		},
 	}
@@ -672,7 +706,7 @@ func TestHandlers_GetJobs(t *testing.T) {
 				job := models.Job{}
 				err := json.Unmarshal(w.Body.Bytes()[1:w.Body.Len()-1], &job)
 				assert.NoError(err)
-				assert.Equal(mockPreheatJobModel, &job)
+				assert.Equal(mockSanitizedPreheatJobModel, &job)
 			},
 		},
 	}

@@ -63,7 +63,7 @@ func (h *Handlers) CreateJob(ctx *gin.Context) {
 			return
 		}
 
-		ctx.JSON(http.StatusOK, job)
+		ctx.JSON(http.StatusOK, sanitizeJobForResponse(job))
 	case job.SyncPeersJob:
 		var json types.CreateSyncPeersJobRequest
 		if err := ctx.ShouldBindBodyWith(&json, binding.JSON); err != nil {
@@ -98,7 +98,7 @@ func (h *Handlers) CreateJob(ctx *gin.Context) {
 			return
 		}
 
-		ctx.JSON(http.StatusOK, job)
+		ctx.JSON(http.StatusOK, sanitizeJobForResponse(job))
 	case job.GetImageDistributionJob:
 		var json types.CreateGetImageDistributionJobRequest
 		if err := ctx.ShouldBindBodyWith(&json, binding.JSON); err != nil {
@@ -131,7 +131,7 @@ func (h *Handlers) CreateJob(ctx *gin.Context) {
 			return
 		}
 
-		ctx.JSON(http.StatusOK, job)
+		ctx.JSON(http.StatusOK, sanitizeJobForResponse(job))
 	case job.GCJob:
 		var json types.CreateGCJobRequest
 		if err := ctx.ShouldBindBodyWith(&json, binding.JSON); err != nil {
@@ -145,7 +145,7 @@ func (h *Handlers) CreateJob(ctx *gin.Context) {
 			return
 		}
 
-		ctx.JSON(http.StatusOK, job)
+		ctx.JSON(http.StatusOK, sanitizeJobForResponse(job))
 	default:
 		ctx.JSON(http.StatusUnprocessableEntity, gin.H{"errors": "Unknow type"})
 	}
@@ -210,7 +210,7 @@ func (h *Handlers) UpdateJob(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, job)
+	ctx.JSON(http.StatusOK, sanitizeJobForResponse(job))
 }
 
 // @Summary Get Job
@@ -238,7 +238,7 @@ func (h *Handlers) GetJob(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, job)
+	ctx.JSON(http.StatusOK, sanitizeJobForResponse(job))
 }
 
 // @Summary Get Jobs
@@ -269,5 +269,5 @@ func (h *Handlers) GetJobs(ctx *gin.Context) {
 	}
 
 	h.setPaginationLinkHeader(ctx, query.Page, query.PerPage, int(count))
-	ctx.JSON(http.StatusOK, jobs)
+	ctx.JSON(http.StatusOK, sanitizeJobsForResponse(jobs))
 }
