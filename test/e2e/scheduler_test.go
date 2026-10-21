@@ -67,6 +67,13 @@ var _ = Describe("Schedulers Restarting", func() {
 				return err
 			}, 5*time.Minute, 15*time.Second).Should(Succeed())
 
+			// The download above proves one scheduler tracks the seed peers again,
+			// wait for the rest: the seed peers discover a restarted scheduler within
+			// the dynconfig refresh interval and announce within the announce interval,
+			// and the schedulers of the compatibility tests rebuild the hashring of
+			// seed peers every 30 seconds after that.
+			time.Sleep(90 * time.Second)
+
 			sha256sum, err := util.CalculateSha256ByTaskID([]*util.PodExec{clientPod}, testFile.GetTaskID())
 			Expect(err).NotTo(HaveOccurred())
 			Expect(testFile.GetSha256()).To(Equal(sha256sum))

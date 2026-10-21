@@ -25,7 +25,6 @@ import (
 	"reflect"
 	"strconv"
 	"sync"
-	"sync/atomic"
 	"testing"
 	"time"
 
@@ -49,6 +48,7 @@ import (
 
 	logger "d7y.io/dragonfly/v2/internal/dflog"
 	"d7y.io/dragonfly/v2/pkg/gc"
+	"d7y.io/dragonfly/v2/pkg/idgen"
 	nethttp "d7y.io/dragonfly/v2/pkg/net/http"
 	"d7y.io/dragonfly/v2/pkg/rpc/common"
 	dfdaemonclientmocks "d7y.io/dragonfly/v2/pkg/rpc/dfdaemon/client/mocks"
@@ -145,137 +145,347 @@ func TestSeedPeer_newSeedPeer(t *testing.T) {
 	}
 }
 
-func TestSeedPeer_refresh(t *testing.T) {
+func TestSeedPeer_Store(t *testing.T) {
 	tests := []struct {
 		name   string
-		hosts  func(t *testing.T) []*Host
-		mock   func(m *MockHostManagerMockRecorder, hosts []*Host)
-		expect func(t *testing.T, seedPeer *seedPeer, hosts []*Host)
+		expect func(t *testing.T, seedPeer *seedPeer)
 	}{
 		{
-			name: "refresh healthy seed peer",
-			hosts: func(t *testing.T) []*Host {
-				return []*Host{mockSeedHostServer(t, func(svr *grpc.Server) {
-					healthpb.RegisterHealthServer(svr, health.NewServer())
-				})}
-			},
-			mock: func(m *MockHostManagerMockRecorder, hosts []*Host) {
-				m.LoadAllSeeds().Return(hosts)
-			},
-			expect: func(t *testing.T, seedPeer *seedPeer, hosts []*Host) {
+			name: "store seed peer",
+			expect: func(t *testing.T, seedPeer *seedPeer) {
 				assert := assert.New(t)
-				seedPeer.refresh(context.Background())
+				mockHost := mockSeedHost(mockRawSeedHost.Port)
+				seedPeer.Store(mockHost)
+				assert.True(seedPeer.HasAvailable())
+				assert.Equal(hashring.DefaultVNodesPerNode, seedPeer.hashring.Len())
+
+				host, err := seedPeer.Select(context.Background(), mockTaskID)
+				assert.NoError(err)
+				assert.Same(mockHost, host)
+			},
+		},
+		{
+			name: "replace the host of the same seed peer and keep the hashring",
+			expect: func(t *testing.T, seedPeer *seedPeer) {
+				assert := assert.New(t)
+				stale := mockSeedHost(mockRawSeedHost.Port)
+				seedPeer.Store(stale)
+				ring := seedPeer.hashring
+
+				restarted := mockSeedHost(mockRawSeedHost.Port)
+				restarted.ID = idgen.HostID("127.0.0.2", mockRawSeedHost.Hostname, true)
+				restarted.IP = "127.0.0.2"
+				seedPeer.Store(restarted)
+				assert.Same(ring, seedPeer.hashring)
+				assert.Equal(hashring.DefaultVNodesPerNode, seedPeer.hashring.Len())
+				assert.Len(seedPeer.hosts, 1)
+
+				host, err := seedPeer.Select(context.Background(), mockTaskID)
+				assert.NoError(err)
+				assert.Same(restarted, host)
+			},
+		},
+		{
+			name: "store seed peers with different names",
+			expect: func(t *testing.T, seedPeer *seedPeer) {
+				assert := assert.New(t)
+				foo := mockSeedHost(mockRawSeedHost.Port)
+				foo.Name = "default-seed-client-0"
+				bar := mockSeedHost(mockRawSeedHost.Port)
+				bar.Name = "default-seed-client-1"
+				seedPeer.Store(foo)
+				seedPeer.Store(bar)
+				assert.Len(seedPeer.hosts, 2)
+				assert.Equal(2*hashring.DefaultVNodesPerNode, seedPeer.hashring.Len())
+
+				host, err := seedPeer.Select(context.Background(), mockTaskID)
+				assert.NoError(err)
+				assert.Contains([]*Host{foo, bar}, host)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctl := gomock.NewController(t)
+			defer ctl.Finish()
+			hostManager := NewMockHostManager(ctl)
+			peerManager := NewMockPeerManager(ctl)
+			clientPool := dfdaemonclientmocks.NewMockPool(ctl)
+
+			tc.expect(t, newSeedPeer(peerManager, hostManager, clientPool).(*seedPeer))
+		})
+	}
+}
+
+func TestSeedPeer_Delete(t *testing.T) {
+	tests := []struct {
+		name   string
+		expect func(t *testing.T, seedPeer *seedPeer)
+	}{
+		{
+			name: "delete seed peer",
+			expect: func(t *testing.T, seedPeer *seedPeer) {
+				assert := assert.New(t)
+				mockHost := mockSeedHost(mockRawSeedHost.Port)
+				seedPeer.Store(mockHost)
+				seedPeer.Delete(mockHost)
+				assert.Empty(seedPeer.hosts)
+				assert.False(seedPeer.HasAvailable())
+
+				_, err := seedPeer.Select(context.Background(), mockTaskID)
+				assert.EqualError(err, "no available seed peer")
+			},
+		},
+		{
+			name: "delete seed peer which does not exist",
+			expect: func(t *testing.T, seedPeer *seedPeer) {
+				assert := assert.New(t)
+				seedPeer.Delete(mockSeedHost(mockRawSeedHost.Port))
+				assert.Empty(seedPeer.hosts)
+				assert.False(seedPeer.HasAvailable())
+			},
+		},
+		{
+			name: "keep the more recently announced host of the same seed peer",
+			expect: func(t *testing.T, seedPeer *seedPeer) {
+				assert := assert.New(t)
+				stale := mockSeedHost(mockRawSeedHost.Port)
+				restarted := mockSeedHost(mockRawSeedHost.Port)
+				restarted.ID = idgen.HostID("127.0.0.2", mockRawSeedHost.Hostname, true)
+				seedPeer.Store(stale)
+				seedPeer.Store(restarted)
+				seedPeer.Delete(stale)
 				assert.True(seedPeer.HasAvailable())
 
 				host, err := seedPeer.Select(context.Background(), mockTaskID)
 				assert.NoError(err)
-				assert.Equal(hosts[0].ID, host.ID)
+				assert.Same(restarted, host)
 			},
 		},
 		{
-			name: "filter unhealthy seed peer",
-			hosts: func(t *testing.T) []*Host {
-				return []*Host{mockUnreachableSeedHost(t)}
-			},
-			mock: func(m *MockHostManagerMockRecorder, hosts []*Host) {
-				m.LoadAllSeeds().Return(hosts)
-			},
-			expect: func(t *testing.T, seedPeer *seedPeer, hosts []*Host) {
+			name: "delete one of the seed peers",
+			expect: func(t *testing.T, seedPeer *seedPeer) {
 				assert := assert.New(t)
-				seedPeer.refresh(context.Background())
-				assert.False(seedPeer.HasAvailable())
-
-				_, err := seedPeer.Select(context.Background(), mockTaskID)
-				assert.Error(err)
-			},
-		},
-		{
-			name: "keep the most recently announced host of the same seed peer",
-			hosts: func(t *testing.T) []*Host {
-				register := func(svr *grpc.Server) {
-					healthpb.RegisterHealthServer(svr, health.NewServer())
-				}
-
-				stale := mockSeedHostServer(t, register)
-				stale.UpdatedAt.Store(time.Now().Add(-time.Minute))
-				return []*Host{stale, mockSeedHostServer(t, register)}
-			},
-			mock: func(m *MockHostManagerMockRecorder, hosts []*Host) {
-				m.LoadAllSeeds().Return(hosts)
-			},
-			expect: func(t *testing.T, seedPeer *seedPeer, hosts []*Host) {
-				assert := assert.New(t)
-				seedPeer.refresh(context.Background())
+				foo := mockSeedHost(mockRawSeedHost.Port)
+				foo.Name = "default-seed-client-0"
+				bar := mockSeedHost(mockRawSeedHost.Port)
+				bar.Name = "default-seed-client-1"
+				seedPeer.Store(foo)
+				seedPeer.Store(bar)
+				seedPeer.Delete(foo)
 				assert.Len(seedPeer.hosts, 1)
 				assert.Equal(hashring.DefaultVNodesPerNode, seedPeer.hashring.Len())
 
 				host, err := seedPeer.Select(context.Background(), mockTaskID)
 				assert.NoError(err)
-				assert.Same(hosts[1], host)
+				assert.Same(bar, host)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctl := gomock.NewController(t)
+			defer ctl.Finish()
+			hostManager := NewMockHostManager(ctl)
+			peerManager := NewMockPeerManager(ctl)
+			clientPool := dfdaemonclientmocks.NewMockPool(ctl)
+
+			tc.expect(t, newSeedPeer(peerManager, hostManager, clientPool).(*seedPeer))
+		})
+	}
+}
+
+func TestSeedPeer_refresh(t *testing.T) {
+	tests := []struct {
+		name   string
+		expect func(t *testing.T, seedPeer *seedPeer)
+	}{
+		{
+			name: "delete seed peer whose announcement has stopped without health check",
+			expect: func(t *testing.T, seedPeer *seedPeer) {
+				assert := assert.New(t)
+				mockHost := mockSeedHostServer(t, func(svr *grpc.Server) {
+					healthpb.RegisterHealthServer(svr, health.NewServer())
+				})
+				mockHost.AnnounceInterval = time.Second
+				mockHost.UpdatedAt.Store(time.Now().Add(-3 * time.Second))
+				seedPeer.Store(mockHost)
+
+				seedPeer.refresh(context.Background())
+				assert.Empty(seedPeer.hosts)
+				assert.False(seedPeer.HasAvailable())
+
+				_, err := seedPeer.Select(context.Background(), mockTaskID)
+				assert.EqualError(err, "no available seed peer")
 			},
 		},
 		{
-			name: "reuse the hashring when the seed peers are unchanged",
-			hosts: func(t *testing.T) []*Host {
-				return []*Host{mockSeedHostServer(t, func(svr *grpc.Server) {
-					healthpb.RegisterHealthServer(svr, health.NewServer())
-				})}
-			},
-			mock: func(m *MockHostManagerMockRecorder, hosts []*Host) {
-				m.LoadAllSeeds().Return(hosts).Times(2)
-			},
-			expect: func(t *testing.T, seedPeer *seedPeer, hosts []*Host) {
+			name: "delete suspected seed peer which fails the health check",
+			expect: func(t *testing.T, seedPeer *seedPeer) {
 				assert := assert.New(t)
+				mockHost := mockUnreachableSeedHost(t)
+				mockHost.AnnounceInterval = 10 * time.Second
+				mockHost.UpdatedAt.Store(time.Now().Add(-15 * time.Second))
+				seedPeer.Store(mockHost)
+
 				seedPeer.refresh(context.Background())
+				assert.Empty(seedPeer.hosts)
+				assert.False(seedPeer.HasAvailable())
+			},
+		},
+		{
+			name: "keep suspected seed peer which passes the health check",
+			expect: func(t *testing.T, seedPeer *seedPeer) {
+				assert := assert.New(t)
+				mockHost := mockSeedHostServer(t, func(svr *grpc.Server) {
+					healthpb.RegisterHealthServer(svr, health.NewServer())
+				})
+				mockHost.AnnounceInterval = 10 * time.Second
+				mockHost.UpdatedAt.Store(time.Now().Add(-15 * time.Second))
+				seedPeer.Store(mockHost)
 				ring := seedPeer.hashring
 
 				seedPeer.refresh(context.Background())
 				assert.Same(ring, seedPeer.hashring)
-				assert.Same(hosts[0], seedPeer.hosts[hosts[0].Name])
+				assert.Same(mockHost, seedPeer.hosts[mockHost.Name])
+				assert.True(seedPeer.HasAvailable())
 			},
 		},
 		{
-			name: "refresh and select concurrently with changing seed peers",
-			hosts: func(t *testing.T) []*Host {
-				register := func(svr *grpc.Server) {
+			name: "keep suspected seed peer which announces during the health check",
+			expect: func(t *testing.T, seedPeer *seedPeer) {
+				assert := assert.New(t)
+				mockHost := mockHangingSeedHost(t)
+				mockHost.AnnounceInterval = 10 * time.Second
+				mockHost.UpdatedAt.Store(time.Now().Add(-15 * time.Second))
+				seedPeer.Store(mockHost)
+
+				var wg sync.WaitGroup
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					time.Sleep(500 * time.Millisecond)
+					mockHost.UpdatedAt.Store(time.Now())
+					seedPeer.Store(mockHost)
+				}()
+
+				seedPeer.refresh(context.Background())
+				wg.Wait()
+				assert.True(seedPeer.HasAvailable())
+
+				host, err := seedPeer.Select(context.Background(), mockTaskID)
+				assert.NoError(err)
+				assert.Same(mockHost, host)
+			},
+		},
+		{
+			name: "keep seed peer announced within the announce interval without health check",
+			expect: func(t *testing.T, seedPeer *seedPeer) {
+				assert := assert.New(t)
+				mockHost := mockUnreachableSeedHost(t)
+				mockHost.AnnounceInterval = time.Minute
+				seedPeer.Store(mockHost)
+				ring := seedPeer.hashring
+
+				seedPeer.refresh(context.Background())
+				assert.Same(ring, seedPeer.hashring)
+				assert.Same(mockHost, seedPeer.hosts[mockHost.Name])
+				assert.True(seedPeer.HasAvailable())
+			},
+		},
+		{
+			name: "keep seed peer without announce interval",
+			expect: func(t *testing.T, seedPeer *seedPeer) {
+				assert := assert.New(t)
+				mockHost := mockUnreachableSeedHost(t)
+				mockHost.UpdatedAt.Store(time.Now().Add(-time.Hour))
+				seedPeer.Store(mockHost)
+
+				seedPeer.refresh(context.Background())
+				assert.Same(mockHost, seedPeer.hosts[mockHost.Name])
+				assert.True(seedPeer.HasAvailable())
+			},
+		},
+		{
+			name: "keep the more recently announced host of the suspected seed peer",
+			expect: func(t *testing.T, seedPeer *seedPeer) {
+				assert := assert.New(t)
+				stale := mockUnreachableSeedHost(t)
+				stale.AnnounceInterval = 10 * time.Second
+				stale.UpdatedAt.Store(time.Now().Add(-15 * time.Second))
+				seedPeer.Store(stale)
+
+				restarted := mockSeedHost(mockRawSeedHost.Port)
+				restarted.ID = idgen.HostID("127.0.0.2", mockRawSeedHost.Hostname, true)
+				restarted.AnnounceInterval = 10 * time.Second
+				seedPeer.Store(restarted)
+
+				seedPeer.refresh(context.Background())
+				assert.Same(restarted, seedPeer.hosts[restarted.Name])
+				assert.True(seedPeer.HasAvailable())
+			},
+		},
+		{
+			name: "check the health of suspected seed peers concurrently",
+			expect: func(t *testing.T, seedPeer *seedPeer) {
+				assert := assert.New(t)
+				healthy := mockSeedHostServer(t, func(svr *grpc.Server) {
 					healthpb.RegisterHealthServer(svr, health.NewServer())
+				})
+				healthy.AnnounceInterval = 10 * time.Second
+				healthy.UpdatedAt.Store(time.Now().Add(-15 * time.Second))
+				seedPeer.Store(healthy)
+				for i := range 8 {
+					host := mockHangingSeedHost(t)
+					host.Name = fmt.Sprintf("hanging-seed-client-%d", i)
+					host.AnnounceInterval = 10 * time.Second
+					host.UpdatedAt.Store(time.Now().Add(-15 * time.Second))
+					seedPeer.Store(host)
 				}
 
+				start := time.Now()
+				seedPeer.refresh(context.Background())
+				assert.Less(time.Since(start), 8*time.Second)
+				assert.Len(seedPeer.hosts, 1)
+
+				host, err := seedPeer.Select(context.Background(), mockTaskID)
+				assert.NoError(err)
+				assert.Same(healthy, host)
+			},
+		},
+		{
+			name: "store, delete, refresh and select concurrently",
+			expect: func(t *testing.T, seedPeer *seedPeer) {
 				var hosts []*Host
 				for i := range 3 {
-					host := mockSeedHostServer(t, register)
+					host := mockSeedHost(mockRawSeedHost.Port)
 					host.Name = fmt.Sprintf("default-seed-client-%d", i)
+					host.AnnounceInterval = time.Second
 					hosts = append(hosts, host)
 				}
 
-				return hosts
-			},
-			mock: func(m *MockHostManagerMockRecorder, hosts []*Host) {
-				var calls atomic.Int64
-				m.LoadAllSeeds().DoAndReturn(func() []*Host {
-					switch calls.Add(1) % 3 {
-					case 0:
-						return hosts[:1]
-					case 1:
-						return hosts
-					default:
-						return []*Host{}
-					}
-				}).AnyTimes()
-			},
-			expect: func(t *testing.T, seedPeer *seedPeer, hosts []*Host) {
 				var wg sync.WaitGroup
 				wg.Add(3)
 				go func() {
 					defer wg.Done()
-					for range 100 {
-						seedPeer.refresh(context.Background())
+					for i := range 300 {
+						host := hosts[i%len(hosts)]
+						if i%2 == 0 {
+							host.UpdatedAt.Store(time.Now())
+							seedPeer.Store(host)
+						} else {
+							seedPeer.Delete(host)
+						}
 					}
 				}()
 
 				go func() {
 					defer wg.Done()
-					for range 100 {
+					for i := range 300 {
+						host := hosts[i%len(hosts)]
+						host.UpdatedAt.Store(time.Now().Add(-3 * time.Second))
 						seedPeer.refresh(context.Background())
 					}
 				}()
@@ -284,6 +494,7 @@ func TestSeedPeer_refresh(t *testing.T) {
 					assert := assert.New(t)
 					defer wg.Done()
 					for i := range 2000 {
+						seedPeer.HasAvailable()
 						host, err := seedPeer.Select(context.Background(), fmt.Sprintf("%s-%d", mockTaskID, i))
 						if err != nil {
 							assert.EqualError(err, "no available seed peer")
@@ -291,88 +502,6 @@ func TestSeedPeer_refresh(t *testing.T) {
 						}
 
 						assert.Contains(hosts, host)
-					}
-				}()
-
-				wg.Wait()
-			},
-		},
-		{
-			name: "check the health of seed peers concurrently",
-			hosts: func(t *testing.T) []*Host {
-				hosts := []*Host{mockSeedHostServer(t, func(svr *grpc.Server) {
-					healthpb.RegisterHealthServer(svr, health.NewServer())
-				})}
-				for i := range 8 {
-					host := mockHangingSeedHost(t)
-					host.Name = fmt.Sprintf("hanging-seed-client-%d", i)
-					hosts = append(hosts, host)
-				}
-
-				return hosts
-			},
-			mock: func(m *MockHostManagerMockRecorder, hosts []*Host) {
-				m.LoadAllSeeds().Return(hosts)
-			},
-			expect: func(t *testing.T, seedPeer *seedPeer, hosts []*Host) {
-				assert := assert.New(t)
-				start := time.Now()
-				seedPeer.refresh(context.Background())
-				assert.Less(time.Since(start), 8*time.Second)
-				assert.Len(seedPeer.hosts, 1)
-
-				host, err := seedPeer.Select(context.Background(), mockTaskID)
-				assert.NoError(err)
-				assert.Same(hosts[0], host)
-			},
-		},
-		{
-			name: "clear stale seed peers when host manager is empty",
-			hosts: func(t *testing.T) []*Host {
-				return []*Host{}
-			},
-			mock: func(m *MockHostManagerMockRecorder, hosts []*Host) {
-				m.LoadAllSeeds().Return(hosts)
-			},
-			expect: func(t *testing.T, seedPeer *seedPeer, hosts []*Host) {
-				assert := assert.New(t)
-				mockHost := mockSeedHost(4000)
-				seedPeer.hosts[mockHost.Name] = mockHost
-				seedPeer.hashring.Add(mockHost.Name)
-
-				seedPeer.refresh(context.Background())
-				assert.Empty(seedPeer.hosts)
-				assert.False(seedPeer.HasAvailable())
-
-				_, err := seedPeer.Select(context.Background(), mockTaskID)
-				assert.Error(err)
-			},
-		},
-		{
-			name: "refresh and select concurrently",
-			hosts: func(t *testing.T) []*Host {
-				return []*Host{}
-			},
-			mock: func(m *MockHostManagerMockRecorder, hosts []*Host) {
-				m.LoadAllSeeds().Return(hosts).AnyTimes()
-			},
-			expect: func(t *testing.T, seedPeer *seedPeer, hosts []*Host) {
-				var wg sync.WaitGroup
-				wg.Add(2)
-				go func() {
-					defer wg.Done()
-					for range 100 {
-						seedPeer.refresh(context.Background())
-					}
-				}()
-
-				go func() {
-					assert := assert.New(t)
-					defer wg.Done()
-					for range 100 {
-						seedPeer.HasAvailable()
-						_, err := seedPeer.Select(context.Background(), mockTaskID)
-						assert.Error(err)
 					}
 				}()
 
@@ -389,12 +518,9 @@ func TestSeedPeer_refresh(t *testing.T) {
 			peerManager := NewMockPeerManager(ctl)
 			clientPool := dfdaemonclientmocks.NewMockPool(ctl)
 
-			hosts := tc.hosts(t)
-			tc.mock(hostManager.EXPECT(), hosts)
-
 			seedPeer := newSeedPeer(peerManager, hostManager, clientPool,
 				grpc.WithTransportCredentials(insecure.NewCredentials())).(*seedPeer)
-			tc.expect(t, seedPeer, hosts)
+			tc.expect(t, seedPeer)
 		})
 	}
 }
@@ -456,14 +582,14 @@ func TestSeedPeer_TriggerDownloadTask(t *testing.T) {
 		name      string
 		available bool
 		mock      func(clientPool *dfdaemonclientmocks.MockPool, client *dfdaemonclientmocks.MockClient, stream *dfdaemonv2mocks.MockDfdaemonUpload_DownloadTaskClient, addr string)
-		expect    func(t *testing.T, err error)
+		expect    func(t *testing.T, seedPeer *seedPeer, err error)
 	}{
 		{
 			name:      "no available seed peer",
 			available: false,
 			mock: func(clientPool *dfdaemonclientmocks.MockPool, client *dfdaemonclientmocks.MockClient, stream *dfdaemonv2mocks.MockDfdaemonUpload_DownloadTaskClient, addr string) {
 			},
-			expect: func(t *testing.T, err error) {
+			expect: func(t *testing.T, seedPeer *seedPeer, err error) {
 				assert := assert.New(t)
 				assert.Error(err)
 			},
@@ -474,7 +600,7 @@ func TestSeedPeer_TriggerDownloadTask(t *testing.T) {
 			mock: func(clientPool *dfdaemonclientmocks.MockPool, client *dfdaemonclientmocks.MockClient, stream *dfdaemonv2mocks.MockDfdaemonUpload_DownloadTaskClient, addr string) {
 				clientPool.EXPECT().Get(addr).Return(nil, errors.New("foo")).Times(1)
 			},
-			expect: func(t *testing.T, err error) {
+			expect: func(t *testing.T, seedPeer *seedPeer, err error) {
 				assert := assert.New(t)
 				assert.Error(err)
 			},
@@ -486,9 +612,24 @@ func TestSeedPeer_TriggerDownloadTask(t *testing.T) {
 				clientPool.EXPECT().Get(addr).Return(client, nil).Times(1)
 				client.EXPECT().DownloadTask(gomock.Any(), mockTaskID, gomock.Any()).Return(nil, errors.New("foo")).Times(1)
 			},
-			expect: func(t *testing.T, err error) {
+			expect: func(t *testing.T, seedPeer *seedPeer, err error) {
 				assert := assert.New(t)
 				assert.Error(err)
+				assert.True(seedPeer.HasAvailable())
+			},
+		},
+		{
+			name:      "download task failed with unavailable evicts seed peer",
+			available: true,
+			mock: func(clientPool *dfdaemonclientmocks.MockPool, client *dfdaemonclientmocks.MockClient, stream *dfdaemonv2mocks.MockDfdaemonUpload_DownloadTaskClient, addr string) {
+				clientPool.EXPECT().Get(addr).Return(client, nil).Times(1)
+				client.EXPECT().DownloadTask(gomock.Any(), mockTaskID, gomock.Any()).Return(nil, status.Error(codes.Unavailable, "foo")).Times(1)
+			},
+			expect: func(t *testing.T, seedPeer *seedPeer, err error) {
+				assert := assert.New(t)
+				assert.Equal(codes.Unavailable, status.Code(err))
+				assert.Empty(seedPeer.hosts)
+				assert.False(seedPeer.HasAvailable())
 			},
 		},
 		{
@@ -499,9 +640,25 @@ func TestSeedPeer_TriggerDownloadTask(t *testing.T) {
 				client.EXPECT().DownloadTask(gomock.Any(), mockTaskID, gomock.Any()).Return(stream, nil).Times(1)
 				stream.EXPECT().Recv().Return(nil, errors.New("foo")).Times(1)
 			},
-			expect: func(t *testing.T, err error) {
+			expect: func(t *testing.T, seedPeer *seedPeer, err error) {
 				assert := assert.New(t)
 				assert.Error(err)
+				assert.True(seedPeer.HasAvailable())
+			},
+		},
+		{
+			name:      "receive from download task stream failed with unavailable evicts seed peer",
+			available: true,
+			mock: func(clientPool *dfdaemonclientmocks.MockPool, client *dfdaemonclientmocks.MockClient, stream *dfdaemonv2mocks.MockDfdaemonUpload_DownloadTaskClient, addr string) {
+				clientPool.EXPECT().Get(addr).Return(client, nil).Times(1)
+				client.EXPECT().DownloadTask(gomock.Any(), mockTaskID, gomock.Any()).Return(stream, nil).Times(1)
+				stream.EXPECT().Recv().Return(nil, status.Error(codes.Unavailable, "foo")).Times(1)
+			},
+			expect: func(t *testing.T, seedPeer *seedPeer, err error) {
+				assert := assert.New(t)
+				assert.Equal(codes.Unavailable, status.Code(err))
+				assert.Empty(seedPeer.hosts)
+				assert.False(seedPeer.HasAvailable())
 			},
 		},
 		{
@@ -515,7 +672,7 @@ func TestSeedPeer_TriggerDownloadTask(t *testing.T) {
 					stream.EXPECT().Recv().Return(nil, io.EOF).Times(1),
 				)
 			},
-			expect: func(t *testing.T, err error) {
+			expect: func(t *testing.T, seedPeer *seedPeer, err error) {
 				assert := assert.New(t)
 				assert.NoError(err)
 			},
@@ -543,7 +700,7 @@ func TestSeedPeer_TriggerDownloadTask(t *testing.T) {
 
 			tc.mock(clientPool, client, stream, addr)
 
-			tc.expect(t, seedPeer.TriggerDownloadTask(context.Background(), mockTaskID, &dfdaemonv2.DownloadTaskRequest{}))
+			tc.expect(t, seedPeer, seedPeer.TriggerDownloadTask(context.Background(), mockTaskID, &dfdaemonv2.DownloadTaskRequest{}))
 		})
 	}
 }

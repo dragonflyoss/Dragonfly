@@ -43,6 +43,18 @@ func (m *MockSeedPeer) EXPECT() *MockSeedPeerMockRecorder {
 	return m.recorder
 }
 
+// Delete mocks base method.
+func (m *MockSeedPeer) Delete(arg0 *Host) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Delete", arg0)
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockSeedPeerMockRecorder) Delete(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockSeedPeer)(nil).Delete), arg0)
+}
+
 // HasAvailable mocks base method.
 func (m *MockSeedPeer) HasAvailable() bool {
 	m.ctrl.T.Helper()
@@ -96,6 +108,18 @@ func (m *MockSeedPeer) Stop() {
 func (mr *MockSeedPeerMockRecorder) Stop() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockSeedPeer)(nil).Stop))
+}
+
+// Store mocks base method.
+func (m *MockSeedPeer) Store(arg0 *Host) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Store", arg0)
+}
+
+// Store indicates an expected call of Store.
+func (mr *MockSeedPeerMockRecorder) Store(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Store", reflect.TypeOf((*MockSeedPeer)(nil).Store), arg0)
 }
 
 // TriggerDownloadTask mocks base method.

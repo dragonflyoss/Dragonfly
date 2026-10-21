@@ -542,6 +542,12 @@ func (v *V1) AnnounceHost(ctx context.Context, req *schedulerv1.AnnounceHostRequ
 
 		v.resource.HostManager().Store(host)
 		host.Log.Infof("announce new host: %#v", req)
+
+		// Store the seed peer in the hashring by its announcement.
+		if host.Type == types.HostTypeSuperSeed {
+			v.resource.SeedPeer().Store(host)
+		}
+
 		return nil
 	}
 
@@ -624,6 +630,11 @@ func (v *V1) AnnounceHost(ctx context.Context, req *schedulerv1.AnnounceHostRequ
 		}
 	}
 
+	// Store the seed peer in the hashring by its announcement.
+	if host.Type == types.HostTypeSuperSeed {
+		v.resource.SeedPeer().Store(host)
+	}
+
 	return nil
 }
 
@@ -644,6 +655,12 @@ func (v *V1) LeaveHost(_ctx context.Context, req *schedulerv1.LeaveHostRequest) 
 
 	// Delete host in scheduler.
 	v.resource.HostManager().Delete(host.ID)
+
+	// Delete the seed peer from the hashring.
+	if host.Type == types.HostTypeSuperSeed {
+		v.resource.SeedPeer().Delete(host)
+	}
+
 	return nil
 }
 

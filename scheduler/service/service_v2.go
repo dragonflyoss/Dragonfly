@@ -751,6 +751,11 @@ func (v *V2) AnnounceHost(ctx context.Context, req *schedulerv2.AnnounceHostRequ
 		}
 	}
 
+	// Store the seed peer in the hashring by its announcement.
+	if host.Type == types.HostTypeSuperSeed {
+		v.resource.SeedPeer().Store(host)
+	}
+
 	// Handle the persistent host. If redis is not enabled,
 	// it will not support the persistent feature.
 	if v.persistentResource != nil {
@@ -1214,7 +1219,7 @@ func (v *V2) DeleteHost(_ctx context.Context, req *schedulerv2.DeleteHostRequest
 	log := logger.WithHostID(req.GetHostId())
 	log.Infof("delete host request: %#v", req)
 
-	_, loaded := v.resource.HostManager().Load(req.GetHostId())
+	host, loaded := v.resource.HostManager().Load(req.GetHostId())
 	if !loaded {
 		msg := fmt.Sprintf("host %s not found", req.GetHostId())
 		log.Error(msg)
@@ -1226,6 +1231,11 @@ func (v *V2) DeleteHost(_ctx context.Context, req *schedulerv2.DeleteHostRequest
 
 	// Delete host in scheduler.
 	v.resource.HostManager().Delete(req.GetHostId())
+
+	// Delete the seed peer from the hashring.
+	if host.Type == types.HostTypeSuperSeed {
+		v.resource.SeedPeer().Delete(host)
+	}
 
 	// Handle the persistent host for deletion.
 	if v.persistentResource != nil {

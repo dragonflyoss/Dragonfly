@@ -1845,7 +1845,7 @@ func TestServiceV1_AnnounceHost(t *testing.T) {
 	tests := []struct {
 		name string
 		req  *schedulerv1.AnnounceHostRequest
-		run  func(t *testing.T, svc *V1, req *schedulerv1.AnnounceHostRequest, host *resource.Host, hostManager resource.HostManager, mr *resource.MockResourceMockRecorder, mh *resource.MockHostManagerMockRecorder, md *configmocks.MockDynconfigInterfaceMockRecorder)
+		run  func(t *testing.T, svc *V1, req *schedulerv1.AnnounceHostRequest, host *resource.Host, hostManager resource.HostManager, mr *resource.MockResourceMockRecorder, mh *resource.MockHostManagerMockRecorder, seedPeer resource.SeedPeer, msp *resource.MockSeedPeerMockRecorder, md *configmocks.MockDynconfigInterfaceMockRecorder)
 	}{
 		{
 			name: "host not found",
@@ -1910,7 +1910,7 @@ func TestServiceV1_AnnounceHost(t *testing.T) {
 					Platform:   mockBuild.Platform,
 				},
 			},
-			run: func(t *testing.T, svc *V1, req *schedulerv1.AnnounceHostRequest, host *resource.Host, hostManager resource.HostManager, mr *resource.MockResourceMockRecorder, mh *resource.MockHostManagerMockRecorder, md *configmocks.MockDynconfigInterfaceMockRecorder) {
+			run: func(t *testing.T, svc *V1, req *schedulerv1.AnnounceHostRequest, host *resource.Host, hostManager resource.HostManager, mr *resource.MockResourceMockRecorder, mh *resource.MockHostManagerMockRecorder, seedPeer resource.SeedPeer, msp *resource.MockSeedPeerMockRecorder, md *configmocks.MockDynconfigInterfaceMockRecorder) {
 				assert := assert.New(t)
 				gomock.InOrder(
 					md.GetSchedulerClusterClientConfig().Return(types.SchedulerClusterClientConfig{LoadLimit: 10}, nil).Times(1),
@@ -2011,7 +2011,7 @@ func TestServiceV1_AnnounceHost(t *testing.T) {
 					Platform:   mockBuild.Platform,
 				},
 			},
-			run: func(t *testing.T, svc *V1, req *schedulerv1.AnnounceHostRequest, host *resource.Host, hostManager resource.HostManager, mr *resource.MockResourceMockRecorder, mh *resource.MockHostManagerMockRecorder, md *configmocks.MockDynconfigInterfaceMockRecorder) {
+			run: func(t *testing.T, svc *V1, req *schedulerv1.AnnounceHostRequest, host *resource.Host, hostManager resource.HostManager, mr *resource.MockResourceMockRecorder, mh *resource.MockHostManagerMockRecorder, seedPeer resource.SeedPeer, msp *resource.MockSeedPeerMockRecorder, md *configmocks.MockDynconfigInterfaceMockRecorder) {
 				assert := assert.New(t)
 				gomock.InOrder(
 					md.GetSchedulerClusterClientConfig().Return(types.SchedulerClusterClientConfig{}, errors.New("foo")).Times(1),
@@ -2112,7 +2112,7 @@ func TestServiceV1_AnnounceHost(t *testing.T) {
 					Platform:   mockBuild.Platform,
 				},
 			},
-			run: func(t *testing.T, svc *V1, req *schedulerv1.AnnounceHostRequest, host *resource.Host, hostManager resource.HostManager, mr *resource.MockResourceMockRecorder, mh *resource.MockHostManagerMockRecorder, md *configmocks.MockDynconfigInterfaceMockRecorder) {
+			run: func(t *testing.T, svc *V1, req *schedulerv1.AnnounceHostRequest, host *resource.Host, hostManager resource.HostManager, mr *resource.MockResourceMockRecorder, mh *resource.MockHostManagerMockRecorder, seedPeer resource.SeedPeer, msp *resource.MockSeedPeerMockRecorder, md *configmocks.MockDynconfigInterfaceMockRecorder) {
 				gomock.InOrder(
 					md.GetSchedulerClusterClientConfig().Return(types.SchedulerClusterClientConfig{LoadLimit: 10}, nil).Times(1),
 					mr.HostManager().Return(hostManager).Times(1),
@@ -2210,7 +2210,7 @@ func TestServiceV1_AnnounceHost(t *testing.T) {
 					Platform:   mockBuild.Platform,
 				},
 			},
-			run: func(t *testing.T, svc *V1, req *schedulerv1.AnnounceHostRequest, host *resource.Host, hostManager resource.HostManager, mr *resource.MockResourceMockRecorder, mh *resource.MockHostManagerMockRecorder, md *configmocks.MockDynconfigInterfaceMockRecorder) {
+			run: func(t *testing.T, svc *V1, req *schedulerv1.AnnounceHostRequest, host *resource.Host, hostManager resource.HostManager, mr *resource.MockResourceMockRecorder, mh *resource.MockHostManagerMockRecorder, seedPeer resource.SeedPeer, msp *resource.MockSeedPeerMockRecorder, md *configmocks.MockDynconfigInterfaceMockRecorder) {
 				gomock.InOrder(
 					md.GetSchedulerClusterClientConfig().Return(types.SchedulerClusterClientConfig{}, errors.New("foo")).Times(1),
 					mr.HostManager().Return(hostManager).Times(1),
@@ -2245,6 +2245,57 @@ func TestServiceV1_AnnounceHost(t *testing.T) {
 				assert.NotNil(host.Log)
 			},
 		},
+		{
+			name: "host not found and host type is HostTypeSuperSeed stores the seed peer",
+			req: &schedulerv1.AnnounceHostRequest{
+				Id:           mockSeedHostID,
+				Type:         pkgtypes.HostTypeSuperSeed.Name(),
+				Hostname:     "hostname",
+				Ip:           "127.0.0.1",
+				Port:         8003,
+				DownloadPort: 8001,
+			},
+			run: func(t *testing.T, svc *V1, req *schedulerv1.AnnounceHostRequest, host *resource.Host, hostManager resource.HostManager, mr *resource.MockResourceMockRecorder, mh *resource.MockHostManagerMockRecorder, seedPeer resource.SeedPeer, msp *resource.MockSeedPeerMockRecorder, md *configmocks.MockDynconfigInterfaceMockRecorder) {
+				gomock.InOrder(
+					md.GetSchedulerClusterClientConfig().Return(types.SchedulerClusterClientConfig{LoadLimit: 10}, nil).Times(1),
+					mr.HostManager().Return(hostManager).Times(1),
+					mh.Load(gomock.Any()).Return(nil, false).Times(1),
+					mr.HostManager().Return(hostManager).Times(1),
+					mh.Store(gomock.Cond(func(host *resource.Host) bool { return host.Type == pkgtypes.HostTypeSuperSeed })).Return().Times(1),
+					mr.SeedPeer().Return(seedPeer).Times(1),
+					msp.Store(gomock.Cond(func(host *resource.Host) bool {
+						return host.ID == mockSeedHostID && host.Type == pkgtypes.HostTypeSuperSeed
+					})).Times(1),
+				)
+
+				assert := assert.New(t)
+				assert.NoError(svc.AnnounceHost(context.Background(), req))
+			},
+		},
+		{
+			name: "host already exists and host type is HostTypeSuperSeed stores the seed peer",
+			req: &schedulerv1.AnnounceHostRequest{
+				Id:           mockHostID,
+				Type:         pkgtypes.HostTypeSuperSeed.Name(),
+				Hostname:     "hostname",
+				Ip:           "127.0.0.1",
+				Port:         8003,
+				DownloadPort: 8001,
+			},
+			run: func(t *testing.T, svc *V1, req *schedulerv1.AnnounceHostRequest, host *resource.Host, hostManager resource.HostManager, mr *resource.MockResourceMockRecorder, mh *resource.MockHostManagerMockRecorder, seedPeer resource.SeedPeer, msp *resource.MockSeedPeerMockRecorder, md *configmocks.MockDynconfigInterfaceMockRecorder) {
+				gomock.InOrder(
+					md.GetSchedulerClusterClientConfig().Return(types.SchedulerClusterClientConfig{LoadLimit: 10}, nil).Times(1),
+					mr.HostManager().Return(hostManager).Times(1),
+					mh.Load(gomock.Any()).Return(host, true).Times(1),
+					mr.SeedPeer().Return(seedPeer).Times(1),
+					msp.Store(gomock.Eq(host)).Times(1),
+				)
+
+				assert := assert.New(t)
+				assert.NoError(svc.AnnounceHost(context.Background(), req))
+				assert.Equal(pkgtypes.HostTypeSuperSeed, host.Type)
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -2255,12 +2306,13 @@ func TestServiceV1_AnnounceHost(t *testing.T) {
 			res := resource.NewMockResource(ctl)
 			dynconfig := configmocks.NewMockDynconfigInterface(ctl)
 			hostManager := resource.NewMockHostManager(ctl)
+			seedPeer := resource.NewMockSeedPeer(ctl)
 			host := resource.NewHost(
 				mockRawHost.ID, mockRawHost.IP, mockRawHost.Hostname, mockRawHost.Hostname,
 				mockRawHost.Port, mockRawHost.DownloadPort, mockPeerHost.ProxyPort, mockRawHost.Type)
 			svc := NewV1(&config.Config{Scheduler: mockSchedulerConfig, Metrics: config.MetricsConfig{EnableHost: true}}, res, scheduling, dynconfig)
 
-			tc.run(t, svc, tc.req, host, hostManager, res.EXPECT(), hostManager.EXPECT(), dynconfig.EXPECT())
+			tc.run(t, svc, tc.req, host, hostManager, res.EXPECT(), hostManager.EXPECT(), seedPeer, seedPeer.EXPECT(), dynconfig.EXPECT())
 		})
 	}
 }
@@ -2268,12 +2320,12 @@ func TestServiceV1_AnnounceHost(t *testing.T) {
 func TestServiceV1_LeaveHost(t *testing.T) {
 	tests := []struct {
 		name   string
-		mock   func(host *resource.Host, mockPeer *resource.Peer, peerManager resource.PeerManager, hostManager resource.HostManager, ms *mocks.MockSchedulingMockRecorder, mr *resource.MockResourceMockRecorder, mp *resource.MockPeerManagerMockRecorder, mh *resource.MockHostManagerMockRecorder)
+		mock   func(host *resource.Host, mockPeer *resource.Peer, peerManager resource.PeerManager, hostManager resource.HostManager, ms *mocks.MockSchedulingMockRecorder, mr *resource.MockResourceMockRecorder, mp *resource.MockPeerManagerMockRecorder, mh *resource.MockHostManagerMockRecorder, seedPeer resource.SeedPeer, msp *resource.MockSeedPeerMockRecorder)
 		expect func(t *testing.T, peer *resource.Peer, err error)
 	}{
 		{
 			name: "host not found",
-			mock: func(host *resource.Host, mockPeer *resource.Peer, peerManager resource.PeerManager, hostManager resource.HostManager, ms *mocks.MockSchedulingMockRecorder, mr *resource.MockResourceMockRecorder, mp *resource.MockPeerManagerMockRecorder, mh *resource.MockHostManagerMockRecorder) {
+			mock: func(host *resource.Host, mockPeer *resource.Peer, peerManager resource.PeerManager, hostManager resource.HostManager, ms *mocks.MockSchedulingMockRecorder, mr *resource.MockResourceMockRecorder, mp *resource.MockPeerManagerMockRecorder, mh *resource.MockHostManagerMockRecorder, seedPeer resource.SeedPeer, msp *resource.MockSeedPeerMockRecorder) {
 				gomock.InOrder(
 					mr.HostManager().Return(hostManager).Times(1),
 					mh.Load(gomock.Any()).Return(nil, false).Times(1),
@@ -2286,7 +2338,7 @@ func TestServiceV1_LeaveHost(t *testing.T) {
 		},
 		{
 			name: "host has not peers",
-			mock: func(host *resource.Host, mockPeer *resource.Peer, peerManager resource.PeerManager, hostManager resource.HostManager, ms *mocks.MockSchedulingMockRecorder, mr *resource.MockResourceMockRecorder, mp *resource.MockPeerManagerMockRecorder, mh *resource.MockHostManagerMockRecorder) {
+			mock: func(host *resource.Host, mockPeer *resource.Peer, peerManager resource.PeerManager, hostManager resource.HostManager, ms *mocks.MockSchedulingMockRecorder, mr *resource.MockResourceMockRecorder, mp *resource.MockPeerManagerMockRecorder, mh *resource.MockHostManagerMockRecorder, seedPeer resource.SeedPeer, msp *resource.MockSeedPeerMockRecorder) {
 				gomock.InOrder(
 					mr.HostManager().Return(hostManager).Times(1),
 					mh.Load(gomock.Any()).Return(host, true).Times(1),
@@ -2302,8 +2354,28 @@ func TestServiceV1_LeaveHost(t *testing.T) {
 			},
 		},
 		{
+			name: "host type is HostTypeSuperSeed and seed peer is deleted from hashring",
+			mock: func(host *resource.Host, mockPeer *resource.Peer, peerManager resource.PeerManager, hostManager resource.HostManager, ms *mocks.MockSchedulingMockRecorder, mr *resource.MockResourceMockRecorder, mp *resource.MockPeerManagerMockRecorder, mh *resource.MockHostManagerMockRecorder, seedPeer resource.SeedPeer, msp *resource.MockSeedPeerMockRecorder) {
+				host.Type = pkgtypes.HostTypeSuperSeed
+				gomock.InOrder(
+					mr.HostManager().Return(hostManager).Times(1),
+					mh.Load(gomock.Any()).Return(host, true).Times(1),
+					mr.PeerManager().Return(peerManager).Times(1),
+					mp.DeleteAllByHostID(gomock.Any()).Times(1),
+					mr.HostManager().Return(hostManager).Times(1),
+					mh.Delete(gomock.Any()).Return().Times(1),
+					mr.SeedPeer().Return(seedPeer).Times(1),
+					msp.Delete(gomock.Eq(host)).Times(1),
+				)
+			},
+			expect: func(t *testing.T, peer *resource.Peer, err error) {
+				assert := assert.New(t)
+				assert.NoError(err)
+			},
+		},
+		{
 			name: "peer state is PeerStateLeave",
-			mock: func(host *resource.Host, mockPeer *resource.Peer, peerManager resource.PeerManager, hostManager resource.HostManager, ms *mocks.MockSchedulingMockRecorder, mr *resource.MockResourceMockRecorder, mp *resource.MockPeerManagerMockRecorder, mh *resource.MockHostManagerMockRecorder) {
+			mock: func(host *resource.Host, mockPeer *resource.Peer, peerManager resource.PeerManager, hostManager resource.HostManager, ms *mocks.MockSchedulingMockRecorder, mr *resource.MockResourceMockRecorder, mp *resource.MockPeerManagerMockRecorder, mh *resource.MockHostManagerMockRecorder, seedPeer resource.SeedPeer, msp *resource.MockSeedPeerMockRecorder) {
 				host.Peers.Store(mockPeer.ID, mockPeer)
 				mockPeer.FSM.SetState(resource.PeerStateLeave)
 				gomock.InOrder(
@@ -2331,6 +2403,7 @@ func TestServiceV1_LeaveHost(t *testing.T) {
 			dynconfig := configmocks.NewMockDynconfigInterface(ctl)
 			hostManager := resource.NewMockHostManager(ctl)
 			peerManager := resource.NewMockPeerManager(ctl)
+			seedPeer := resource.NewMockSeedPeer(ctl)
 			host := resource.NewHost(
 				mockRawHost.ID, mockRawHost.IP, mockRawHost.Hostname, mockRawHost.Hostname,
 				mockRawHost.Port, mockRawHost.DownloadPort, mockRawHost.ProxyPort, mockRawHost.Type)
@@ -2338,7 +2411,7 @@ func TestServiceV1_LeaveHost(t *testing.T) {
 			mockPeer := resource.NewPeer(mockSeedPeerID, mockTask, host)
 			svc := NewV1(&config.Config{Scheduler: mockSchedulerConfig, Metrics: config.MetricsConfig{EnableHost: true}}, res, scheduling, dynconfig)
 
-			tc.mock(host, mockPeer, peerManager, hostManager, scheduling.EXPECT(), res.EXPECT(), peerManager.EXPECT(), hostManager.EXPECT())
+			tc.mock(host, mockPeer, peerManager, hostManager, scheduling.EXPECT(), res.EXPECT(), peerManager.EXPECT(), hostManager.EXPECT(), seedPeer, seedPeer.EXPECT())
 			tc.expect(t, mockPeer, svc.LeaveHost(context.Background(), &schedulerv1.LeaveHostRequest{
 				Id: idgen.HostID(host.IP, host.Hostname, true),
 			}))
