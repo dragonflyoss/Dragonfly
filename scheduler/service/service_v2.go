@@ -92,6 +92,24 @@ type V2 struct {
 
 	// Dynamic config.
 	dynconfig config.DynconfigInterface
+
+	// Dial options of the connections to the peers, carrying the transport
+	// credentials of peer.tls.
+	peerDialOptions []grpc.DialOption
+}
+
+// V2Option configures the v2 version of service.
+type V2Option func(v *V2)
+
+// WithPeerDialOptions sets the dial options of the connections to the peers,
+// e.g. the transport credentials of peer.tls. Without it, the peers are dialed
+// without TLS.
+func WithPeerDialOptions(opts ...grpc.DialOption) V2Option {
+	return func(v *V2) {
+		if len(opts) > 0 {
+			v.peerDialOptions = opts
+		}
+	}
 }
 
 // New v2 version of service instance.
@@ -104,8 +122,9 @@ func NewV2(
 	job job.Job,
 	internalJobImage internaljob.Image,
 	dynconfig config.DynconfigInterface,
+	opts ...V2Option,
 ) *V2 {
-	return &V2{
+	v := &V2{
 		resource:                resource,
 		persistentResource:      persistentResource,
 		persistentCacheResource: persistentCacheResource,
@@ -114,7 +133,14 @@ func NewV2(
 		internalJobImage:        internalJobImage,
 		config:                  cfg,
 		dynconfig:               dynconfig,
+		peerDialOptions:         []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
 	}
+
+	for _, opt := range opts {
+		opt(v)
+	}
+
+	return v
 }
 
 // AnnouncePeer announces peer to scheduler.
@@ -2859,7 +2885,7 @@ func (v *V2) DeletePersistentPeer(_ctx context.Context, req *schedulerv2.DeleteP
 
 	// Delete the persistent task from the peer, if delete failed, skip it.
 	addr := net.JoinHostPort(peer.Host.IP, strconv.Itoa(int(peer.Host.DownloadPort)))
-	dialOptions := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	dialOptions := v.peerDialOptions
 	dfdaemonClient, err := v.resource.PeerClientPool().Get(addr, dialOptions...)
 	if err != nil {
 		peer.Log.Errorf("get dfdaemon client failed %s", err)
@@ -3062,7 +3088,7 @@ func (v *V2) replicatePersistentTask(ctx context.Context, peer *persistent.Peer,
 // downloadPersistentTaskByPeer downloads the persistent task by peer.
 func (v *V2) downloadPersistentTaskByPeer(ctx context.Context, task *persistent.Task, host *persistent.Host) error {
 	addr := net.JoinHostPort(host.IP, strconv.Itoa(int(host.DownloadPort)))
-	dialOptions := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	dialOptions := v.peerDialOptions
 	dfdaemonClient, err := v.resource.PeerClientPool().Get(addr, dialOptions...)
 	if err != nil {
 		task.Log.Errorf("get dfdaemon client failed %s", err)
@@ -3103,7 +3129,7 @@ func (v *V2) downloadPersistentTaskByPeer(ctx context.Context, task *persistent.
 // persistPersistentTaskByPeer persists the persistent task by peer.
 func (v *V2) persistPersistentTaskByPeer(ctx context.Context, peer *persistent.Peer, cachedParent *persistent.Peer) error {
 	addr := net.JoinHostPort(cachedParent.Host.IP, strconv.Itoa(int(cachedParent.Host.DownloadPort)))
-	dialOptions := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	dialOptions := v.peerDialOptions
 	dfdaemonClient, err := v.resource.PeerClientPool().Get(addr, dialOptions...)
 	if err != nil {
 		peer.Log.Errorf("get dfdaemon client failed %s", err)
@@ -3239,7 +3265,7 @@ func (v *V2) DeletePersistentTask(_ctx context.Context, req *schedulerv2.DeleteP
 
 		// Delete the persistent task from the peer, if delete failed, skip it.
 		addr := net.JoinHostPort(peer.Host.IP, strconv.Itoa(int(peer.Host.DownloadPort)))
-		dialOptions := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+		dialOptions := v.peerDialOptions
 		dfdaemonClient, err := v.resource.PeerClientPool().Get(addr, dialOptions...)
 		if err != nil {
 			peer.Log.Errorf("get dfdaemon client failed %s", err)
@@ -4065,7 +4091,7 @@ func (v *V2) DeletePersistentCachePeer(_ctx context.Context, req *schedulerv2.De
 
 	// Delete the persistent cache task from the peer, if delete failed, skip it.
 	addr := net.JoinHostPort(peer.Host.IP, strconv.Itoa(int(peer.Host.DownloadPort)))
-	dialOptions := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	dialOptions := v.peerDialOptions
 	dfdaemonClient, err := v.resource.PeerClientPool().Get(addr, dialOptions...)
 	if err != nil {
 		peer.Log.Errorf("get dfdaemon client failed %s", err)
@@ -4272,7 +4298,7 @@ func (v *V2) replicatePersistentCacheTask(ctx context.Context, peer *persistentc
 // downloadPersistentCacheTaskByPeer downloads the persistent cache task by peer.
 func (v *V2) downloadPersistentCacheTaskByPeer(ctx context.Context, task *persistentcache.Task, host *persistentcache.Host) error {
 	addr := net.JoinHostPort(host.IP, strconv.Itoa(int(host.DownloadPort)))
-	dialOptions := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	dialOptions := v.peerDialOptions
 	dfdaemonClient, err := v.resource.PeerClientPool().Get(addr, dialOptions...)
 	if err != nil {
 		task.Log.Errorf("get dfdaemon client failed %s", err)
@@ -4310,7 +4336,7 @@ func (v *V2) downloadPersistentCacheTaskByPeer(ctx context.Context, task *persis
 // persistPersistentCacheTaskByPeer persists the persistent cache task by peer.
 func (v *V2) persistPersistentCacheTaskByPeer(ctx context.Context, peer *persistentcache.Peer, cachedParent *persistentcache.Peer) error {
 	addr := net.JoinHostPort(cachedParent.Host.IP, strconv.Itoa(int(cachedParent.Host.DownloadPort)))
-	dialOptions := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	dialOptions := v.peerDialOptions
 	dfdaemonClient, err := v.resource.PeerClientPool().Get(addr, dialOptions...)
 	if err != nil {
 		peer.Log.Errorf("get dfdaemon client failed %s", err)
@@ -4449,7 +4475,7 @@ func (v *V2) DeletePersistentCacheTask(_ctx context.Context, req *schedulerv2.De
 
 		// Delete the persistent cache task from the peer, if delete failed, skip it.
 		addr := net.JoinHostPort(peer.Host.IP, strconv.Itoa(int(peer.Host.DownloadPort)))
-		dialOptions := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+		dialOptions := v.peerDialOptions
 		dfdaemonClient, err := v.resource.PeerClientPool().Get(addr, dialOptions...)
 		if err != nil {
 			peer.Log.Errorf("get dfdaemon client failed %s", err)
