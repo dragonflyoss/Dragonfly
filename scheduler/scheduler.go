@@ -23,7 +23,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/docker/go-connections/tlsconfig"
 	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
@@ -336,12 +335,7 @@ func newRedisClient(cfg *config.Config) (redis.UniversalClient, error) {
 	}
 
 	if redisTLS := cfg.Database.Redis.TLS; redisTLS != nil {
-		tlsCfg, err := tlsconfig.Client(tlsconfig.Options{
-			CAFile:             redisTLS.CACert,
-			CertFile:           redisTLS.Cert,
-			KeyFile:            redisTLS.Key,
-			InsecureSkipVerify: redisTLS.InsecureSkipVerify,
-		})
+		tlsCfg, err := pkgredis.NewTLSClientConfig(redisTLS.CACert, redisTLS.Cert, redisTLS.Key, redisTLS.InsecureSkipVerify)
 		if err != nil {
 			return nil, err
 		}

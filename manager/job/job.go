@@ -26,6 +26,7 @@ import (
 	"d7y.io/dragonfly/v2/manager/config"
 	"d7y.io/dragonfly/v2/manager/models"
 	nettls "d7y.io/dragonfly/v2/pkg/net/tls"
+	pkgredis "d7y.io/dragonfly/v2/pkg/redis"
 )
 
 // DefaultTaskPollingInterval is the default interval for polling task.
@@ -44,7 +45,7 @@ type Job struct {
 
 // New returns a new Job.
 func New(cfg *config.Config, gdb *gorm.DB) (*Job, error) {
-	j, err := internaljob.New(&internaljob.Config{
+	redisConfig := &internaljob.Config{
 		Addrs:            cfg.Database.Redis.Addrs,
 		MasterName:       cfg.Database.Redis.MasterName,
 		Username:         cfg.Database.Redis.Username,
@@ -53,7 +54,18 @@ func New(cfg *config.Config, gdb *gorm.DB) (*Job, error) {
 		SentinelPassword: cfg.Database.Redis.SentinelPassword,
 		BrokerDB:         cfg.Database.Redis.BrokerDB,
 		BackendDB:        cfg.Database.Redis.BackendDB,
-	}, internaljob.GlobalQueue)
+	}
+
+	if redisTLS := cfg.Database.Redis.TLS; redisTLS != nil {
+		tlsCfg, err := pkgredis.NewTLSClientConfig(redisTLS.CACert, redisTLS.Cert, redisTLS.Key, redisTLS.InsecureSkipVerify)
+		if err != nil {
+			return nil, err
+		}
+
+		redisConfig.TLSConfig = tlsCfg
+	}
+
+	j, err := internaljob.New(redisConfig, internaljob.GlobalQueue)
 	if err != nil {
 		return nil, err
 	}

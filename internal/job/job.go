@@ -18,6 +18,7 @@ package job
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -50,6 +51,7 @@ type Config struct {
 	SentinelPassword string
 	BrokerDB         int
 	BackendDB        int
+	TLSConfig        *tls.Config
 }
 
 type Job struct {
@@ -70,6 +72,7 @@ func New(cfg *Config, queue Queue) (*Job, error) {
 		SentinelUsername: cfg.SentinelUsername,
 		SentinelPassword: cfg.SentinelPassword,
 		DB:               cfg.BackendDB,
+		TLSConfig:        cfg.TLSConfig,
 	}); err != nil {
 		return nil, err
 	}
@@ -93,6 +96,7 @@ func New(cfg *Config, queue Queue) (*Job, error) {
 		DefaultQueue:    queue.String(),
 		ResultBackend:   backend,
 		ResultsExpireIn: DefaultResultsExpireIn,
+		TLSConfig:       cfg.TLSConfig,
 		Redis: &machineryv1config.RedisConfig{
 			MasterName:             cfg.MasterName,
 			MaxIdle:                DefaultRedisMaxIdle,

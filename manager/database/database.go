@@ -23,7 +23,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/docker/go-connections/tlsconfig"
 	caches "github.com/go-gorm/caches/v4"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -107,12 +106,7 @@ func New(cfg *config.Config) (*Database, error) {
 	}
 
 	if redisTLS := cfg.Database.Redis.TLS; redisTLS != nil {
-		tlsCfg, err := tlsconfig.Client(tlsconfig.Options{
-			CAFile:             redisTLS.CACert,
-			CertFile:           redisTLS.Cert,
-			KeyFile:            redisTLS.Key,
-			InsecureSkipVerify: redisTLS.InsecureSkipVerify,
-		})
+		tlsCfg, err := pkgredis.NewTLSClientConfig(redisTLS.CACert, redisTLS.Cert, redisTLS.Key, redisTLS.InsecureSkipVerify)
 		if err != nil {
 			return nil, err
 		}

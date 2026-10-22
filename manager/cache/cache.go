@@ -37,7 +37,7 @@ func New(cfg *config.Config) (*Cache, error) {
 	var localCache *cache.TinyLFU
 	localCache = cache.NewTinyLFU(cfg.Cache.Local.Size, cfg.Cache.Local.TTL)
 
-	rdb, err := pkgredis.NewRedis(&redis.UniversalOptions{
+	redisOpts := &redis.UniversalOptions{
 		Addrs:            cfg.Database.Redis.Addrs,
 		MasterName:       cfg.Database.Redis.MasterName,
 		DB:               cfg.Database.Redis.DB,
@@ -47,7 +47,18 @@ func New(cfg *config.Config) (*Cache, error) {
 		SentinelPassword: cfg.Database.Redis.SentinelPassword,
 		PoolSize:         cfg.Database.Redis.PoolSize,
 		PoolTimeout:      cfg.Database.Redis.PoolTimeout,
-	})
+	}
+
+	if redisTLS := cfg.Database.Redis.TLS; redisTLS != nil {
+		tlsCfg, err := pkgredis.NewTLSClientConfig(redisTLS.CACert, redisTLS.Cert, redisTLS.Key, redisTLS.InsecureSkipVerify)
+		if err != nil {
+			return nil, err
+		}
+
+		redisOpts.TLSConfig = tlsCfg
+	}
+
+	rdb, err := pkgredis.NewRedis(redisOpts)
 	if err != nil {
 		return nil, err
 	}

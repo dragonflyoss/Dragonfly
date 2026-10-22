@@ -46,6 +46,7 @@ import (
 	managertypes "d7y.io/dragonfly/v2/manager/types"
 	"d7y.io/dragonfly/v2/pkg/dfnet"
 	"d7y.io/dragonfly/v2/pkg/idgen"
+	pkgredis "d7y.io/dragonfly/v2/pkg/redis"
 	cndsystemclient "d7y.io/dragonfly/v2/pkg/rpc/cdnsystem/client"
 	"d7y.io/dragonfly/v2/scheduler/config"
 	resource "d7y.io/dragonfly/v2/scheduler/resource/standard"
@@ -97,6 +98,15 @@ func New(cfg *config.Config, resource resource.Resource, dialOptions ...grpc.Dia
 		SentinelPassword: cfg.Database.Redis.SentinelPassword,
 		BrokerDB:         cfg.Database.Redis.BrokerDB,
 		BackendDB:        cfg.Database.Redis.BackendDB,
+	}
+
+	if redisTLS := cfg.Database.Redis.TLS; redisTLS != nil {
+		tlsCfg, err := pkgredis.NewTLSClientConfig(redisTLS.CACert, redisTLS.Cert, redisTLS.Key, redisTLS.InsecureSkipVerify)
+		if err != nil {
+			return nil, err
+		}
+
+		redisConfig.TLSConfig = tlsCfg
 	}
 
 	globalJob, err := internaljob.New(redisConfig, internaljob.GlobalQueue)
